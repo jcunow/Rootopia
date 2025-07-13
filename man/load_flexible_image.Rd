@@ -15,7 +15,7 @@ load_flexible_image(
 \arguments{
 \item{input}{File path or image object}
 
-\item{output_format}{Character, one of "cimg", "spatrast", "array", "brick", "raster"}
+\item{output_format}{Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.}
 
 \item{normalize}{Logical, whether to normalize values to 0-1 range if they're in 0-255}
 

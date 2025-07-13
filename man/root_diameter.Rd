@@ -37,10 +37,11 @@ A list containing:
   \item{skeleton_rast}{`SpatRaster`. Binary raster mask of skeletonized regions.}
   \item{diameter_rast}{`SpatRaster`. Raster showing diameters in the skeletonized regions.}
   \item{distance_map_rast}{`SpatRaster`. Raster showing the distance transform values.}
+  \item{root_volume}{Numeric. The sum of root volume - assuming cylindrical roots}
 }
 }
 \description{
-This function estimates root diameters from an input image using skeletonization and distance transform methods.
+This function estimates root diameters and root volume from an input image using skeletonization and distance transform methods.
 The input can be a file path, raster, image object, or array, which is converted to a binary image before processing.
 }
 \details{

@@ -22,7 +22,7 @@ Remove small foreground objects (e.g., dirt) from root binary images
 \examples{
 \dontrun{
 data("seg_Oulanka2023_Session01_T067")
-img <- seg_ seg_Oulanka2023_Session01_T067
+img <-  seg_Oulanka2023_Session01_T067
 cleaned <- remove_small_foreground_objects(img, min_size = 100)
 plot(cleaned)
 }

@@ -348,21 +348,7 @@ thin_image_guohall <- function(img, verbose = FALSE, select.layer = 2) {
 #' skeleton <- medial_axis_transform(raster, verbose = TRUE)
 #' }
 medial_axis_transform <- function(img, verbose = FALSE, select.layer = NULL) {
-  # Input validation
-  tryCatch({
-    validated <- validate_image_input(
-      img = img,
-      allow_empty = FALSE,
-      min_dim = c(3,3),
-      require_binary = TRUE,
-      select.layer = select.layer
-    )
-    img <- validated$img
-  }, error = function(e) {
-    stop("Input validation failed: ", e$message)
-  }, warning = function(w) {
-    warning("Input validation warning: ", w$message)
-  })
+  
   
   # Flexible input processing with error handling
   img <- tryCatch({
@@ -373,6 +359,8 @@ medial_axis_transform <- function(img, verbose = FALSE, select.layer = NULL) {
     stop("Failed to load or convert image: ", e$message)
   })
   
+
+
   # Check for numerical stability in distance calculations
   check_numerical_stability <- function(dist_map) {
     if (any(is.nan(dist_map)) || any(is.infinite(dist_map))) {
@@ -637,22 +625,22 @@ detect_skeleton_points <- function(img, select.layer = 2) {
 #' @return If a single method is selected, the function returns a `SpatRaster` object representing the skeletonized image. If multiple methods are selected, a named list of `SpatRaster` objects is returned.
 #'
 #' @examples
-#' \dontrun{
+#' 
 #' # Load a binary image as a SpatRaster
 #' binary_image <- terra::rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0,0), nrow = 3))
 #'
 #' # Apply all skeletonization methods
 #' skeletons <- skeletonize_image(binary_image, verbose = TRUE)
-#' }
+#' 
 #'
 #' @seealso \code{\link{thin_image_zhangsuen}}, \code{\link{thin_image_guohall}}, \code{\link{medial_axis_transform}}
 #' @export
-skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT"), verbose = TRUE, select.layer = NULL) {
+skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT", "SteepestAscend"), verbose = TRUE, select.layer = NULL) {
   # Ensure methods are valid
-  valid_methods <- c("ZhangSuen", "GuoHall", "MAT")
+  valid_methods <- c("ZhangSuen", "GuoHall", "MAT", "SteepestAscend")
   methods <- intersect(methods, valid_methods)
   if (length(methods) == 0) {
-    stop("No valid methods specified. Choose from: 'ZhangSuen', 'GuoHall', 'MAT'.")
+    stop("No valid methods specified. Choose from: 'ZhangSuen', 'GuoHall', 'MAT', 'SteepestAscend'.")
   }
   
   
@@ -666,6 +654,7 @@ skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT"), v
         thin_image_zhangsuen(img, verbose = verbose, select.layer = NULL),
       "GuoHall" = thin_image_guohall(img, verbose = verbose, select.layer = NULL),
       "MAT" = medial_axis_transform(img, verbose = verbose, select.layer = NULL),
+      "SteepestAscend" = thin_image_steepest_ascend(img, verbose = verbose, select.layer = select.layer),
       stop(paste("Unsupported method:", method))
     )
     results[[method]] <- result
@@ -677,4 +666,46 @@ skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT"), v
   } else {
     return(results)  # Multiple method results
   }
+}
+
+
+
+#' Steepest Ascend Skeletonization (Internal)
+#'
+#' Skeletonize a binary image using a ridge-based steepest ascend approximation on the distance transform.
+#'
+#' @param img A matrix, data frame, or `SpatRaster` object representing the binary image.
+#' @param verbose Logical. If `TRUE`, prints diagnostic information. Default is `FALSE`.
+#' @param select.layer Integer indicating the layer to use if `img` is a multi-layer `SpatRaster`. Default is `NULL`.
+#'
+#' @return A binary matrix representing the skeleton obtained from local maxima on the distance transform.
+#' @keywords internal
+thin_image_steepest_ascend <- function(img, verbose = FALSE, select.layer = NULL) {
+  
+  
+  # Convert to binary matrix with error handling
+  img <- tryCatch({
+    result <- load_flexible_image(img, select.layer = select.layer,
+                                  output_format = "matrix", normalize = TRUE, binarize = TRUE)
+    result
+  }, error = function(e) {
+    stop("Failed to load image: ", e$message)
+  })
+  
+  # Compute distance transform and identify ridge lines
+  dt <- tryCatch({
+    im <- imager::as.cimg(t(img))  # transpose to match cimg's (x,y) convention
+    distmap <- imager::distance_transform(im, value = 0)
+    local_maxima <- distmap == imager::isoblur(distmap, sigma = 1)
+    ridge <- as.matrix(local_maxima)
+    t(ridge) * img  # convert back and mask with original image
+  }, error = function(e) {
+    stop("Ridge detection failed: ", e$message)
+  })
+  
+  if (verbose) {
+    cat("Steepest ascend ridge-based skeletonization complete. Skeleton pixels:", sum(dt), "\n")
+  }
+  
+  return(dt)
 }

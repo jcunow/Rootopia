@@ -48,13 +48,14 @@ A processed binary image
 Process root images by filling holes and optionally smoothing edges
 }
 \examples{
-\dontrun{
 data("seg_Oulanka2023_Session01_T067")
-img <- seg_ seg_Oulanka2023_Session01_T067
+img <-  seg_Oulanka2023_Session01_T067
 # Fill holes only
 result1 <- clean_root_image(img, fill_holes = TRUE, smooth_edges = FALSE)
 # Fill holes and smooth edges
 result2 <- clean_root_image(img, fill_holes = TRUE, smooth_edges = TRUE)
 plot(result2)
 }
+\seealso{
+\code{\link{smooth_root_edges}}, \code{\link{fill_root_holes}}, \code{\link{remove_small_foreground_objects}}
 }

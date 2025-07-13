@@ -25,7 +25,6 @@ Imports:
     imager,
     landscapemetrics,
     minpack.lm,
-    OpenImageR,
     raster,
     RStoolbox,
     stats,

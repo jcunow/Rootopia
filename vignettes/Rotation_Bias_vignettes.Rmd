@@ -48,13 +48,13 @@ The rotation bias and circadian analysis module includes:
 
 # For demonstration, we'll generate synthetic data
 set.seed(32608)  # For reproducibility
-period <- 24     # 24-hour cycle
-n <- 50          # Number of observations
-timestamps <- runif(n, 0, 3*period)  # Random sampling times across 3 days
+period <- 1     # cycle length
+n <- 150         # Number of observations
+timestamps <- runif(n, 0, 1*period)  # Random sampling times across 3 days
 amplitude <- 2   # Strength of the rhythm
 phase <- 6       # Time offset (hours)
 baseline <- 3    # Average growth rate
-noise <- 1       # Random variation
+noise <- 0.8       # Random variation
 
 # Simulate root growth with circadian pattern
 growth_rates <- amplitude * sin(2 * pi / period * (timestamps + phase)) + 
@@ -82,25 +82,25 @@ ggplot(root_ts_data, aes(x = time, y = growth_rate)) +
 **Purpose**: Detect and characterize circadian rhythms in root growth patterns.
 
 ```{r, eval=FALSE}
+root_ts_data = root_ts_data %>% arrange(root_ts_data$time)
 # Fit a sine curve to the time-series data
-circadian_fit <- fit_circadian_model(
-  time = root_ts_data$time,
-  values = root_ts_data$growth_rate,
-  period = 24,  # Fixed 24-hour period
-  method = "nls" # Non-linear least squares
+fit <- fit_sine_curve(
+  tt = root_ts_data$time,
+  yy = root_ts_data$growth_rate,
+  parStart = list(amp = 2, phase = 6, offset = 3, period = 1)
 )
 
 # Display model parameters
-print("Circadian model parameters:")
-print(circadian_fit$parameters)
+print("sine curve fit:")
+print(fit)
 
 # Plot the data with fitted curve
-plot_circadian_fit(
-  time = root_ts_data$time,
-  values = root_ts_data$growth_rate,
-  fit = circadian_fit,
+plot(
+  root_ts_data$time, 
+  root_ts_data$growth_rate,
   title = "Circadian Rhythm in Root Growth"
 )
+lines(root_ts_data$time, fit$predicted, col = "coral" )
 ```
 
 ### 3. Statistical Testing for Rhythmicity
@@ -108,30 +108,33 @@ plot_circadian_fit(
 **Purpose**: Determine if the observed patterns are statistically significant circadian rhythms.
 
 ```{r, eval=FALSE}
-# Perform statistical tests to validate circadian rhythms
+# Perform statistical tests to validate circadian rhythms (all identical - check)
 
 # 1. Wald Test (tests if amplitude is significantly different from zero)
-wald_result <- test_circadian_wald(
-  time = root_ts_data$time,
-  values = root_ts_data$growth_rate,
+wald_result <- rhythmicity_test(
+  method = "Wald",
+  tt = root_ts_data$time,
+  yy = root_ts_data$growth_rate,
   period = 24
 )
 print("Wald test for circadian rhythmicity:")
 print(wald_result)
 
 # 2. Likelihood Ratio Test (compares rhythmic vs. constant models)
-lr_result <- test_circadian_lr(
-  time = root_ts_data$time,
-  values = root_ts_data$growth_rate,
+lr_result <- rhythmicity_test(
+  method = "LR",
+  tt = root_ts_data$time,
+  yy = root_ts_data$growth_rate,
   period = 24
 )
 print("Likelihood Ratio test for circadian rhythmicity:")
 print(lr_result)
 
 # 3. F Test (tests overall model significance)
-f_result <- test_circadian_f(
-  time = root_ts_data$time,
-  values = root_ts_data$growth_rate,
+f_result <- rhythmicity_test(
+  method = "F",
+  tt = root_ts_data$time,
+  yy = root_ts_data$growth_rate,
   period = 24
 )
 print("F test for circadian rhythmicity:")
@@ -303,7 +306,7 @@ plot_bias_comparison(
 
 ## Conclusion
 
-This vignette has demonstrated how to analyze rotation bias and circadian rhythms in root growth using the RootScanR package. These analyses can reveal important aspects of root growth strategies and responses to environmental cues such as light, gravity, and daily temperature cycles.
+This vignette demonstrates how to analyze rotation bias and circadian rhythms in root growth using the RootScanR package. These analyses can reveal important aspects of root growth strategies and responses to environmental cues or methodological quirks.
 
 Key takeaways:
 1. Circadian rhythms can be detected and characterized using sine curve fitting

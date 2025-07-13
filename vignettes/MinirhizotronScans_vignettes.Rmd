@@ -255,10 +255,13 @@ print(soil_texture)
 **Purpose**: Analyze how root traits change with soil depth.
 
 ```{r, eval=FALSE}
+
+
 ## create analytical zones; indexD indicates which depth to look at.
-root_zone = zone.fun(rootpic = root_map, 
-                     indexD = 10,
-                     binned.map =  binning(depthmap = depth_map, 5) )
+root_zone = zoning(img = root_map, 
+                   depth = 10,
+                   mode = "depth",
+                   depth_map =  binning(depthmap = depth_map, 5) )
 
 # go through each slice
 bin_width = 2
@@ -266,9 +269,10 @@ rl.df  = data.frame(depth = seq(0,30,bin_width), rl = NA,rl.density = NA, rootpx
 root_map =  load_flexible_image(root_map,binarize = TRUE, output_format = "spatrast")
 for(i in rl.df$depth){
   # analytical unit
-  root_zone = zone.fun(rootpic = root_map , 
-                     indexD = i,
-                     binned.map =  binning(depthmap = depth_map, bin_width) )
+  root_zone = zoning(img = root_map , 
+                     mode = "depth",
+                     depth = i,
+                     depth_map =  binning(depthmap = depth_map, bin_width) )
   # root length
   try(rl.df$rl[rl.df$depth == i] <- as.numeric(root_length(root_zone,dpi = 150)))
   

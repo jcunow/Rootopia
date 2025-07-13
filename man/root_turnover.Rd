@@ -50,3 +50,6 @@ Depends on method and parameters:
 \description{
 Performs root turnover analysis for either a single multi-layer image or two separate images
 }
+\seealso{
+\code{\link{turnover_tc}}, \code{\link{turnover_dpc}}
+}

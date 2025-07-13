@@ -433,234 +433,125 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
   })
 }
 
-#' Threshold an image to binirize image
+
+
+#' Threshold or deblur an image to binarize features
+#'
+#' Applies global or adaptive thresholding to a raster image, with optional
+#' masking and simple deblurring based on structural layer separation.
 #'
 #' @param img SpatRaster object
-#' @param threshold Numeric value between 0 and 1 for thresholding
-#' @param select.layer Integer specifying which layer should be used to capture blur
-#' @param mask.layer Integer specifying which layer preserves mask sections
-#'
-#' @return SpatRaster object
-#' @export
-#'
-#' @examples
-#' blurred.img = terra::rast(seg_Oulanka2023_Session03_T067)
-#' img = blur.correction(blurred.img, 0.3)
-blur.correction = function(img, threshold = 0.4, select.layer = 2, mask.layer = 1) {
-  tryCatch({
-    # Input validation
-    if (missing(img)) {
-      stop("img parameter is required")
-    }
-
-    if (!inherits(img, "SpatRaster")) {
-      stop("img must be a SpatRaster object")
-    }
-
-    if (!is.numeric(threshold) || threshold < 0 || threshold > 1) {
-      stop("threshold must be a numeric value between 0 and 1")
-    }
-
-    nlyr <- terra::nlyr(img)
-
-    # Validate layer parameters for multi-layer images
-    if (nlyr == 3) {
-      if (!is.numeric(select.layer) || select.layer < 1 ) {
-        stop("select.layer must be an integer between 1")
-      }
-      if (!is.numeric(mask.layer) || mask.layer < 1 ) {
-        stop("mask.layer must be an integer between 1")
-      }
-      if (select.layer == mask.layer) {
-        stop("select.layer and mask.layer cannot be the same")
-      }
-    }
-
-    # Check for empty or NA-only raster
-    if (all(is.na(terra::values(img)))) {
-      stop("Input raster contains only NA values")
-    }
-
-    # Process image
-    img2 <- img
-
-    if (nlyr == 3) {
-      # Multi-layer processing
-      mx <- terra::global(img2[[select.layer]], "max", na.rm = TRUE)[[1]]
-
-      if (is.na(mx) || mx == 0) {
-        stop("Invalid maximum value in select.layer")
-      }
-
-      # isolate mask part
-      img2[[mask.layer]] <- img2[[mask.layer]] - img2[[select.layer]]
-      img2[[mask.layer]] <- (img2[[mask.layer]] >= (mx * threshold)) * mx
-
-      # unblur select layer
-      img2[[select.layer]] <- (img2[[select.layer]] >= (mx * threshold)) * mx
-
-      # unblur remaining layer
-      other.layer <- which(!1:3 %in% select.layer & !1:3 %in% mask.layer)
-      img2[[other.layer]] <- (img2[[select.layer]] >= (mx * threshold)) * mx
-
-    } else {
-      # Single-layer processing
-      mx <- terra::global(img2, "max", na.rm = TRUE)[[1]]
-
-      if (is.na(mx) || mx == 0) {
-        stop("Invalid maximum value in image")
-      }
-
-      img2 <- (img2 >= (mx * threshold)) * mx
-    }
-
-    return(img2)
-
-  }, error = function(e) {
-    stop(sprintf("Error in blur.correction: %s", e$message))
-  })
-}
-
-#' Threshold an image to binarize image
-#'
-#' @param img SpatRaster object
-#' @param threshold Numeric value between 0 and 1 representing the fraction of the reference value.
-#'                  For global thresholding, this is the fraction of the global maximum.
-#'                  For adaptive thresholding, this is the fraction of the local mean.
-#' @param method Character string specifying thresholding method: "global" or "adaptive"
-#' @param window_size Integer specifying window size for adaptive thresholding (must be odd)
-#' @param select.layer Integer or NULL specifying which layer should be used for thresholding. If NULL, average of all layers is used.
-#' @param mask.layer Integer or NULL specifying which layer preserves mask sections. If NULL, no mask is applied.
-#' @param binary_01 Logical; if TRUE, output values are strictly 0 and 1. If FALSE, uses the maximum value of the input.
+#' @param threshold Numeric value (0–1). For global thresholding, it's a fraction of the global max.
+#'                  For adaptive thresholding, it's a fraction of local mean. For deblurring, it's the fraction of max used to recover structure.
+#' @param method "global" or "adaptive". Ignored if `deblur = TRUE`.
+#' @param window_size Integer (odd), only used for adaptive thresholding.
+#' @param select.layer Integer or NULL. Which layer to use for thresholding or deblurring.
+#'                     If NULL and multilayer, the mean of all layers is used.
+#' @param mask.layer Integer or NULL. If set, used to preserve masked regions or enhance structure.
+#' @param binary_01 Logical. If TRUE, binarized output uses 0/1. If FALSE, it retains max value of input.
+#' @param deblur Logical. If TRUE, applies deblurring logic instead of standard thresholding.
 #'
 #' @return SpatRaster object
 #' @export
 #'
 #' @examples
 #' img = terra::rast(seg_Oulanka2023_Session03_T067)
-#' # Global thresholding (threshold = 0.3 means pixels > 30% of global max value become 1)
-#' binary_img1 = image_threshold(img, threshold = 0.3, method = "global")
-#' # Adaptive thresholding (threshold = 0.9 means pixels > 90% of local mean become 1)
-#' binary_img2 = image_threshold(img,
-#'                  threshold = 0.9, method = "adaptive",
-#'                  window_size = 15, binary_01 = TRUE)
-#' # Using average of all layers with no mask
-#' binary_img3 = image_threshold(img, select.layer = NULL, mask.layer = NULL)
-image_threshold = function(img, threshold = 0.4, method = "global", window_size = 15,
-                           select.layer = 2, mask.layer = 1, binary_01 = FALSE) {
+#' image_threshold(img, threshold = 0.3, method = "global")
+#' image_threshold(img, threshold = 0.9, method = "adaptive", window_size = 15, binary_01 = TRUE)
+#' image_threshold(img, threshold = 0.4, select.layer = 2, mask.layer = 1, deblur = TRUE)
+image_threshold <- function(img, threshold = 0.4, method = "global", window_size = 15,
+                            select.layer = 2, mask.layer = 1, binary_01 = FALSE,
+                            deblur = FALSE) {
   tryCatch({
-    # Input validation
-    if (missing(img)) {
-      stop("img parameter is required")
-    }
-    if (!inherits(img, "SpatRaster")) {
-      stop("img must be a SpatRaster object")
-    }
-
-    # Validate method parameter
-    method <- tolower(method)
-    if (!method %in% c("global", "adaptive")) {
-      stop("method must be either 'global' or 'adaptive'")
-    }
-
-    # Validate threshold
+    if (missing(img)) stop("img parameter is required")
+    if (!inherits(img, "SpatRaster")) stop("img must be a SpatRaster object")
     if (!is.numeric(threshold) || threshold < 0 || threshold > 1) {
       stop("threshold must be a numeric value between 0 and 1")
     }
-
-    # Additional validation for adaptive method
-    if (method == "adaptive") {
-      if (!is.numeric(window_size) || window_size < 3 || window_size %% 2 == 0) {
-        stop("window_size must be a positive odd integer >= 3")
-      }
-    }
-
-    # Validate binary_01 parameter
-    if (!is.logical(binary_01)) {
-      stop("binary_01 must be a logical value (TRUE or FALSE)")
-    }
-
+    
     nlyr <- terra::nlyr(img)
-
-    # Check for empty or NA-only raster
-    if (all(is.na(terra::values(img)))) {
-      stop("Input raster contains only NA values")
-    }
-
-    # Process image
+    if (all(is.na(terra::values(img)))) stop("Input raster contains only NA values")
+    
     img2 <- img
-
-    # Prepare to average all layers if select.layer is NULL
+    
+    # ---- DEBLURRING MODE ----
+    if (deblur) {
+      if (nlyr < 2) stop("Deblurring requires a multi-layer image")
+      if (select.layer == mask.layer) stop("select.layer and mask.layer cannot be the same")
+      
+      mx <- terra::global(img[[select.layer]], "max", na.rm = TRUE)[[1]]
+      if (is.na(mx) || mx == 0) stop("Invalid maximum in select.layer")
+      
+      # Deblurring: isolate structure from blurry background
+      img2[[mask.layer]] <- img[[mask.layer]] - img[[select.layer]]
+      img2[[mask.layer]] <- (img2[[mask.layer]] >= (mx * threshold)) * mx
+      img2[[select.layer]] <- (img[[select.layer]] >= (mx * threshold)) * mx
+      
+      other.layer <- setdiff(1:nlyr, c(select.layer, mask.layer))
+      if (length(other.layer) > 0) {
+        img2[[other.layer]] <- (img[[select.layer]] >= (mx * threshold)) * mx
+      }
+      
+      return(img2)
+    }
+    
+    # ---- THRESHOLDING MODE ----
+    # Determine processing layer
     if (is.null(select.layer) && nlyr > 1) {
-      # Create average layer for processing
       layer_to_process <- terra::app(img, fun = mean, na.rm = TRUE)
     } else if (!is.null(select.layer) && select.layer <= nlyr) {
-      # Use specified layer
       layer_to_process <- img[[select.layer]]
     } else if (nlyr == 1) {
-      # Single layer case
       layer_to_process <- img
     } else {
-      stop("Invalid select.layer value for the given number of layers")
+      stop("Invalid select.layer for given image")
     }
-
-    # Get maximum value for scaling
+    
     mx <- terra::global(layer_to_process, "max", na.rm = TRUE)[[1]]
-    if (is.na(mx) || mx == 0) {
-      stop("Invalid maximum value in the processing layer")
-    }
-
-    # Determine output value (either 1 or max value)
+    if (is.na(mx) || mx == 0) stop("Invalid maximum in processing layer")
     output_value <- ifelse(binary_01, 1, mx)
-
-    # Apply thresholding
-    if (method == "global") {
-      # Global thresholding - threshold is a percentage of max value
+    
+    if (tolower(method) == "global") {
       threshold_mask <- layer_to_process >= (mx * threshold)
-    } else {
-      # Adaptive thresholding - threshold is a percentage of local mean
+    } else if (tolower(method) == "adaptive") {
+      if (!is.numeric(window_size) || window_size < 3 || window_size %% 2 == 0) {
+        stop("window_size must be an odd integer >= 3")
+      }
       w <- matrix(1, nrow = window_size, ncol = window_size)
-      mean_raster <- terra::focal(layer_to_process, w = w, fun = mean, na.rm = TRUE)
-      threshold_mask <- layer_to_process >= (mean_raster * threshold)
+      local_mean <- terra::focal(layer_to_process, w = w, fun = mean, na.rm = TRUE)
+      threshold_mask <- layer_to_process >= (local_mean * threshold)
+    } else {
+      stop("method must be 'global' or 'adaptive'")
     }
-
-    # Apply thresholding to all layers based on mask.layer settings
+    
+    # Apply threshold to layers
     if (nlyr > 1) {
-      if (is.null(mask.layer)) {
-        # Apply same threshold to all layers when no mask is specified
-        for (i in 1:nlyr) {
+      for (i in 1:nlyr) {
+        if (!is.null(mask.layer) && i == mask.layer && (!is.null(select.layer) && mask.layer != select.layer)) {
+          mask_layer_data <- img[[mask.layer]]
+          if (tolower(method) == "global") {
+            img2[[i]] <- (mask_layer_data >= (mx * threshold)) * output_value
+          } else {
+            mask_mean <- terra::focal(mask_layer_data, w = w, fun = mean, na.rm = TRUE)
+            img2[[i]] <- (mask_layer_data >= (mask_mean * threshold)) * output_value
+          }
+        } else {
           img2[[i]] <- threshold_mask * output_value
         }
-      } else if (mask.layer <= nlyr && (is.null(select.layer) || mask.layer != select.layer)) {
-        # Apply threshold with masking
-        for (i in 1:nlyr) {
-          if (i == mask.layer) {
-            # For mask layer, threshold it directly
-            mask_layer_data <- img[[mask.layer]]
-            if (method == "global") {
-              img2[[i]] <- (mask_layer_data >= (mx * threshold)) * output_value
-            } else {
-              mask_mean <- terra::focal(mask_layer_data, w = w, fun = mean, na.rm = TRUE)
-              img2[[i]] <- (mask_layer_data >= (mask_mean * threshold)) * output_value
-            }
-          } else {
-            # For other layers, apply the threshold from the processing layer
-            img2[[i]] <- threshold_mask * output_value
-          }
-        }
-      } else {
-        stop("Invalid mask.layer value or mask.layer equals select.layer")
       }
     } else {
-      # Single layer case
       img2 <- threshold_mask * output_value
     }
-
+    
     return(img2)
   }, error = function(e) {
-    stop(sprintf("Error in image.threshold: %s", e$message))
+    stop(sprintf("Error in image_threshold: %s", e$message))
   })
 }
+
+
+
+
 #' Calculate root accumulation
 #'
 #' @param x Data frame containing group, depth, and variable columns
@@ -823,6 +714,7 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
     stop(sprintf("Error in rgb2gray: %s", e$message))
   })
 }
+
 
 
 

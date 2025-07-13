@@ -123,7 +123,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' @examples
 #' \dontrun{
 #' data("seg_Oulanka2023_Session01_T067")
-#' img <- seg_ seg_Oulanka2023_Session01_T067
+#' img <- seg_Oulanka2023_Session01_T067
 #' filled <- fill_root_holes(img, min_hole_size = 1, max_hole_size = 100)
 #' plot(filled)
 #' }
@@ -189,7 +189,7 @@ fill_root_holes <- function(img, min_hole_size = 1, max_hole_size = Inf) {
 #' @examples
 #' \dontrun{
 #' data("seg_Oulanka2023_Session01_T067")
-#' img <- seg_ seg_Oulanka2023_Session01_T067
+#' img <-  seg_Oulanka2023_Session01_T067
 #' cleaned <- remove_small_foreground_objects(img, min_size = 100)
 #' plot(cleaned)
 #' }
@@ -258,17 +258,17 @@ remove_small_foreground_objects <- function(img, min_size = 100, connectivity = 
 #' @param iterations Number of iterations for the smoothing process
 #' @return A processed binary image
 #' @export
+#' 
+#' @seealso \code{\link{smooth_root_edges}}, \code{\link{fill_root_holes}}, \code{\link{remove_small_foreground_objects}}
 #'
 #' @examples
-#' \dontrun{
 #' data("seg_Oulanka2023_Session01_T067")
-#' img <- seg_ seg_Oulanka2023_Session01_T067
+#' img <-  seg_Oulanka2023_Session01_T067
 #' # Fill holes only
 #' result1 <- clean_root_image(img, fill_holes = TRUE, smooth_edges = FALSE)
 #' # Fill holes and smooth edges
 #' result2 <- clean_root_image(img, fill_holes = TRUE, smooth_edges = TRUE)
 #' plot(result2)
-#' }
 clean_root_image <- function(img,
                              remove_small_particles = TRUE, min_size  = 100, connectivity = 8,
                              fill_holes = TRUE, min_hole_size = 1, max_hole_size = Inf, 

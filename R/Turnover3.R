@@ -300,6 +300,9 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
 #' @return Depends on method and parameters:
 #'   - For temporal comparison: data.frame with root production and turnover
 #'   - For DPC method: tibble with pixel sums and ratios or list of SpatRaster layers
+#'   
+#' @seealso \code{\link{turnover_tc}}, \code{\link{turnover_dpc}}
+#'
 #' @export
 root_turnover = function(img1, img2 = NULL,
                          method = "kimura",

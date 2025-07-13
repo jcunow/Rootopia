@@ -442,6 +442,7 @@ analyze_soil_texture = function(img.color, grays = 7, window = c(9,9),
   })
 }
 
+
 #' Approximate average Root Thickness
 #'
 #' @param kimuralength length of roots in image section, input unit is cm.
@@ -483,7 +484,7 @@ root_thickness = function(kimuralength, rootpx, dpi=300) {
     px.thicc <- thiccness / (dpi/2.54)
 
     # Validate final result
-    if (px.thicc <= 0) {
+    if (px.thicc <= 0.000000001) {
       warning("Calculated thickness is very small, which may indicate measurement issues")
     }
 

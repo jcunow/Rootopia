@@ -65,7 +65,7 @@ normalize_array <- function(arr, normalize, binarize) {
 
 #' Load an image flexibly from file or convert from memory
 #' @param input File path or image object
-#' @param output_format Character, one of "cimg", "spatrast", "array", "brick", "raster"
+#' @param output_format Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.
 #' @param select.layer Numeric, which layer to select if input has multiple layers
 #' @param normalize Logical, whether to normalize values to 0-1 range if they're in 0-255
 #' @param binarize Logical, whether the output is strictly 0 and 1. Overwrites normalize
@@ -74,10 +74,13 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
   validate_conversion_params(input, normalize, select.layer, binarize)
 
   # shortcut
-  if (inherits(input, output_format) && is.null(select.layer)){
-    return(input)  # Return input if already in desired format
-    }
+  # input <- if (inherits(input, output_format) && is.null(select.layer)){
+  #   input  # Return input if already in desired format
+  #   }else message("input format not recognized")
 
+  if (inherits(input, output_format) && is.null(select.layer)) {
+    return(input)   # already in the requested form
+  }
 
   arr <- NULL
 
@@ -165,7 +168,7 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
   else if (output_format == "array" ||
            output_format == "Array" ||
            output_format == "ARRAY") {
-    return(array(arr,dim = dims))
+    array(arr,dim = dims)
   }
   else if (output_format == "matrix" ||
            output_format == "Matrix" ||

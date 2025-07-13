@@ -6,7 +6,7 @@
 \usage{
 skeletonize_image(
   img,
-  methods = c("ZhangSuen", "GuoHall", "MAT"),
+  methods = c("ZhangSuen", "GuoHall", "MAT", "SteepestAscend"),
   verbose = TRUE,
   select.layer = NULL
 )
@@ -37,13 +37,13 @@ This function allows for flexible and streamlined skeletonization of binary imag
 The function processes the input image with the specified methods and returns the results. If multiple methods are chosen, the results are returned as a named list, with each element corresponding to a method.
 }
 \examples{
-\dontrun{
+
 # Load a binary image as a SpatRaster
 binary_image <- terra::rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0,0), nrow = 3))
 
 # Apply all skeletonization methods
 skeletons <- skeletonize_image(binary_image, verbose = TRUE)
-}
+
 
 }
 \seealso{

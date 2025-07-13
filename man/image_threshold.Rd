@@ -2,7 +2,7 @@
 % Please edit documentation in R/LilHelpers3.R
 \name{image_threshold}
 \alias{image_threshold}
-\title{Threshold an image to binarize image}
+\title{Threshold or deblur an image to binarize features}
 \usage{
 image_threshold(
   img,
@@ -11,40 +11,39 @@ image_threshold(
   window_size = 15,
   select.layer = 2,
   mask.layer = 1,
-  binary_01 = FALSE
+  binary_01 = FALSE,
+  deblur = FALSE
 )
 }
 \arguments{
 \item{img}{SpatRaster object}
 
-\item{threshold}{Numeric value between 0 and 1 representing the fraction of the reference value.
-For global thresholding, this is the fraction of the global maximum.
-For adaptive thresholding, this is the fraction of the local mean.}
+\item{threshold}{Numeric value (0–1). For global thresholding, it's a fraction of the global max.
+For adaptive thresholding, it's a fraction of local mean. For deblurring, it's the fraction of max used to recover structure.}
 
-\item{method}{Character string specifying thresholding method: "global" or "adaptive"}
+\item{method}{"global" or "adaptive". Ignored if `deblur = TRUE`.}
 
-\item{window_size}{Integer specifying window size for adaptive thresholding (must be odd)}
+\item{window_size}{Integer (odd), only used for adaptive thresholding.}
 
-\item{select.layer}{Integer or NULL specifying which layer should be used for thresholding. If NULL, average of all layers is used.}
+\item{select.layer}{Integer or NULL. Which layer to use for thresholding or deblurring.
+If NULL and multilayer, the mean of all layers is used.}
 
-\item{mask.layer}{Integer or NULL specifying which layer preserves mask sections. If NULL, no mask is applied.}
+\item{mask.layer}{Integer or NULL. If set, used to preserve masked regions or enhance structure.}
 
-\item{binary_01}{Logical; if TRUE, output values are strictly 0 and 1. If FALSE, uses the maximum value of the input.}
+\item{binary_01}{Logical. If TRUE, binarized output uses 0/1. If FALSE, it retains max value of input.}
+
+\item{deblur}{Logical. If TRUE, applies deblurring logic instead of standard thresholding.}
 }
 \value{
 SpatRaster object
 }
 \description{
-Threshold an image to binarize image
+Applies global or adaptive thresholding to a raster image, with optional
+masking and simple deblurring based on structural layer separation.
 }
 \examples{
 img = terra::rast(seg_Oulanka2023_Session03_T067)
-# Global thresholding (threshold = 0.3 means pixels > 30\% of global max value become 1)
-binary_img1 = image_threshold(img, threshold = 0.3, method = "global")
-# Adaptive thresholding (threshold = 0.9 means pixels > 90\% of local mean become 1)
-binary_img2 = image_threshold(img,
-                 threshold = 0.9, method = "adaptive",
-                 window_size = 15, binary_01 = TRUE)
-# Using average of all layers with no mask
-binary_img3 = image_threshold(img, select.layer = NULL, mask.layer = NULL)
+image_threshold(img, threshold = 0.3, method = "global")
+image_threshold(img, threshold = 0.9, method = "adaptive", window_size = 15, binary_01 = TRUE)
+image_threshold(img, threshold = 0.4, select.layer = 2, mask.layer = 1, deblur = TRUE)
 }

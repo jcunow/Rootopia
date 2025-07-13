@@ -22,7 +22,7 @@ Fill internal holes in root binary images while preserving edges
 \examples{
 \dontrun{
 data("seg_Oulanka2023_Session01_T067")
-img <- seg_ seg_Oulanka2023_Session01_T067
+img <- seg_Oulanka2023_Session01_T067
 filled <- fill_root_holes(img, min_hole_size = 1, max_hole_size = 100)
 plot(filled)
 }
