@@ -108,7 +108,7 @@ fit_sine_curve <- function(x, y,  parStart = list(amp = 3, phase = 0, offset = 0
 #' @title Finite sample/ large sample Likelihood ratio test for circadian pattern detection
 #' @param tt Time vector / scanner rotation position
 #' @param yy Value
-#' @param FN Type of test to use, TRUE = "FN" (finite) for 'F-like Test or FALSE = "LS" (large samples) for Likilihood Ratio Test. Default is finite sample.
+#' @param method Type of test to use, `FLR` (finite sample liklihood ratio test) for a F-like Test, or `LR` (large samples) for liklihood ratio test, or `F` for a standard F-test. Default is finite sample liklhood ratio test.
 #' @param parStart Named list with starting values for parameters: `amp`, `phase`, `offset`, and `period`.
 #' @return A list of amp, phase, offset, sigma02, sigmaA2, l0, l1, df, stat, and pvalue.
 #' model: \eqn{y= A * sin(2*pi*x+B)+C}
@@ -157,8 +157,8 @@ fit_sine_curve <- function(x, y,  parStart = list(amp = 3, phase = 0, offset = 0
 #' Phase <- 6
 #' Offset <- 3
 #' yy <- Amp * sin(2*pi/Period * (tt + Phase)) + Offset + rnorm(n,0,1)
-#' rhytmicity_test(tt, yy,  FN =TRUE, parStart = list(amp = 3, phase = 0, offset = 0, period = 20) )
-rhytmicity_test <- function(tt, yy, parStart = list(amp = 3, phase = 0, offset = 0, period = 12) , FN = TRUE) {
+#' rhytmicity_test(tt, yy,  method = "FRL", parStart = list(amp = 3, phase = 0, offset = 0, period = 20) )
+rhytmicity_test <- function(tt, yy, parStart = list(amp = 3, phase = 0, offset = 0, period = 12), method = "FRL", FN = TRUE) {
 
   # fit sine curve
   fitCurveOut <- fit_sine_curve(x = tt, y = yy, parStart)
@@ -183,23 +183,28 @@ rhytmicity_test <- function(tt, yy, parStart = list(amp = 3, phase = 0, offset =
   l0 <- -n/2*log(2*pi*sigma02)-1/(2*sigma02)*sum((yy-mean(yy))^2)
   l1 <- -n/2*log(2*pi*sigmaA2)-1/(2*sigmaA2)*sum((yy-amp*sin(2*pi/period*(tt+phase))-offset)^2)
   
-
-
-  if(FN==FALSE){
+  # LR statistics
+  dfdiff <- (n-1)-(n-4)
+  LR_stat <- -2*(l0-l1)
+  dfdiff <- (n-1)-(n-4)
+  df = data.frame(n=n,dfdiff = dfdiff)
+  
+  if(method == "LR" ){
     # Likelihood Ratio Test  
-    dfdiff <- (n-1)-(n-3)
-    df = data.frame(n)
-    LR_stat <- -2*(l0-l1)
     stat = data.frame(LR_stat)
     pval <- stats::pchisq(LR_stat,dfdiff,lower.tail = F)
   }
-  else if(FN==TRUE){
+  else if(method == "FLR" ){
+    # Vuong finite-sample adjusted LR statistics - transforms chisq into F-distribution
+    LR_stat <- (exp(LR_stat/n) - 1) * (n-k) / r
+    pvalue <- stats::pf(LR_stat, df1 = r, df2 = n-k, lower.tail = F)
+  }
+  else if(method == "F"){
     # F-test 
-    
     tss <- fitCurveOut$tss         # null model RSS
     rss <- fitCurveOut$rss         # full model RSS
-    df1 <- 2                               # parameters added
-    df2 <- n - 3                           # residual df full model
+    df1 <- 3                               # parameters added
+    df2 <- n - 4                           # residual df full model
     
     F_stat <- ((tss - rss) / df1) / (rss / df2)
     stat = data.frame(F_stat)
@@ -228,12 +233,5 @@ rhytmicity_test <- function(tt, yy, parStart = list(amp = 3, phase = 0, offset =
   
   return(res)
 }
-
-
-
-
-
-
-
 
 
