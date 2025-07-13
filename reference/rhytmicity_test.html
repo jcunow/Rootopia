@@ -170,47 +170,7 @@ tutorial (for circadian data): http://htmlpreview.github.io/?https://github.com/
 <span class="r-in"><span><span class="va">Offset</span> <span class="op">&lt;-</span> <span class="fl">3</span></span></span>
 <span class="r-in"><span><span class="va">yy</span> <span class="op">&lt;-</span> <span class="va">Amp</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span><span class="op">*</span><span class="va">pi</span><span class="op">/</span><span class="va">Period</span> <span class="op">*</span> <span class="op">(</span><span class="va">tt</span> <span class="op">+</span> <span class="va">Phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="va">Offset</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>,<span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rhytmicity_test</span><span class="op">(</span><span class="va">tt</span>, <span class="va">yy</span>,  FN <span class="op">=</span><span class="cn">TRUE</span>, parStart <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">3</span>, phase <span class="op">=</span> <span class="fl">0</span>, offset <span class="op">=</span> <span class="fl">0</span>, period <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $amp</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.367137</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $phase</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 11.98315</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $offset</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.645654</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $period</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 31.09577</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $peakTime</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 26.88657</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $sigma02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.500877</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $sigmaA2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5191673</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $l0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -93.86296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $l1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -54.5587</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $df</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   df1 df2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   2  47</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $stat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     F_stat</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 89.70169</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $pvalue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 9.00641e-17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $R2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7924059</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rhytmicity_test(tt, yy, FN = TRUE, parStart = list(amp = 3, phase = 0,     offset = 0, period = 20)):</span> object 'stat' not found</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
