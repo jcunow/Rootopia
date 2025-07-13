@@ -146,7 +146,7 @@ proper depth alignment and remove overlap between images.</p>
 <span><span class="va">image_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"path/to/image1.png"</span>, <span class="st">"path/to/image2.png"</span>, <span class="st">"path/to/image3.png"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Stitch images together (removes redundant overlap)</span></span>
-<span><span class="va">stitched_image</span> <span class="op">&lt;-</span> <span class="fu">RootScanR</span><span class="fu">::</span><span class="fu"><a href="../reference/stitch_sequential_images.html">stitch_sequential_images</a></span><span class="op">(</span><span class="va">image_files</span>, </span>
+<span><span class="va">stitched_image</span> <span class="op">&lt;-</span> <span class="fu">RootScanR</span><span class="fu">::</span><span class="fu">stitch_sequential_images</span><span class="op">(</span><span class="va">image_files</span>, </span>
 <span>                                                      overlap_px <span class="op">=</span> <span class="fl">200</span>, </span>
 <span>                                                      method <span class="op">=</span> <span class="st">"crosscorr"</span>,</span>
 <span>                                                      side1 <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span>  </span>
@@ -365,9 +365,10 @@ minirhizotron images.</p>
 depth.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## create analytical zones; indexD indicates which depth to look at.</span></span>
-<span><span class="va">root_zone</span> <span class="op">=</span> <span class="fu"><a href="../reference/zone.fun.html">zone.fun</a></span><span class="op">(</span>rootpic <span class="op">=</span> <span class="va">root_map</span>, </span>
-<span>                     indexD <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                     binned.map <span class="op">=</span>  <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, <span class="fl">5</span><span class="op">)</span> <span class="op">)</span></span>
+<span><span class="va">root_zone</span> <span class="op">=</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span>img <span class="op">=</span> <span class="va">root_map</span>, </span>
+<span>                   depth <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>                   mode <span class="op">=</span> <span class="st">"depth"</span>,</span>
+<span>                   depth_map <span class="op">=</span>  <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, <span class="fl">5</span><span class="op">)</span> <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># go through each slice</span></span>
 <span><span class="va">bin_width</span> <span class="op">=</span> <span class="fl">2</span></span>
@@ -375,9 +376,10 @@ depth.</p>
 <span><span class="va">root_map</span> <span class="op">=</span>  <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">root_map</span>,binarize <span class="op">=</span> <span class="cn">TRUE</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="co"># analytical unit</span></span>
-<span>  <span class="va">root_zone</span> <span class="op">=</span> <span class="fu"><a href="../reference/zone.fun.html">zone.fun</a></span><span class="op">(</span>rootpic <span class="op">=</span> <span class="va">root_map</span> , </span>
-<span>                     indexD <span class="op">=</span> <span class="va">i</span>,</span>
-<span>                     binned.map <span class="op">=</span>  <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, <span class="va">bin_width</span><span class="op">)</span> <span class="op">)</span></span>
+<span>  <span class="va">root_zone</span> <span class="op">=</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span>img <span class="op">=</span> <span class="va">root_map</span> , </span>
+<span>                     mode <span class="op">=</span> <span class="st">"depth"</span>,</span>
+<span>                     depth <span class="op">=</span> <span class="va">i</span>,</span>
+<span>                     depth_map <span class="op">=</span>  <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, <span class="va">bin_width</span><span class="op">)</span> <span class="op">)</span></span>
 <span>  <span class="co"># root length</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rl</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">root_zone</span>,dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>  </span>
@@ -428,7 +430,7 @@ documentation and the package GitHub repository at <a href="https://github.com/j
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

@@ -133,13 +133,13 @@ root growth for analysis.</p>
 <span></span>
 <span><span class="co"># For demonstration, we'll generate synthetic data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">32608</span><span class="op">)</span>  <span class="co"># For reproducibility</span></span>
-<span><span class="va">period</span> <span class="op">&lt;-</span> <span class="fl">24</span>     <span class="co"># 24-hour cycle</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">50</span>          <span class="co"># Number of observations</span></span>
-<span><span class="va">timestamps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">3</span><span class="op">*</span><span class="va">period</span><span class="op">)</span>  <span class="co"># Random sampling times across 3 days</span></span>
+<span><span class="va">period</span> <span class="op">&lt;-</span> <span class="fl">1</span>     <span class="co"># cycle length</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">150</span>         <span class="co"># Number of observations</span></span>
+<span><span class="va">timestamps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">*</span><span class="va">period</span><span class="op">)</span>  <span class="co"># Random sampling times across 3 days</span></span>
 <span><span class="va">amplitude</span> <span class="op">&lt;-</span> <span class="fl">2</span>   <span class="co"># Strength of the rhythm</span></span>
 <span><span class="va">phase</span> <span class="op">&lt;-</span> <span class="fl">6</span>       <span class="co"># Time offset (hours)</span></span>
 <span><span class="va">baseline</span> <span class="op">&lt;-</span> <span class="fl">3</span>    <span class="co"># Average growth rate</span></span>
-<span><span class="va">noise</span> <span class="op">&lt;-</span> <span class="fl">1</span>       <span class="co"># Random variation</span></span>
+<span><span class="va">noise</span> <span class="op">&lt;-</span> <span class="fl">0.8</span>       <span class="co"># Random variation</span></span>
 <span></span>
 <span><span class="co"># Simulate root growth with circadian pattern</span></span>
 <span><span class="va">growth_rates</span> <span class="op">&lt;-</span> <span class="va">amplitude</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">period</span> <span class="op">*</span> <span class="op">(</span><span class="va">timestamps</span> <span class="op">+</span> <span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -167,25 +167,25 @@ root growth for analysis.</p>
 <p><strong>Purpose</strong>: Detect and characterize circadian rhythms
 in root growth patterns.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Fit a sine curve to the time-series data</span></span>
-<span><span class="va">circadian_fit</span> <span class="op">&lt;-</span> <span class="fu">fit_circadian_model</span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  period <span class="op">=</span> <span class="fl">24</span>,  <span class="co"># Fixed 24-hour period</span></span>
-<span>  method <span class="op">=</span> <span class="st">"nls"</span> <span class="co"># Non-linear least squares</span></span>
+<code class="sourceCode R"><span><span class="va">root_ts_data</span> <span class="op">=</span> <span class="va">root_ts_data</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span><span class="op">)</span></span>
+<span><span class="co"># Fit a sine curve to the time-series data</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sine_curve.html">fit_sine_curve</a></span><span class="op">(</span></span>
+<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
+<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
+<span>  parStart <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">2</span>, phase <span class="op">=</span> <span class="fl">6</span>, offset <span class="op">=</span> <span class="fl">3</span>, period <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Display model parameters</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Circadian model parameters:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">circadian_fit</span><span class="op">$</span><span class="va">parameters</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"sine curve fit:"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot the data with fitted curve</span></span>
-<span><span class="fu">plot_circadian_fit</span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  fit <span class="op">=</span> <span class="va">circadian_fit</span>,</span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>, </span>
+<span>  <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Circadian Rhythm in Root Growth"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>, <span class="va">fit</span><span class="op">$</span><span class="va">predicted</span>, col <span class="op">=</span> <span class="st">"coral"</span> <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="statistical-testing-for-rhythmicity">3. Statistical Testing for Rhythmicity<a class="anchor" aria-label="anchor" href="#statistical-testing-for-rhythmicity"></a>
@@ -193,30 +193,33 @@ in root growth patterns.</p>
 <p><strong>Purpose</strong>: Determine if the observed patterns are
 statistically significant circadian rhythms.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Perform statistical tests to validate circadian rhythms</span></span>
+<code class="sourceCode R"><span><span class="co"># Perform statistical tests to validate circadian rhythms (all identical - check)</span></span>
 <span></span>
 <span><span class="co"># 1. Wald Test (tests if amplitude is significantly different from zero)</span></span>
-<span><span class="va">wald_result</span> <span class="op">&lt;-</span> <span class="fu">test_circadian_wald</span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
+<span><span class="va">wald_result</span> <span class="op">&lt;-</span> <span class="fu">rhythmicity_test</span><span class="op">(</span></span>
+<span>  method <span class="op">=</span> <span class="st">"Wald"</span>,</span>
+<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
+<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
 <span>  period <span class="op">=</span> <span class="fl">24</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Wald test for circadian rhythmicity:"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">wald_result</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 2. Likelihood Ratio Test (compares rhythmic vs. constant models)</span></span>
-<span><span class="va">lr_result</span> <span class="op">&lt;-</span> <span class="fu">test_circadian_lr</span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
+<span><span class="va">lr_result</span> <span class="op">&lt;-</span> <span class="fu">rhythmicity_test</span><span class="op">(</span></span>
+<span>  method <span class="op">=</span> <span class="st">"LR"</span>,</span>
+<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
+<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
 <span>  period <span class="op">=</span> <span class="fl">24</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Likelihood Ratio test for circadian rhythmicity:"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">lr_result</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 3. F Test (tests overall model significance)</span></span>
-<span><span class="va">f_result</span> <span class="op">&lt;-</span> <span class="fu">test_circadian_f</span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
+<span><span class="va">f_result</span> <span class="op">&lt;-</span> <span class="fu">rhythmicity_test</span><span class="op">(</span></span>
+<span>  method <span class="op">=</span> <span class="st">"F"</span>,</span>
+<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
+<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
 <span>  period <span class="op">=</span> <span class="fl">24</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"F test for circadian rhythmicity:"</span><span class="op">)</span></span>
@@ -391,11 +394,10 @@ treatments affect root directional preferences.</p>
 <div class="section level3">
 <h3 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
 </h3>
-<p>This vignette has demonstrated how to analyze rotation bias and
-circadian rhythms in root growth using the RootScanR package. These
-analyses can reveal important aspects of root growth strategies and
-responses to environmental cues such as light, gravity, and daily
-temperature cycles.</p>
+<p>This vignette demonstrates how to analyze rotation bias and circadian
+rhythms in root growth using the RootScanR package. These analyses can
+reveal important aspects of root growth strategies and responses to
+environmental cues or methodological quirks.</p>
 <p>Key takeaways: 1. Circadian rhythms can be detected and characterized
 using sine curve fitting 2. Statistical tests help validate the
 significance of observed rhythms 3. Rotation bias analysis quantifies
@@ -417,7 +419,7 @@ GitHub repository at <a href="https://github.com/jcunow/RootScanR" class="extern
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

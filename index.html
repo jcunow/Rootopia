@@ -91,7 +91,7 @@
 <span><span class="fu">RotCensor</span><span class="op">(</span><span class="va">img</span>,center.offset <span class="op">=</span> <span class="fl">0.3</span>,fixed.rotation <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># under construction: estimating rotation by root distribution (assuming top-tube bias)</span></span>
-<span><span class="fu"><a href="reference/LR_rhythmicity.html">LR_rhythmicity</a></span><span class="op">(</span><span class="va">rotation.cuts</span>, <span class="va">root.px</span>, period<span class="op">=</span> <span class="va">number.rotation.slices</span><span class="op">)</span><span class="op">$</span><span class="va">phase</span> <span class="op">*</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">roation.cuts</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="va">number.rotations.slices</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
+<span><span class="fu">LR_rhythmicity</span><span class="op">(</span><span class="va">rotation.cuts</span>, <span class="va">root.px</span>, period<span class="op">=</span> <span class="va">number.rotation.slices</span><span class="op">)</span><span class="op">$</span><span class="va">phase</span> <span class="op">*</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">roation.cuts</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="va">number.rotations.slices</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
 <p><br></p>
 </div>
 <div class="section level2">
@@ -112,7 +112,7 @@
 <li>Depth-wise zoning</li>
 </ol>
 <pre><code><span><span class="va">binned.map</span> <span class="op">=</span> <span class="fu"><a href="reference/binning.html">binning</a></span><span class="op">(</span><span class="va">depthmap</span>, nn <span class="op">=</span> <span class="fl">1</span>,<span class="st">"rounding"</span><span class="op">)</span></span>
-<span><span class="va">root.zone</span> <span class="op">=</span> <span class="fu"><a href="reference/zone.fun.html">zone.fun</a></span><span class="op">(</span><span class="va">img</span>, <span class="va">binned.map</span>, indexD <span class="op">=</span> <span class="fl">5</span>, nn <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre>
+<span><span class="va">root.zone</span> <span class="op">=</span> <span class="fu">zone.fun</span><span class="op">(</span><span class="va">img</span>, <span class="va">binned.map</span>, indexD <span class="op">=</span> <span class="fl">5</span>, nn <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre>
 <p><br></p>
 </div>
 <div class="section level2">
@@ -155,7 +155,7 @@
 <pre><code><span><span class="va">rotation.rootpx</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kk <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>,px <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">rotation.rootpx</span><span class="op">)</span><span class="op">{</span></span>
-<span><span class="va">rotation.zone</span> <span class="op">=</span> <span class="fu"><a href="reference/zone.rotation.fun.html">zone.rotation.fun</a></span><span class="op">(</span><span class="va">img</span>,k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span>,<span class="va">i</span><span class="op">)</span>,kk <span class="op">=</span> <span class="fl">12</span>, mm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1500</span>,<span class="fl">5000</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rotation.zone</span> <span class="op">=</span> <span class="fu">zone.rotation.fun</span><span class="op">(</span><span class="va">img</span>,k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span>,<span class="va">i</span><span class="op">)</span>,kk <span class="op">=</span> <span class="fl">12</span>, mm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1500</span>,<span class="fl">5000</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rotation.rootpx</span><span class="op">$</span><span class="va">px</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span> <span class="op">=</span> <span class="fu">count_pixel</span><span class="op">(</span><span class="va">rotation.zone</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span></code></pre>
@@ -163,7 +163,7 @@
 <li>Test Amplitude Difference Can be used to text e.g., differences in top-bottom-tube bias between varying insertion angle or tube diameter To test differences between sinus fits, we make use of the diffCircadian package <a href="https://github.com/diffCircadian/diffCircadian" class="external-link uri">https://github.com/diffCircadian/diffCircadian</a>
 </li>
 </ol>
-<pre><code><span><span class="fu"><a href="reference/fitSinCurve.html">fitSinCurve</a></span><span class="op">(</span><span class="va">rotation.rootpx</span><span class="op">$</span><span class="va">px</span>,period <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<pre><code><span><span class="fu">fitSinCurve</span><span class="op">(</span><span class="va">rotation.rootpx</span><span class="op">$</span><span class="va">px</span>,period <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="fu">LTTest_diff_amp</span><span class="op">(</span><span class="va">img1_rotation.rootpx</span><span class="op">$</span><span class="va">px</span>,<span class="va">img2_rotation.rootpx</span><span class="op">$</span><span class="va">px</span><span class="op">)</span></span></code></pre>
 </div>
 </div>
@@ -209,7 +209,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>
