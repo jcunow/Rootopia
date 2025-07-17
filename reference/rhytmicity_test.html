@@ -51,6 +51,7 @@
 <span>  <span class="va">tt</span>,</span>
 <span>  <span class="va">yy</span>,</span>
 <span>  parStart <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">3</span>, phase <span class="op">=</span> <span class="fl">0</span>, offset <span class="op">=</span> <span class="fl">0</span>, period <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"FRL"</span>,</span>
 <span>  FN <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -71,8 +72,8 @@
 <dd><p>Named list with starting values for parameters: `amp`, `phase`, `offset`, and `period`.</p></dd>
 
 
-<dt id="arg-fn">FN<a class="anchor" aria-label="anchor" href="#arg-fn"></a></dt>
-<dd><p>Type of test to use, TRUE = "FN" (finite) for 'F-like Test or FALSE = "LS" (large samples) for Likilihood Ratio Test. Default is finite sample.</p></dd>
+<dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
+<dd><p>Type of test to use, `FLR` (finite sample liklihood ratio test) for a F-like Test, or `LR` (large samples) for liklihood ratio test, or `F` for a standard F-test. Default is finite sample liklhood ratio test.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -169,8 +170,9 @@ tutorial (for circadian data): http://htmlpreview.github.io/?https://github.com/
 <span class="r-in"><span><span class="va">Phase</span> <span class="op">&lt;-</span> <span class="fl">6</span></span></span>
 <span class="r-in"><span><span class="va">Offset</span> <span class="op">&lt;-</span> <span class="fl">3</span></span></span>
 <span class="r-in"><span><span class="va">yy</span> <span class="op">&lt;-</span> <span class="va">Amp</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span><span class="op">*</span><span class="va">pi</span><span class="op">/</span><span class="va">Period</span> <span class="op">*</span> <span class="op">(</span><span class="va">tt</span> <span class="op">+</span> <span class="va">Phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="va">Offset</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>,<span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">rhytmicity_test</span><span class="op">(</span><span class="va">tt</span>, <span class="va">yy</span>,  FN <span class="op">=</span><span class="cn">TRUE</span>, parStart <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">3</span>, phase <span class="op">=</span> <span class="fl">0</span>, offset <span class="op">=</span> <span class="fl">0</span>, period <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rhytmicity_test(tt, yy, FN = TRUE, parStart = list(amp = 3, phase = 0,     offset = 0, period = 20)):</span> object 'stat' not found</span>
+<span class="r-in"><span><span class="fu">rhytmicity_test</span><span class="op">(</span><span class="va">tt</span>, <span class="va">yy</span>,  method <span class="op">=</span> <span class="st">"FRL"</span>, </span></span>
+<span class="r-in"><span>                parStart <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">3</span>, phase <span class="op">=</span> <span class="fl">0</span>, offset <span class="op">=</span> <span class="fl">0</span>, period <span class="op">=</span> <span class="fl">20</span><span class="op">)</span> <span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rhytmicity_test(tt, yy, method = "FRL", parStart = list(amp = 3,     phase = 0, offset = 0, period = 20)):</span> object 'stat' not found</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
