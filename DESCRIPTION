@@ -24,6 +24,7 @@ Imports:
     imagefx,
     imager,
     landscapemetrics,
+    mclust,
     minpack.lm,
     raster,
     RStoolbox,

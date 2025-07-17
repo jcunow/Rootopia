@@ -8,6 +8,7 @@ rhytmicity_test(
   tt,
   yy,
   parStart = list(amp = 3, phase = 0, offset = 0, period = 12),
+  method = "FRL",
   FN = TRUE
 )
 }
@@ -18,7 +19,7 @@ rhytmicity_test(
 
 \item{parStart}{Named list with starting values for parameters: `amp`, `phase`, `offset`, and `period`.}
 
-\item{FN}{Type of test to use, TRUE = "FN" (finite) for 'F-like Test or FALSE = "LS" (large samples) for Likilihood Ratio Test. Default is finite sample.}
+\item{method}{Type of test to use, `FLR` (finite sample liklihood ratio test) for a F-like Test, or `LR` (large samples) for liklihood ratio test, or `F` for a standard F-test. Default is finite sample liklhood ratio test.}
 }
 \value{
 A list of amp, phase, offset, sigma02, sigmaA2, l0, l1, df, stat, and pvalue.
@@ -68,7 +69,8 @@ Amp <- 2
 Phase <- 6
 Offset <- 3
 yy <- Amp * sin(2*pi/Period * (tt + Phase)) + Offset + rnorm(n,0,1)
-rhytmicity_test(tt, yy,  FN =TRUE, parStart = list(amp = 3, phase = 0, offset = 0, period = 20) )
+rhytmicity_test(tt, yy,  method = "FRL", 
+                parStart = list(amp = 3, phase = 0, offset = 0, period = 20) )
 }
 \author{
 Caleb (Zhiguang Huo)

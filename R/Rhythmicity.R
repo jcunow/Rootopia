@@ -28,11 +28,11 @@
 #'
 #' @export
 fit_sine_curve <- function(x, y,  parStart = list(amp = 3, phase = 0, offset = 0, period = 24)) {
-
-   # df = data.frame(tt = tt, yy = yy)
-   # df = dplyr::arrange(df,df$tt)
-   # tt <- df$tt
-   # yy <- df$yy
+  
+  # df = data.frame(tt = tt, yy = yy)
+  # df = dplyr::arrange(df,df$tt)
+  # tt <- df$tt
+  # yy <- df$yy
   
   
   getPred <- function(parS, x) {
@@ -157,9 +157,12 @@ fit_sine_curve <- function(x, y,  parStart = list(amp = 3, phase = 0, offset = 0
 #' Phase <- 6
 #' Offset <- 3
 #' yy <- Amp * sin(2*pi/Period * (tt + Phase)) + Offset + rnorm(n,0,1)
-#' rhytmicity_test(tt, yy,  method = "FRL", parStart = list(amp = 3, phase = 0, offset = 0, period = 20) )
-rhytmicity_test <- function(tt, yy, parStart = list(amp = 3, phase = 0, offset = 0, period = 12), method = "FRL", FN = TRUE) {
-
+#' rhytmicity_test(tt, yy,  method = "FRL", 
+#'                 parStart = list(amp = 3, phase = 0, offset = 0, period = 20) )
+rhytmicity_test <- function(tt, yy, 
+                            parStart = list(amp = 3, phase = 0, offset = 0, period = 12), 
+                            method = "FRL", FN = TRUE) {
+  
   # fit sine curve
   fitCurveOut <- fit_sine_curve(x = tt, y = yy, parStart)
   n <- length(yy)
@@ -195,6 +198,10 @@ rhytmicity_test <- function(tt, yy, parStart = list(amp = 3, phase = 0, offset =
     pval <- stats::pchisq(LR_stat,dfdiff,lower.tail = F)
   }
   else if(method == "FLR" ){
+
+    k = 4 # number of estiamted parameter
+    r = k-1 # number of added parameters (the mean parameter is common to both)    
+    
     # Vuong finite-sample adjusted LR statistics - transforms chisq into F-distribution
     LR_stat <- (exp(LR_stat/n) - 1) * (n-k) / r
     pvalue <- stats::pf(LR_stat, df1 = r, df2 = n-k, lower.tail = F)

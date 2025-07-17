@@ -718,88 +718,91 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 
 
 
-#' Find Modal Peaks in a Density Estimation
+
+#' Detect and Classify Modes in a Distribution Using Prominence or Mclust
 #'
-#' This function identifies peaks and valleys in the density estimation of the input data.
-#' It computes the prominence of each peak and allows the user to filter peaks based on a prominence threshold.
-#' The function also provides the option to visualize the data as either a density plot, a raw line plot, or no display.
+#' This function detects local modes (peaks) in a univariate distribution using kernel density
+#' estimation and a prominence threshold. It can optionally apply model-based clustering
+#' using `mclust` to estimate the number and characteristics of distributional components.
 #'
-#' @param x A numeric vector of data for which the modal peaks are to be identified.
-#' @param prominence_threshold A numeric value specifying the minimum prominence of peaks to be considered.
-#'        If `NULL`, no prominence threshold is applied. Default is 0.005.
-#' @param display_type A character string indicating the type of output display. Options are:
-#'        - `"density"` for a density plot with peaks and valleys marked (default),
-#'        - `"raw"` for a raw line plot with peaks and valleys marked,
-#'        - `"none"` for no plot, just returning the peak and valley data.
+#' @param x Numeric vector of observations.
+#' @param prominence_threshold Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.
+#' @param display_type Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.
+#' @param mclust Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.
 #'
-#' @return A list containing:
-#'         - `peak_x`: The x-coordinates of the detected peaks.
-#'         - `peak_y`: The y-coordinates (density values) of the detected peaks.
-#'         - `valley_x`: The x-coordinates of the detected valleys (or NULL if none).
-#'         - `valley_y`: The y-coordinates (density values) of the detected valleys (or NULL if none).
-#'         - `prominences`: The prominence of each peak (or NULL if none).
-#'         - A message indicating the number of modes in the distribution.
+#' @return A list with the following elements:
+#' \describe{
+#'   \item{peak_x}{Vector of x-values (locations) of detected peaks.}
+#'   \item{peak_y}{Vector of y-values (heights) of detected peaks in the kernel density.}
+#'   \item{valley_x}{Vector of x-values for local minima between peaks (if any).}
+#'   \item{valley_y}{Vector of y-values for local minima between peaks (if any).}
+#'   \item{prominences}{Vector of prominence values corresponding to each detected peak.}
+#'   \item{mclust}{A list of Mclust model results if \code{mclust = TRUE}, including means, SDs, standard errors, cluster sizes, and 95\% CI.}
+#'   \item{classifications}{A vector assigning each observation in \code{x} to a cluster. Based on Mclust if \code{mclust = TRUE}, otherwise based on closest peak from prominence method.}
+#' }
+#'
+#' @details
+#' Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
+#' This helps identify meaningful peaks while filtering out spurious noise-driven ones.  
+#' When \code{mclust = TRUE}, model-based clustering is performed using Gaussian mixture models (\code{V} variance structure),
+#' and the results are returned along with a classification vector.
+#'
+#' The classification strategy depends on \code{mclust}:  
+#' - If \code{TRUE}, it returns cluster assignments from \code{mclust::Mclust()}.  
+#' - If \code{FALSE}, it classifies each observation by its nearest peak in the kernel density estimate.
+#'
+#' Both plots (density and uncertainty) share the same x-axis to support visual comparison.
 #'
 #' @examples
-#' # Simulate a bimodal distribution
-#' set.seed(123)
-#' x <- c(rnorm(500, mean = -2, sd = 1), rnorm(500, mean = 3, sd = 1))
+#' # Example 1: Noisy Unimodal
+#' x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
+#' modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
+#' modal_peaks(x1, prominence_threshold = 0.01, mclust = TRUE, display_type = "density")
 #'
-#' # Call the function with density plot (default)
-#' results_density <- modal_peaks(x, prominence_threshold = 0.005, display_type = "density")
+#' # Example 2: Noisy Bimodal
+#' x2 <- c(rnorm(300, -2, 0.9), rnorm(300, 2.5, 2.3)) + runif(600, -0.2, 0.2)
+#' modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "density")
+#' modal_peaks(x2, prominence_threshold = 0.001, mclust = FALSE, display_type = "raw")
+#' modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "raw")
 #'
-#' # Call the function with raw line plot
-#' results_raw <- modal_peaks(x, prominence_threshold = 0.005, display_type = "raw")
-#'
-#' # Call the function with no display (just returns results)
-#' results_none <- modal_peaks(x, prominence_threshold = 0.005, display_type = "none")
-modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density") {
-
-  # Input validation for display_type
+#' @importFrom stats density
+#' @importFrom graphics plot abline arrows legend
+#' @importFrom mclust Mclust
+#' @export
+modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density", mclust = TRUE) {
   if (!display_type %in% c("density", "raw", "none")) {
     stop("Invalid 'display_type'. Choose 'density', 'raw', or 'none'.")
   }
-
-  # Estimate density
+  
   dens <- stats::density(x)
-
-  # Find local maxima (peaks)
-  peaks <- which(diff(sign(diff(dens$y))) == -2) + 1  # Local maxima
-
-  # Find local minima (valleys)
-  valleys <- which(diff(sign(diff(dens$y))) == 2) + 1  # Local minima
-
-  # Compute prominence of peaks
+  peaks <- which(diff(sign(diff(dens$y))) == -2) + 1
+  valleys <- which(diff(sign(diff(dens$y))) == 2) + 1
+  
   prominences <- numeric(length(peaks))
   for (i in seq_along(peaks)) {
-    # Check if there are valleys before and after the peak, handle edge cases
-    left_valley <- if (any(valleys < peaks[i])) max(valleys[valleys < peaks[i]], na.rm = TRUE) else NA
-    right_valley <- if (any(valleys > peaks[i])) min(valleys[valleys > peaks[i]], na.rm = TRUE) else NA
-
+    left_valley <- if (any(valleys < peaks[i])) max(valleys[valleys < peaks[i]]) else NA
+    right_valley <- if (any(valleys > peaks[i])) min(valleys[valleys > peaks[i]]) else NA
     peak_height <- dens$y[peaks[i]]
-
-    # If there are no valleys, we set valley_height to 0 or a very low value
+    
     valley_height <- if (!is.na(left_valley) && !is.na(right_valley)) {
-      max(dens$y[left_valley], dens$y[right_valley], na.rm = TRUE)
+      max(dens$y[left_valley], dens$y[right_valley])
     } else if (!is.na(left_valley)) {
       dens$y[left_valley]
     } else if (!is.na(right_valley)) {
       dens$y[right_valley]
     } else {
-      0  # No valleys, assume lowest value
+      0
     }
-
+    
     prominences[i] <- peak_height - valley_height
   }
-
-  # Apply prominence threshold if provided
+  
   if (!is.null(prominence_threshold)) {
     valid_peaks <- which(prominences >= prominence_threshold)
     peaks <- peaks[valid_peaks]
     prominences <- prominences[valid_peaks]
   }
-
-  # Handle cases where no valleys or prominences are detected
+  
   if (length(peaks) <= 1) {
     valleys <- NULL
     prominences <- NULL
@@ -809,31 +812,104 @@ modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density
   } else {
     message(sprintf("The distribution is multimodal (%d peaks detected).", length(peaks)))
   }
-
-  # Display output based on the type selected
+  
+  mclust_results <- NULL
+  classifications <- NULL
+  xlim_range <- range(x)
+  
+  if (mclust) {
+    model <- mclust::Mclust(x, modelNames = "V")
+    means <- model$parameters$mean
+    variances <- model$parameters$variance$sigmasq
+    props <- model$parameters$pro
+    n <- length(x)
+    nk <- props * n
+    
+    se <- sqrt(variances) / sqrt(nk)
+    ci95_lower <- means - 1.96 * se
+    ci95_upper <- means + 1.96 * se
+    sd <- sqrt(variances)
+    
+    mclust_results <- list(
+      means = means,
+      sd = sd,
+      se = se,
+      n = nk,
+      ci95_lower = ci95_lower,
+      ci95_upper = ci95_upper
+    )
+    
+    classifications <- model$classification
+  } else {
+    # Prominence-based classification
+    classifications <- sapply(x, function(val) which.min(abs(val - dens$x[peaks])))
+  }
+  
   if (display_type == "density") {
-    # Plot the density with the peaks and valleys marked
-    graphics::plot(dens, main = "Density with Peaks and Valleys")
-    graphics::abline(v = dens$x[peaks], col = "red", lty = 2)  # Mark peaks
-    if (!is.null(valleys)) {
-      graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)  # Mark valleys
+    if (mclust && !is.null(mclust_results)) {
+      graphics::par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+      
+      graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
+      graphics::abline(v = dens$x[peaks], col = "firebrick3", lty = 2)
+      if (!is.null(valleys)) {
+        graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
+      }
+      graphics::abline(v = mclust_results$means, col = "coral", lty = 2)
+      graphics::arrows(
+        mclust_results$means - mclust_results$sd, 0,
+        mclust_results$means + mclust_results$sd, 0,
+        code = 3, angle = 90, length = 0.05, col = "coral", lwd = 1.5
+      )
+      
+      graphics::legend("topright",
+             legend = c("Peaks", if (!is.null(valleys)) "Valleys", "Mclust & SD"),
+             col = c("firebrick3", if (!is.null(valleys)) "blue", "coral"),
+             lty = 2, cex = 0.8)
+      
+      graphics::plot(x, model$uncertainty, pch = 16, type = "p",
+                     col = model$classification,
+                     main = "Mclust Classification Uncertainty",
+                     xlab = "Observation", ylab = "Uncertainty",
+                     xlim = xlim_range)
+      
+      graphics::legend("topright",
+             legend = paste("Cluster", sort(unique(model$classification))),
+             col = sort(unique(model$classification)),
+             pch = 16, cex = 0.8)
+      
+      graphics::par(mfrow = c(1, 1))
+    } else {
+      graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
+      graphics::abline(v = dens$x[peaks], col = "firebrick3", lty = 2)
+      if (!is.null(valleys)) {
+        graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
+      }
+      
+      graphics::legend("topright",
+             legend = c("Peaks", if (!is.null(valleys)) "Valleys"),
+             col = c("firebrick3", if (!is.null(valleys)) "blue"),
+             lty = 2, cex = 0.8)
     }
-    graphics::legend("topright", legend = c("Peaks", if (!is.null(valleys)) "Valleys" else NULL),
-           col = c("red", if (!is.null(valleys)) "blue" else NULL), lty = 2, cex = 0.8)
   } else if (display_type == "raw") {
-    # Plot raw data as a line with peaks and valleys marked
-    graphics::plot(x, type = "l", main = "Raw Data with Peaks and Valleys", xlab = "Index", ylab = "Value")
-    graphics::points(peaks, x[peaks], col = "red", pch = 19)  # Mark peaks in raw data
-    if (!is.null(valleys)) {
-      graphics::points(valleys, x[valleys], col = "blue", pch = 19)  # Mark valleys in raw data
-    }
-    graphics::legend("topright", legend = c("Peaks", if (!is.null(valleys)) "Valleys" else NULL),
-           col = c("red", if (!is.null(valleys)) "blue" else NULL), pch = 19, cex = 0.8, xpd = TRUE)
-  } # No display for "none"
-
-  # Return results as a list (peaks, valleys, and their prominences)
-  return(list(peak_x = dens$x[peaks], peak_y = dens$y[peaks],
-              valley_x = if (!is.null(valleys)) dens$x[valleys] else NULL,
-              valley_y = if (!is.null(valleys)) dens$y[valleys] else NULL,
-              prominences = prominences))
+    cluster_ids <- classifications
+    peak_colors <- grDevices::rainbow(length(unique(cluster_ids)))
+    
+    graphics::plot(seq_along(x), x, type = "p",
+                   col = peak_colors[cluster_ids], pch = 16,
+                   main = "Raw Data Colored by Cluster Membership",
+                   xlab = "Index", ylab = "Value")
+    graphics::legend("topright", legend = paste("Cluster", sort(unique(cluster_ids))),
+                     col = peak_colors, pch = 16, cex = 0.8)
+  }
+  
+  return(list(
+    peak_x = dens$x[peaks],
+    peak_y = dens$y[peaks],
+    valley_x = if (!is.null(valleys)) dens$x[valleys] else NULL,
+    valley_y = if (!is.null(valleys)) dens$y[valleys] else NULL,
+    prominences = prominences,
+    mclust = mclust_results,
+    classifications = classifications
+  ))
 }
+

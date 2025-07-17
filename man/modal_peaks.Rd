@@ -2,46 +2,63 @@
 % Please edit documentation in R/LilHelpers3.R
 \name{modal_peaks}
 \alias{modal_peaks}
-\title{Find Modal Peaks in a Density Estimation}
+\title{Detect and Classify Modes in a Distribution Using Prominence or Mclust}
 \usage{
-modal_peaks(x, prominence_threshold = 0.005, display_type = "density")
+modal_peaks(
+  x,
+  prominence_threshold = 0.005,
+  display_type = "density",
+  mclust = TRUE
+)
 }
 \arguments{
-\item{x}{A numeric vector of data for which the modal peaks are to be identified.}
+\item{x}{Numeric vector of observations.}
 
-\item{prominence_threshold}{A numeric value specifying the minimum prominence of peaks to be considered.
-If `NULL`, no prominence threshold is applied. Default is 0.005.}
+\item{prominence_threshold}{Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.}
 
-\item{display_type}{A character string indicating the type of output display. Options are:
-- `"density"` for a density plot with peaks and valleys marked (default),
-- `"raw"` for a raw line plot with peaks and valleys marked,
-- `"none"` for no plot, just returning the peak and valley data.}
+\item{display_type}{Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.}
+
+\item{mclust}{Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.}
 }
 \value{
-A list containing:
-        - `peak_x`: The x-coordinates of the detected peaks.
-        - `peak_y`: The y-coordinates (density values) of the detected peaks.
-        - `valley_x`: The x-coordinates of the detected valleys (or NULL if none).
-        - `valley_y`: The y-coordinates (density values) of the detected valleys (or NULL if none).
-        - `prominences`: The prominence of each peak (or NULL if none).
-        - A message indicating the number of modes in the distribution.
+A list with the following elements:
+\describe{
+  \item{peak_x}{Vector of x-values (locations) of detected peaks.}
+  \item{peak_y}{Vector of y-values (heights) of detected peaks in the kernel density.}
+  \item{valley_x}{Vector of x-values for local minima between peaks (if any).}
+  \item{valley_y}{Vector of y-values for local minima between peaks (if any).}
+  \item{prominences}{Vector of prominence values corresponding to each detected peak.}
+  \item{mclust}{A list of Mclust model results if \code{mclust = TRUE}, including means, SDs, standard errors, cluster sizes, and 95\% CI.}
+  \item{classifications}{A vector assigning each observation in \code{x} to a cluster. Based on Mclust if \code{mclust = TRUE}, otherwise based on closest peak from prominence method.}
+}
 }
 \description{
-This function identifies peaks and valleys in the density estimation of the input data.
-It computes the prominence of each peak and allows the user to filter peaks based on a prominence threshold.
-The function also provides the option to visualize the data as either a density plot, a raw line plot, or no display.
+This function detects local modes (peaks) in a univariate distribution using kernel density
+estimation and a prominence threshold. It can optionally apply model-based clustering
+using `mclust` to estimate the number and characteristics of distributional components.
+}
+\details{
+Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
+This helps identify meaningful peaks while filtering out spurious noise-driven ones.  
+When \code{mclust = TRUE}, model-based clustering is performed using Gaussian mixture models (\code{V} variance structure),
+and the results are returned along with a classification vector.
+
+The classification strategy depends on \code{mclust}:  
+- If \code{TRUE}, it returns cluster assignments from \code{mclust::Mclust()}.  
+- If \code{FALSE}, it classifies each observation by its nearest peak in the kernel density estimate.
+
+Both plots (density and uncertainty) share the same x-axis to support visual comparison.
 }
 \examples{
-# Simulate a bimodal distribution
-set.seed(123)
-x <- c(rnorm(500, mean = -2, sd = 1), rnorm(500, mean = 3, sd = 1))
+# Example 1: Noisy Unimodal
+x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
+modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
+modal_peaks(x1, prominence_threshold = 0.01, mclust = TRUE, display_type = "density")
 
-# Call the function with density plot (default)
-results_density <- modal_peaks(x, prominence_threshold = 0.005, display_type = "density")
+# Example 2: Noisy Bimodal
+x2 <- c(rnorm(300, -2, 0.9), rnorm(300, 2.5, 2.3)) + runif(600, -0.2, 0.2)
+modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "density")
+modal_peaks(x2, prominence_threshold = 0.001, mclust = FALSE, display_type = "raw")
+modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "raw")
 
-# Call the function with raw line plot
-results_raw <- modal_peaks(x, prominence_threshold = 0.005, display_type = "raw")
-
-# Call the function with no display (just returns results)
-results_none <- modal_peaks(x, prominence_threshold = 0.005, display_type = "none")
 }
