@@ -11,6 +11,7 @@ template:
     code_font:
       google: JetBrains Mono
 
+serarch: true
 
 # navbar:
 #   structure:
@@ -18,20 +19,34 @@ template:
 #     right: [search, github, lightswitch]
 
 
+# navbar:
+#   left:
+#   - text: Tutorial
+#     href: articles/FlatBedScans_vignettes.html
+#           articles/MinirhizotronScans_vignettes.html
+#           articles/Rotation_Bias_vignettes.html
+#   - text: News
+#     href: news/index.html
+#   - text: Reference
+#     href: reference/index.html
+#   structure:
+#     right: [search, github, lightswitch]
+
+
 navbar:
   left:
-  - text: Tutorial
-    href: articles/FlatBedScans_vignettes.html
-          articles/MinirhizotronScans_vignettes.html
-          articles/Rotation_Bias_vignettes.html
-  - text: DemoFile
-  - text: News
-    href: news/index.html
-  - text: Reference
-    href: reference/index.html
+    - text: Tutorial
+      menu:
+        - text: Flatbed Scans
+          href: articles/FlatBedScans_vignettes.html
+        - text: Minirhizotron Scans
+          href: articles/MinirhizotronScans_vignettes.html
+        - text: Rotation Bias
+          href: articles/Rotation_Bias_vignettes.html
+    - text: News
+      href: news/index.html
+    - text: Reference
+      href: reference/index.html
   structure:
     right: [search, github, lightswitch]
-
-
-
 
