@@ -40,7 +40,7 @@
 #'
 #' # Get spatial outputs too
 #' res <- deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2, return = "all")
-#' plot(res$aligned_roots)
+#' terra::plot(res$aligned_roots)
 #'
 #' @export
 deep_drive <- function(DepthMap,
@@ -170,7 +170,7 @@ deep_drive <- function(DepthMap,
         deep_drive = deep.drive.v,
         angle_map = AngleMap,
         optimal_angle_map = gg,
-        aligned_roots = terra::mask(aligned_roots, AngleMap),
+        aligned_roots = terra::mask(aligned_roots, AngleMap)
       ))
     }
     

@@ -753,21 +753,21 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #'
 #' Both plots (density and uncertainty) share the same x-axis to support visual comparison.
 #'
+#' @importFrom mclust Mclust mclustBIC
+#' 
 #' @examples
+#' set.seed(2)
+#' #' library(mclust)
 #' # Example 1: Noisy Unimodal
 #' x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
-#' modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
-#' modal_peaks(x1, prominence_threshold = 0.01, mclust = TRUE, display_type = "density")
+#' peaks1_1 = modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
+#' #peaks1_2 = modal_peaks(x1, prominence_threshold = 0.01, mclust = TRUE, display_type = "density")
 #'
 #' # Example 2: Noisy Bimodal
 #' x2 <- c(rnorm(300, -2, 0.9), rnorm(300, 2.5, 2.3)) + runif(600, -0.2, 0.2)
-#' modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "density")
-#' modal_peaks(x2, prominence_threshold = 0.001, mclust = FALSE, display_type = "raw")
-#' modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "raw")
-#'
-#' @importFrom stats density
-#' @importFrom graphics plot abline arrows legend
-#' @importFrom mclust Mclust
+#' peaks2_1 = modal_peaks(x2, prominence_threshold = 0.0001, mclust = FALSE, display_type = "density")
+#' peaks2_2 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = FALSE, display_type = "raw")
+#' #peaks2_3 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = TRUE, display_type = "raw")
 #' @export
 modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density", mclust = TRUE) {
   if (!display_type %in% c("density", "raw", "none")) {
@@ -850,7 +850,7 @@ modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density
       graphics::par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
       
       graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
-      graphics::abline(v = dens$x[peaks], col = "firebrick3", lty = 2)
+      graphics::abline(v = dens$x[peaks], col = "firebrick4", lty = 2)
       if (!is.null(valleys)) {
         graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
       }
@@ -863,7 +863,7 @@ modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density
       
       graphics::legend("topright",
              legend = c("Peaks", if (!is.null(valleys)) "Valleys", "Mclust & SD"),
-             col = c("firebrick3", if (!is.null(valleys)) "blue", "coral"),
+             col = c("firebrick4", if (!is.null(valleys)) "blue", "coral"),
              lty = 2, cex = 0.8)
       
       graphics::plot(x, model$uncertainty, pch = 16, type = "p",
@@ -880,14 +880,14 @@ modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density
       graphics::par(mfrow = c(1, 1))
     } else {
       graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
-      graphics::abline(v = dens$x[peaks], col = "firebrick3", lty = 2)
+      graphics::abline(v = dens$x[peaks], col = "firebrick4", lty = 2)
       if (!is.null(valleys)) {
         graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
       }
       
       graphics::legend("topright",
              legend = c("Peaks", if (!is.null(valleys)) "Valleys"),
-             col = c("firebrick3", if (!is.null(valleys)) "blue"),
+             col = c("firebrick4", if (!is.null(valleys)) "blue"),
              lty = 2, cex = 0.8)
     }
   } else if (display_type == "raw") {
@@ -898,8 +898,20 @@ modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density
                    col = peak_colors[cluster_ids], pch = 16,
                    main = "Raw Data Colored by Cluster Membership",
                    xlab = "Index", ylab = "Value")
-    graphics::legend("topright", legend = paste("Cluster", sort(unique(cluster_ids))),
-                     col = peak_colors, pch = 16, cex = 0.8)
+    
+    # Add peak means from KDE
+    graphics::abline(h = dens$x[peaks], col = "firebrick4", lty = 2, lwd = 1.5)
+    
+    # Add mclust means if available
+    if (mclust && !is.null(mclust_results)) {
+      graphics::abline(h = mclust_results$means, col = "coral", lty = 2, lwd = 1.5)
+    }
+    
+    legend_labels <- paste("Cluster", sort(unique(cluster_ids)))
+    legend_colors <- peak_colors[sort(unique(cluster_ids))]
+    
+    graphics::legend("topright", legend = legend_labels,
+                     col = legend_colors, pch = 16, cex = 0.8)
   }
   
   return(list(

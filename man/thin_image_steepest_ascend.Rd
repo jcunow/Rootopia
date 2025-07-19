@@ -2,21 +2,50 @@
 % Please edit documentation in R/Thinning4.R
 \name{thin_image_steepest_ascend}
 \alias{thin_image_steepest_ascend}
-\title{Steepest Ascend Skeletonization (Internal)}
+\title{Thin binary image using steepest ascent skeletonization}
 \usage{
-thin_image_steepest_ascend(img, verbose = FALSE, select.layer = NULL)
+thin_image_steepest_ascend(img, verbose = TRUE, select.layer = 2)
 }
 \arguments{
-\item{img}{A matrix, data frame, or `SpatRaster` object representing the binary image.}
+\item{img}{Input image. Can be a file path, image object, or any format supported
+by \code{load_flexible_image}.}
 
-\item{verbose}{Logical. If `TRUE`, prints diagnostic information. Default is `FALSE`.}
+\item{verbose}{Logical. If \code{TRUE}, prints progress information including
+the final skeleton pixel count. Default is \code{TRUE}.}
 
-\item{select.layer}{Integer indicating the layer to use if `img` is a multi-layer `SpatRaster`. Default is `NULL`.}
+\item{select.layer}{Integer. Which layer/channel to select from the input image.
+Default is 2. This parameter is passed to \code{load_flexible_image}.}
 }
 \value{
-A binary matrix representing the skeleton obtained from local maxima on the distance transform.
+A binary matrix of the same dimensions as the input image, where 1
+  indicates skeleton pixels and 0 indicates background.
 }
 \description{
-Skeletonize a binary image using a ridge-based steepest ascend approximation on the distance transform.
+This function performs skeletonization of a binary image using a steepest ascent
+algorithm on the distance transform. Each foreground pixel traces its path to
+the ridge (skeleton) by following the steepest ascent gradient in the distance
+transform field.
+}
+\details{
+The algorithm works by:
+\enumerate{
+  \item Computing the Euclidean distance transform of the binary image
+  \item For each foreground pixel, tracing the steepest ascent path in the
+        distance transform until reaching a local maximum (ridge point)
+  \item Marking all ridge points as skeleton pixels
+}
+
+The function uses padding to handle edge cases during the steepest ascent
+tracing process.
+}
+\examples{
+\dontrun{
+# Load and skeletonize an image
+skeleton <- thin_image_steepest_ascend(binary_image)
+
+# Visualize the result
+plot(as.cimg(skeleton))
+}
+
 }
 \keyword{internal}

@@ -13,7 +13,8 @@ create_depthmap(
   dpi = 300,
   start.soil = 0,
   center.offset = 0,
-  select.layer = 2
+  select.layer = 2,
+  progress = FALSE
 )
 }
 \arguments{
@@ -34,7 +35,9 @@ images, specify band_index parameter}
 
 \item{center.offset}{Numeric; rotational center offset (0 = centered, 1 = edge)}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
+\item{select.layer}{Integer; specifies which layer to use if the input is a multi-band image. Default is `2`.}
+
+\item{progress}{Message; indicates how mny rows have been processed}
 }
 \value{
 terra raster object containing the depth map

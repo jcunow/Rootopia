@@ -14,7 +14,8 @@
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start.soil Numeric; soil surface boundary in cm (0 = surface)
 #' @param center.offset Numeric; rotational center offset (0 = centered, 1 = edge)
-#' @param select.layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.
+#' @param select.layer Integer; specifies which layer to use if the input is a multi-band image. Default is `2`.
+#' @param progress Message; indicates how mny rows have been processed  
 #'
 #' @return terra raster object containing the depth map
 #' @export
@@ -35,7 +36,7 @@
 #'   center.offset = 0 )
 create_depthmap = function(img, mask = NULL, sinoid = TRUE,
                            tube.thicc = 7, tilt = 45, dpi = 300,
-                           start.soil = 0, center.offset = 0, select.layer = 2) {
+                           start.soil = 0, center.offset = 0, select.layer = 2, progress = FALSE) {
 
   # Input validation module
   tryCatch({
@@ -116,7 +117,7 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # Row processing with progress monitoring
     for (ii in 1:target.row) {
       df[ii,] = df11 + (ii*px.to.cm.h * tilt.factor)
-      if (ii %% 100 == 0)
+      if (progress && ii %% 100 == 0)
         message(sprintf("Processing row %d of %d", ii, target.row))
     }
 

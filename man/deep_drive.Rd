@@ -13,16 +13,6 @@ deep_drive(
   select.layerAM = NULL,
   return = c("value", "all")
 )
-
-deep_drive(
-  DepthMap,
-  RootMap = NULL,
-  AngleMap = NULL,
-  select.layerRM = NULL,
-  select.layerDM = NULL,
-  select.layerAM = NULL,
-  return = c("value", "all")
-)
 }
 \arguments{
 \item{DepthMap}{A SpatRast object representing local depth (e.g., distance from surface or tube wall).}
@@ -48,38 +38,14 @@ deep_drive(
   - `deep_drive`: numeric proportion (same as above)
   - `angle_map`: the root direction map used (SpatRast)
   - `optimal_angle_map`: the steepest downward direction from `DepthMap` (SpatRast)
-  - `aligned_roots`: binary SpatRast showing aligned root pixels
-  - `misaligned_roots`: binary SpatRast showing misaligned root pixels
-
-- If `return = "value"`: A numeric value between 0 and 1.
-  - `1` means all root pixels align with the local steepest downward direction.
-  - `0` means none of the root pixels align with local depth gradients.
-
-- If `return = "all"`: A named list with:
-  - `deep_drive`: numeric proportion (same as above)
-  - `angle_map`: the root direction map used (SpatRast)
-  - `optimal_angle_map`: the steepest downward direction from `DepthMap` (SpatRast)
   - `aligned_roots`: binary SpatRast showing root pixels aligned with the steepest local depth descent
 }
 \description{
 This function calculates the proportion of root pixels that grow in the direction
 of steepest local depth descent — a metric for evaluating how efficiently roots
 explore the vertical soil profile.
-
-This function calculates the proportion of root pixels that grow in the direction
-of steepest local depth descent — a metric for evaluating how efficiently roots
-explore the vertical soil profile.
 }
 \details{
-It uses a depth raster (`DepthMap`) and a root direction raster (`AngleMap`)
-or estimates one from a binary root presence map (`RootMap`). Directions are
-compared using a D8 neighborhood scheme.
-
-
-Root direction and optimal depth direction are both represented in D8 format:
-0, 45, 90, 135, 180, 225, 270, 315.
-The function compares these directions pixel-wise and returns the fraction of root pixels where the angles match.
-
 It uses a depth raster (`DepthMap`) and a root direction raster (`AngleMap`)
 or estimates one from a binary root presence map (`RootMap`). Directions are
 compared using a D8 neighborhood scheme.
@@ -94,17 +60,6 @@ deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2)
 
 # Get spatial outputs too
 res <- deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2, return = "all")
-plot(res$aligned_roots)
-
-data(skl_Oulanka2023_Session01_T067)
-im <- ceiling(terra::rast(skl_Oulanka2023_Session01_T067) / 255)
-DepthMap <- terra::t(create_depthmap(im, center.offset = 0, tube.thicc = 3.5))
-
-# Just the deep drive score
-deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2)
-
-# Get spatial outputs too
-res <- deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2, return = "all")
-plot(res$aligned_roots)
+terra::plot(res$aligned_roots)
 
 }

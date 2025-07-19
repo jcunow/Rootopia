@@ -603,37 +603,192 @@ detect_skeleton_points <- function(img, select.layer = 2) {
 }
 
 
+
+
+
+
+
+
+#' Thin binary image using steepest ascent skeletonization
+#'
+#' This function performs skeletonization of a binary image using a steepest ascent
+#' algorithm on the distance transform. Each foreground pixel traces its path to
+#' the ridge (skeleton) by following the steepest ascent gradient in the distance
+#' transform field.
+#'
+#' @param img Input image. Can be a file path, image object, or any format supported
+#'   by \code{load_flexible_image}.
+#' @param verbose Logical. If \code{TRUE}, prints progress information including
+#'   the final skeleton pixel count. Default is \code{TRUE}.
+#' @param select.layer Integer. Which layer/channel to select from the input image.
+#'   Default is 2. This parameter is passed to \code{load_flexible_image}.
+#'
+#' @return A binary matrix of the same dimensions as the input image, where 1
+#'   indicates skeleton pixels and 0 indicates background.
+#'
+#' @details
+#' The algorithm works by:
+#' \enumerate{
+#'   \item Computing the Euclidean distance transform of the binary image
+#'   \item For each foreground pixel, tracing the steepest ascent path in the
+#'         distance transform until reaching a local maximum (ridge point)
+#'   \item Marking all ridge points as skeleton pixels
+#' }
+#'
+#' The function uses padding to handle edge cases during the steepest ascent
+#' tracing process.
+#'
+#' @keywords internal
+#'
+#' @examples
+#' \dontrun{
+#' # Load and skeletonize an image
+#' skeleton <- thin_image_steepest_ascend(binary_image)
+#' 
+#' # Visualize the result
+#' plot(as.cimg(skeleton))
+#' }
+#'
+thin_image_steepest_ascend <- function(img, verbose = TRUE, select.layer = 2) {
+  
+  img = load_flexible_image( img, output_format = "cimg", select.layer = select.layer, binarize = T)
+  
+  # Compute distance transform (using imager's distmap)
+  edt <- imager::distance_transform(img,  0)
+  
+  # Pre-allocate skeleton matrix with correct dimensions
+  skeleton <- matrix(0, nrow = dim(img)[1], ncol = dim(img)[2])
+  
+  # Pad EDT for edge cases
+  edt_mat <- as.matrix(edt)
+  padded <- matrix(-Inf, nrow = nrow(edt_mat) + 2, ncol = ncol(edt_mat) + 2)
+  padded[2:(nrow(padded)-1), 2:(ncol(padded)-1)] <- edt_mat
+  
+  # Function to trace steepest ascent from (row, col)
+  trace_to_ridge <- function(row, col) {
+    # Convert to padded coordinates
+    pr <- row + 1  # padded row
+    pc <- col + 1  # padded col
+    
+    repeat {
+      neighborhood <- padded[(pr-1):(pr+1), (pc-1):(pc+1)]
+      max_val <- max(neighborhood)
+      
+      if (padded[pr, pc] >= max_val || max_val == -Inf) {
+        # Convert back to original image coordinates
+        orig_row <- pr - 1
+        orig_col <- pc - 1
+        
+        # Clamp to valid indices
+        orig_row <- min(max(orig_row, 1), nrow(skeleton))
+        orig_col <- min(max(orig_col, 1), ncol(skeleton))
+        
+        return(c(orig_row, orig_col))
+      }
+      
+      offsets <- which(neighborhood == max_val, arr.ind = TRUE)[1, ]
+      dr <- offsets[1] - 2  # row offset
+      dc <- offsets[2] - 2  # col offset
+      
+      pr <- pr + dr
+      pc <- pc + dc
+      
+      # If stepping outside padded bounds, break and clamp
+      if (pr < 2 || pr > (nrow(padded) - 1) || pc < 2 || pc > (ncol(padded) - 1)) {
+        orig_row <- min(max(pr - 1, 1), nrow(skeleton))
+        orig_col <- min(max(pc - 1, 1), ncol(skeleton))
+        return(c(orig_row, orig_col))
+      }
+      
+      # Update row, col in original coordinate system for next iteration
+      row <- pr - 1
+      col <- pc - 1
+    }
+  }
+  
+  # Run steepest ascent from all foreground pixels
+  bin_mat <- as.matrix(img)
+  foreground <- which(bin_mat > 0, arr.ind = TRUE)
+  
+  for (i in seq_len(nrow(foreground))) {
+    rc <- foreground[i, ]  # rc[1] = row, rc[2] = col
+    ridge_pt <- trace_to_ridge(rc[1], rc[2])  # Pass (row, col)
+    
+    r <- as.integer(ridge_pt[1])  # row
+    c <- as.integer(ridge_pt[2])  # col
+    
+    if (r >= 1 && r <= nrow(skeleton) && c >= 1 && c <= ncol(skeleton)) {
+      skeleton[r, c] <- 1
+    }
+  }
+  
+  if (verbose) {
+    cat("Skeletonization complete. Skeleton pixel count:", sum(skeleton), "\n")
+  }
+  
+  return(skeleton)
+}
+
+
+
+
+
+
+
+
+
+
+
 #' Skeletonization Wrapper Function
 #'
-#' This function serves as a wrapper for applying different skeletonization methods to a binary image, including the Zhang-Suen, Guo-Hall, and Medial Axis Transform (MAT) algorithms.
+#' This function serves as a wrapper for applying different skeletonization methods to a binary image, including the Zhang-Suen, Guo-Hall, Medial Axis Transform (MAT), and Steepest Ascent algorithms.
 #'
 #' @param img A matrix, data frame, or `SpatRaster` object representing the binary image to be skeletonized.
-#' @param methods A character vector specifying the skeletonization methods to apply. Valid options are \code{"ZhangSuen"}, \code{"GuoHall"}, and \code{"MAT"}. Defaults to all three methods.
+#' @param methods A character vector specifying the skeletonization methods to apply. Valid options are \code{"ZhangSuen"}, \code{"GuoHall"}, \code{"MAT"}, and \code{"SteepestAscend"}. Defaults to all four methods.
 #' @param verbose Logical. If \code{TRUE}, displays progress and diagnostic messages during processing. Defaults to \code{TRUE}.
-#' @param select.layer Integer specifying the layer to use if \code{img} is a multi-layer `SpatRaster`. Defaults to 2.
+#' @param select.layer Integer specifying the layer to use if \code{img} is a multi-layer `SpatRaster`. Defaults to \code{NULL}, which may use package-specific defaults for each method.
 #'
 #' @details
 #' This function allows for flexible and streamlined skeletonization of binary images using one or more supported algorithms:
 #' \itemize{
-#'   \item \code{"ZhangSuen"}: Implements the Zhang-Suen thinning algorithm.
-#'   \item \code{"GuoHall"}: Implements the Guo-Hall thinning algorithm.
-#'   \item \code{"MAT"}: Computes the Medial Axis Transform to extract the skeleton.
+#'   \item \code{"ZhangSuen"}: Implements the Zhang-Suen thinning algorithm, a parallel iterative method that preserves connectivity while reducing binary objects to their skeletal representation.
+#'   \item \code{"GuoHall"}: Implements the Guo-Hall thinning algorithm, an improved parallel thinning method that often produces cleaner skeletons with better preservation of shape characteristics.
+#'   \item \code{"MAT"}: Computes the Medial Axis Transform to extract the skeleton based on the distance transform of the binary image.
+#'   \item \code{"SteepestAscend"}: Uses a steepest ascent algorithm on the distance transform, where each foreground pixel traces its path to ridge points (skeleton) by following the steepest gradient.
 #' }
 #'
-#' The function processes the input image with the specified methods and returns the results. If multiple methods are chosen, the results are returned as a named list, with each element corresponding to a method.
+#' The function processes the input image with the specified methods and returns the results. If multiple methods are chosen, the results are returned as a named list, with each element corresponding to a method. Each method may have different computational complexity and produce slightly different skeletal representations.
 #'
-#' @return If a single method is selected, the function returns a `SpatRaster` object representing the skeletonized image. If multiple methods are selected, a named list of `SpatRaster` objects is returned.
+#' @return If a single method is selected, the function returns a `SpatRaster` object representing the skeletonized image. If multiple methods are selected, a named list of `SpatRaster` objects is returned, where each element is named according to the method used.
 #'
 #' @examples
-#' 
+#' \dontrun{
 #' # Load a binary image as a SpatRaster
-#' binary_image <- terra::rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0,0), nrow = 3))
+#' binary_image <- terra::rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0, 0), nrow = 3))
 #'
 #' # Apply all skeletonization methods
 #' skeletons <- skeletonize_image(binary_image, verbose = TRUE)
 #' 
+#' # Apply only Zhang-Suen method
+#' zhang_skeleton <- skeletonize_image(binary_image, methods = "ZhangSuen")
+#' 
+#' # Apply only Zhang-Suen method
+#' SA_skeleton <- skeletonize_image(binary_image, methods = "SteepestAscend")
+#' 
+#' # Apply multiple specific methods
+#' selected_skeletons <- skeletonize_image(binary_image, 
+#'                                        methods = c("ZhangSuen", "MAT"),
+#'                                        verbose = FALSE)
+#' 
+#' # Access results from multiple methods
+#' zhang_result <- selected_skeletons$ZhangSuen
+#' mat_result <- selected_skeletons$MAT
+#' }
 #'
-#' @seealso \code{\link{thin_image_zhangsuen}}, \code{\link{thin_image_guohall}}, \code{\link{medial_axis_transform}}
+#' @note
+#' Different skeletonization methods may produce varying results depending on the input image characteristics. The Zhang-Suen and Guo-Hall methods are iterative thinning approaches, while MAT and SteepestAscend are based on distance transforms. Consider the specific requirements of your analysis when choosing methods.
+#'
+#' @seealso \code{\link{thin_image_zhangsuen}}, \code{\link{thin_image_guohall}}, \code{\link{medial_axis_transform}}, \code{\link{thin_image_steepest_ascend}}
 #' @export
 skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT", "SteepestAscend"), verbose = TRUE, select.layer = NULL) {
   # Ensure methods are valid
@@ -651,9 +806,9 @@ skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT", "S
     result <- switch(
       method,
       "ZhangSuen" =
-        thin_image_zhangsuen(img, verbose = verbose, select.layer = NULL),
-      "GuoHall" = thin_image_guohall(img, verbose = verbose, select.layer = NULL),
-      "MAT" = medial_axis_transform(img, verbose = verbose, select.layer = NULL),
+        thin_image_zhangsuen(img, verbose = verbose, select.layer = select.layer),
+      "GuoHall" = thin_image_guohall(img, verbose = verbose, select.layer = select.layer),
+      "MAT" = medial_axis_transform(img, verbose = verbose, select.layer = select.layer),
       "SteepestAscend" = thin_image_steepest_ascend(img, verbose = verbose, select.layer = select.layer),
       stop(paste("Unsupported method:", method))
     )
@@ -666,46 +821,4 @@ skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT", "S
   } else {
     return(results)  # Multiple method results
   }
-}
-
-
-
-#' Steepest Ascend Skeletonization (Internal)
-#'
-#' Skeletonize a binary image using a ridge-based steepest ascend approximation on the distance transform.
-#'
-#' @param img A matrix, data frame, or `SpatRaster` object representing the binary image.
-#' @param verbose Logical. If `TRUE`, prints diagnostic information. Default is `FALSE`.
-#' @param select.layer Integer indicating the layer to use if `img` is a multi-layer `SpatRaster`. Default is `NULL`.
-#'
-#' @return A binary matrix representing the skeleton obtained from local maxima on the distance transform.
-#' @keywords internal
-thin_image_steepest_ascend <- function(img, verbose = FALSE, select.layer = NULL) {
-  
-  
-  # Convert to binary matrix with error handling
-  img <- tryCatch({
-    result <- load_flexible_image(img, select.layer = select.layer,
-                                  output_format = "matrix", normalize = TRUE, binarize = TRUE)
-    result
-  }, error = function(e) {
-    stop("Failed to load image: ", e$message)
-  })
-  
-  # Compute distance transform and identify ridge lines
-  dt <- tryCatch({
-    im <- imager::as.cimg(t(img))  # transpose to match cimg's (x,y) convention
-    distmap <- imager::distance_transform(im, value = 0)
-    local_maxima <- distmap == imager::isoblur(distmap, sigma = 1)
-    ridge <- as.matrix(local_maxima)
-    t(ridge) * img  # convert back and mask with original image
-  }, error = function(e) {
-    stop("Ridge detection failed: ", e$message)
-  })
-  
-  if (verbose) {
-    cat("Steepest ascend ridge-based skeletonization complete. Skeleton pixels:", sum(dt), "\n")
-  }
-  
-  return(dt)
 }

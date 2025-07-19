@@ -233,9 +233,9 @@ estimate_rotation_shift = function(img1, img2, cor.type="phase",
     return(c(x.lag, y.lag))
 
   }, error = function(e) {
-    stop(paste("Error in RotShiftDet:", e$message))
+    stop(paste("Error in estimate_rotation_shift:", e$message))
   }, warning = function(w) {
-    warning(paste("Warning in RotShiftDet:", w$message))
+    warning(paste("Warning in estimate_rotation_shift:", w$message))
   })
 }
 
@@ -246,7 +246,7 @@ estimate_rotation_shift = function(img1, img2, cor.type="phase",
 #' Crops image edges to handle non-overlapping regions between sequential scans.
 #'
 #' @param img Input image to censor
-#' @param center.offset Rotation shift in rows (from RotShiftDet)
+#' @param center.offset Rotation shift in rows (from estimate_rotation_shift())
 #' @param cut.buffer Proportion of image to cut when fixed_rotation=FALSE
 #' @param fixed.rotation Use fixed output dimensions
 #' @param fixed.width Output width when fixed_rotation=TRUE
@@ -261,6 +261,12 @@ estimate_rotation_shift = function(img1, img2, cor.type="phase",
 #'                          center.offset = 120,
 #'                          cut.buffer = 0.02,
 #'                          fixed.rotation = FALSE)
+#'                          
+#' censored.raster = rotation_censor(img,
+#'                          center.offset = 220,
+#'                          cut.buffer = 0.02,
+#'                          fixed.width = 1000,
+#'                          fixed.rotation = TRUE)
 rotation_censor = function(img, center.offset=0, cut.buffer=0.02,
                      fixed.rotation=TRUE, fixed.width=500, select.layer=NULL) {
 
@@ -304,13 +310,14 @@ rotation_censor = function(img, center.offset=0, cut.buffer=0.02,
       stop("Cut ratio too large, would remove entire image")
     }
 
+    
     if (!fixed.rotation) {
       # Handle variable rotation cases
       ex = terra::ext(img.c)
 
-      if (center.offset > 0) {
+      if (offset.ratio >= 0.5) {
         ex[4] = (1-cut.ratio) * ex[4]
-      } else if (center.offset < 0) {
+      } else if (offset.ratio < 0.5) {
         ex[3] = cut.ratio * ex[3]
       } else {
         ex[3] = (cut.ratio/2) * ex[3]
@@ -318,7 +325,14 @@ rotation_censor = function(img, center.offset=0, cut.buffer=0.02,
       }
 
       img.cc = terra::crop(img.c, ex)
+      
+      if (terra::ncell(img.cc) == 0) {
+        warning("Resulting image is empty after censoring")
+        return(NULL)
+      }
+      return(img.cc)
 
+      
     } else {
       # Handle fixed rotation
       center.row = center.offset
@@ -327,29 +341,30 @@ rotation_censor = function(img, center.offset=0, cut.buffer=0.02,
       ex[4] = dim(img.c)[1]
       terra::ext(img.c) <- ex
 
-      mid_point = (dim(img.c)[1]/2) + center.row
-      ex[3] = mid_point - fixed.width/2
-      ex[4] = mid_point + fixed.width/2
+      new_mid_point = center.row #+ (dim(img.c)[1]/2) 
+      ex[3] = new_mid_point - fixed.width/2
+      ex[4] = new_mid_point + fixed.width/2
 
-      # Validate dimensions
-      if (ex[3] < 0 || ex[4] > dim(img.c)[1]) {
-        stop("Fixed width window exceeds image dimensions")
-      }
 
       img.cc = terra::crop(img.c, ex)
+      
+      # Validate dimensions
+      if (ex[3] < 0 || ex[4] > dim(img.c)[1]) {
+        message("New image dimension: ",dim(img.cc)[1] ," is smaller than specified fixed.width: ", fixed.width, ". Too strong offset for this fixed.width. Consider adjusting the fixed.width.")
+      }
+      
+      if (terra::ncell(img.cc) == 0) {
+        warning("Resulting image is empty after censoring")
+        return(NULL)
+      }
+      return(img.cc)
     }
 
-    if (terra::ncell(img.cc) == 0) {
-      warning("Resulting image is empty after censoring")
-      return(NULL)
-    }
 
-    return(img.cc)
+  
 
   }, error = function(e) {
     stop(paste("Error in RotCensor:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in RotCensor:", w$message))
   })
 }
 

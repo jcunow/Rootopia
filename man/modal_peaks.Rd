@@ -50,15 +50,16 @@ The classification strategy depends on \code{mclust}:
 Both plots (density and uncertainty) share the same x-axis to support visual comparison.
 }
 \examples{
+set.seed(2)
+#' library(mclust)
 # Example 1: Noisy Unimodal
 x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
-modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
-modal_peaks(x1, prominence_threshold = 0.01, mclust = TRUE, display_type = "density")
+peaks1_1 = modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
+#peaks1_2 = modal_peaks(x1, prominence_threshold = 0.01, mclust = TRUE, display_type = "density")
 
 # Example 2: Noisy Bimodal
 x2 <- c(rnorm(300, -2, 0.9), rnorm(300, 2.5, 2.3)) + runif(600, -0.2, 0.2)
-modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "density")
-modal_peaks(x2, prominence_threshold = 0.001, mclust = FALSE, display_type = "raw")
-modal_peaks(x2, prominence_threshold = 0.001, mclust = TRUE, display_type = "raw")
-
+peaks2_1 = modal_peaks(x2, prominence_threshold = 0.0001, mclust = FALSE, display_type = "density")
+peaks2_2 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = FALSE, display_type = "raw")
+#peaks2_3 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = TRUE, display_type = "raw")
 }

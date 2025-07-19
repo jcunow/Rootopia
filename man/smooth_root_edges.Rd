@@ -22,14 +22,14 @@ A smoothed binary image
 Smooth the edges of a root binary image
 }
 \examples{
-\dontrun{
+
 data("seg_Oulanka2023_Session01_T067")
-img <- seg_ seg_Oulanka2023_Session01_T067
+img <- seg_Oulanka2023_Session01_T067
 # Try different kernel shapes
 smoothed_square <- smooth_root_edges(img, kernel_shape = "square", kernel_size = 3)
 smoothed_diamond <- smooth_root_edges(img, kernel_shape = "diamond", kernel_size = 3)
 smoothed_disk <- smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3)
 plot(smoothed_disk)
-}
+
 }
 \keyword{internal}

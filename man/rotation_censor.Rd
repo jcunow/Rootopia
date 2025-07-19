@@ -16,7 +16,7 @@ rotation_censor(
 \arguments{
 \item{img}{Input image to censor}
 
-\item{center.offset}{Rotation shift in rows (from RotShiftDet)}
+\item{center.offset}{Rotation shift in rows (from estimate_rotation_shift())}
 
 \item{cut.buffer}{Proportion of image to cut when fixed_rotation=FALSE}
 
@@ -39,4 +39,10 @@ censored.raster = rotation_censor(img,
                          center.offset = 120,
                          cut.buffer = 0.02,
                          fixed.rotation = FALSE)
+                         
+censored.raster = rotation_censor(img,
+                         center.offset = 220,
+                         cut.buffer = 0.02,
+                         fixed.width = 1000,
+                         fixed.rotation = TRUE)
 }
