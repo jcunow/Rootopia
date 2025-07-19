@@ -15,7 +15,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/binning.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/circular_mean.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/clean_root_image.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/clean_image.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/count_pixels.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/create_depthmap.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/create_kernel.html</loc></url>
@@ -25,7 +25,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/fill_root_holes.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/fill_holes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/fit_sine_curve.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/image_threshold.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/index.html</loc></url>
@@ -33,10 +33,11 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/medial_axis_transform.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/modal_peaks.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/normalize_array.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/remove_small_foreground_objects.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/remove_small_objects.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/report_image_components.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb2gray.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb_Oulanka2023_Session03_T067.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/rhytmicity_test.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/rhythmicity.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_accumulation.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_diameter.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_length.html</loc></url>

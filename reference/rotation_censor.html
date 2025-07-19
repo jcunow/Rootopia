@@ -66,7 +66,7 @@
 
 
 <dt id="arg-center-offset">center.offset<a class="anchor" aria-label="anchor" href="#arg-center-offset"></a></dt>
-<dd><p>Rotation shift in rows (from RotShiftDet)</p></dd>
+<dd><p>Rotation shift in rows (from estimate_rotation_shift())</p></dd>
 
 
 <dt id="arg-cut-buffer">cut.buffer<a class="anchor" aria-label="anchor" href="#arg-cut-buffer"></a></dt>
@@ -98,6 +98,13 @@
 <span class="r-in"><span>                         center.offset <span class="op">=</span> <span class="fl">120</span>,</span></span>
 <span class="r-in"><span>                         cut.buffer <span class="op">=</span> <span class="fl">0.02</span>,</span></span>
 <span class="r-in"><span>                         fixed.rotation <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                         </span></span>
+<span class="r-in"><span><span class="va">censored.raster</span> <span class="op">=</span> <span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>,</span></span>
+<span class="r-in"><span>                         center.offset <span class="op">=</span> <span class="fl">220</span>,</span></span>
+<span class="r-in"><span>                         cut.buffer <span class="op">=</span> <span class="fl">0.02</span>,</span></span>
+<span class="r-in"><span>                         fixed.width <span class="op">=</span> <span class="fl">1000</span>,</span></span>
+<span class="r-in"><span>                         fixed.rotation <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> New image dimension: 720 is smaller than specified fixed.width: 1000. Too strong offset for this fixed.width. Consider adjusting the fixed.width.</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

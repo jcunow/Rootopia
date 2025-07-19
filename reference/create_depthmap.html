@@ -59,7 +59,8 @@ and insertion angle.</p>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  start.soil <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  center.offset <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  select.layer <span class="op">=</span> <span class="fl">2</span></span>
+<span>  select.layer <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  progress <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -101,7 +102,11 @@ images, specify band_index parameter</p></dd>
 
 
 <dt id="arg-select-layer">select.layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
-<dd><p>Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.</p></dd>
+<dd><p>Integer; specifies which layer to use if the input is a multi-band image. Default is `2`.</p></dd>
+
+
+<dt id="arg-progress">progress<a class="anchor" aria-label="anchor" href="#arg-progress"></a></dt>
+<dd><p>Message; indicates how mny rows have been processed</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -126,55 +131,6 @@ images, specify band_index parameter</p></dd>
 <span class="r-in"><span>  tilt <span class="op">=</span> <span class="fl">45</span>,</span></span>
 <span class="r-in"><span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span></span>
 <span class="r-in"><span>  center.offset <span class="op">=</span> <span class="fl">0</span> <span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 100 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 200 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 300 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 400 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 500 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 600 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 700 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 800 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 900 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1000 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1100 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1200 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1300 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1400 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1500 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1600 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1700 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1800 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 1900 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2000 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2100 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2200 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2300 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2400 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2500 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2600 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2700 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2800 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 2900 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3000 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3100 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3200 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3300 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3400 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3500 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3600 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3700 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3800 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 3900 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4000 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4100 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4200 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4300 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4400 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4500 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4600 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4700 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4800 of 4900</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing row 4900 of 4900</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
