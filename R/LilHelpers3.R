@@ -729,6 +729,7 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #' @param prominence_threshold Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.
 #' @param display_type Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.
 #' @param mclust Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.
+#' @param adjust numeric. Adjusts the size of the density kernel. Higher values lead to more smoothing.
 #'
 #' @return A list with the following elements:
 #' \describe{
@@ -769,12 +770,12 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #' peaks2_2 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = FALSE, display_type = "raw")
 #' #peaks2_3 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = TRUE, display_type = "raw")
 #' @export
-modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density", mclust = TRUE) {
+modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density", adjust = 1, mclust = FALSE) {
   if (!display_type %in% c("density", "raw", "none")) {
     stop("Invalid 'display_type'. Choose 'density', 'raw', or 'none'.")
   }
   
-  dens <- stats::density(x)
+  dens <- stats::density(x, bw = "nrd", adjust = adjust)
   peaks <- which(diff(sign(diff(dens$y))) == -2) + 1
   valleys <- which(diff(sign(diff(dens$y))) == 2) + 1
   
