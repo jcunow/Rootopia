@@ -1,117 +1,5 @@
 
 
-#' Smooth the edges of a root binary image
-#'
-#' @param img A binary image of root systems (imager cimg object)
-#' @param kernel_shape Shape of the kernel: "square", "diamond", or "disk"
-#' @param kernel_size Size of the kernel for morphological operations (odd integer). Use larger kernels for higher image resolution
-#' @param iterations Number of iterations for the smoothing process
-#' @return A smoothed binary image
-#' @export
-#' @keywords internal
-#'
-#' @importFrom imager dilate erode as.cimg is.cimg grayscale
-#' @examples
-#' 
-#' data("seg_Oulanka2023_Session01_T067")
-#' img <- seg_Oulanka2023_Session01_T067
-#' # Try different kernel shapes
-#' smoothed_square <- smooth_root_edges(img, kernel_shape = "square", kernel_size = 3)
-#' smoothed_diamond <- smooth_root_edges(img, kernel_shape = "diamond", kernel_size = 3)
-#' smoothed_disk <- smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3)
-#' plot(smoothed_disk)
-#' 
-smooth_root_edges <- function(img, kernel_shape = "disk", kernel_size = 3, iterations = 1) {
-
-  # Try to convert to cimg
-  img <- load_flexible_image(img, output_format = "cimg",binarize = T)
-    
-
-  # Ensure image is grayscale (3D array) if it's color (4D array)
-  if (imager::spectrum(img) > 1) {
-    img <- imager::grayscale(img)
-  }
-  
-  # Binarize the image if needed
-  #img <- img > 0.5
-  
-  # Create kernel based on selected shape
-  kern <- create_kernel(shape = kernel_shape, size = kernel_size)
-  
-  # Apply closing operation (dilation followed by erosion) multiple times
-  smoothed_img <- img
-  for (i in 1:iterations) {
-    smoothed_img <- imager::dilate(smoothed_img, kern)
-    smoothed_img <- imager::erode(smoothed_img, kern)
-  }
-  
-  return(smoothed_img)
-}
-
-#' Create a kernel with specified shape for morphological operations
-#'
-#' @param shape Shape of the kernel: "square", "diamond", or "disk"
-#' @param size Size of the kernel (odd integer)
-#' @return A kernel as an imager cimg object
-#' @keywords internal
-create_kernel <- function(shape = "disk", size = 3) {
-  
-  # Ensure methods are valid
-  valid_shapes <- c( "square", "diamond", "disk")
-  methods <- intersect(shape, valid_shapes)
-  if (length(methods) == 0) {
-    stop("No valid shape specified. Choose from: 'square', 'diamond', 'disk'.")
-  }
-  # Ensure odd size for symmetry
-  if (size %% 2 == 0) size <- size + 1
-  
-  # Create empty kernel matrix
-  kern_matrix <- matrix(0, size, size)
-  center <- floor(size/2) + 1
-  radius <- floor(size/2)
-  
-  # Fill kernel based on shape
-  for (i in 1:size) {
-    for (j in 1:size) {
-      if (shape == "square") {
-        # Square: all positions filled
-        kern_matrix[i, j] <- 1
-      } else if (shape == "diamond") {
-        # Diamond: Manhattan distance <= radius
-        if (abs(i - center) + abs(j - center) <= radius) {
-          kern_matrix[i, j] <- 1
-        }
-      } else if (shape == "disk") {
-        # Disk/Circle: Euclidean distance <= radius
-        if (sqrt((i - center)^2 + (j - center)^2) <= radius) {
-          kern_matrix[i, j] <- 1
-        }
-      } else if (shape == "cross") {
-        # Cross shape
-        if (i == center || j == center) {
-          kern_matrix[i, j] <- 1
-        }
-      } else if (shape == "x") {
-        # X shape (diagonals)
-        if (abs(i - center) == abs(j - center)) {
-          kern_matrix[i, j] <- 1
-        }
-      }
-    }
-  }
-  
-  # Convert matrix to cimg object
-  return(imager::as.cimg(kern_matrix))
-}
-
-
-
-
-
-
-
-
-#################3 real function
 #' Fill holes in binary images
 #'
 #' Identifies internal black regions ("holes") in a binary image and fills them by setting their pixel values to 1. Holes are defined as black areas (value = 0) completely surrounded by white (value = 1), i.e., not connected to the image border.
@@ -122,62 +10,34 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' @return A `cimg` object with holes filled (as 1s).
 #' @keywords internal
 fill_holes <- function(img, max_size = NULL) {
+  inv <- 1 - img
+  lbl <- imager::label(inv)
   
-  # 1. Use image directly - holes (0s) are already "foreground" for labeling
-  # We want to label the black regions (holes and background)
-  holes_and_bg <- 1 - img
-  
-  # 2. Label all connected components in holes and background
-  lbl <- imager::label(holes_and_bg)
-  
-  # 3. Identify labels that touch the border — these are NOT holes
   border_labels <- unique(c(
     lbl[1, , 1, 1],
     lbl[dim(lbl)[1], , 1, 1],
     lbl[, 1, 1, 1],
     lbl[, dim(lbl)[2], 1, 1]
   ))
-  
-  # Remove 0 from border labels (background)
   border_labels <- border_labels[border_labels > 0]
   
-  # 4. Keep only internal labels (potential holes)
   internal_mask <- !(lbl %in% border_labels)
   internal_labels <- lbl * as.numeric(internal_mask)
   
-  # 5. Get hole regions and filter by size
-  hole_ids <- unique(as.numeric(internal_labels[internal_labels > 0]))
-  
-  if (length(hole_ids) == 0) {
-    return(img)  # No holes to fill
+  if (!is.null(max_size)) {
+    label_sizes <- table(internal_labels[internal_labels > 0])
+    allowed_labels <- as.integer(names(label_sizes[label_sizes <= max_size]))
+    fill_mask <- (internal_labels %in% allowed_labels)
+  } else {
+    fill_mask <- internal_labels > 0
   }
   
-  # Create a copy of the image to modify
-  filled_img <- img
-  
-  for (id in hole_ids) {
-    # Find all pixels belonging to this hole
-    hole_coords <- which(internal_labels == id, arr.ind = TRUE)
-    
-    # Calculate the actual size of the hole
-    # Count pixels that are currently 0 (black holes) in original image
-    hole_size <- sum(img[hole_coords] == 0)
-    
-    # Only fill holes that are smaller than max_size (if specified)
-    if (is.null(max_size) || hole_size <= max_size) {
-      # Fill the hole by setting all hole pixels to 1 (white)
-      for (i in 1:nrow(hole_coords)) {
-        coord <- hole_coords[i, ]
-        # Only fill if it's currently a hole (value 0)
-        if (img[coord[1], coord[2], 1, 1] == 0) {
-          filled_img[coord[1], coord[2], 1, 1] <- 1
-        }
-      }
-    }
-  }
-  
-  return(filled_img)
+  img[fill_mask] <- 1
+  return(img)
 }
+
+
+
 
 #' Remove small white artifacts from binary images
 #'
@@ -189,58 +49,35 @@ fill_holes <- function(img, max_size = NULL) {
 #' @return A `cimg` object with small white artifacts removed (set to 0).
 #' @keywords internal
 remove_small_objects <- function(img, max_size = NULL) {
-  
-  # 1. Label white objects directly (no inversion needed)
   lbl <- imager::label(img)
   
-  # 2. Identify labels that touch the border — these are large/connected objects to keep
   border_labels <- unique(c(
     lbl[1, , 1, 1],
     lbl[dim(lbl)[1], , 1, 1],
     lbl[, 1, 1, 1],
     lbl[, dim(lbl)[2], 1, 1]
   ))
-  
-  # Remove 0 from border labels (background)
   border_labels <- border_labels[border_labels > 0]
   
-  # 3. Keep only internal labels (potential small artifacts)
   internal_mask <- !(lbl %in% border_labels)
   internal_labels <- lbl * as.numeric(internal_mask)
   
-  # 4. Get artifact regions and filter by size
-  artifact_ids <- unique(as.numeric(internal_labels[internal_labels > 0]))
-  
-  if (length(artifact_ids) == 0) {
-    return(img)  # No artifacts to remove
+  if (!is.null(max_size)) {
+    label_sizes <- table(internal_labels[internal_labels > 0])
+    small_labels <- as.integer(names(label_sizes[label_sizes <= max_size]))
+    remove_mask <- (internal_labels %in% small_labels)
+  } else {
+    remove_mask <- internal_labels > 0
   }
   
-  # Create a copy of the image to modify
-  cleaned_img <- img
-  
-  for (id in artifact_ids) {
-    # Find all pixels belonging to this artifact
-    artifact_coords <- which(internal_labels == id, arr.ind = TRUE)
-    
-    # Calculate the actual size of the artifact
-    # Count pixels that are currently 1 (white objects) in original image
-    artifact_size <- sum(img[artifact_coords] == 1)
-    
-    # Only remove artifacts that are smaller than max_size (if specified)
-    if (is.null(max_size) || artifact_size <= max_size) {
-      # Remove the artifact by setting all object pixels to 0 (black)
-      for (i in 1:nrow(artifact_coords)) {
-        coord <- artifact_coords[i, ]
-        # Only remove if it's currently an object (value 1)
-        if (img[coord[1], coord[2], 1, 1] == 1) {
-          cleaned_img[coord[1], coord[2], 1, 1] <- 0
-        }
-      }
-    }
-  }
-  
-  return(cleaned_img)
+  img[remove_mask] <- 0
+  return(img)
 }
+
+
+
+
+
 
 
 
@@ -367,6 +204,124 @@ report_image_components <- function(img) {
 
 
 
+#' Smooth the edges of a root binary image
+#'
+#' @param img A binary image of root systems (imager cimg object)
+#' @param kernel_shape Shape of the kernel: "square", "diamond", or "disk"
+#' @param kernel_size Size of the kernel for morphological operations (odd integer). Use larger kernels for higher image resolution
+#' @param iterations Number of iterations for the smoothing process
+#' @return A smoothed binary image
+#' @export
+#' @keywords internal
+#'
+#' @importFrom imager dilate erode as.cimg is.cimg grayscale
+#' @examples
+#' 
+#' data("seg_Oulanka2023_Session01_T067")
+#' img <- seg_Oulanka2023_Session01_T067
+#' # Try different kernel shapes
+#' smoothed_square <- smooth_root_edges(img, kernel_shape = "square", kernel_size = 3)
+#' smoothed_diamond <- smooth_root_edges(img, kernel_shape = "diamond", kernel_size = 3)
+#' smoothed_disk <- smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3)
+#' plot(smoothed_disk)
+#' 
+smooth_root_edges <- function(img, kernel_shape = "disk", kernel_size = 3, iterations = 1) {
+  
+  # Try to convert to cimg
+  img <- load_flexible_image(img, output_format = "cimg",binarize = T)
+  
+  
+  # Ensure image is grayscale (3D array) if it's color (4D array)
+  if (imager::spectrum(img) > 1) {
+    img <- imager::grayscale(img)
+  }
+  
+  # Binarize the image if needed
+  #img <- img > 0.5
+  
+  # Create kernel based on selected shape
+  kern <- create_kernel(shape = kernel_shape, size = kernel_size)
+  
+  # Apply closing operation (dilation followed by erosion) multiple times
+  smoothed_img <- img
+  for (i in 1:iterations) {
+    smoothed_img <- imager::dilate(smoothed_img, kern)
+    smoothed_img <- imager::erode(smoothed_img, kern)
+  }
+  
+  return(smoothed_img)
+}
+
+
+
+
+
+
+
+#' Create a kernel with specified shape for morphological operations
+#'
+#' @param shape Shape of the kernel: "square", "diamond", or "disk"
+#' @param size Size of the kernel (odd integer)
+#' @return A kernel as an imager cimg object
+#' @keywords internal
+create_kernel <- function(shape = "disk", size = 3) {
+  
+  # Ensure methods are valid
+  valid_shapes <- c( "square", "diamond", "disk")
+  methods <- intersect(shape, valid_shapes)
+  if (length(methods) == 0) {
+    stop("No valid shape specified. Choose from: 'square', 'diamond', 'disk'.")
+  }
+  # Ensure odd size for symmetry
+  if (size %% 2 == 0) size <- size + 1
+  
+  # Create empty kernel matrix
+  kern_matrix <- matrix(0, size, size)
+  center <- floor(size/2) + 1
+  radius <- floor(size/2)
+  
+  # Fill kernel based on shape
+  for (i in 1:size) {
+    for (j in 1:size) {
+      if (shape == "square") {
+        # Square: all positions filled
+        kern_matrix[i, j] <- 1
+      } else if (shape == "diamond") {
+        # Diamond: Manhattan distance <= radius
+        if (abs(i - center) + abs(j - center) <= radius) {
+          kern_matrix[i, j] <- 1
+        }
+      } else if (shape == "disk") {
+        # Disk/Circle: Euclidean distance <= radius
+        if (sqrt((i - center)^2 + (j - center)^2) <= radius) {
+          kern_matrix[i, j] <- 1
+        }
+      } else if (shape == "cross") {
+        # Cross shape
+        if (i == center || j == center) {
+          kern_matrix[i, j] <- 1
+        }
+      } else if (shape == "x") {
+        # X shape (diagonals)
+        if (abs(i - center) == abs(j - center)) {
+          kern_matrix[i, j] <- 1
+        }
+      }
+    }
+  }
+  
+  # Convert matrix to cimg object
+  return(imager::as.cimg(kern_matrix))
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -388,6 +343,7 @@ report_image_components <- function(img) {
 #' @param kernel_size Size of the structuring element used for edge smoothing.
 #' @param iterations Number of times the smoothing operation is applied.
 #' @param report Logical; if `TRUE`, the function returns a list with the cleaned image and a printed report on hole and artifact sizes. Defaults to `FALSE`.
+#' @param select.layer Integer specifying the layer to use if \code{img} is a multi-layer `SpatRaster`. Defaults to \code{NULL}, which may use package-specific defaults for each method.
 #'
 #' @return A cleaned `cimg` object. If `report = TRUE`, returns a list with two elements: the cleaned image and the printed summary.
 #'
@@ -448,19 +404,19 @@ clean_image <- function(img,
                         kernel_shape = "disk",
                         kernel_size = 3,
                         iterations = 1,
+                        select.layer = NULL,
                         report = FALSE) {
-  # First fill holes
-  img_filled <- fill_holes(img, max_hole_size)
   
-  # Then remove small artifacts
+  img = load_flexible_image(img, output_format = "cimg", select.layer = select.layer, binarize = TRUE)
+  
+  # Use fast variants
+  img_filled <- fill_holes(img, max_hole_size)
   img_cleaned <- remove_small_objects(img_filled, max_artifact_size)
   
-  # Optionally smooth edges
-  if (edge_smooth) {
-    img_smooth <- smooth_root_edges(img_cleaned, kernel_shape = kernel_shape,
-                                    kernel_size = kernel_size, iterations = iterations)
+  img_smooth <- if (edge_smooth) {
+    smooth_root_edges(img_cleaned, kernel_shape, kernel_size, iterations)
   } else {
-    img_smooth <- img_cleaned
+    img_cleaned
   }
   
   if (report) {
@@ -470,12 +426,6 @@ clean_image <- function(img,
     return(img_smooth)
   }
 }
-
-
-
-
-
-
 
 
 
