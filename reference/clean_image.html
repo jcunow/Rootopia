@@ -47,7 +47,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Clean binary images by filling holes, removing small artifacts, and optionally smoothing edges</h1>
-      <small class="dont-index">Source: <a href="https://github.com/jcunow/RootScanR/blob/main/R/clean_binary_image.R" class="external-link"><code>R/clean_binary_image.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/jcunow/RootScanR/blob/main/R/clean_image.R" class="external-link"><code>R/clean_image.R</code></a></small>
       <div class="d-none name"><code>clean_image.Rd</code></div>
     </div>
 
@@ -68,6 +68,7 @@
 <span>  kernel_shape <span class="op">=</span> <span class="st">"disk"</span>,</span>
 <span>  kernel_size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  iterations <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  select.layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  report <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -162,10 +163,10 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Plot results</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">img</span>, main <span class="op">=</span> <span class="st">"Original"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cleaned1</span>, main <span class="op">=</span> <span class="st">"Fill ≤50, Remove ≤10"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cleaned2</span>, main <span class="op">=</span> <span class="st">"Fill ≤20, Remove ≤30"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cleaned3</span>, main <span class="op">=</span> <span class="st">"Fill ≤30, Remove ≤20 + Smooth"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">img</span>, main <span class="op">=</span> <span class="st">"Original"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cleaned1</span>, main <span class="op">=</span> <span class="st">"Fill ≤50, Remove ≤10"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cleaned2</span>, main <span class="op">=</span> <span class="st">"Fill ≤20, Remove ≤30"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cleaned3</span>, main <span class="op">=</span> <span class="st">"Fill ≤30, Remove ≤20 + Smooth"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="clean_image-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 </code></pre></div>

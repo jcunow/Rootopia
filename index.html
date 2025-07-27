@@ -65,114 +65,109 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="rootscanr---r-package">RootScanR - R package<a class="anchor" aria-label="anchor" href="#rootscanr---r-package"></a>
-</h1></div>
-<p><br></p>
+  <main id="main" class="col-md-9"><hr>
 <div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+<h2 id="rootscanr-extract-root-traits-from-images">RootScanR: Extract Root Traits from Images<a class="anchor" aria-label="anchor" href="#rootscanr-extract-root-traits-from-images"></a>
 </h2>
-<p><em>RootScanR</em> is a package which has been designed to make the analysis of minirhizotron root scans just a little less stupid. The package relies on prior Image segmentation. We recommend using <em>RootDetector</em> or <em>RootPainter</em>. This packages enables the user to map various root features to a continue s depth distributions. The user has the choice to include the tube insertion angle and tube diameter - or ignore it (?). Rotational bias of root prevalence can be tested. Let me know if you have questions, improvements, or found bugs &amp; errors.</p>
-<pre><code><span><span class="co"># install the package</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://devtools.r-lib.org/" class="external-link">"devtools"</a></span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jcunow/RootScanR"</span><span class="op">)</span></span></code></pre>
+<p>output: distill::distill_article description: “R tools for root trait extraction from flatbed and minirhizotron images.” —</p>
+<p><a href="https://jcunow.github.io/RootScanR/"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a></p>
+<hr>
+<p>Welcome to <strong>RootScanR</strong>, an R package designed to extract quantitative belowground traits from <strong>flatbed root scans</strong> and <strong>minirhizotron image sequences</strong>. It provides flexible image preprocessing, trait estimation like root length &amp; diameter, depth mapping, and distribution tools.</p>
+</div>
+<div class="section level2">
+<h2 id="id_-what-can-rootscanr-do">💡 What can RootScanR do?<a class="anchor" aria-label="anchor" href="#id_-what-can-rootscanr-do"></a>
+</h2>
+<ul>
+<li>🖼️ Clean and process binary root images</li>
+<li>🌱 Estimate root length (skeletonize and Kimura Root Length)</li>
+<li>📏 Measure root diameters and modal distributions</li>
+<li>🕸️ Analyze root architecture (branching points, MST, loopiness)</li>
+<li><h2 id="id_-spatial-spatial-indecies-root-angle-distribution-rotation-bias">🥕 Spatial-spatial indecies (root angle distribution, rotation bias)</h2></li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="id_-tutorials">📘 Tutorials<a class="anchor" aria-label="anchor" href="#id_-tutorials"></a>
+</h2>
+<p>Jump straight into hands-on tutorials:</p>
+<ul>
+<li>📄 <a href="articles/FlatBedScans_vignettes.html">Flatbed Scan Workflow</a>
+</li>
+<li>📄 <a href="articles/MinirhizotronScans_vignettes.html">Minirhizotron Workflow</a>
+</li>
+<li>📄 <a href="articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a>
+</li>
+</ul>
+<p>Each tutorial includes code, images, overlays, and tips for interpretation.</p>
 <hr>
 <p><br></p>
 </div>
 <div class="section level2">
-<h2 id="calibration">Calibration<a class="anchor" aria-label="anchor" href="#calibration"></a>
+<h2 id="id_-quick-start">🚀 Quick Start<a class="anchor" aria-label="anchor" href="#id_-quick-start"></a>
 </h2>
-<p>More accurate results require easy to gather <em>in-situ</em> calibration of each tube. Traditionally, the assumption is that all tube have been installed perfectly, i.e., exact same insertion angle, insertion depth, same scanner rotation position, and tape overshoot for each tube. RootScanR offers the possibility to approximate the soil start and rotation center based an assumption of well-taped tubes.</p>
-<ol style="list-style-type: decimal">
-<li>Soil Surface Position Estimation</li>
-</ol>
-<pre><code><span><span class="va">start.soil</span> <span class="op">=</span> <span class="fu">SoilSurfE</span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span></code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Scanner Rotation Position, Rotation Differences Between Two Scans, and Removal of Scan Edges only present in one Scan and not the other.</li>
-</ol>
-<pre><code><span><span class="fu">RotationE</span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
-<span><span class="fu">RotShiftDet</span><span class="op">(</span><span class="va">img1</span>,<span class="va">img2</span><span class="op">)</span></span>
-<span><span class="fu">RotCensor</span><span class="op">(</span><span class="va">img</span>,center.offset <span class="op">=</span> <span class="fl">0.3</span>,fixed.rotation <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Load example flatbed scan</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/RootScanR" class="external-link">RootScanR</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"seg_Oulanka2023_Session01_T067"</span><span class="op">)</span></span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="va">seg_Oulanka2023_Session01_T067</span></span>
 <span></span>
-<span><span class="co"># under construction: estimating rotation by root distribution (assuming top-tube bias)</span></span>
-<span><span class="fu">LR_rhythmicity</span><span class="op">(</span><span class="va">rotation.cuts</span>, <span class="va">root.px</span>, period<span class="op">=</span> <span class="va">number.rotation.slices</span><span class="op">)</span><span class="op">$</span><span class="va">phase</span> <span class="op">*</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">roation.cuts</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">/</span><span class="va">number.rotations.slices</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">)</span></span></code></pre>
-<p><br></p>
-</div>
-<div class="section level2">
-<h2 id="the-core-function-create-a-depthmap">The core function: Create a depthmap<a class="anchor" aria-label="anchor" href="#the-core-function-create-a-depthmap"></a>
-</h2>
-<p>requires: soil surface estimate, rotation center estimate, tube insertion angle, tube diameter, scan resolution</p>
-<ol style="list-style-type: decimal">
-<li>Phase shifted, trimmed sine depth mapping including tube diameter and tube insertion angle</li>
-</ol>
-<pre><code><span><span class="va">depthmap</span> <span class="op">=</span> <span class="fu"><a href="reference/create_depthmap.html">create_depthmap</a></span><span class="op">(</span><span class="va">img</span>,<span class="va">mask</span>, tube.thicc <span class="op">=</span> <span class="fl">7</span>, tilt <span class="op">=</span> <span class="fl">45</span>, dpi <span class="op">=</span> <span class="fl">300</span>, start.soil <span class="op">=</span> <span class="fl">0</span>,center.offset <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre>
-<p><br></p>
-</div>
-<div class="section level2">
-<h2 id="zoning---create-analytical-units">Zoning - Create analytical units<a class="anchor" aria-label="anchor" href="#zoning---create-analytical-units"></a>
-</h2>
-<p>Creates discrete sub-units of the whole image. This determines the resolution of the depth distributions. Currently, the package only supports analysis within discrete depth bands. Future releases will tackle response functions on continuous depth.</p>
-<ol style="list-style-type: decimal">
-<li>Depth-wise zoning</li>
-</ol>
-<pre><code><span><span class="va">binned.map</span> <span class="op">=</span> <span class="fu"><a href="reference/binning.html">binning</a></span><span class="op">(</span><span class="va">depthmap</span>, nn <span class="op">=</span> <span class="fl">1</span>,<span class="st">"rounding"</span><span class="op">)</span></span>
-<span><span class="va">root.zone</span> <span class="op">=</span> <span class="fu">zone.fun</span><span class="op">(</span><span class="va">img</span>, <span class="va">binned.map</span>, indexD <span class="op">=</span> <span class="fl">5</span>, nn <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre>
-<p><br></p>
-</div>
-<div class="section level2">
-<h2 id="feature-extractions">Feature Extractions<a class="anchor" aria-label="anchor" href="#feature-extractions"></a>
-</h2>
-<ol style="list-style-type: decimal">
-<li>Parameter from segmented image cut</li>
-</ol>
-<pre><code><span><span class="fu">RootScapeMetrics</span><span class="op">(</span><span class="va">root.zone</span>, metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lsm_c_ca"</span>,<span class="st">"lsm_c_pland"</span>,<span class="st">"lsm_c_enn_mn"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">Root.px</span> <span class="op">=</span> <span class="fu">count_pixel</span><span class="op">(</span><span class="va">root.zone</span><span class="op">)</span></span></code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Parameter from skeletonized image cut</li>
-</ol>
-<pre><code><span><span class="va">root.zone.skl</span> <span class="op">=</span> <span class="fu"><a href="reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">root.zone</span>, method <span class="op">=</span> <span class="st">"MAT"</span>, layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">RL</span> <span class="op">=</span> <span class="fu"><a href="reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">root.zone.skeleton</span><span class="op">)</span></span></code></pre>
-<ol start="3" style="list-style-type: decimal">
-<li>Combine both</li>
-</ol>
-<pre><code><span><span class="fu">root.thickness</span><span class="op">(</span><span class="va">Root.px</span>, <span class="va">RL</span><span class="op">)</span></span></code></pre>
-<ol start="4" style="list-style-type: decimal">
-<li>Parameter from RGB image cut</li>
-</ol>
-<pre><code><span><span class="va">Rhizosphere</span> <span class="op">=</span> <span class="fu">Halo</span><span class="op">(</span><span class="va">root.zone</span>, width <span class="op">=</span> <span class="fl">5</span>, halo.only <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">soil</span> <span class="op">=</span> <span class="va">rgb.img</span><span class="op">[</span><span class="va">Rhizosphere</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span> <span class="op">&lt;</span> <span class="op">-</span> <span class="cn">NA</span></span>
-<span><span class="fu"><a href="reference/analyze_soil_texture.html">analyze_soil_texture</a></span><span class="op">(</span><span class="va">soil</span><span class="op">)</span></span>
-<span><span class="va">soil.color</span> <span class="op">=</span> <span class="fu"><a href="reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">soil</span><span class="op">)</span></span></code></pre>
-<ol start="5" style="list-style-type: decimal">
-<li>Turnover - either two images from different time points, or the ‘RootDetector’ root tracking output</li>
-</ol>
-<pre><code><span><span class="fu"><a href="reference/turnover_tc.html">turnover_tc</a></span><span class="op">(</span><span class="va">root.zone1</span>,<span class="va">root.zone2</span>, method <span class="op">=</span> <span class="st">"kimura"</span>,dpi <span class="op">=</span> <span class="fl">300</span>, unit <span class="op">=</span> <span class="st">"cm"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/turnover_dpc.html">turnover_dpc</a></span><span class="op">(</span><span class="va">root.zone.dpc</span>, product.layer <span class="op">=</span> <span class="fl">2</span>, decay.layer <span class="op">=</span> <span class="fl">1</span>, im.return <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre>
-<p><br></p>
-</div>
-<div class="section level2">
-<h2 id="rotational-bias">Rotational Bias<a class="anchor" aria-label="anchor" href="#rotational-bias"></a>
-</h2>
-<ol style="list-style-type: decimal">
-<li>Rotational zoning, Feature Extraction,</li>
-</ol>
-<pre><code><span><span class="va">rotation.rootpx</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kk <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>,px <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
+<span><span class="co"># Preprocess and extract traits</span></span>
+<span><span class="va">binary</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
+<span><span class="va">cleaned</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/clean_image.html">clean_image</a></span><span class="op">(</span><span class="va">binary</span>, max_artifact_size <span class="op">=</span> <span class="fl">5</span>, max_hole_size <span class="op">=</span> <span class="fl">5</span>, select.layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">skel</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">cleaned</span>,  methods <span class="op">=</span> <span class="st">"GuoHall"</span>, verbose <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">rotation.rootpx</span><span class="op">)</span><span class="op">{</span></span>
-<span><span class="va">rotation.zone</span> <span class="op">=</span> <span class="fu">zone.rotation.fun</span><span class="op">(</span><span class="va">img</span>,k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span>,<span class="va">i</span><span class="op">)</span>,kk <span class="op">=</span> <span class="fl">12</span>, mm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1500</span>,<span class="fl">5000</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">rotation.rootpx</span><span class="op">$</span><span class="va">px</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span> <span class="op">=</span> <span class="fu">count_pixel</span><span class="op">(</span><span class="va">rotation.zone</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span></code></pre>
-<ol start="2" style="list-style-type: decimal">
-<li>Test Amplitude Difference Can be used to text e.g., differences in top-bottom-tube bias between varying insertion angle or tube diameter To test differences between sinus fits, we make use of the diffCircadian package <a href="https://github.com/diffCircadian/diffCircadian" class="external-link uri">https://github.com/diffCircadian/diffCircadian</a>
-</li>
-</ol>
-<pre><code><span><span class="fu">fitSinCurve</span><span class="op">(</span><span class="va">rotation.rootpx</span><span class="op">$</span><span class="va">px</span>,period <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
-<span><span class="fu">LTTest_diff_amp</span><span class="op">(</span><span class="va">img1_rotation.rootpx</span><span class="op">$</span><span class="va">px</span>,<span class="va">img2_rotation.rootpx</span><span class="op">$</span><span class="va">px</span><span class="op">)</span></span></code></pre>
+<span><span class="co"># Length and diameter</span></span>
+<span><span class="fu"><a href="reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skel</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span><span class="va">diam_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/root_diameter.html">root_diameter</a></span><span class="op">(</span><span class="va">cleaned</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>, select.layer <span class="op">=</span> <span class="cn">NULL</span> <span class="op">)</span></span>
+<span><span class="fu"><a href="reference/modal_peaks.html">modal_peaks</a></span><span class="op">(</span><span class="va">diam_map</span><span class="op">$</span><span class="va">diameters</span>, prominence_threshold <span class="op">=</span> <span class="fl">10</span>, mclust <span class="op">=</span> <span class="cn">F</span>, adjust <span class="op">=</span> <span class="fl">5</span>, display_type <span class="op">=</span> <span class="st">"density"</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="co"># Architecture</span></span>
+<span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">metrics</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Visualize</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diam_map</span><span class="op">$</span><span class="va">diameter_rast</span><span class="op">)</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="id_-reference--citation">📚 Reference &amp; Citation<a class="anchor" aria-label="anchor" href="#id_-reference--citation"></a>
+</h2>
+<p>To cite <code>RootScanR</code>, please use the relevant methods cited in the vignettes:</p>
+<ul>
+<li>Kimura et al. (1999) – Pixel-based root length estimation</li>
+<li>Zhang &amp; Suen (1984) – Skeletonization</li>
+<li>Otsu (1979) – Thresholding</li>
+<li>Scrucca et al. (2016) – Model-based clustering (Mclust)</li>
+</ul>
+<p>You can also generate the full citation in R:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"RootScanR"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="id_-news--updates">📢 News &amp; Updates<a class="anchor" aria-label="anchor" href="#id_-news--updates"></a>
+</h2>
+<p>See the <a href="news/index.html">News page</a> for the latest changes and version notes.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="id_-documentation">🔍 Documentation<a class="anchor" aria-label="anchor" href="#id_-documentation"></a>
+</h2>
+<ul>
+<li><a href="reference/index.html">Function reference</a></li>
+<li><a href="articles/index.html">Vignettes</a></li>
+<li><a href="https://github.com/jcunow/RootScanR" class="external-link">Source code on GitHub</a></li>
+</ul>
+<hr>
+<div class="section level3">
+<h3 id="id_-contributions--issues">🙌 Contributions &amp; Issues<a class="anchor" aria-label="anchor" href="#id_-contributions--issues"></a>
+</h3>
+<p>Found a bug or have a feature request? Please <a href="https://github.com/jcunow/RootScanR/issues" class="external-link">open an issue</a> or submit a pull request.</p>
 </div>
 </div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

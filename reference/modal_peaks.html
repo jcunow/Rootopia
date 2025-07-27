@@ -61,7 +61,8 @@ using `mclust` to estimate the number and characteristics of distributional comp
 <span>  <span class="va">x</span>,</span>
 <span>  prominence_threshold <span class="op">=</span> <span class="fl">0.005</span>,</span>
 <span>  display_type <span class="op">=</span> <span class="st">"density"</span>,</span>
-<span>  mclust <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  adjust <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  mclust <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -79,6 +80,10 @@ using `mclust` to estimate the number and characteristics of distributional comp
 
 <dt id="arg-display-type">display_type<a class="anchor" aria-label="anchor" href="#arg-display-type"></a></dt>
 <dd><p>Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.</p></dd>
+
+
+<dt id="arg-adjust">adjust<a class="anchor" aria-label="anchor" href="#arg-adjust"></a></dt>
+<dd><p>numeric. Adjusts the size of the density kernel. Higher values lead to more smoothing.</p></dd>
 
 
 <dt id="arg-mclust">mclust<a class="anchor" aria-label="anchor" href="#arg-mclust"></a></dt>
@@ -136,10 +141,10 @@ and the results are returned along with a classification vector.</p>
 <span class="r-in"><span><span class="co"># Example 2: Noisy Bimodal</span></span></span>
 <span class="r-in"><span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">300</span>, <span class="op">-</span><span class="fl">2</span>, <span class="fl">0.9</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">300</span>, <span class="fl">2.5</span>, <span class="fl">2.3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">600</span>, <span class="op">-</span><span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">peaks2_1</span> <span class="op">=</span> <span class="fu">modal_peaks</span><span class="op">(</span><span class="va">x2</span>, prominence_threshold <span class="op">=</span> <span class="fl">0.0001</span>, mclust <span class="op">=</span> <span class="cn">FALSE</span>, display_type <span class="op">=</span> <span class="st">"density"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The distribution is bimodal (2 peaks detected).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The distribution is unimodal (1 peak detected).</span>
 <span class="r-plt img"><img src="modal_peaks-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="va">peaks2_2</span> <span class="op">=</span><span class="fu">modal_peaks</span><span class="op">(</span><span class="va">x2</span>, prominence_threshold <span class="op">=</span> <span class="fl">0.0001</span>, mclust <span class="op">=</span> <span class="cn">FALSE</span>, display_type <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> The distribution is bimodal (2 peaks detected).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The distribution is unimodal (1 peak detected).</span>
 <span class="r-plt img"><img src="modal_peaks-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co">#peaks2_3 =modal_peaks(x2, prominence_threshold = 0.0001, mclust = TRUE, display_type = "raw")</span></span></span>
 </code></pre></div>
