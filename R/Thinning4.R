@@ -643,7 +643,8 @@ detect_skeleton_points <- function(img, select.layer = 2) {
 #' @examples
 #' \dontrun{
 #' # Load and skeletonize an image
-#' skeleton <- thin_image_steepest_ascend(binary_image)
+#' raster <- terra::rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0,0), nrow = 3))
+#' skeleton <- thin_image_steepest_ascend(raster)
 #' 
 #' # Visualize the result
 #' plot(as.cimg(skeleton))
@@ -812,8 +813,12 @@ skeletonize_image <- function(img, methods = c("ZhangSuen", "GuoHall", "MAT", "S
       "SteepestAscend" = thin_image_steepest_ascend(img, verbose = verbose, select.layer = select.layer),
       stop(paste("Unsupported method:", method))
     )
+    # convert to output format
+    result <- load_flexible_image(result, output_format = "spatrast", normalize = F, binarize = F)
     results[[method]] <- result
   }
+  
+  
   
   # Return results as a list
   if (length(results) == 1) {
