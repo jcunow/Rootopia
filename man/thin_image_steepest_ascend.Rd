@@ -41,7 +41,8 @@ tracing process.
 \examples{
 \dontrun{
 # Load and skeletonize an image
-skeleton <- thin_image_steepest_ascend(binary_image)
+raster <- terra::rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0,0), nrow = 3))
+skeleton <- thin_image_steepest_ascend(raster)
 
 # Visualize the result
 plot(as.cimg(skeleton))

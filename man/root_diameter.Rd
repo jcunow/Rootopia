@@ -7,7 +7,7 @@
 root_diameter(
   img,
   skeleton_method = "GuoHall",
-  select.layer = 2,
+  select.layer = NULL,
   diagnostics = FALSE,
   unit = "cm",
   dpi = 300
