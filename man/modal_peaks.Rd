@@ -8,7 +8,8 @@ modal_peaks(
   x,
   prominence_threshold = 0.005,
   display_type = "density",
-  mclust = TRUE
+  adjust = 1,
+  mclust = FALSE
 )
 }
 \arguments{
@@ -17,6 +18,8 @@ modal_peaks(
 \item{prominence_threshold}{Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.}
 
 \item{display_type}{Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.}
+
+\item{adjust}{numeric. Adjusts the size of the density kernel. Higher values lead to more smoothing.}
 
 \item{mclust}{Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.}
 }

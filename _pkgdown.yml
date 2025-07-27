@@ -1,4 +1,66 @@
+# url: https://jcunow.github.io/RootScanR/
+# template:
+#   bootstrap: 5
+#   theme: breeze-light
+#   light-switch: true
+#   bslib:
+#     base_font:
+#       google: Roboto
+#     heading_font:
+#       google: Aleo
+#     code_font:
+#       google: JetBrains Mono
+# 
+# serarch: true
+# 
+# # navbar:
+# #   structure:
+# #     left:  [intro, reference, articles, tutorials, news]
+# #     right: [search, github, lightswitch]
+# 
+# 
+# # navbar:
+# #   left:
+# #   - text: Tutorial
+# #     href: articles/FlatBedScans_vignettes.html
+# #           articles/MinirhizotronScans_vignettes.html
+# #           articles/Rotation_Bias_vignettes.html
+# #   - text: News
+# #     href: news/index.html
+# #   - text: Reference
+# #     href: reference/index.html
+# #   structure:
+# #     right: [search, github, lightswitch]
+# 
+# home:
+#   title: "RootScanR: Extract Root Traits from Images"
+#   description: "R tools for extracting root traits from flatbed and minirhizotron images"
+#   path: index.md    
+# 
+# navbar:
+#   left:
+#     - text: Tutorial
+#       menu:
+#         - text: Flatbed Scans
+#           href: articles/FlatBedScans_vignettes.html
+#         - text: Minirhizotron Scans
+#           href: articles/MinirhizotronScans_vignettes.html
+#         - text: Rotation Bias
+#           href: articles/Rotation_Bias_vignettes.html
+#     - text: News
+#       href: news/index.html
+#     - text: Reference
+#       href: reference/index.html
+#   structure:
+#     right: [search, github, lightswitch]
+# 
+
+
+
+
+
 url: https://jcunow.github.io/RootScanR/
+
 template:
   bootstrap: 5
   theme: breeze-light
@@ -11,26 +73,7 @@ template:
     code_font:
       google: JetBrains Mono
 
-serarch: true
-
-# navbar:
-#   structure:
-#     left:  [intro, reference, articles, tutorials, news]
-#     right: [search, github, lightswitch]
-
-
-# navbar:
-#   left:
-#   - text: Tutorial
-#     href: articles/FlatBedScans_vignettes.html
-#           articles/MinirhizotronScans_vignettes.html
-#           articles/Rotation_Bias_vignettes.html
-#   - text: News
-#     href: news/index.html
-#   - text: Reference
-#     href: reference/index.html
-#   structure:
-#     right: [search, github, lightswitch]
+search: true  
 
 
 navbar:
@@ -49,4 +92,3 @@ navbar:
       href: reference/index.html
   structure:
     right: [search, github, lightswitch]
-
