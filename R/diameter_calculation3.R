@@ -45,7 +45,7 @@
 #' terra::plot(result$skeleton_rast)
 #'
 #' @export
-root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = 2, 
+root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = NULL, 
                           diagnostics = FALSE, unit = "cm", dpi = 300) {
   # Input validation and error handling module
   tryCatch({
@@ -56,8 +56,8 @@ root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = 2,
 
 
     # Validate select.layer
-    if (!is.numeric(select.layer) || select.layer < 1) {
-      stop("select.layer must be a positive integer")
+    if ( (!is.numeric(select.layer) || select.layer < 1) && !is.null(select.layer)) {
+      stop("select.layer must be a positive integer or NULL")
     }
 
     # Validate diagnostics
@@ -137,7 +137,7 @@ root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = 2,
     # Skeletonization with validation
     IMS <- tryCatch({
       skeleton <- skeletonize_image(IM, methods = skeleton_method,select.layer = NULL)
-      if (all(skeleton == 0)) {
+      if (all(terra::values( skeleton) == 0)) {
         warning("Skeletonization produced empty result - check input image")
       }
       load_flexible_image(skeleton, output_format = "SpatRaster",  normalize = FALSE, binarize = FALSE, select.layer = NULL)
@@ -164,9 +164,9 @@ root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = 2,
 
     # outpur unit conversion
     if(unit == "cm") {
-      DsSKL = DsSKL / (1800 / 2.54)
+      DsSKL = DsSKL / (dpi / 2.54)
     }else if(unit == "inch"){
-      DsSKL = DsSKL / (1800)
+      DsSKL = DsSKL / (dpi)
     }else if(unit == "px"){
       DsSKL = DsSKL 
     }
