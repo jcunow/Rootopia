@@ -61,7 +61,7 @@ root_length = function(img, unit="cm", dpi=300, select.layer = 1) {
       warning("Image may not be properly skeletonized (contains non-binary values)")
     }
 
-    ## Original function logic starts here
+    
     k0 = matrix(c(0,1,0,0,1,0,0,0,0), nrow = 3, ncol = 3)
     k1 = matrix(c(0,0,0,1,1,0,0,0,0), nrow = 3, ncol = 3)
 
