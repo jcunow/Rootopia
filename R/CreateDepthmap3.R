@@ -14,7 +14,6 @@
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start.soil Numeric; soil surface boundary in cm (0 = surface)
 #' @param center.offset Numeric; rotational center offset (0 = centered, 1 = edge)
-#' @param select.layer Integer; specifies which layer to use if the input is a multi-band image. Default is `2`.
 #' @param progress Message; indicates how mny rows have been processed  
 #'
 #' @return terra raster object containing the depth map
@@ -33,10 +32,10 @@
 #'   tube.thicc = 7,
 #'   tilt = 45,
 #'   dpi = 300,
-#'   center.offset = 0 )
+#'   center.offset = 0.1 )
 create_depthmap = function(img, mask = NULL, sinoid = TRUE,
                            tube.thicc = 7, tilt = 45, dpi = 300,
-                           start.soil = 0, center.offset = 0, select.layer = 2, progress = FALSE) {
+                           start.soil = 0, center.offset = 0.5, progress = FALSE) {
 
   # Input validation module
   tryCatch({
@@ -51,8 +50,6 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
       stop("start.soil must be a numeric value")
     if (!is.numeric(center.offset) || center.offset < 0 || center.offset > 1)
       stop("center.offset must be between 0 and 1")
-    if (!is.numeric(select.layer) || select.layer < 1)
-      stop("select.layer must be a positive integer")
 
     # Validate logical parameters
     if (!is.logical(sinoid))
@@ -62,6 +59,9 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     if (is.null(img))
       stop("Input image cannot be NULL")
 
+    # all layers have the same dimensions, we select layer 1 to handle multi-layer and single-layer raster
+    select.layer = 1
+    
     # Try loading the image with error handling
     img <- tryCatch({
       load_flexible_image(img, select.layer = select.layer,
