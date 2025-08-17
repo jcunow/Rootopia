@@ -352,9 +352,9 @@ medial_axis_transform <- function(img, verbose = FALSE, select.layer = NULL) {
   
   # Flexible input processing with error handling
   img <- tryCatch({
-    result <- load_flexible_image(img, output_format = "spatrast",
+    result <- load_flexible_image(img, output_format = "matrix",
                                   normalize = TRUE,binarize = T, select.layer = select.layer)
-    matrix(as.numeric(result), nrow = nrow(result))
+    # matrix(as.numeric(result), nrow = nrow(result))
   }, error = function(e) {
     stop("Failed to load or convert image: ", e$message)
   })
@@ -449,8 +449,8 @@ medial_axis_transform <- function(img, verbose = FALSE, select.layer = NULL) {
     dist_transform <- compute_distance_transform(img)
     if(verbose) cat("\nDistance transform computed\n")
     
-    skeleton <- terra::t(find_local_maxima(dist_transform))
-    result <- matrix(0, nrow = nrow(img), ncol = ncol(img))
+    skeleton <- t(find_local_maxima(dist_transform))
+    result <- load_flexible_image(skeleton , output_format = "matrix", binarize = T) #matrix(0, nrow = nrow(img), ncol = ncol(img))
     result[skeleton] <- 1
     
     # Validate final result
