@@ -351,6 +351,7 @@ rotation_censor = function(img, center.offset=0, cut.buffer=0.02,
       # Validate dimensions
       if (ex[3] < 0 || ex[4] > dim(img.c)[1]) {
         message("New image dimension: ",dim(img.cc)[1] ," is smaller than specified fixed.width: ", fixed.width, ". Too strong offset for this fixed.width. Consider adjusting the fixed.width.")
+        message("Max. possible fixed.width with this offset is: " , dim(img.c)[1]-(center.row-dim(img.c)[1]/2) * 2, "(+-1 rounding error)" )
       }
       
       if (terra::ncell(img.cc) == 0) {
@@ -370,7 +371,7 @@ rotation_censor = function(img, center.offset=0, cut.buffer=0.02,
 
 
 
-#' Estimate soil surface position using tape markers
+  #' Estimate soil surface position using tape markers
 #'
 #' Detects the soil surface by analyzing tape coverage patterns in the image.
 #'
