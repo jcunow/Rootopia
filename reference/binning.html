@@ -83,7 +83,9 @@
 <span class="r-in"><span><span class="va">mask</span><span class="op">[</span><span class="va">mask</span> <span class="op">==</span> <span class="fl">255</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
 <span class="r-in"><span><span class="va">img</span> <span class="op">=</span> <span class="va">img</span></span></span>
 <span class="r-in"><span><span class="va">depthmap</span> <span class="op">=</span> <span class="fu"><a href="create_depthmap.html">create_depthmap</a></span><span class="op">(</span><span class="va">img</span>,<span class="va">mask</span>,start.soil <span class="op">=</span> <span class="fl">2.9</span>, select.layer <span class="op">=</span> <span class="fl">2</span> <span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in create_depthmap(img, mask, start.soil = 2.9, select.layer = 2):</span> unused argument (select.layer = 2)</span>
 <span class="r-in"><span><span class="va">binned.map</span> <span class="op">=</span> <span class="fu">binning</span><span class="op">(</span><span class="va">depthmap</span>,nn <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in value[[3L]](cond):</span> Error in binning: object 'depthmap' not found</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
