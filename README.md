@@ -70,28 +70,9 @@ terra::plot(skel)
 
 ---
 
-## 📚 Reference & Citation
 
-To cite `RootScanR`, please use the relevant methods cited in the vignettes:
 
-* Kimura et al. (1999) – Pixel-based root length estimation
-* Zhang & Suen (1984) – Skeletonization
-* Otsu (1979) – Thresholding
-* Scrucca et al. (2016) – Model-based clustering (Mclust)
 
-You can also generate the full citation in R:
-
-```r
-citation("RootScanR")
-```
-
----
-
-## 📢 News & Updates
-
-See the [News page](news/index.html) for the latest changes and version notes.
-
----
 
 ## 🔍 Documentation
 
