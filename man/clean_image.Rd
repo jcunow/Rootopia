@@ -31,6 +31,8 @@ clean_image(
 
 \item{iterations}{Number of times the smoothing operation is applied.}
 
+\item{select.layer}{Integer specifying the layer to use if \code{img} is a multi-layer `SpatRaster`. Defaults to \code{NULL}, which may use package-specific defaults for each method.}
+
 \item{report}{Logical; if `TRUE`, the function returns a list with the cleaned image and a printed report on hole and artifact sizes. Defaults to `FALSE`.}
 }
 \value{

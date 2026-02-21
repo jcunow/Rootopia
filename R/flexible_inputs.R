@@ -73,10 +73,6 @@ normalize_array <- function(arr, normalize, binarize) {
 load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE, select.layer = NULL, binarize = FALSE) {
   validate_conversion_params(input, normalize, select.layer, binarize)
 
-  # shortcut
-  # input <- if (inherits(input, output_format) && is.null(select.layer)){
-  #   input  # Return input if already in desired format
-  #   }else message("input format not recognized")
 
   if (inherits(input, output_format) && is.null(select.layer)) {
     return(input)   # already in the requested form
@@ -141,7 +137,16 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
 
 
 
-  # Return based on desired output format
+  ## Return based on desired output format
+  # Overwrite 3D matrix choice
+  if((output_format == "matrix" || 
+      output_format == "Matrix" ||
+      output_format == "MATRIX") && dims[3] > 1 ){
+    warning("You cannot convert a 3D image to 2D matrix. An array is returned instead. Consider specifying ´select.layer´ if you want to return a matrix.")
+    output_format = "array"
+  }
+  
+  # flexible output  conversion
   if (output_format == "SpatRaster" ||
       output_format == "spatraster" ||
       output_format == "spatrast" ||
@@ -165,6 +170,8 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
            output_format == "LAYER") {
     return(raster::raster(arr))
   }
+  
+    
   else if (output_format == "array" ||
            output_format == "Array" ||
            output_format == "ARRAY") {
@@ -178,7 +185,7 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
   else if (output_format == "cimg" ||
            output_format == "Cimg" ||
            output_format == "CIMG") {
-    return(imager::as.cimg(arr))
+    return(suppressWarnings(imager::as.cimg(arr)))
   }
   else if(output_format == "magick-image" ||
           output_format == "magick" ||
@@ -186,7 +193,7 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
           output_format == "Magick-Image" ||
           output_format == "MAGICK" ||
           output_format == "MAGICK-IMAGE" ){
-    return(imager::cimg2magick(imager::as.cimg(arr)))
+    return(imager::cimg2magick(supressWarnings(imager::as.cimg(arr))))
   }
   else {
     stop("Unsupported output format.\n", supported_formats_string(type = "Output"))

@@ -6,7 +6,8 @@
 \usage{
 root_diameter(
   img,
-  skeleton_method = "GuoHall",
+  skeleton_method = "MAT",
+  skeleton.img = NULL,
   select.layer = NULL,
   diagnostics = FALSE,
   unit = "cm",
@@ -17,7 +18,9 @@ root_diameter(
 \item{img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array.
 The input image to process.}
 
-\item{skeleton_method}{Character. The method to use for skeletonization. Default is `"Guo-Hall"`.}
+\item{skeleton_method}{Character. The method to use for skeletonization. Default is `"MAT"`. Will be skipped if skeleton `SpatRaster`is provided.}
+
+\item{skeleton.img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.}
 
 \item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
 
@@ -58,7 +61,7 @@ The function supports various input formats and normalizes image values to the r
 # Example usage:
 data(seg_Oulanka2023_Session01_T067)
 result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
-  skeleton_method = "GuoHall", select.layer = 2, unit = "px",
+  skeleton_method = "MAT", select.layer = 2, unit = "px",
   diagnostics = TRUE)
 
 # Access results:

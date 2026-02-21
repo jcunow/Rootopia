@@ -6,7 +6,8 @@
 #' @param img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array.
 #'   The input image to process.
 #' @param diagnostics Logical. If `TRUE`, enables diagnostic plots and logging. Default is `FALSE`.
-#' @param skeleton_method Character. The method to use for skeletonization. Default is `"Guo-Hall"`.
+#' @param skeleton_method Character. The method to use for skeletonization. Default is `"MAT"`. Will be skipped if skeleton `SpatRaster`is provided.
+#' @param skeleton.img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.
 #' @param select.layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.
 #' @param unit output in pixel 'px', 'inch' or in 'cm'
 #' @param dpi scan resolution. Only used if unit = 'cm' or 'inch'
@@ -37,7 +38,7 @@
 #' # Example usage:
 #' data(seg_Oulanka2023_Session01_T067)
 #' result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
-#'   skeleton_method = "GuoHall", select.layer = 2, unit = "px",
+#'   skeleton_method = "MAT", select.layer = 2, unit = "px",
 #'   diagnostics = TRUE)
 #'
 #' # Access results:
@@ -45,7 +46,7 @@
 #' terra::plot(result$skeleton_rast)
 #'
 #' @export
-root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = NULL, 
+root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, select.layer = NULL, 
                           diagnostics = FALSE, unit = "cm", dpi = 300) {
   # Input validation and error handling module
   tryCatch({
@@ -70,9 +71,9 @@ root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = NULL
       stop("Unit must be either 'px', 'cm', or 'inch'")
     }
     
-    # Validate DPI when unit is cm
+    # Validate DPI when unit is cm or inch
     if (unit == "cm" | unit == "inch") {
-      if (missing(dpi) || !is.numeric(dpi) || dpi <= 0) {
+      if (is.null(dpi) || !is.numeric(dpi) || dpi <= 0) {
         stop("Valid positive numeric dpi value is required when unit = 'cm' or 'inch'.")
       }
     }
@@ -134,20 +135,27 @@ root_diameter <- function(img,  skeleton_method = "GuoHall", select.layer = NULL
       stop(sprintf("Failed to convert image to SpatRaster: %s", e$message))
     })
 
-    # Skeletonization with validation
-    IMS <- tryCatch({
-      skeleton <- skeletonize_image(IM, methods = skeleton_method,select.layer = NULL)
-      if (all(terra::values( skeleton) == 0)) {
-        warning("Skeletonization produced empty result - check input image")
-      }
-      load_flexible_image(skeleton, output_format = "SpatRaster",  normalize = FALSE, binarize = FALSE, select.layer = NULL)
-    }, error = function(e) {
-      stop(sprintf("Skeletonization failed: %s", e$message))
-    })
+    if(is.null(skeleton.img) ){
+      # Skeletonization with validation
+      IMS <- tryCatch({
+        skeleton <- skeletonize_image(IM, methods = skeleton_method,select.layer = NULL)
+        if (all(terra::values( skeleton) == 0)) {
+          warning("Skeletonization produced empty result - check input image")
+        }
+        load_flexible_image(skeleton, output_format = "SpatRaster",  normalize = FALSE, binarize = FALSE, select.layer = NULL)
+      }, error = function(e) {
+        stop(sprintf("Skeletonization failed: %s", e$message))
+      })      
+    }else {
+      IMS = load_flexible_image(skeleton.img, output_format = "SpatRaster",  normalize = FALSE, binarize = TRUE, select.layer = NULL)
+    }
 
+    
     # Filter root regions
     DsSKL <- Ds
-    DsSKL[IMS == 0] <- NA
+    terra::ext(IMS) <- terra::ext(DsSKL) 
+    DsSKL[[1:dim(Ds)[3]]][IMS == 0] <- NA  
+    # DsSKL[IMS == 0] <- NA
 
      # remove non root distances
      DsSKL[DsSKL == 0] <- NA

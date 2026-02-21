@@ -449,7 +449,8 @@ medial_axis_transform <- function(img, verbose = FALSE, select.layer = NULL) {
     dist_transform <- compute_distance_transform(img)
     if(verbose) cat("\nDistance transform computed\n")
     
-    skeleton <- t(find_local_maxima(dist_transform))
+    skeleton <- find_local_maxima(dist_transform)
+    #skeleton <- t(find_local_maxima(dist_transform))
     result <- load_flexible_image(skeleton , output_format = "matrix", binarize = T) #matrix(0, nrow = nrow(img), ncol = ncol(img))
     result[skeleton] <- 1
     

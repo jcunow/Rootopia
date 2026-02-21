@@ -12,8 +12,7 @@ create_depthmap(
   tilt = 45,
   dpi = 300,
   start.soil = 0,
-  center.offset = 0,
-  select.layer = 2,
+  center.offset = 0.5,
   progress = FALSE
 )
 }
@@ -35,8 +34,6 @@ images, specify band_index parameter}
 
 \item{center.offset}{Numeric; rotational center offset (0 = centered, 1 = edge)}
 
-\item{select.layer}{Integer; specifies which layer to use if the input is a multi-band image. Default is `2`.}
-
 \item{progress}{Message; indicates how mny rows have been processed}
 }
 \value{
@@ -57,7 +54,7 @@ map = create_depthmap(img,mask,start.soil = 0.1,
   tube.thicc = 7,
   tilt = 45,
   dpi = 300,
-  center.offset = 0 )
+  center.offset = 0.1 )
 }
 \author{
 Johannes Cunow, Robert Weigel
