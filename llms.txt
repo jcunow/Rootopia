@@ -47,6 +47,7 @@ interpretation.
 ## 🚀 Quick Start
 
 ``` r
+
 # Load example flatbed scan
 library(RootScanR)
 library(terra)
@@ -104,8 +105,12 @@ request.
   : Texture calculation
 - [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
   : Bin continuous depth values into discrete intervals
+- [`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
+  : Build peat class centroids from manual RGB colour picks
 - [`circular_mean()`](https://jcunow.github.io/RootScanR/reference/circular_mean.md)
   : Calculate a circular mean to determine average Directionality
+- [`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
+  : Classify peat material classes from a minirhizotron RGB raster
 - [`clean_image()`](https://jcunow.github.io/RootScanR/reference/clean_image.md)
   : Clean binary images by filling holes, removing small artifacts, and
   optionally smoothing edges
@@ -132,6 +137,8 @@ request.
 - [`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md)
   : Detect and Classify Modes in a Distribution Using Prominence or
   Mclust
+- [`plot_peat_classification()`](https://jcunow.github.io/RootScanR/reference/plot_peat_classification.md)
+  : Plot the output of classify_peat_rgb
 - [`rgb2gray()`](https://jcunow.github.io/RootScanR/reference/rgb2gray.md)
   : Convert RGB image to grayscale with optimized memory management and
   parallel processing

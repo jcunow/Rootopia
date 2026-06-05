@@ -81,7 +81,7 @@ DepthMap <- terra::t(create_depthmap(im, center.offset = 0, tube.thicc = 3.5))
 
 # Just the deep drive score
 deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2)
-#> [1] 0.2440353
+#> [1] 0.2440492
 
 # Get spatial outputs too
 res <- deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2, return = "all")

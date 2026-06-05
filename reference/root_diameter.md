@@ -10,7 +10,8 @@ to a binary image before processing.
 ``` r
 root_diameter(
   img,
-  skeleton_method = "GuoHall",
+  skeleton_method = "MAT",
+  skeleton.img = NULL,
   select.layer = NULL,
   diagnostics = FALSE,
   unit = "cm",
@@ -29,7 +30,13 @@ root_diameter(
 - skeleton_method:
 
   Character. The method to use for skeletonization. Default is
-  \`"Guo-Hall"\`.
+  \`"MAT"\`. Will be skipped if skeleton \`SpatRaster\`is provided.
+
+- skeleton.img:
+
+  A character string (file path), \`SpatRaster\`, \`RasterBrick\`,
+  \`RasterLayer\`, \`cimg\`, \`magick-image\`, or array. Uses this
+  object instead of computing it from scratch.
 
 - select.layer:
 
@@ -104,34 +111,20 @@ raster operations and the \`imager\` package for image processing.
 # Example usage:
 data(seg_Oulanka2023_Session01_T067)
 result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
-  skeleton_method = "GuoHall", select.layer = 2, unit = "px",
+  skeleton_method = "MAT", select.layer = 2, unit = "px",
   diagnostics = TRUE)
 #> 
-#> Applying method: GuoHall 
-#> Image dimensions: 1144 x 4900 
-#> Initial foreground pixels: 200781 
-#> Iteration 1 : Removed 95916 pixels
-#> Iteration 2 : Removed 2872 pixels
-#> Iteration 3 : Removed 822 pixels
-#> Iteration 4 : Removed 326 pixels
-#> Iteration 5 : Removed 149 pixels
-#> Iteration 6 : Removed 66 pixels
-#> Iteration 7 : Removed 29 pixels
-#> Iteration 8 : Removed 19 pixels
-#> Iteration 9 : Removed 16 pixels
-#> Iteration 10 : Removed 8 pixels
-#> Iteration 11 : Removed 6 pixels
-#> Iteration 12 : Removed 3 pixels
-#> Final foreground pixels: 100549 
-#> Total iterations: 13 
+#> Applying method: MAT 
+#> 
+#> Distance transform computed
 #> Processing complete. Summary statistics:
-#> Mean diameter: 2.21
+#> Mean diameter: 2.14
 #> Median diameter: 2.00
-#> Number of valid measurements: 100549
+#> Number of valid measurements: 161904
 
 # Access results:
 print(result$mean_diameter)
-#> [1] 2.20623
+#> [1] 2.14191
 terra::plot(result$skeleton_rast)
 
 ```

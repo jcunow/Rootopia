@@ -36,6 +36,7 @@ like the following. Step 2 and step 3 depend
 ### Installation
 
 ``` r
+
 # Install the package from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
@@ -55,6 +56,7 @@ minirhizotron tubes into a single composite image to enable proper depth
 alignment and remove overlap between images.
 
 ``` r
+
 # Load example image files (replace with your actual file paths)
 image_files <- c("path/to/image1.png", "path/to/image2.png", "path/to/image3.png")
 
@@ -98,6 +100,7 @@ Models can be sensitive to resolution. Try
 **Purpose**: Import your segmented and original RGB images for analysis.
 
 ``` r
+
 # Load a segmented image (replace with your file path). The function accepts multiple different input formats.
 segmented_image <- load_flexible_image("path/to/segmented_image.tif", output_format = "spatrast", normalize = F, select.layer = NULL, binarize = FALSE)
 
@@ -119,6 +122,7 @@ attribution. If calibration data is unavailable, RootScanR provides
 estimation functions using tape cover as proxy:
 
 ``` r
+
 # Estimate soil surface position based on tape cover. Here, 0.5 cm of tape beyond the true soil surface is assumed to block out light.
 soil_surface <- estimate_soil_surface(rgb_image, dpi = 300, tape.overlap = 0.5)
 print(paste0("Estimated soil surface begins at column: ", soil_surface$soil0))
@@ -134,6 +138,7 @@ print(paste0("Estimated rotation center at row: ", rotation_center))
 in the image.
 
 ``` r
+
 # Create a mask to exclude tape from soil analysis
 # Assuming RootDetector format where red channel includes tape
 tape_mask <- (segmented_image[[1]] - segmented_image[[2]]) / 255
@@ -161,6 +166,7 @@ plot(depth_map, main = "Depth Map")
 analysis and visualization.
 
 ``` r
+
 # Create depth bins (5cm intervals)
 binned_map <- bin_depths(depth_map, interval = 5, method = "rounding")
 
@@ -178,6 +184,7 @@ terra::plot(transposed_map, main = "Binned Depth Map (5cm intervals)")
 for morphological analysis.
 
 ``` r
+
 # Create root skeleton using Medial Axis Transform (MAT) method
 # Select layer 2 which typically contains root information in RootDetector output
 skeleton <- skeletonize_image(
@@ -197,6 +204,7 @@ plot(skeleton, main = "Root Skeleton")
 analysis.
 
 ``` r
+
 # Detect endpoints and branching points
 skeleton_points <- detect_skeleton_points(skeleton)
 root_tips <- px.sum(skeleton_points$endpoints)
@@ -239,6 +247,7 @@ print(root_metrics)
 images.
 
 ``` r
+
 # Analyze overall tube color
 tube_color <- tube_coloration(rgb_image)
 print("Overall tube color metrics:")
@@ -273,6 +282,7 @@ print(soil_texture)
 **Purpose**: Analyze how root traits change with soil depth.
 
 ``` r
+
 ## create analytical zones; indexD indicates which depth to look at.
 root_zone = zoning(img = root_map, 
                    depth = 10,

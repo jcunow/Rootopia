@@ -14,7 +14,9 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/abind2.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/binning.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/build_peat_centroids.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/circular_mean.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/clean_image.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/count_pixels.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/create_depthmap.html</loc></url>
@@ -33,6 +35,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/medial_axis_transform.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/modal_peaks.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/normalize_array.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/plot_peat_classification.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/remove_small_objects.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/report_image_components.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb2gray.html</loc></url>

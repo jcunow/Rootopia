@@ -57,6 +57,12 @@ clean_image(
 
   Number of times the smoothing operation is applied.
 
+- select.layer:
+
+  Integer specifying the layer to use if `img` is a multi-layer
+  \`SpatRaster\`. Defaults to `NULL`, which may use package-specific
+  defaults for each method.
+
 - report:
 
   Logical; if \`TRUE\`, the function returns a list with the cleaned

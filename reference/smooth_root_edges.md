@@ -34,15 +34,13 @@ A smoothed binary image
 ## Examples
 
 ``` r
+
 data("seg_Oulanka2023_Session01_T067")
 img <- seg_Oulanka2023_Session01_T067
 # Try different kernel shapes
 smoothed_square <- smooth_root_edges(img, kernel_shape = "square", kernel_size = 3)
-#> Warning: Assuming third dimension corresponds to colour
 smoothed_diamond <- smooth_root_edges(img, kernel_shape = "diamond", kernel_size = 3)
-#> Warning: Assuming third dimension corresponds to colour
 smoothed_disk <- smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3)
-#> Warning: Assuming third dimension corresponds to colour
 plot(smoothed_disk)
 
 ```

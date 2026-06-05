@@ -16,6 +16,7 @@ ecological studies.
 ### Installation
 
 ``` r
+
 # Install the package from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
@@ -45,6 +46,7 @@ functions:
 **Purpose**: Import flatbed scan images for analysis.
 
 ``` r
+
 # Load a flatbed scan image (replace with your actual file path)
 flatbed_image <- load_flexible_image(
   "path/to/flatbed_scan.tiff", 
@@ -81,6 +83,7 @@ plot(binary_image, main = "Binary Root Image")
 system for morphological analysis.
 
 ``` r
+
 # Skeletonize the root image
 skeleton <- skeletonize_roots(
   binary_image,
@@ -102,6 +105,7 @@ morphology.
 **Purpose**: Identify key structural elements of the root system.
 
 ``` r
+
 # Detect root tips and branching points
 skeleton_features <- detect_skeleton_points(skeleton)
 
@@ -123,6 +127,7 @@ print(paste0("Branching frequency (per 100 cm): ", round(branching_frequency, 2)
 **Purpose**: Calculate the total length of all roots in the image.
 
 ``` r
+
 # Calculate root length using Kimura's method
 root_length <- root_length(skeleton)
 print(paste0("Total root length (cm): ", round(root_length, 2)))
@@ -133,6 +138,7 @@ print(paste0("Total root length (cm): ", round(root_length, 2)))
 **Purpose**: Assess how much of the scan area is occupied by roots.
 
 ``` r
+
 # Create background (non-root) mask
 background <- (binary_image - 1) * -1
 
@@ -154,6 +160,7 @@ print(paste0("Root length density: ", round(rootlength_density, 4)))
 **Purpose**: Estimate the thickness of roots at different positions.
 
 ``` r
+
 # Calculate root diameters
 diameter_map <- root_diameter(
   root_map, 
@@ -197,6 +204,7 @@ plot(h$mids, h$counts, type = "h", lwd = 10, col = "lightblue",
 for further analysis.
 
 ``` r
+
 library(grid)
 # overlay plotting
 g1 = ggplotGrob(flatbed_image)

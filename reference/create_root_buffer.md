@@ -36,13 +36,13 @@ SpatRast - buffer zone around non-zero pixels
 data(seg_Oulanka2023_Session03_T067)
 img <- terra::rast(seg_Oulanka2023_Session03_T067)
 create_root_buffer(img, width = 2)
-#> class       : SpatRaster 
+#> class       : SpatRaster
 #> size        : 1161, 4900, 3  (nrow, ncol, nlyr)
 #> resolution  : 1, 1  (x, y)
 #> extent      : 0, 4900, 0, 1161  (xmin, xmax, ymin, ymax)
-#> coord. ref. :  
+#> coord. ref. : 
 #> source(s)   : memory
-#> names       : lyr.1, lyr.2, lyr.3 
-#> min values  :  -254,  -254,  -254 
-#> max values  :     1,     1,     1 
+#> names       : lyr.1, lyr.2, lyr.3
+#> min values  :  -254,  -254,  -254
+#> max values  :     1,     1,     1
 ```

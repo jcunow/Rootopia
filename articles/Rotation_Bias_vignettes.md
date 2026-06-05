@@ -14,6 +14,7 @@ changing root growth angles.
 ### Installation
 
 ``` r
+
 # Install the package from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
@@ -43,6 +44,7 @@ The rotation bias and circadian analysis module includes:
 analysis.
 
 ``` r
+
 # Example: Loading time-series data
 # In a real scenario, you would load your own data from files
 # The data should contain timestamps and root measurements
@@ -84,6 +86,7 @@ ggplot(root_ts_data, aes(x = time, y = growth_rate)) +
 patterns.
 
 ``` r
+
 root_ts_data = root_ts_data %>% arrange(root_ts_data$time)
 # Fit a sine curve to the time-series data
 fit <- fit_sine_curve(
@@ -111,6 +114,7 @@ lines(root_ts_data$time, fit$predicted, col = "coral" )
 significant circadian rhythms.
 
 ``` r
+
 # Perform statistical tests to validate circadian rhythms (all identical - check)
 
 # 1. Wald Test (tests if amplitude is significantly different from zero)
@@ -150,6 +154,7 @@ print(f_result)
 the period is unknown.
 
 ``` r
+
 # Scan for the most likely period in the data
 period_scan <- analyze_circadian_period(
   time = root_ts_data$time,
@@ -175,6 +180,7 @@ print(paste0("Best-fitting period: ", round(best_period, 2), " hours"))
 minirhizotron tubes.
 
 ``` r
+
 # For rotation bias, we need data that includes angular positions
 # In a minirhizotron, this would be the angular position around the tube
 
@@ -222,6 +228,7 @@ plot_rotation_bias(
 rhythms.
 
 ``` r
+
 # For this analysis, we need data that combines time and angular position
 # Generate synthetic data for demonstration
 
@@ -279,6 +286,7 @@ plot_temporal_bias(
 directional preferences.
 
 ``` r
+
 # Simulate data for two treatments
 set.seed(123)
 

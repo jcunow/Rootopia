@@ -1,11 +1,11 @@
-pandoc: 3.1.11
+pandoc: 3.8.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   FlatBedScans_vignettes: FlatBedScans_vignettes.html
   MinirhizotronScans_vignettes: MinirhizotronScans_vignettes.html
   Rotation_Bias_vignettes: Rotation_Bias_vignettes.html
-last_built: 2025-11-19T09:03Z
+last_built: 2026-06-05T10:35Z
 urls:
   reference: https://jcunow.github.io/RootScanR/reference
   article: https://jcunow.github.io/RootScanR/articles

@@ -47,6 +47,7 @@ interpretation.
 ## 🚀 Quick Start
 
 ``` r
+
 # Load example flatbed scan
 library(RootScanR)
 library(terra)
