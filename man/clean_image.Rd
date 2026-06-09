@@ -93,17 +93,12 @@ very jagged edges; leave it off (`FALSE`, the default) otherwise.
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# Inspect before cleaning
-report_image_components(img)
 
 # Clean: fill small holes, remove tiny artifacts — returns SpatRaster
 cleaned <- clean_image(img,
                        max_hole_size     = 50,
                        max_artifact_size = 10,
                        select.layer      = 2)
-
-terra::plot(cleaned)            # works directly, no conversion needed
-skel <- skeletonize_image(cleaned, methods = "MAT")
 
 # If you need a cimg for further imager operations:
 cleaned_cimg <- clean_image(img, max_hole_size = 50,

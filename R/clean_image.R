@@ -147,7 +147,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' @param img A `cimg` binary image (values 0 and 1), or any format accepted
 #'   by [load_flexible_image()].
 #' @return Invisibly `NULL`.  Prints to the console.
-#' @export
+#' @keywords internal
 #' @examples
 #' img <- imager::as.cimg(matrix(0, 50, 50))
 #' img[10:20, 10:20] <- 1   # white square
@@ -297,17 +297,12 @@ smooth_root_edges <- function(img,
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
 #'
-#' # Inspect before cleaning
-#' report_image_components(img)
 #'
 #' # Clean: fill small holes, remove tiny artifacts — returns SpatRaster
 #' cleaned <- clean_image(img,
 #'                        max_hole_size     = 50,
 #'                        max_artifact_size = 10,
 #'                        select.layer      = 2)
-#'
-#' terra::plot(cleaned)            # works directly, no conversion needed
-#' skel <- skeletonize_image(cleaned, methods = "MAT")
 #'
 #' # If you need a cimg for further imager operations:
 #' cleaned_cimg <- clean_image(img, max_hole_size = 50,
