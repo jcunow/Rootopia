@@ -2,63 +2,41 @@
 % Please edit documentation in R/clean_image.R
 \name{report_image_components}
 \alias{report_image_components}
-\title{Report sizes of holes and white artifacts in binary images}
+\title{Report sizes of holes and isolated artifacts in a binary image}
 \usage{
 report_image_components(img)
 }
 \arguments{
-\item{img}{A `cimg` object representing a binary image with values 0 and 1.}
+\item{img}{A `cimg` binary image (values 0 and 1), or any format accepted
+by [load_flexible_image()].}
 }
 \value{
-None (invisible `NULL`). The function prints human-readable summaries to the console.
+Invisibly `NULL`.  Prints to the console.
 }
 \description{
-Analyzes a binary image and prints the sizes of internal black holes (0-valued regions enclosed by 1s) and isolated white artifacts (1-valued regions not connected to the border). This function is useful for diagnosing what would be affected by `fill_holes()` and `remove_small_objects()` operations.
+Prints a human-readable summary of all internal black holes and isolated
+white artifacts in `img`, together with their pixel counts.  Use this
+**before** calling [clean_image()] to decide on appropriate values for
+`max_hole_size` and `max_artifact_size`.
 }
-\details{
-Holes are detected by inverting the image and applying connected component labeling. Any region that does not touch the image border is considered a candidate hole or artifact.
+\section{Choosing thresholds}{
 
-
-- Holes are black regions (0-valued pixels) completely enclosed by white (1-valued) areas.
-- Artifacts are small white regions (1-valued pixels) that are not connected to the image border.
-- Pixel counts are printed for each detected region.
+At 300 DPI a single root cross-section in a minirhizotron scan is
+roughly 5–150 px² depending on root diameter.  As a starting point:
+\itemize{
+  \item `max_artifact_size = 10` removes single-pixel noise and tiny
+        segmentation specks while preserving fine roots.
+  \item `max_hole_size = 50` fills small gaps inside roots without
+        merging genuinely separate objects.
 }
+Scale these linearly if your scanner DPI differs (e.g. at 150 DPI,
+halve both values).
+}
+
 \examples{
-#' # Create a complex test image with holes and artifacts
-
-  img <- imager::as.cimg(matrix(0, 150, 150))  # Start with black background
-
-  # Create multiple white objects with black holes
-  img[20:50, 20:50] <- 1       # White square 1
-  img[30:35, 30:35] <- 0       # Small black hole in square 1
-
-  img[70:120, 70:120] <- 1     # White square 2
-  img[80:85, 80:85] <- 0       # Small black hole 1 in square 2
-  img[100:115, 100:115] <- 0   # Large black hole 2 in square 2
-  
-# Add small artifacts (1-pixel specks)
-img[10, 140] <- 1
-img[145, 15] <- 1
-
-# Add a 2×2 speck
-img[130:131, 40:41] <- 1
-
-# Add an irregular blob
-img[100:102, 10] <- 1
-img[101:102, 11] <- 1
-img[101, 12] <- 1
-
-  # Create a white ring (donut shape)
-  center_x <- 40
-  center_y <- 100
-for (i in 1:150) {
- for (j in 1:150) {
-   dist <- sqrt((i - center_x)^2 + (j - center_y)^2)
-   if (dist <= 20 && dist >= 10) {
-     img[i, j,,] <- 1  
- }}}
- 
+img <- imager::as.cimg(matrix(0, 50, 50))
+img[10:20, 10:20] <- 1   # white square
+img[13:15, 13:15] <- 0   # hole inside it
+img[40, 40]        <- 1  # isolated artifact
 report_image_components(img)
-
 }
-\keyword{internal}

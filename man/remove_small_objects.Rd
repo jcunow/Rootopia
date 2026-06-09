@@ -2,19 +2,21 @@
 % Please edit documentation in R/clean_image.R
 \name{remove_small_objects}
 \alias{remove_small_objects}
-\title{Remove small white artifacts from binary images}
+\title{Remove small isolated white artifacts from a binary image}
 \usage{
 remove_small_objects(img, max_size = NULL)
 }
 \arguments{
-\item{img}{A `cimg` object representing a binary image (values 0 and 1).}
+\item{img}{A `cimg` binary image (values 0 and 1).}
 
-\item{max_size}{Optional maximum size (in pixels) of white objects to remove. If `NULL`, all isolated objects are removed.}
+\item{max_size}{Maximum artifact size in pixels to remove.  If `NULL`
+(default), all isolated white regions are removed.}
 }
 \value{
-A `cimg` object with small white artifacts removed (set to 0).
+A `cimg` with artifacts removed.
 }
 \description{
-Identifies small internal white regions (objects) in a binary image and removes them by setting their pixel values to 0. Artifacts are defined as white areas (value = 1) not connected to the image border.
+Sets to 0 all white regions (value = 1) that are not connected to the
+image border.
 }
 \keyword{internal}

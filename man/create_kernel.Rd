@@ -2,19 +2,21 @@
 % Please edit documentation in R/clean_image.R
 \name{create_kernel}
 \alias{create_kernel}
-\title{Create a kernel with specified shape for morphological operations}
+\title{Create a morphological structuring element}
 \usage{
 create_kernel(shape = "disk", size = 3)
 }
 \arguments{
-\item{shape}{Shape of the kernel: "square", "diamond", or "disk"}
+\item{shape}{One of `"disk"` (default), `"square"`, or `"diamond"`.}
 
-\item{size}{Size of the kernel (odd integer)}
+\item{size}{Kernel size in pixels (odd integer).  Even values are silently
+incremented by 1.}
 }
 \value{
-A kernel as an imager cimg object
+A `cimg` kernel.
 }
 \description{
-Create a kernel with specified shape for morphological operations
+Returns a `cimg` kernel of a given shape for use with
+`imager::dilate()` / `imager::erode()`.
 }
 \keyword{internal}

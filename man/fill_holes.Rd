@@ -2,19 +2,21 @@
 % Please edit documentation in R/clean_image.R
 \name{fill_holes}
 \alias{fill_holes}
-\title{Fill holes in binary images}
+\title{Fill internal black holes in a binary image}
 \usage{
 fill_holes(img, max_size = NULL)
 }
 \arguments{
-\item{img}{A `cimg` object representing a binary image (values 0 and 1).}
+\item{img}{A `cimg` binary image (values 0 and 1).}
 
-\item{max_size}{Optional maximum size (in pixels) of holes to fill. If `NULL`, all holes are filled.}
+\item{max_size}{Maximum hole size in pixels to fill.  If `NULL` (default),
+all holes are filled regardless of size.}
 }
 \value{
-A `cimg` object with holes filled (as 1s).
+A `cimg` with holes filled.
 }
 \description{
-Identifies internal black regions ("holes") in a binary image and fills them by setting their pixel values to 1. Holes are defined as black areas (value = 0) completely surrounded by white (value = 1), i.e., not connected to the image border.
+Sets to 1 all black regions (value = 0) that are completely surrounded by
+white (value = 1) — i.e. not connected to the image border.
 }
 \keyword{internal}
