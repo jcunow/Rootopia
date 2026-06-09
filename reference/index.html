@@ -17,9 +17,11 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial"><li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial"><li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -44,9 +46,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="batch-processing">Batch processing<a class="anchor" aria-label="anchor" href="#batch-processing"></a></h2>
 
-
+      <div class="section-desc"><p>High-level wrapper that runs a full depth-profile analysis over a directory of images.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -55,87 +57,112 @@
 
       <dl><dt>
 
-          <code><a href="RPI.html">RPI()</a></code>
+          <code><a href="root_depth_metrics.html">root_depth_metrics()</a></code>
 
         </dt>
-        <dd>Calculate Root Penetration Index</dd>
+        <dd>Compute root traits over a depth profile from segmented (mini)rhizotron images</dd>
+      </dl></div><div class="section level2">
+      <h2 id="image-loading-and-preprocessing">Image loading and preprocessing<a class="anchor" aria-label="anchor" href="#image-loading-and-preprocessing"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Functions for loading, cleaning, thresholding, and transforming root images.</p></div>
 
-          <code><a href="RWDI.html">RWDI()</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Calculate Root Weight Depth Index</dd>
 
-        <dt>
 
-          <code><a href="TurnoverDPC_data.html">TurnoverDPC_data</a></code>
 
-        </dt>
-        <dd>Root Turnover Analysis Data</dd>
+      <dl><dt>
 
-        <dt>
-
-          <code><a href="analyze_soil_texture.html">analyze_soil_texture()</a></code>
+          <code><a href="load_flexible_image.html">load_flexible_image()</a></code>
 
         </dt>
-        <dd>Texture calculation</dd>
-
-        <dt>
-
-          <code><a href="binning.html">binning()</a></code>
-
-        </dt>
-        <dd>Bin continuous depth values into discrete intervals</dd>
-
-        <dt>
-
-          <code><a href="build_peat_centroids.html">build_peat_centroids()</a></code>
-
-        </dt>
-        <dd>Build peat class centroids from manual RGB colour picks</dd>
-
-        <dt>
-
-          <code><a href="circular_mean.html">circular_mean()</a></code>
-
-        </dt>
-        <dd>Calculate a circular mean to determine average Directionality</dd>
-
-        <dt>
-
-          <code><a href="classify_peat_rgb.html">classify_peat_rgb()</a></code>
-
-        </dt>
-        <dd>Classify peat material classes from a minirhizotron RGB raster</dd>
+        <dd>Load an image flexibly from file or convert from memory</dd>
 
         <dt>
 
           <code><a href="clean_image.html">clean_image()</a></code>
 
         </dt>
-        <dd>Clean binary images by filling holes, removing small artifacts, and optionally smoothing edges</dd>
+        <dd>Clean a binary root image</dd>
+
+        <dt>
+
+          <code><a href="image_threshold.html">image_threshold()</a></code>
+
+        </dt>
+        <dd>Threshold or deblur an image to binarize features</dd>
+
+        <dt>
+
+          <code><a href="rgb2gray.html">rgb2gray()</a></code>
+
+        </dt>
+        <dd>Convert RGB image to grayscale with optimized memory management and parallel processing</dd>
+
+        <dt>
+
+          <code><a href="rotation_censor.html">rotation_censor()</a></code>
+
+        </dt>
+        <dd>Censor image edges based on rotation</dd>
+
+        <dt>
+
+          <code><a href="skeletonize_image.html">skeletonize_image()</a></code>
+
+        </dt>
+        <dd>Skeletonization Wrapper Function</dd>
+      </dl></div><div class="section level2">
+      <h2 id="root-traits">Root traits<a class="anchor" aria-label="anchor" href="#root-traits"></a></h2>
+
+      <div class="section-desc"><p>Per-image trait extraction: length, diameter, architecture, and spatial metrics.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="root_length.html">root_length()</a></code>
+
+        </dt>
+        <dd>Calculate Root Length using Kimura's Method with optimizations</dd>
+
+        <dt>
+
+          <code><a href="root_diameter.html">root_diameter()</a></code>
+
+        </dt>
+        <dd>Estimate Root Diameters</dd>
+
+        <dt>
+
+          <code><a href="root_thickness.html">root_thickness()</a></code>
+
+        </dt>
+        <dd>Approximate average Root Thickness</dd>
+
+        <dt>
+
+          <code><a href="detect_skeleton_points.html">detect_skeleton_points()</a></code>
+
+        </dt>
+        <dd>Detect Skeleton Points: Branching Points and Endpoints</dd>
 
         <dt>
 
           <code><a href="count_pixels.html">count_pixels()</a></code>
 
         </dt>
-        <dd>counts all pixels in a segmented image</dd>
+        <dd>Count all pixels in a segmented image</dd>
 
         <dt>
 
-          <code><a href="create_depthmap.html">create_depthmap()</a></code>
+          <code><a href="px.sum.html">px.sum()</a></code>
 
         </dt>
-        <dd>Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map</dd>
-
-        <dt>
-
-          <code><a href="create_root_buffer.html">create_root_buffer()</a></code>
-
-        </dt>
-        <dd>Create a buffer halo) around non-zero pixels</dd>
+        <dd>Count pixels (deprecated alias for count_pixels)</dd>
 
         <dt>
 
@@ -146,10 +173,54 @@
 
         <dt>
 
-          <code><a href="detect_skeleton_points.html">detect_skeleton_points()</a></code>
+          <code><a href="root_scape_metrics.html">root_scape_metrics()</a></code>
 
         </dt>
-        <dd>Detect Skeleton Points: Branching Points and Endpoints</dd>
+        <dd>RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features akin to landscape analysis.</dd>
+
+        <dt>
+
+          <code><a href="root_accumulation.html">root_accumulation()</a></code>
+
+        </dt>
+        <dd>Calculate root accumulation</dd>
+      </dl></div><div class="section level2">
+      <h2 id="depth-mapping">Depth mapping<a class="anchor" aria-label="anchor" href="#depth-mapping"></a></h2>
+
+      <div class="section-desc"><p>Functions for constructing and binning depth maps from minirhizotron geometry.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="create_depthmap.html">create_depthmap()</a></code>
+
+        </dt>
+        <dd>Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map</dd>
+
+        <dt>
+
+          <code><a href="binning.html">binning()</a></code>
+
+        </dt>
+        <dd>Bin continuous depth values into discrete intervals</dd>
+
+        <dt>
+
+          <code><a href="zoning.html">zoning()</a></code>
+
+        </dt>
+        <dd>Zone Image Data by Depth and/or Rotation Slices with Optional Spatial Cropping</dd>
+
+        <dt>
+
+          <code><a href="estimate_soil_surface.html">estimate_soil_surface()</a></code>
+
+        </dt>
+        <dd>Estimate soil surface position using tape markers</dd>
 
         <dt>
 
@@ -164,34 +235,43 @@
 
         </dt>
         <dd>Detect rotation shift between two images</dd>
+      </dl></div><div class="section level2">
+      <h2 id="soil-and-colour-characterisation">Soil and colour characterisation<a class="anchor" aria-label="anchor" href="#soil-and-colour-characterisation"></a></h2>
+
+      <div class="section-desc"><p>Colour metrics, peat classification, and texture analysis.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="tube_coloration.html">tube_coloration()</a></code>
+
+        </dt>
+        <dd>Calculate Image Coloration Metrics</dd>
 
         <dt>
 
-          <code><a href="estimate_soil_surface.html">estimate_soil_surface()</a></code>
+          <code><a href="analyze_soil_texture.html">analyze_soil_texture()</a></code>
 
         </dt>
-        <dd>Estimate soil surface position using tape markers</dd>
+        <dd>Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)</dd>
 
         <dt>
 
-          <code><a href="fit_sine_curve.html">fit_sine_curve()</a></code>
+          <code><a href="classify_peat_rgb.html">classify_peat_rgb()</a></code>
 
         </dt>
-        <dd>Fit a sine curve to data with optional fixed period</dd>
+        <dd>Classify peat material classes from a minirhizotron RGB raster</dd>
 
         <dt>
 
-          <code><a href="image_threshold.html">image_threshold()</a></code>
+          <code><a href="build_peat_centroids.html">build_peat_centroids()</a></code>
 
         </dt>
-        <dd>Threshold or deblur an image to binarize features</dd>
-
-        <dt>
-
-          <code><a href="modal_peaks.html">modal_peaks()</a></code>
-
-        </dt>
-        <dd>Detect and Classify Modes in a Distribution Using Prominence or Mclust</dd>
+        <dd>Build peat class centroids from manual RGB colour picks</dd>
 
         <dt>
 
@@ -199,62 +279,29 @@
 
         </dt>
         <dd>Plot the output of classify_peat_rgb</dd>
+      </dl></div><div class="section level2">
+      <h2 id="distribution-analysis">Distribution analysis<a class="anchor" aria-label="anchor" href="#distribution-analysis"></a></h2>
+
+      <div class="section-desc"><p>Statistical indices summarising root distribution with depth.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="RWDI.html">RWDI()</a></code>
+
+        </dt>
+        <dd>Calculate Root Weight Depth Index</dd>
 
         <dt>
 
-          <code><a href="rgb2gray.html">rgb2gray()</a></code>
+          <code><a href="RPI.html">RPI()</a></code>
 
         </dt>
-        <dd>Convert RGB image to grayscale with optimized memory management and parallel processing</dd>
-
-        <dt>
-
-          <code><a href="rgb_Oulanka2023_Session03_T067.html">rgb_Oulanka2023_Session03_T067</a></code>
-
-        </dt>
-        <dd>Original Minirhizotron Root Scan - Session 3, Tube 67</dd>
-
-        <dt>
-
-          <code><a href="rhythmicity.html">rhythmicity()</a></code>
-
-        </dt>
-        <dd>Assess rhythmicity via sine curve fitting and model comparison</dd>
-
-        <dt>
-
-          <code><a href="root_accumulation.html">root_accumulation()</a></code>
-
-        </dt>
-        <dd>Calculate root accumulation</dd>
-
-        <dt>
-
-          <code><a href="root_diameter.html">root_diameter()</a></code>
-
-        </dt>
-        <dd>Estimate Root Diameters</dd>
-
-        <dt>
-
-          <code><a href="root_length.html">root_length()</a></code>
-
-        </dt>
-        <dd>Calculate Root Length using Kimura's Method with optimizations</dd>
-
-        <dt>
-
-          <code><a href="root_scape_metrics.html">root_scape_metrics()</a></code>
-
-        </dt>
-        <dd>RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features akin to landscape analysis.</dd>
-
-        <dt>
-
-          <code><a href="root_thickness.html">root_thickness()</a></code>
-
-        </dt>
-        <dd>Approximate average Root Thickness</dd>
+        <dd>Calculate Root Penetration Index</dd>
 
         <dt>
 
@@ -265,45 +312,24 @@
 
         <dt>
 
-          <code><a href="rotation_censor.html">rotation_censor()</a></code>
+          <code><a href="rhythmicity.html">rhythmicity()</a></code>
 
         </dt>
-        <dd>Censor image edges based on rotation</dd>
+        <dd>Assess rhythmicity via sine curve fitting and model comparison</dd>
 
         <dt>
 
-          <code><a href="seg_Oulanka2023_Session01_T067.html">seg_Oulanka2023_Session01_T067</a></code>
+          <code><a href="modal_peaks.html">modal_peaks()</a></code>
 
         </dt>
-        <dd>Segmented Minirhizotron Root Scan - Session 1, Tube 67</dd>
+        <dd>Detect and Classify Modes in a Distribution Using Prominence or Mclust</dd>
 
         <dt>
 
-          <code><a href="seg_Oulanka2023_Session03_T067.html">seg_Oulanka2023_Session03_T067</a></code>
+          <code><a href="circular_mean.html">circular_mean()</a></code>
 
         </dt>
-        <dd>Segmented Minirhizotron Root Scan - Session 3, Tube 67</dd>
-
-        <dt>
-
-          <code><a href="skeletonize_image.html">skeletonize_image()</a></code>
-
-        </dt>
-        <dd>Skeletonization Wrapper Function</dd>
-
-        <dt>
-
-          <code><a href="skl_Oulanka2023_Session01_T067.html">skl_Oulanka2023_Session01_T067</a></code>
-
-        </dt>
-        <dd>Skeletonized Root Scan - Session 1, Tube 67</dd>
-
-        <dt>
-
-          <code><a href="skl_Oulanka2023_Session03_T067.html">skl_Oulanka2023_Session03_T067</a></code>
-
-        </dt>
-        <dd>Skeletonized Root Scan - Session 3, Tube 67</dd>
+        <dd>Calculate a circular mean to determine average Directionality</dd>
 
         <dt>
 
@@ -325,22 +351,90 @@
 
         </dt>
         <dd>A tailweighted Version of 1 dimensional Wasserstein distance betwwen two probability vectors</dd>
+      </dl></div><div class="section level2">
+      <h2 id="rotation-bias">Rotation bias<a class="anchor" aria-label="anchor" href="#rotation-bias"></a></h2>
+
+      <div class="section-desc"><p>Detect and correct for rotational artefacts in minirhizotron tube scans.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="fit_sine_curve.html">fit_sine_curve()</a></code>
+
+        </dt>
+        <dd>Fit a sine curve to data with optional fixed period</dd>
 
         <dt>
 
-          <code><a href="tube_coloration.html">tube_coloration()</a></code>
+          <code><a href="create_root_buffer.html">create_root_buffer()</a></code>
 
         </dt>
-        <dd>Calculate Image Coloration Metrics</dd>
+        <dd>Create a buffer halo) around non-zero pixels</dd>
 
         <dt>
 
-          <code><a href="zoning.html">zoning()</a></code>
+          <code><a href="create_depthmap.html">create_depthmap()</a></code>
 
         </dt>
-        <dd>Zone Image Data by Depth and/or Rotation Slices with Optional Spatial Cropping</dd>
+        <dd>Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map</dd>
+      </dl></div><div class="section level2">
+      <h2 id="example-data">Example data<a class="anchor" aria-label="anchor" href="#example-data"></a></h2>
+
+      <div class="section-desc"><p>Built-in example images from the Oulanka 2023 field campaign.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="seg_Oulanka2023_Session01_T067.html">seg_Oulanka2023_Session01_T067</a></code>
+
+        </dt>
+        <dd>Segmented Minirhizotron Root Scan - Session 1, Tube 67</dd>
+
+        <dt>
+
+          <code><a href="seg_Oulanka2023_Session03_T067.html">seg_Oulanka2023_Session03_T067</a></code>
+
+        </dt>
+        <dd>Segmented Minirhizotron Root Scan - Session 3, Tube 67</dd>
+
+        <dt>
+
+          <code><a href="skl_Oulanka2023_Session01_T067.html">skl_Oulanka2023_Session01_T067</a></code>
+
+        </dt>
+        <dd>Skeletonized Root Scan - Session 1, Tube 67</dd>
+
+        <dt>
+
+          <code><a href="skl_Oulanka2023_Session03_T067.html">skl_Oulanka2023_Session03_T067</a></code>
+
+        </dt>
+        <dd>Skeletonized Root Scan - Session 3, Tube 67</dd>
+
+        <dt>
+
+          <code><a href="rgb_Oulanka2023_Session03_T067.html">rgb_Oulanka2023_Session03_T067</a></code>
+
+        </dt>
+        <dd>Original Minirhizotron Root Scan - Session 3, Tube 67</dd>
+
+        <dt>
+
+          <code><a href="TurnoverDPC_data.html">TurnoverDPC_data</a></code>
+
+        </dt>
+        <dd>Root Turnover Analysis Data</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

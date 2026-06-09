@@ -1,9 +1,7 @@
-# Fill holes in binary images
+# Fill internal black holes in a binary image
 
-Identifies internal black regions ("holes") in a binary image and fills
-them by setting their pixel values to 1. Holes are defined as black
-areas (value = 0) completely surrounded by white (value = 1), i.e., not
-connected to the image border.
+Sets to 1 all black regions (value = 0) that are completely surrounded
+by white (value = 1) — i.e. not connected to the image border.
 
 ## Usage
 
@@ -15,13 +13,13 @@ fill_holes(img, max_size = NULL)
 
 - img:
 
-  A \`cimg\` object representing a binary image (values 0 and 1).
+  A \`cimg\` binary image (values 0 and 1).
 
 - max_size:
 
-  Optional maximum size (in pixels) of holes to fill. If \`NULL\`, all
-  holes are filled.
+  Maximum hole size in pixels to fill. If \`NULL\` (default), all holes
+  are filled regardless of size.
 
 ## Value
 
-A \`cimg\` object with holes filled (as 1s).
+A \`cimg\` with holes filled.

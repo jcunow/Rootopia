@@ -1,6 +1,7 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://jcunow.github.io/RootScanR/404.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/LICENSE.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.html</loc></url>
@@ -15,6 +16,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/binning.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/build_peat_centroids.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/cimg_to_spatrast.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/circular_mean.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/clean_image.html</loc></url>
@@ -36,12 +38,14 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/modal_peaks.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/normalize_array.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/plot_peat_classification.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/px.sum.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/remove_small_objects.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/report_image_components.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb2gray.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb_Oulanka2023_Session03_T067.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rhythmicity.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_accumulation.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/root_depth_metrics.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_diameter.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_length.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/root_scape_metrics.html</loc></url>

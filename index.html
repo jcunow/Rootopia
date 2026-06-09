@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Depth-Resolved Root Analysis and Trait Extraction from Minirhizotrons and Flatbed Scanner • RootScanR</title>
+<title>RootScanR: Extract Root Traits from Images • RootScanR</title>
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Roboto-0.4.10/font.css" rel="stylesheet">
@@ -13,9 +13,9 @@
 <link href="deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Depth-Resolved Root Analysis and Trait Extraction from Minirhizotrons and Flatbed Scanner">
-<meta name="description" content="RootScanR enables depth-resolved analysis of minirhizotron images and trait extraction from flatbed root scans. Designed for studying root dynamics and morphology, it provides tools for root density, skeletonization, depth profiling, and trait quantification. Track roots in depth. Extract traits in detail. Rotational biases of minirhizotron tubes can also be assessed. Minirhizotron scans will need to be segmented beforehand (e.g., RootDetector, RootPainter).">
-<meta property="og:description" content="RootScanR enables depth-resolved analysis of minirhizotron images and trait extraction from flatbed root scans. Designed for studying root dynamics and morphology, it provides tools for root density, skeletonization, depth profiling, and trait quantification. Track roots in depth. Extract traits in detail. Rotational biases of minirhizotron tubes can also be assessed. Minirhizotron scans will need to be segmented beforehand (e.g., RootDetector, RootPainter).">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="RootScanR: Extract Root Traits from Images">
+<meta name="description" content="R tools for extracting root traits from flatbed and minirhizotron images">
+<meta property="og:description" content="R tools for extracting root traits from flatbed and minirhizotron images">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -37,9 +37,11 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="articles/FlatBedScans_vignettes.html">Flatbed Scans</a></li>
-    <li><a class="dropdown-item" href="articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans</a></li>
-    <li><a class="dropdown-item" href="articles/Rotation_Bias_vignettes.html">Rotation Bias</a></li>
+<li><a class="dropdown-item" href="articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">News</a></li>
@@ -73,16 +75,19 @@
 <p><a href="https://jcunow.github.io/RootScanR/"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a></p>
 <hr>
 <p>Welcome to <strong>RootScanR</strong>, an R package designed to extract quantitative belowground traits from <strong>flatbed root scans</strong> and <strong>minirhizotron image sequences</strong>. It provides flexible image preprocessing, trait estimation like root length &amp; diameter, depth mapping, and distribution tools.</p>
+<ul>
+<li>some features are still experimental. At the moment, you will still need to provide a skeleton created elewhere (for example RootDetector).</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="bulb-what-can-rootscanr-do">💡 What can RootScanR do?<a class="anchor" aria-label="anchor" href="#bulb-what-can-rootscanr-do"></a>
 </h2>
 <ul>
-<li>🖼️ Clean and process binary root images</li>
-<li>🌱 Estimate root length (skeletonize and Kimura Root Length)</li>
-<li>📏 Measure root diameters and modal distributions</li>
-<li>🕸️ Analyze root architecture (branching points, MST, loopiness)</li>
-<li><h2 id="carrot-spatial-spatial-indecies-root-angle-distribution-rotation-bias">🥕 Spatial-spatial indecies (root angle distribution, rotation bias)</h2></li>
+<li>🖼️ Clean and process root scans from (mini)rhizotrons and flatbed scanners</li>
+<li>🌱 Estimate root length</li>
+<li>📏 Measure root diameters and distributions</li>
+<li>🕸️ Analyze root architecture (branching point, root tips, root angle distribution)</li>
+<li><h2 id="carrot-spatial-spatial-indices-root-angle-distribution-rotation-bias">🥕 Spatial-spatial indices (root angle distribution, rotation bias)</h2></li>
 </ul>
 </div>
 <div class="section level2">

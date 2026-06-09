@@ -1,10 +1,11 @@
-# Clean binary images by filling holes, removing small artifacts, and optionally smoothing edges
+# Clean a binary root image
 
-This function performs a comprehensive cleaning operation on a binary
-image by: 1. Filling internal black holes (regions of 0 surrounded by
-1s), 2. Removing small internal white artifacts (1s not connected to the
-image border), and 3. Optionally applying edge smoothing to refine
-boundaries of root structures or other objects.
+Performs three sequential cleaning operations on a binary segmented
+image: 1. \*\*Hole filling\*\* — fills black regions enclosed by white
+(segmentation gaps inside roots). 2. \*\*Artifact removal\*\* — removes
+isolated white specks not connected to the image border (false-positive
+root detections). 3. \*\*Edge smoothing\*\* \*(optional, off by
+default)\* — applies morphological closing to smooth jagged root edges.
 
 ## Usage
 
@@ -13,11 +14,12 @@ clean_image(
   img,
   max_hole_size = NULL,
   max_artifact_size = NULL,
-  edge_smooth = TRUE,
+  edge_smooth = FALSE,
   kernel_shape = "disk",
   kernel_size = 3,
   iterations = 1,
   select.layer = NULL,
+  output_format = "spatrast",
   report = FALSE
 )
 ```
@@ -26,110 +28,102 @@ clean_image(
 
 - img:
 
-  A \`cimg\` object representing a binary image with pixel values 0 and
-  1.
+  A \`cimg\` object, \`SpatRaster\`, matrix, or file path.
 
 - max_hole_size:
 
-  Maximum size (in pixels) of black holes to fill. If \`NULL\`, all
-  holes are filled.
+  Maximum hole size in pixels to fill. If \`NULL\`, all enclosed holes
+  are filled. See \*\*Choosing thresholds\*\* above.
 
 - max_artifact_size:
 
-  Maximum size (in pixels) of white artifacts to remove. If \`NULL\`,
-  all isolated objects are removed.
+  Maximum artifact size in pixels to remove. If \`NULL\`, all isolated
+  white regions are removed.
 
 - edge_smooth:
 
-  Logical; if \`TRUE\`, applies morphological smoothing to object edges.
+  Logical. Apply morphological closing after hole/artifact cleaning.
+  Default \`FALSE\`.
 
 - kernel_shape:
 
-  Shape of the morphological kernel used for smoothing. One of
-  \`"disk"\` (default), \`"square"\`, etc., depending on your
-  implementation of \`smooth_root_edges()\`.
+  Structuring element shape for edge smoothing: \`"disk"\` (default),
+  \`"square"\`, or \`"diamond"\`.
 
 - kernel_size:
 
-  Size of the structuring element used for edge smoothing.
+  Structuring element size (odd integer). Default \`3\`.
 
 - iterations:
 
-  Number of times the smoothing operation is applied.
+  Number of closing iterations for edge smoothing. Default \`1\`.
 
 - select.layer:
 
-  Integer specifying the layer to use if `img` is a multi-layer
-  \`SpatRaster\`. Defaults to `NULL`, which may use package-specific
-  defaults for each method.
+  Integer or \`NULL\`. Which layer to use for multi-layer inputs.
+
+- output_format:
+
+  Character. Format of the returned object. One of \`"spatrast"\`
+  (default), \`"cimg"\`, or \`"matrix"\`. Using \`"spatrast"\` means the
+  result can be passed directly to \`terra::plot()\`,
+  \`skeletonize_image()\`, \`root_length()\`, etc. without any further
+  conversion.
 
 - report:
 
-  Logical; if \`TRUE\`, the function returns a list with the cleaned
-  image and a printed report on hole and artifact sizes. Defaults to
-  \`FALSE\`.
+  Logical. If \`TRUE\`, also calls \[report_image_components()\] on the
+  \*original\* (uncleaned) image before cleaning. When \`output_format =
+  "spatrast"\` (default), the cleaned raster is returned directly even
+  when \`report = TRUE\`; the report is printed as a side effect.
+  Default \`FALSE\`.
 
 ## Value
 
-A cleaned \`cimg\` object. If \`report = TRUE\`, returns a list with two
-elements: the cleaned image and the printed summary.
+A cleaned image in the format specified by \`output_format\`
+(\`SpatRaster\`, \`cimg\`, or matrix).
 
-## Details
+## Why clean before skeletonisation
 
-Holes and artifacts are detected using connected component labeling.
-Objects touching the image border are preserved and not modified. Pixel
-connectivity is assumed to be 4-connected.
+\`skeletonize_image()\` uses the Medial Axis Transform, which is driven
+by the distance transform. Small holes inside a root inflate the local
+distance values and force the medial axis to bifurcate around the hole,
+producing spurious branching points. Isolated artifact pixels produce
+phantom skeleton segments. Cleaning first yields a much cleaner
+skeleton.
+
+## Choosing thresholds
+
+Call \[report_image_components()\] on your image first to see the actual
+pixel counts of all holes and artifacts. At 300 DPI, sensible starting
+values are \`max_hole_size = 50\` and \`max_artifact_size = 10\`.
+
+## Edge smoothing caution
+
+\`edge_smooth = TRUE\` applies a morphological closing that slightly
+dilates then erodes root edges. This can merge closely adjacent roots
+and alter root diameter measurements. Only use it when the segmentation
+output has very jagged edges; leave it off (\`FALSE\`, the default)
+otherwise.
+
+## See also
+
+\[report_image_components()\], \[skeletonize_image()\]
 
 ## Examples
 
 ``` r
-# Create a complex test image with holes and artifacts
-
-  img <- imager::as.cimg(matrix(0, 150, 150))  # Start with black background
-
-  # Create multiple white objects with black holes
-  img[20:50, 20:50] <- 1       # White square 1
-  img[30:35, 30:35] <- 0       # Small black hole in square 1
-
-  img[70:120, 70:120] <- 1     # White square 2
-  img[80:85, 80:85] <- 0       # Small black hole 1 in square 2
-  img[100:115, 100:115] <- 0   # Large black hole 2 in square 2
-  
-# Add small artifacts (1-pixel specks)
-img[10, 140] <- 1
-img[145, 15] <- 1
-
-# Add a 2×2 speck
-img[130:131, 40:41] <- 1
-
-# Add an irregular blob
-img[100:102, 10] <- 1
-img[101:102, 11] <- 1
-img[101, 12] <- 1
-
-  # Create a white ring (donut shape)
-  center_x <- 40
-  center_y <- 100
-for (i in 1:150) {
- for (j in 1:150) {
-   dist <- sqrt((i - center_x)^2 + (j - center_y)^2)
-   if (dist <= 20 && dist >= 10) {
-     img[i, j,,] <- 1  
- }}}
+data(seg_Oulanka2023_Session01_T067)
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
 
-# Clean with various thresholds
-cleaned1 <- clean_image(img, max_hole_size = 50, max_artifact_size = 10)
-cleaned2 <- clean_image(img, max_hole_size = 20, max_artifact_size = 30)
-cleaned3 <- clean_image(img, max_hole_size = 30, max_artifact_size = 20, 
-                        edge_smooth = TRUE, kernel_size = 3)
+# Clean: fill small holes, remove tiny artifacts — returns SpatRaster
+cleaned <- clean_image(img,
+                       max_hole_size     = 50,
+                       max_artifact_size = 10,
+                       select.layer      = 2)
 
-# Plot results
-par(mfrow = c(2, 2))
-plot(img, main = "Original")
-plot(cleaned1, main = "Fill ≤50, Remove ≤10")
-plot(cleaned2, main = "Fill ≤20, Remove ≤30")
-plot(cleaned3, main = "Fill ≤30, Remove ≤20 + Smooth")
-
-par(mfrow = c(1, 1))
+# If you need a cimg for further imager operations:
+cleaned_cimg <- clean_image(img, max_hole_size = 50,
+                            output_format = "cimg", select.layer = 2)
 ```

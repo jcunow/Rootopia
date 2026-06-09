@@ -19,33 +19,35 @@ root_scape_metrics(
 
 - img:
 
-  segmented raster (values = 0,1). Consider whether skeletonized raster
-  is appropriate.
+  Segmented raster (values = 0, 1). Consider whether a skeletonized
+  raster is more appropriate for your use case.
 
 - indexD:
 
-  please specify depth. Will only affect the output column = "depth".
-  Useful when used in a loop.
+  Depth index for the output column "depth". Useful when called inside a
+  loop over depth bins.
 
 - select.layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`2\`.
+  image. Default is \`NULL\` (single-layer expected).
 
 - metrics:
 
-  which ,metrics should be calculated from the available ones in
-  'landscapemetrics::calculate_lsm()'.
+  Character vector of metrics to calculate; must be valid names from
+  \`landscapemetrics::list_lsm()\`.
 
 ## Value
 
-a bunch of metric values
+A data frame of metric values with columns: metric, value, object,
+depth.
 
 ## Examples
 
 ``` r
 data(seg_Oulanka2023_Session01_T067)
-img = terra::rast(seg_Oulanka2023_Session01_T067)
-RootScapeObject  = root_scape_metrics(img,indexD = 80, select.layer = 2,  metrics = c("lsm_c_ca"))
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
+RootScapeObject <- root_scape_metrics(img, indexD = 80, select.layer = 2,
+                                       metrics = c("lsm_c_ca"))
 #> Warning: Please use 'check_landscape()' to ensure the input data is valid.
 ```

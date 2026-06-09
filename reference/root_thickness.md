@@ -1,6 +1,7 @@
 # Approximate average Root Thickness
 
-Approximate average Root Thickness
+Estimates mean root diameter from total root length and root pixel
+count.
 
 ## Usage
 
@@ -12,22 +13,22 @@ root_thickness(kimuralength, rootpx, dpi = 300)
 
 - kimuralength:
 
-  length of roots in image section, input unit is cm.
+  Total root length in cm (e.g. from \[root_length()\]).
 
 - rootpx:
 
-  amount of rootpx in the image section
+  Total number of root pixels in the image section.
 
 - dpi:
 
-  image resolution
+  Image resolution in dots per inch. Default is 300.
 
 ## Value
 
-a value in units cm
+A numeric value in cm representing approximate average root diameter.
 
 ## Examples
 
 ``` r
-root.ticc = root_thickness(kimuralength = 300,rootpx = 9500, dpi = 300)
+root.thicc <- root_thickness(kimuralength = 300, rootpx = 9500, dpi = 300)
 ```

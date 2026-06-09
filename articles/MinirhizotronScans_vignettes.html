@@ -35,9 +35,11 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias</a></li>
+<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -93,12 +95,19 @@ technology. RootScanR is designed for comprehensive analysis of these
 root system images, providing tools for image preparation, depth
 mapping, and extraction of meaningful root traits. To extract root
 traits, segmenting the image outside R is needed (see step 2).</p>
+<blockquote>
+<p><strong>New to RootScanR?</strong> If you want to process a whole set
+of images in one go, see the <a href="BatchProcessing_vignette.html">Batch Processing with
+<code>root_depth_metrics()</code></a> vignette, which wraps this entire
+workflow into a single function call with toggleable metric groups.</p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="key-functionalities">Key Functionalities<a class="anchor" aria-label="anchor" href="#key-functionalities"></a>
 </h3>
 <p>A typical workflow to analyze minirhizotron scans could look
-something like the following. Step 2 and step 3 depend</p>
+something like the following. Steps 2 and 3 depend on the scanner setup
+and available calibration data.</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Image Stitching</strong>: Combine sequential minirhizotron
@@ -117,7 +126,7 @@ each pixel in the root scans</li>
 <strong>Root Trait Extraction</strong>: Calculate important root
 metrics (length, density, branching, etc.)</li>
 <li>
-<strong>Spatial Root Features</strong> Extracting spatial-explicit
+<strong>Spatial Root Features</strong>: Extracting spatial-explicit
 root scape features e.g., entropy, root instance count, fractal
 dimension</li>
 <li>
@@ -147,19 +156,15 @@ from scan images</li>
 <p><strong>Purpose</strong>: Combine multiple sequential images from
 longer minirhizotron tubes into a single composite image to enable
 proper depth alignment and remove overlap between images.</p>
+<blockquote>
+<p><strong>Note</strong>: <code>stitch_sequential_images()</code> is
+planned for a future release and is not yet available in the current
+version of RootScanR. Use external tools in the meantime — a
+ready-to-use Python script is available at <a href="https://github.com/jcunow/ImageStitching" class="external-link uri">https://github.com/jcunow/ImageStitching</a>.</p>
+</blockquote>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load example image files (replace with your actual file paths)</span></span>
-<span><span class="va">image_files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"path/to/image1.png"</span>, <span class="st">"path/to/image2.png"</span>, <span class="st">"path/to/image3.png"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Stitch images together (removes redundant overlap)</span></span>
-<span><span class="va">stitched_image</span> <span class="op">&lt;-</span> <span class="fu">RootScanR</span><span class="fu">::</span><span class="fu">stitch_sequential_images</span><span class="op">(</span><span class="va">image_files</span>, </span>
-<span>                                                      overlap_px <span class="op">=</span> <span class="fl">200</span>, </span>
-<span>                                                      method <span class="op">=</span> <span class="st">"crosscorr"</span>,</span>
-<span>                                                      side1 <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span>  </span>
-<span></span>
-<span></span>
-<span><span class="co"># Visualize the stitched image</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">stitched_image</span>, main <span class="op">=</span> <span class="st">"Stitched Minirhizotron Image"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Placeholder — stitch_sequential_images() is not yet exported (to be added).</span></span>
+<span><span class="co"># Use external tools for now — e.g., Python code: https://github.com/jcunow/ImageStitching</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="image-segmentation-recommendations">2. Image Segmentation Recommendations<a class="anchor" aria-label="anchor" href="#image-segmentation-recommendations"></a>
@@ -193,8 +198,10 @@ analysis</li>
 </ol>
 <p><strong>Tip</strong>: For images with high root density, consider
 splitting your stitched images before segmentation and rejoining
-afterwards. <strong>Tip</strong>: Models can be sensitive to resolution.
-Try</p>
+afterwards.</p>
+<p><strong>Tip</strong>: Models can be sensitive to resolution. Try to
+match the DPI of your training data when applying a pre-trained
+model.</p>
 </div>
 <div class="section level4">
 <h4 id="loading-images">3. Loading Images<a class="anchor" aria-label="anchor" href="#loading-images"></a>
@@ -202,14 +209,21 @@ Try</p>
 <p><strong>Purpose</strong>: Import your segmented and original RGB
 images for analysis.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load a segmented image (replace with your file path). The function accepts multiple different input formats.</span></span>
-<span><span class="va">segmented_image</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="st">"path/to/segmented_image.tif"</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, normalize <span class="op">=</span> <span class="cn">F</span>, select.layer <span class="op">=</span> <span class="cn">NULL</span>, binarize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Load a segmented image (replace with your file path).</span></span>
+<span><span class="co"># The function accepts multiple different input formats.</span></span>
+<span><span class="va">segmented_image</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span></span>
+<span>  <span class="st">"path/to/segmented_image.tif"</span>,</span>
+<span>  output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
+<span>  normalize     <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  select.layer  <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  binarize      <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Load corresponding RGB image for visual reference</span></span>
 <span><span class="va">rgb_image</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="st">"path/to/rgb_image.tif"</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Display the images</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rgb_image</span>, main <span class="op">=</span> <span class="st">"Original RGB Image"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rgb_image</span>,       main <span class="op">=</span> <span class="st">"Original RGB Image"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">segmented_image</span>, main <span class="op">=</span> <span class="st">"Segmented Image"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -221,11 +235,13 @@ pixels and actual soil depth.</p>
 attribution. If calibration data is unavailable, RootScanR provides
 estimation functions using tape cover as proxy:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Estimate soil surface position based on tape cover. Here, 0.5 cm of tape beyond the true soil surface is assumed to block out light.</span></span>
+<code class="sourceCode R"><span><span class="co"># Estimate soil surface position based on tape cover.</span></span>
+<span><span class="co"># Here, 0.5 cm of tape beyond the true soil surface is assumed to block out light.</span></span>
 <span><span class="va">soil_surface</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_soil_surface.html">estimate_soil_surface</a></span><span class="op">(</span><span class="va">rgb_image</span>, dpi <span class="op">=</span> <span class="fl">300</span>, tape.overlap <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Estimated soil surface begins at column: "</span>, <span class="va">soil_surface</span><span class="op">$</span><span class="va">soil0</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Estimate rotation center. This only works for asymmetric taping around the tube with more on the uside. </span></span>
+<span><span class="co"># Estimate rotation center.</span></span>
+<span><span class="co"># This only works for asymmetric taping around the tube with more on the upper side.</span></span>
 <span><span class="va">rotation_center</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_center.html">estimate_rotation_center</a></span><span class="op">(</span><span class="va">rgb_image</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Estimated rotation center at row: "</span>, <span class="va">rotation_center</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -235,8 +251,8 @@ estimation functions using tape cover as proxy:</p>
 <p><strong>Purpose</strong>: Create a map that assigns soil depth values
 to each pixel in the image.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create a mask to exclude tape from soil analysis</span></span>
-<span><span class="co"># Assuming RootDetector format where red channel includes tape</span></span>
+<code class="sourceCode R"><span><span class="co"># Create a mask to exclude tape from soil analysis.</span></span>
+<span><span class="co"># Assuming RootDetector format where red channel includes tape.</span></span>
 <span><span class="va">tape_mask</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">segmented_image</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">segmented_image</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="fl">255</span></span>
 <span><span class="va">tape_mask</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/transpose.html" class="external-link">t</a></span><span class="op">(</span><span class="va">tape_mask</span><span class="op">)</span></span>
 <span></span>
@@ -245,10 +261,10 @@ to each pixel in the image.</p>
 <span></span>
 <span><span class="co"># Create the depthmap</span></span>
 <span><span class="va">depth_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_depthmap.html">create_depthmap</a></span><span class="op">(</span></span>
-<span>  image <span class="op">=</span> <span class="va">segmented_image</span>, </span>
-<span>  sinusoidal <span class="op">=</span> <span class="cn">TRUE</span>,    <span class="co"># Account for tube curvature</span></span>
-<span>  mask <span class="op">=</span> <span class="va">tape_mask</span>,</span>
-<span>  soil_start <span class="op">=</span> <span class="va">soil_surface</span>,</span>
+<span>  image         <span class="op">=</span> <span class="va">segmented_image</span>,</span>
+<span>  sinusoidal    <span class="op">=</span> <span class="cn">TRUE</span>,    <span class="co"># Account for tube curvature</span></span>
+<span>  mask          <span class="op">=</span> <span class="va">tape_mask</span>,</span>
+<span>  soil_start    <span class="op">=</span> <span class="va">soil_surface</span>,</span>
 <span>  center_offset <span class="op">=</span> <span class="va">center_offset</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -261,15 +277,15 @@ to each pixel in the image.</p>
 <p><strong>Purpose</strong>: Group depths into discrete intervals for
 statistical analysis and visualization.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create depth bins (5cm intervals)</span></span>
-<span><span class="va">binned_map</span> <span class="op">&lt;-</span> <span class="fu">bin_depths</span><span class="op">(</span><span class="va">depth_map</span>, interval <span class="op">=</span> <span class="fl">5</span>, method <span class="op">=</span> <span class="st">"rounding"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Create depth bins (5 cm intervals)</span></span>
+<span><span class="va">binned_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, interval <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Correct extent for plotting</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">binned_map</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">binned_map</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">binned_map</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Visualize binned depthmap</span></span>
 <span><span class="va">transposed_map</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/transpose.html" class="external-link">t</a></span><span class="op">(</span><span class="va">binned_map</span><span class="op">)</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">transposed_map</span>, main <span class="op">=</span> <span class="st">"Binned Depth Map (5cm intervals)"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">transposed_map</span>, main <span class="op">=</span> <span class="st">"Binned Depth Map (5 cm intervals)"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="root-skeletonization">7. Root Skeletonization<a class="anchor" aria-label="anchor" href="#root-skeletonization"></a>
@@ -277,13 +293,13 @@ statistical analysis and visualization.</p>
 <p><strong>Purpose</strong>: Create a single-pixel-wide representation
 of root structure for morphological analysis.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create root skeleton using Medial Axis Transform (MAT) method</span></span>
-<span><span class="co"># Select layer 2 which typically contains root information in RootDetector output</span></span>
+<code class="sourceCode R"><span><span class="co"># Create root skeleton using Medial Axis Transform (MAT) method.</span></span>
+<span><span class="co"># Select layer 2 which typically contains root information in RootDetector output.</span></span>
 <span><span class="va">skeleton</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span></span>
-<span>  <span class="va">segmented_image</span>, </span>
-<span>  method <span class="op">=</span> <span class="st">"MAT"</span>, </span>
+<span>  <span class="va">segmented_image</span>,</span>
+<span>  methods      <span class="op">=</span> <span class="st">"MAT"</span>,</span>
 <span>  select.layer <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verbose      <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Visualize skeleton</span></span>
@@ -296,35 +312,34 @@ of root structure for morphological analysis.</p>
 for ecological analysis.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Detect endpoints and branching points</span></span>
-<span><span class="va">skeleton_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skeleton</span><span class="op">)</span></span>
-<span><span class="va">root_tips</span> <span class="op">&lt;-</span> <span class="fu">px.sum</span><span class="op">(</span><span class="va">skeleton_points</span><span class="op">$</span><span class="va">endpoints</span><span class="op">)</span></span>
-<span><span class="va">branching_points</span> <span class="op">&lt;-</span> <span class="fu">px.sum</span><span class="op">(</span><span class="va">skeleton_points</span><span class="op">$</span><span class="va">branching_points</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Number of root tips: "</span>, <span class="va">root_tips</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Number of branching points: "</span>, <span class="va">branching_points</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">skeleton_points</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skeleton</span><span class="op">)</span></span>
+<span><span class="va">root_tips_n</span>      <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">skeleton_points</span><span class="op">$</span><span class="va">endpoints</span><span class="op">)</span></span>
+<span><span class="va">branching_pts_n</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">skeleton_points</span><span class="op">$</span><span class="va">branching_points</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Number of root tips: "</span>,       <span class="va">root_tips_n</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Number of branching points: "</span>, <span class="va">branching_pts_n</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate root length using Kimura's method</span></span>
-<span><span class="va">root_length</span> <span class="op">&lt;-</span> <span class="fu">RootLength</span><span class="op">(</span><span class="va">skeleton</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Total root length (cm): "</span>, <span class="va">root_length</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skeleton</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span>, select.layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Total root length (cm): "</span>, <span class="va">rl</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate root density</span></span>
-<span><span class="co"># Create binary mask of non-root area</span></span>
-<span><span class="va">void_area</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu">prepare_binary_image</span><span class="op">(</span><span class="va">segmented_image</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="op">-</span><span class="fl">1</span></span>
-<span><span class="va">root_pixels</span> <span class="op">&lt;-</span> <span class="fu">px.sum</span><span class="op">(</span><span class="va">segmented_image</span>, layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">void_pixels</span> <span class="op">&lt;-</span> <span class="fu">px.sum</span><span class="op">(</span><span class="va">void_area</span>, layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">root_pixels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">segmented_image</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">void_area</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">segmented_image</span>, <span class="fl">2</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">void_pixels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">void_area</span><span class="op">)</span></span>
 <span><span class="va">root_density</span> <span class="op">&lt;-</span> <span class="va">root_pixels</span> <span class="op">/</span> <span class="op">(</span><span class="va">root_pixels</span> <span class="op">+</span> <span class="va">void_pixels</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Root density: "</span>, <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="va">root_density</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate maximum rooting depth ("deep drive")</span></span>
-<span><span class="va">deep_drive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span></span>
-<span>  RootMap <span class="op">=</span> <span class="va">segmented_image</span>, </span>
+<span><span class="va">max_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span></span>
+<span>  RootMap  <span class="op">=</span> <span class="va">segmented_image</span>,</span>
 <span>  DepthMap <span class="op">=</span> <span class="va">depth_map</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Maximum rooting depth (cm): "</span>, <span class="va">deep_drive</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Maximum rooting depth (cm): "</span>, <span class="va">max_depth</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate landscape metrics for root architecture</span></span>
 <span><span class="va">root_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_scape_metrics.html">root_scape_metrics</a></span><span class="op">(</span></span>
-<span>  img <span class="op">=</span> <span class="va">segmented_image</span>, </span>
-<span>  indexD <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>  img     <span class="op">=</span> <span class="va">segmented_image</span>,</span>
+<span>  indexD  <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lsm_c_ca"</span>, <span class="st">"lsm_l_ent"</span>, <span class="st">"lsm_c_pd"</span>, <span class="st">"lsm_c_enn_mn"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Root architecture metrics:"</span><span class="op">)</span></span>
@@ -337,9 +352,9 @@ for ecological analysis.</p>
 minirhizotron images.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Analyze overall tube color</span></span>
-<span><span class="va">tube_color</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">rgb_image</span><span class="op">)</span></span>
+<span><span class="va">tube_color_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">rgb_image</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Overall tube color metrics:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">tube_color</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">tube_color_metrics</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create buffer around roots to analyze soil without root &amp; rhizosphere influence</span></span>
 <span><span class="va">root_buffer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">segmented_image</span>, width <span class="op">=</span> <span class="fl">2</span>, halo.only <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -347,19 +362,19 @@ minirhizotron images.</p>
 <span><span class="co"># Create soil-only image by removing root areas</span></span>
 <span><span class="va">soil_image</span> <span class="op">&lt;-</span> <span class="va">rgb_image</span> <span class="op">-</span> <span class="va">root_buffer</span></span>
 <span></span>
-<span><span class="co"># Analyze soil color</span></span>
-<span><span class="va">soil_color</span> <span class="op">&lt;-</span> <span class="fu">tube_color</span><span class="op">(</span><span class="va">soil_image</span><span class="op">)</span></span>
+<span><span class="co"># Analyze soil color (use tube_coloration, not tube_color)</span></span>
+<span><span class="va">soil_color_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">soil_image</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Soil color metrics:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">soil_color</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">soil_color_metrics</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Extract soil texture information using GLCM (Gray-Level Co-occurrence Matrix)</span></span>
-<span><span class="va">gray_image</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rgb2gray.html">rgb2gray</a></span><span class="op">(</span><span class="va">soil_image</span><span class="op">)</span></span>
+<span><span class="co"># Extract soil texture information using GLCM (Gray-Level Co-occurrence Matrix).</span></span>
+<span><span class="co"># Note: analyze_soil_texture expects a raster::brick object (required by the glcm package).</span></span>
+<span><span class="va">soil_raster</span>  <span class="op">&lt;-</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/brick.html" class="external-link">brick</a></span><span class="op">(</span><span class="va">soil_image</span><span class="op">)</span></span>
 <span><span class="va">soil_texture</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_soil_texture.html">analyze_soil_texture</a></span><span class="op">(</span></span>
-<span>  <span class="va">gray_image</span>,</span>
-<span>  gray_levels <span class="op">=</span> <span class="fl">7</span>,</span>
-<span>  window_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
-<span>  statistics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"second_moment"</span>, <span class="st">"homogeneity"</span><span class="op">)</span>,</span>
-<span>  directions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span>  img.color <span class="op">=</span> <span class="va">soil_raster</span>,</span>
+<span>  grays     <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>  window    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">9</span><span class="op">)</span>,</span>
+<span>  metrics   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"second_moment"</span>, <span class="st">"homogeneity"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Soil texture metrics:"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">soil_texture</span><span class="op">)</span></span></code></pre></div>
@@ -370,49 +385,80 @@ minirhizotron images.</p>
 <p><strong>Purpose</strong>: Analyze how root traits change with soil
 depth.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## create analytical zones; indexD indicates which depth to look at.</span></span>
-<span><span class="va">root_zone</span> <span class="op">=</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span>img <span class="op">=</span> <span class="va">root_map</span>, </span>
-<span>                   depth <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>                   mode <span class="op">=</span> <span class="st">"depth"</span>,</span>
-<span>                   depth_map <span class="op">=</span>  <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, <span class="fl">5</span><span class="op">)</span> <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Load root map as binary raster</span></span>
+<span><span class="va">root_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">segmented_image</span>, binarize <span class="op">=</span> <span class="cn">TRUE</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># go through each slice</span></span>
-<span><span class="va">bin_width</span> <span class="op">=</span> <span class="fl">2</span></span>
-<span><span class="va">rl.df</span>  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>depth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">30</span>,<span class="va">bin_width</span><span class="op">)</span>, rl <span class="op">=</span> <span class="cn">NA</span>,rl.density <span class="op">=</span> <span class="cn">NA</span>, rootpx <span class="op">=</span> <span class="cn">NA</span>, voidpx <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
-<span><span class="va">root_map</span> <span class="op">=</span>  <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">root_map</span>,binarize <span class="op">=</span> <span class="cn">TRUE</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
-<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="co"># analytical unit</span></span>
-<span>  <span class="va">root_zone</span> <span class="op">=</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span>img <span class="op">=</span> <span class="va">root_map</span> , </span>
-<span>                     mode <span class="op">=</span> <span class="st">"depth"</span>,</span>
-<span>                     depth <span class="op">=</span> <span class="va">i</span>,</span>
-<span>                     depth_map <span class="op">=</span>  <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, <span class="va">bin_width</span><span class="op">)</span> <span class="op">)</span></span>
-<span>  <span class="co"># root length</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rl</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">root_zone</span>,dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>  </span>
-<span>    <span class="co"># available root pixels</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rootpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">px.sum</span><span class="op">(</span><span class="va">root_zone</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="co"># available soil &amp; tape pixels (inverse roots)</span></span>
-<span>    <span class="va">voidpx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">root_zone</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">voidpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">px.sum</span><span class="op">(</span><span class="va">voidpx</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="co"># calculate rootlength density</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rl.density</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rl</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">/</span> <span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rootpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">rl.df</span><span class="op">$</span><span class="va">voidpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>  </span>
+<span><span class="co"># Pre-compute binned depth map (reused in every loop iteration)</span></span>
+<span><span class="va">binned_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, interval <span class="op">=</span> <span class="va">bin_width</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bin_width</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span><span class="va">rl.df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  depth      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">30</span>, <span class="va">bin_width</span><span class="op">)</span>,</span>
+<span>  rl         <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>  rl.density <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>  rootpx     <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>  voidpx     <span class="op">=</span> <span class="cn">NA_real_</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># Subset image to this depth zone</span></span>
+<span>  <span class="va">root_zone</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span></span>
+<span>    img       <span class="op">=</span> <span class="va">root_map</span>,</span>
+<span>    mode      <span class="op">=</span> <span class="st">"depth"</span>,</span>
+<span>    depth     <span class="op">=</span> <span class="va">i</span>,</span>
+<span>    depth_map <span class="op">=</span> <span class="va">binned_depth</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Root length</span></span>
+<span>  <span class="va">rl.df</span><span class="op">$</span><span class="va">rl</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">root_zone</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>, select.layer <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"root_length failed at depth "</span>, <span class="va">i</span>, <span class="st">": "</span>, <span class="va">e</span><span class="op">$</span><span class="va">message</span><span class="op">)</span></span>
+<span>      <span class="cn">NA_real_</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Root pixels</span></span>
+<span>  <span class="va">rl.df</span><span class="op">$</span><span class="va">rootpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">root_zone</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"count_pixels (root) failed at depth "</span>, <span class="va">i</span>, <span class="st">": "</span>, <span class="va">e</span><span class="op">$</span><span class="va">message</span><span class="op">)</span></span>
+<span>      <span class="cn">NA_real_</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Void pixels (inverse of roots)</span></span>
+<span>  <span class="va">void_zone</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">root_zone</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="va">rl.df</span><span class="op">$</span><span class="va">voidpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">tryCatch</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">void_zone</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    error <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"count_pixels (void) failed at depth "</span>, <span class="va">i</span>, <span class="st">": "</span>, <span class="va">e</span><span class="op">$</span><span class="va">message</span><span class="op">)</span></span>
+<span>      <span class="cn">NA_real_</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="co"># Root length density</span></span>
+<span>  <span class="va">total_px</span> <span class="op">&lt;-</span> <span class="va">rl.df</span><span class="op">$</span><span class="va">rootpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="va">rl.df</span><span class="op">$</span><span class="va">voidpx</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span></span>
+<span>  <span class="va">rl.df</span><span class="op">$</span><span class="va">rl.density</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">rl.df</span><span class="op">$</span><span class="va">rl</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">total_px</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">rl.df</span><span class="op">$</span><span class="va">rl</span><span class="op">[</span><span class="va">rl.df</span><span class="op">$</span><span class="va">depth</span> <span class="op">==</span> <span class="va">i</span><span class="op">]</span> <span class="op">/</span> <span class="va">total_px</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="cn">NA_real_</span></span>
+<span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span>
-<span></span>
 <span></span>
 <span><span class="co"># Visualize results</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">rl.df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">rl.density</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">rootpx</span><span class="op">)</span><span class="op">)</span>,color <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">rootpx</span><span class="op">)</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">voidpx</span><span class="op">+</span><span class="va">rootpx</span><span class="op">)</span><span class="op">/</span><span class="fl">10</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"darkorange"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">voidpx</span><span class="op">+</span><span class="va">rootpx</span><span class="op">)</span><span class="op">/</span><span class="fl">10</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"darkorange"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">rootpx</span><span class="op">)</span><span class="op">)</span>,            color <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">rootpx</span><span class="op">)</span><span class="op">)</span>,           color <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">voidpx</span> <span class="op">+</span> <span class="va">rootpx</span><span class="op">)</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"darkorange"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/scale.html" class="external-link">scale</a></span><span class="op">(</span><span class="va">voidpx</span> <span class="op">+</span> <span class="va">rootpx</span><span class="op">)</span> <span class="op">/</span> <span class="fl">10</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"darkorange"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"Root Length by Soil Depth"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Soil Depth (cm)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"standard deviation"</span></span>
+<span>    x     <span class="op">=</span> <span class="st">"Soil Depth (cm)"</span>,</span>
+<span>    y     <span class="op">=</span> <span class="st">"Scaled value (SD units)"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 </div>
@@ -422,7 +468,7 @@ depth.</p>
 <p>This vignette demonstrates the core workflows for analyzing
 minirhizotron images with RootScanR. For more detailed information about
 specific functions and additional features, please refer to the function
-documentation and the package GitHub repository at <a href="https://github.com/jcunow/RootScanR" class="external-link">https://github.com/jcunow/RootScanR</a>.</p>
+documentation and the package GitHub repository at <a href="https://github.com/jcunow/RootScanR" class="external-link uri">https://github.com/jcunow/RootScanR</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

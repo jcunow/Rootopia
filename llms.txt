@@ -14,17 +14,23 @@ belowground traits from **flatbed root scans** and **minirhizotron image
 sequences**. It provides flexible image preprocessing, trait estimation
 like root length & diameter, depth mapping, and distribution tools.
 
+- some features are still experimental. At the moment, you will still
+  need to provide a skeleton created elewhere (for example
+  RootDetector).
+
 ## 💡 What can RootScanR do?
 
-- 🖼️ Clean and process binary root images
+- 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed
+  scanners
 
-- 🌱 Estimate root length (skeletonize and Kimura Root Length)
+- 🌱 Estimate root length
 
-- 📏 Measure root diameters and modal distributions
+- 📏 Measure root diameters and distributions
 
-- 🕸️ Analyze root architecture (branching points, MST, loopiness)
+- 🕸️ Analyze root architecture (branching point, root tips, root angle
+  distribution)
 
-- ## 🥕 Spatial-spatial indecies (root angle distribution, rotation bias)
+- ## 🥕 Spatial-spatial indices (root angle distribution, rotation bias)
 
 ## 📘 Tutorials
 
@@ -93,84 +99,110 @@ request.
 
 # Package index
 
-## All functions
+## Batch processing
 
-- [`RPI()`](https://jcunow.github.io/RootScanR/reference/RPI.md) :
-  Calculate Root Penetration Index
-- [`RWDI()`](https://jcunow.github.io/RootScanR/reference/RWDI.md) :
-  Calculate Root Weight Depth Index
-- [`TurnoverDPC_data`](https://jcunow.github.io/RootScanR/reference/TurnoverDPC_data.md)
-  : Root Turnover Analysis Data
-- [`analyze_soil_texture()`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md)
-  : Texture calculation
-- [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
-  : Bin continuous depth values into discrete intervals
-- [`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
-  : Build peat class centroids from manual RGB colour picks
-- [`circular_mean()`](https://jcunow.github.io/RootScanR/reference/circular_mean.md)
-  : Calculate a circular mean to determine average Directionality
-- [`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
-  : Classify peat material classes from a minirhizotron RGB raster
+High-level wrapper that runs a full depth-profile analysis over a
+directory of images.
+
+- [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md)
+  : Compute root traits over a depth profile from segmented
+  (mini)rhizotron images
+
+## Image loading and preprocessing
+
+Functions for loading, cleaning, thresholding, and transforming root
+images.
+
+- [`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md)
+  : Load an image flexibly from file or convert from memory
 - [`clean_image()`](https://jcunow.github.io/RootScanR/reference/clean_image.md)
-  : Clean binary images by filling holes, removing small artifacts, and
-  optionally smoothing edges
-- [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
-  : counts all pixels in a segmented image
-- [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
-  : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
-- [`create_root_buffer()`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
-  : Create a buffer halo) around non-zero pixels
-- [`deep_drive()`](https://jcunow.github.io/RootScanR/reference/deep_drive.md)
-  : Assess Root Growth Direction Relative to Depth Gradient
+  : Clean a binary root image
+- [`image_threshold()`](https://jcunow.github.io/RootScanR/reference/image_threshold.md)
+  : Threshold or deblur an image to binarize features
+- [`rgb2gray()`](https://jcunow.github.io/RootScanR/reference/rgb2gray.md)
+  : Convert RGB image to grayscale with optimized memory management and
+  parallel processing
+- [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+  : Censor image edges based on rotation
+- [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+  : Skeletonization Wrapper Function
+
+## Root traits
+
+Per-image trait extraction: length, diameter, architecture, and spatial
+metrics.
+
+- [`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
+  : Calculate Root Length using Kimura's Method with optimizations
+- [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
+  : Estimate Root Diameters
+- [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
+  : Approximate average Root Thickness
 - [`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
   : Detect Skeleton Points: Branching Points and Endpoints
+- [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
+  : Count all pixels in a segmented image
+- [`px.sum()`](https://jcunow.github.io/RootScanR/reference/px.sum.md) :
+  Count pixels (deprecated alias for count_pixels)
+- [`deep_drive()`](https://jcunow.github.io/RootScanR/reference/deep_drive.md)
+  : Assess Root Growth Direction Relative to Depth Gradient
+- [`root_scape_metrics()`](https://jcunow.github.io/RootScanR/reference/root_scape_metrics.md)
+  : RootScapeMetric relies on Landscapemetrics to extract 'Root Scape'
+  Features akin to landscape analysis.
+- [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
+  : Calculate root accumulation
+
+## Depth mapping
+
+Functions for constructing and binning depth maps from minirhizotron
+geometry.
+
+- [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+  : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
+- [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
+  : Bin continuous depth values into discrete intervals
+- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
+  Zone Image Data by Depth and/or Rotation Slices with Optional Spatial
+  Cropping
+- [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
+  : Estimate soil surface position using tape markers
 - [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
   : Estimates rotation from tape coverage
 - [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
   : Detect rotation shift between two images
-- [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
-  : Estimate soil surface position using tape markers
-- [`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
-  : Fit a sine curve to data with optional fixed period
-- [`image_threshold()`](https://jcunow.github.io/RootScanR/reference/image_threshold.md)
-  : Threshold or deblur an image to binarize features
+
+## Soil and colour characterisation
+
+Colour metrics, peat classification, and texture analysis.
+
+- [`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
+  : Calculate Image Coloration Metrics
+- [`analyze_soil_texture()`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md)
+  : Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)
+- [`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
+  : Classify peat material classes from a minirhizotron RGB raster
+- [`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
+  : Build peat class centroids from manual RGB colour picks
+- [`plot_peat_classification()`](https://jcunow.github.io/RootScanR/reference/plot_peat_classification.md)
+  : Plot the output of classify_peat_rgb
+
+## Distribution analysis
+
+Statistical indices summarising root distribution with depth.
+
+- [`RWDI()`](https://jcunow.github.io/RootScanR/reference/RWDI.md) :
+  Calculate Root Weight Depth Index
+- [`RPI()`](https://jcunow.github.io/RootScanR/reference/RPI.md) :
+  Calculate Root Penetration Index
+- [`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
+  : Unified Root Turnover Analysis
+- [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+  : Assess rhythmicity via sine curve fitting and model comparison
 - [`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md)
   : Detect and Classify Modes in a Distribution Using Prominence or
   Mclust
-- [`plot_peat_classification()`](https://jcunow.github.io/RootScanR/reference/plot_peat_classification.md)
-  : Plot the output of classify_peat_rgb
-- [`rgb2gray()`](https://jcunow.github.io/RootScanR/reference/rgb2gray.md)
-  : Convert RGB image to grayscale with optimized memory management and
-  parallel processing
-- [`rgb_Oulanka2023_Session03_T067`](https://jcunow.github.io/RootScanR/reference/rgb_Oulanka2023_Session03_T067.md)
-  : Original Minirhizotron Root Scan - Session 3, Tube 67
-- [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
-  : Assess rhythmicity via sine curve fitting and model comparison
-- [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
-  : Calculate root accumulation
-- [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
-  : Estimate Root Diameters
-- [`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
-  : Calculate Root Length using Kimura's Method with optimizations
-- [`root_scape_metrics()`](https://jcunow.github.io/RootScanR/reference/root_scape_metrics.md)
-  : RootScapeMetric relies on Landscapemetrics to extract 'Root Scape'
-  Features akin to landscape analysis.
-- [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
-  : Approximate average Root Thickness
-- [`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
-  : Unified Root Turnover Analysis
-- [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
-  : Censor image edges based on rotation
-- [`seg_Oulanka2023_Session01_T067`](https://jcunow.github.io/RootScanR/reference/seg_Oulanka2023_Session01_T067.md)
-  : Segmented Minirhizotron Root Scan - Session 1, Tube 67
-- [`seg_Oulanka2023_Session03_T067`](https://jcunow.github.io/RootScanR/reference/seg_Oulanka2023_Session03_T067.md)
-  : Segmented Minirhizotron Root Scan - Session 3, Tube 67
-- [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
-  : Skeletonization Wrapper Function
-- [`skl_Oulanka2023_Session01_T067`](https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session01_T067.md)
-  : Skeletonized Root Scan - Session 1, Tube 67
-- [`skl_Oulanka2023_Session03_T067`](https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session03_T067.md)
-  : Skeletonized Root Scan - Session 3, Tube 67
+- [`circular_mean()`](https://jcunow.github.io/RootScanR/reference/circular_mean.md)
+  : Calculate a circular mean to determine average Directionality
 - [`tail_weighted_js_divergence()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_js_divergence.md)
   : Calculate tail-weighted Jensen-Shannon divergence
 - [`tail_weighted_kl_divergence()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_kl_divergence.md)
@@ -178,19 +210,44 @@ request.
 - [`tail_weighted_wasserstein_distance()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_wasserstein_distance.md)
   : A tailweighted Version of 1 dimensional Wasserstein distance betwwen
   two probability vectors
-- [`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
-  : Calculate Image Coloration Metrics
-- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
-  Zone Image Data by Depth and/or Rotation Slices with Optional Spatial
-  Cropping
+
+## Rotation bias
+
+Detect and correct for rotational artefacts in minirhizotron tube scans.
+
+- [`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
+  : Fit a sine curve to data with optional fixed period
+- [`create_root_buffer()`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
+  : Create a buffer halo) around non-zero pixels
+- [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+  : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
+
+## Example data
+
+Built-in example images from the Oulanka 2023 field campaign.
+
+- [`seg_Oulanka2023_Session01_T067`](https://jcunow.github.io/RootScanR/reference/seg_Oulanka2023_Session01_T067.md)
+  : Segmented Minirhizotron Root Scan - Session 1, Tube 67
+- [`seg_Oulanka2023_Session03_T067`](https://jcunow.github.io/RootScanR/reference/seg_Oulanka2023_Session03_T067.md)
+  : Segmented Minirhizotron Root Scan - Session 3, Tube 67
+- [`skl_Oulanka2023_Session01_T067`](https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session01_T067.md)
+  : Skeletonized Root Scan - Session 1, Tube 67
+- [`skl_Oulanka2023_Session03_T067`](https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session03_T067.md)
+  : Skeletonized Root Scan - Session 3, Tube 67
+- [`rgb_Oulanka2023_Session03_T067`](https://jcunow.github.io/RootScanR/reference/rgb_Oulanka2023_Session03_T067.md)
+  : Original Minirhizotron Root Scan - Session 3, Tube 67
+- [`TurnoverDPC_data`](https://jcunow.github.io/RootScanR/reference/TurnoverDPC_data.md)
+  : Root Turnover Analysis Data
 
 # Articles
 
 ### All vignettes
 
+- [Batch Processing with
+  root_depth_metrics()](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md):
 - [Analyzing Root Traits from Flatbed Scans with RootScanR in
   R](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md):
 - [Minirhizotron Scans Analysis with RootScanR in
   R](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md):
-- [Rotation Bias and Circadian Analysis with
+- [Rotation Bias and Rhythmicity Analysis with
   RootScanR](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md):

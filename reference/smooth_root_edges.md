@@ -1,6 +1,8 @@
-# Smooth the edges of a root binary image
+# Smooth object edges with morphological closing
 
-Smooth the edges of a root binary image
+Applies a morphological closing (dilation then erosion) to smooth the
+edges of binary objects. Intended as a post-cleaning step before
+skeletonisation; do \*\*not\*\* apply after skeletonisation.
 
 ## Usage
 
@@ -12,35 +14,22 @@ smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3, iterations = 1)
 
 - img:
 
-  A binary image of root systems (imager cimg object)
+  A \`cimg\` binary image or any format accepted by
+  \[load_flexible_image()\].
 
 - kernel_shape:
 
-  Shape of the kernel: "square", "diamond", or "disk"
+  One of \`"disk"\` (default), \`"square"\`, \`"diamond"\`.
 
 - kernel_size:
 
-  Size of the kernel for morphological operations (odd integer). Use
-  larger kernels for higher image resolution
+  Structuring element size (odd integer). At 300 DPI, \`kernel_size =
+  3\` is a good starting point.
 
 - iterations:
 
-  Number of iterations for the smoothing process
+  Number of closing iterations.
 
 ## Value
 
-A smoothed binary image
-
-## Examples
-
-``` r
-
-data("seg_Oulanka2023_Session01_T067")
-img <- seg_Oulanka2023_Session01_T067
-# Try different kernel shapes
-smoothed_square <- smooth_root_edges(img, kernel_shape = "square", kernel_size = 3)
-smoothed_diamond <- smooth_root_edges(img, kernel_shape = "diamond", kernel_size = 3)
-smoothed_disk <- smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3)
-plot(smoothed_disk)
-
-```
+A \`cimg\` binary image.

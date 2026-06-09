@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Rotation Bias and Circadian Analysis with RootScanR • RootScanR</title>
+<title>Rotation Bias and Rhythmicity Analysis with RootScanR • RootScanR</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Roboto-0.4.10/font.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 <link href="../deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Rotation Bias and Circadian Analysis with RootScanR">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Rotation Bias and Rhythmicity Analysis with RootScanR">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -35,9 +35,11 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias</a></li>
+<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -69,7 +71,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Rotation Bias and Circadian Analysis with RootScanR</h1>
+      <h1>Rotation Bias and Rhythmicity Analysis with RootScanR</h1>
                         <h4 data-toc-skip class="author">Johannes
 Cunow</h4>
             
@@ -86,332 +88,388 @@ Cunow</h4>
 <div class="section level3">
 <h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h3>
-<p>This vignette demonstrates how to analyze rotation and methodological
-bias of a minirhizotron setup using the <strong>RootScanR</strong>
-package. In minirhizotron studies, roots may exhibit preferential growth
-areas on the tube surface depending on the tube size and tube insertion
-angle. This might also affect how roots behave at the surface itself by
-e.g., changing root growth angles.</p>
+<p>This vignette demonstrates how to detect and correct for rotational
+bias in minirhizotron setups using the <strong>RootScanR</strong>
+package. In minirhizotron studies, the scanner tube is inserted at an
+angle into the soil and can rotate slightly between sessions. Because
+the CI-600 and similar scanners do not cover a full 360° arc, sequential
+images from the same tube may not perfectly overlap. Left uncorrected,
+this rotation introduces a systematic spatial bias — roots near the scan
+edges are observed in some sessions but not others.</p>
+<p>RootScanR addresses this through three calibration functions:</p>
+<ul>
+<li>
+<code><a href="../reference/estimate_rotation_center.html">estimate_rotation_center()</a></code> — locates the rotational
+zero point from tape coverage in the image</li>
+<li>
+<code><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift()</a></code> — quantifies the pixel offset
+between two sessions using image correlation</li>
+<li>
+<code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> — crops images to the shared, overlap
+region</li>
+</ul>
+<p>A fourth function, <code><a href="../reference/estimate_soil_surface.html">estimate_soil_surface()</a></code>, locates the
+soil surface from tape markers; it is used to set the depth zero
+reference for subsequent depth profiling.</p>
 </div>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install the package from GitHub</span></span>
+<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
 <span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="co"># remotes::install_github("jcunow/RootScanR")</span></span>
 <span></span>
-<span><span class="co"># Load the package</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/RootScanR" class="external-link">RootScanR</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>  <span class="co"># For enhanced plotting</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="key-functionalities">Key Functionalities<a class="anchor" aria-label="anchor" href="#key-functionalities"></a>
-</h3>
-<p>The rotation bias and circadian analysis module includes:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Sine Curve Fitting</strong>: Model circadian rhythms in root
-growth data</li>
-<li>
-<strong>Statistical Testing</strong>: Assess the significance of
-observed rhythmic patterns</li>
-<li>
-<strong>Bias Quantification</strong>: Calculate metrics for
-directional growth preferences</li>
-<li>
-<strong>Visualization Tools</strong>: Create informative plots of
-temporal patterns</li>
-</ol>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="example-workflow">Example Workflow<a class="anchor" aria-label="anchor" href="#example-workflow"></a>
 </h3>
 <div class="section level4">
-<h4 id="preparing-time-series-data">1. Preparing Time-Series Data<a class="anchor" aria-label="anchor" href="#preparing-time-series-data"></a>
+<h4 id="estimate-the-rotational-center-from-a-single-image">1. Estimate the Rotational Center from a Single Image<a class="anchor" aria-label="anchor" href="#estimate-the-rotational-center-from-a-single-image"></a>
 </h4>
-<p><strong>Purpose</strong>: Organize your time-series observations of
-root growth for analysis.</p>
+<p><code><a href="../reference/estimate_rotation_center.html">estimate_rotation_center()</a></code> detects the white adhesive
+tape that is attached to the upper side of the tube. Because more tape
+is visible on one side, the function can infer where the top of the tube
+(rotational zero) lies. It returns a pixel row index.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Example: Loading time-series data</span></span>
-<span><span class="co"># In a real scenario, you would load your own data from files</span></span>
-<span><span class="co"># The data should contain timestamps and root measurements</span></span>
+<code class="sourceCode R"><span><span class="co"># Load a segmented scan from the package example data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># For demonstration, we'll generate synthetic data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">32608</span><span class="op">)</span>  <span class="co"># For reproducibility</span></span>
-<span><span class="va">period</span> <span class="op">&lt;-</span> <span class="fl">1</span>     <span class="co"># cycle length</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">150</span>         <span class="co"># Number of observations</span></span>
-<span><span class="va">timestamps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">*</span><span class="va">period</span><span class="op">)</span>  <span class="co"># Random sampling times across 3 days</span></span>
-<span><span class="va">amplitude</span> <span class="op">&lt;-</span> <span class="fl">2</span>   <span class="co"># Strength of the rhythm</span></span>
-<span><span class="va">phase</span> <span class="op">&lt;-</span> <span class="fl">6</span>       <span class="co"># Time offset (hours)</span></span>
-<span><span class="va">baseline</span> <span class="op">&lt;-</span> <span class="fl">3</span>    <span class="co"># Average growth rate</span></span>
-<span><span class="va">noise</span> <span class="op">&lt;-</span> <span class="fl">0.8</span>       <span class="co"># Random variation</span></span>
-<span></span>
-<span><span class="co"># Simulate root growth with circadian pattern</span></span>
-<span><span class="va">growth_rates</span> <span class="op">&lt;-</span> <span class="va">amplitude</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">period</span> <span class="op">*</span> <span class="op">(</span><span class="va">timestamps</span> <span class="op">+</span> <span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>                <span class="va">baseline</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="va">noise</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create a data frame for analysis</span></span>
-<span><span class="va">root_ts_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">timestamps</span>,</span>
-<span>  growth_rate <span class="op">=</span> <span class="va">growth_rates</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize the raw time-series data</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">root_ts_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">growth_rate</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Root Growth Rate Time Series"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Time (hours)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Growth Rate (mm/hour)"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Detect the rotation center (returns a pixel row position)</span></span>
+<span><span class="va">r0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_center.html">estimate_rotation_center</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Estimated rotation center (row):"</span>, <span class="va">r0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Key parameters:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>tape.brightness</code></td>
+<td>Brightness threshold (0–1) for classifying tape pixels</td>
+</tr>
+<tr class="even">
+<td><code>search.area</code></td>
+<td>Fraction of image width to analyse (tape is near the top)</td>
+</tr>
+<tr class="odd">
+<td><code>nclasses</code></td>
+<td>Number of unsupervised clustering classes</td>
+</tr>
+<tr class="even">
+<td><code>tape.quantile</code></td>
+<td>Quantile used to align the brightness scale</td>
+</tr>
+</tbody>
+</table>
+<hr>
 </div>
 <div class="section level4">
-<h4 id="fitting-circadian-models">2. Fitting Circadian Models<a class="anchor" aria-label="anchor" href="#fitting-circadian-models"></a>
+<h4 id="estimate-the-rotation-shift-between-two-sessions">2. Estimate the Rotation Shift Between Two Sessions<a class="anchor" aria-label="anchor" href="#estimate-the-rotation-shift-between-two-sessions"></a>
 </h4>
-<p><strong>Purpose</strong>: Detect and characterize circadian rhythms
-in root growth patterns.</p>
+<p>When the same tube is scanned in two different sessions, the scanner
+may have rotated. <code><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift()</a></code> uses either
+cross-correlation (<code>"ccf"</code>) or phase correlation
+(<code>"phase"</code>) on a shared depth window to find the pixel
+offset.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">root_ts_data</span> <span class="op">=</span> <span class="va">root_ts_data</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span><span class="op">)</span></span>
-<span><span class="co"># Fit a sine curve to the time-series data</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_sine_curve.html">fit_sine_curve</a></span><span class="op">(</span></span>
-<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  parStart <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">2</span>, phase <span class="op">=</span> <span class="fl">6</span>, offset <span class="op">=</span> <span class="fl">3</span>, period <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Display model parameters</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"sine curve fit:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="va">img1</span> <span class="op">&lt;-</span> <span class="va">seg_Oulanka2023_Session01_T067</span>  <span class="co"># session 1</span></span>
+<span><span class="va">img2</span> <span class="op">&lt;-</span> <span class="va">seg_Oulanka2023_Session03_T067</span>  <span class="co"># session 3</span></span>
 <span></span>
-<span><span class="co"># Plot the data with fitted curve</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span></span>
-<span>  <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>, </span>
-<span>  <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Circadian Rhythm in Root Growth"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>, <span class="va">fit</span><span class="op">$</span><span class="va">predicted</span>, col <span class="op">=</span> <span class="st">"coral"</span> <span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Phase correlation is generally more robust to brightness differences</span></span>
+<span><span class="va">shift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift</a></span><span class="op">(</span><span class="va">img1</span>, <span class="va">img2</span>, cor.type <span class="op">=</span> <span class="st">"phase"</span>,</span>
+<span>                                 fixed.depth.pixel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">4000</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rotation shift (x, y pixels):"</span>, <span class="va">shift</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<p>The returned vector contains the horizontal (depth) and vertical
+(rotation) pixel shifts. A large vertical shift means the tube rotated
+substantially between sessions.</p>
+<hr>
 </div>
 <div class="section level4">
-<h4 id="statistical-testing-for-rhythmicity">3. Statistical Testing for Rhythmicity<a class="anchor" aria-label="anchor" href="#statistical-testing-for-rhythmicity"></a>
+<h4 id="censor-image-edges-to-the-shared-overlap-region">3. Censor Image Edges to the Shared Overlap Region<a class="anchor" aria-label="anchor" href="#censor-image-edges-to-the-shared-overlap-region"></a>
 </h4>
-<p><strong>Purpose</strong>: Determine if the observed patterns are
-statistically significant circadian rhythms.</p>
+<p>Once the rotational center and shift are known,
+<code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> crops each image so that only the rows
+present in every session are retained. This eliminates the
+non-overlapping margins and makes root counts directly comparable across
+sessions.</p>
+<p>Two modes are available:</p>
+<ul>
+<li>
+<strong><code>fixed.rotation = FALSE</code></strong>: cuts
+proportionally based on the measured offset</li>
+<li>
+<strong><code>fixed.rotation = TRUE</code></strong>: centers the
+crop on a specified row and forces a fixed output width</li>
+</ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Perform statistical tests to validate circadian rhythms (all identical - check)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 1. Wald Test (tests if amplitude is significantly different from zero)</span></span>
-<span><span class="va">wald_result</span> <span class="op">&lt;-</span> <span class="fu">rhythmicity_test</span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="st">"Wald"</span>,</span>
-<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  period <span class="op">=</span> <span class="fl">24</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Wald test for circadian rhythmicity:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">wald_result</span><span class="op">)</span></span>
+<span><span class="co"># Variable mode — trim proportionally to the measured shift</span></span>
+<span><span class="va">censored_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rotation_censor.html">rotation_censor</a></span><span class="op">(</span><span class="va">img</span>,</span>
+<span>                                center.offset <span class="op">=</span> <span class="fl">120</span>,</span>
+<span>                                cut.buffer    <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>                                fixed.rotation <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 2. Likelihood Ratio Test (compares rhythmic vs. constant models)</span></span>
-<span><span class="va">lr_result</span> <span class="op">&lt;-</span> <span class="fu">rhythmicity_test</span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="st">"LR"</span>,</span>
-<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  period <span class="op">=</span> <span class="fl">24</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Likelihood Ratio test for circadian rhythmicity:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">lr_result</span><span class="op">)</span></span>
+<span><span class="co"># Fixed mode — crop to a 1000-pixel-wide window centred on row 220</span></span>
+<span><span class="va">censored_fix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rotation_censor.html">rotation_censor</a></span><span class="op">(</span><span class="va">img</span>,</span>
+<span>                                center.offset  <span class="op">=</span> <span class="fl">220</span>,</span>
+<span>                                cut.buffer     <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>                                fixed.width    <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                                fixed.rotation <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># 3. F Test (tests overall model significance)</span></span>
-<span><span class="va">f_result</span> <span class="op">&lt;-</span> <span class="fu">rhythmicity_test</span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="st">"F"</span>,</span>
-<span>  tt <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  yy <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  period <span class="op">=</span> <span class="fl">24</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"F test for circadian rhythmicity:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">f_result</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">censored_fix</span>, main <span class="op">=</span> <span class="st">"Censored image (fixed rotation)"</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Note on tube geometry.</strong> The inner and outer tube
+diameters differ, so the observed root length is a slight underestimate
+of the true root length in the soil. A resize coefficient may be applied
+separately; <code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> does not handle this
+correction.</p>
+</blockquote>
+<hr>
 </div>
 <div class="section level4">
-<h4 id="period-analysis">4. Period Analysis<a class="anchor" aria-label="anchor" href="#period-analysis"></a>
+<h4 id="locate-the-soil-surface">4. Locate the Soil Surface<a class="anchor" aria-label="anchor" href="#locate-the-soil-surface"></a>
 </h4>
-<p><strong>Purpose</strong>: Identify the dominant period in root growth
-patterns when the period is unknown.</p>
+<p><code><a href="../reference/estimate_soil_surface.html">estimate_soil_surface()</a></code> finds where soil begins by
+detecting the lower edge of the adhesive tape. It returns a data frame
+with two columns:</p>
+<ul>
+<li>
+<code>soil0</code> — pixel column of the soil surface</li>
+<li>
+<code>tape.end</code> — pixel column of the tape’s lower margin
+(with a safety buffer)</li>
+</ul>
+<p>These values feed directly into <code><a href="../reference/create_depthmap.html">create_depthmap()</a></code> as
+<code>start.soil</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Scan for the most likely period in the data</span></span>
-<span><span class="va">period_scan</span> <span class="op">&lt;-</span> <span class="fu">analyze_circadian_period</span><span class="op">(</span></span>
-<span>  time <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">time</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">root_ts_data</span><span class="op">$</span><span class="va">growth_rate</span>,</span>
-<span>  period_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">36</span><span class="op">)</span>,  <span class="co"># Test periods between 12 and 36 hours</span></span>
-<span>  step <span class="op">=</span> <span class="fl">0.5</span>                 <span class="co"># Step size in hours</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
+<span><span class="va">img_rgb</span> <span class="op">&lt;-</span> <span class="va">rgb_Oulanka2023_Session03_T067</span></span>
 <span></span>
-<span><span class="co"># Plot period scan results</span></span>
-<span><span class="fu">plot_period_scan</span><span class="op">(</span></span>
-<span>  <span class="va">period_scan</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Period Analysis of Root Growth"</span></span>
-<span><span class="op">)</span></span>
+<span><span class="va">surface</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_soil_surface.html">estimate_soil_surface</a></span><span class="op">(</span><span class="va">img_rgb</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">surface</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Identify the best-fitting period</span></span>
-<span><span class="va">best_period</span> <span class="op">&lt;-</span> <span class="va">period_scan</span><span class="op">$</span><span class="va">period</span><span class="op">[</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html" class="external-link">which.min</a></span><span class="op">(</span><span class="va">period_scan</span><span class="op">$</span><span class="va">residual_sum_squares</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Best-fitting period: "</span>, <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="va">best_period</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">" hours"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Use soil0 to anchor the depth map at the true soil surface</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Soil surface at pixel column:"</span>, <span class="va">surface</span><span class="op">$</span><span class="va">soil0</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<p>Key parameters:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>dpi</code></td>
+<td>Scanner resolution; needed to convert the pixel position to cm</td>
+</tr>
+<tr class="even">
+<td><code>tape.overlap</code></td>
+<td>Safety margin (cm) subtracted from the tape edge</td>
+</tr>
+<tr class="odd">
+<td><code>inverse</code></td>
+<td>Set <code>TRUE</code> if the tape is darker than the soil</td>
+</tr>
+<tr class="even">
+<td><code>nclasses</code></td>
+<td>Number of clustering classes for tape detection</td>
+</tr>
+</tbody>
+</table>
+<hr>
 </div>
+</div>
+<div class="section level3">
+<h3 id="rhythmicity-analysis">Rhythmicity Analysis<a class="anchor" aria-label="anchor" href="#rhythmicity-analysis"></a>
+</h3>
+<p>In some minirhizotron deployments, root observations are made at high
+temporal frequency (e.g. multiple times per day). In these datasets it
+can be useful to test whether root dynamics show rhythmic — for instance
+diel — patterns.</p>
+<p><code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> fits a sine curve of the form</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>A</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mn>2</mn><mi>π</mi></mrow><mi>P</mi></mfrac><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>ϕ</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c</annotation></semantics></math></p>
+<p>to a time series and tests whether the amplitude
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+is significantly different from zero, using your choice of three
+statistical tests.</p>
 <div class="section level4">
-<h4 id="rotation-bias-analysis-1">5. Rotation Bias Analysis<a class="anchor" aria-label="anchor" href="#rotation-bias-analysis-1"></a>
+<h4 id="fitting-and-testing">Fitting and Testing<a class="anchor" aria-label="anchor" href="#fitting-and-testing"></a>
 </h4>
-<p><strong>Purpose</strong>: Quantify directional preferences in root
-growth around minirhizotron tubes.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># For rotation bias, we need data that includes angular positions</span></span>
-<span><span class="co"># In a minirhizotron, this would be the angular position around the tube</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">48</span>, length.out <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>           <span class="co"># 48 hours, 120 observations</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">1.8</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">24</span> <span class="op">*</span> <span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>    <span class="co"># amplitude 1.8, 24-h period</span></span>
+<span>     <span class="fl">4</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">120</span>, <span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span>                 <span class="co"># baseline + noise</span></span>
 <span></span>
-<span><span class="co"># For demonstration, we'll generate synthetic rotation data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">n_roots</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
-<span><span class="va">angular_positions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n_roots</span>, <span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span>  <span class="co"># Angles in degrees</span></span>
+<span><span class="co"># --- F-test (default) ---</span></span>
+<span><span class="va">res_F</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"F"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Amplitude: %.2f | Phase: %.1f h | R²: %.3f | p (F): %.4f\n"</span>,</span>
+<span>            <span class="va">res_F</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Simulate a bias toward the bottom of the tube (180 degrees)</span></span>
-<span><span class="va">bias_center</span> <span class="op">&lt;-</span> <span class="fl">180</span></span>
-<span><span class="va">bias_strength</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
-<span><span class="va">density</span> <span class="op">&lt;-</span> <span class="va">bias_strength</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">angular_positions</span>, <span class="va">bias_center</span>, <span class="fl">45</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>           <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">bias_strength</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">dunif</a></span><span class="op">(</span><span class="va">angular_positions</span>, <span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span></span>
-<span>           </span>
-<span><span class="co"># Normalize to create a probability of root presence</span></span>
-<span><span class="va">probability</span> <span class="op">&lt;-</span> <span class="va">density</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">density</span><span class="op">)</span> <span class="op">*</span> <span class="va">n_roots</span></span>
-<span><span class="va">root_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">n_roots</span>, <span class="va">probability</span><span class="op">)</span></span>
+<span><span class="co"># --- Finite-sample likelihood ratio test ---</span></span>
+<span><span class="va">res_FLR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"FLR"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"p (FLR): %.4f\n"</span>, <span class="va">res_FLR</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Create a data frame for analysis</span></span>
-<span><span class="va">rotation_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  angle <span class="op">=</span> <span class="va">angular_positions</span>,</span>
-<span>  root_count <span class="op">=</span> <span class="va">root_counts</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Analyze rotation bias</span></span>
-<span><span class="va">rotation_bias</span> <span class="op">&lt;-</span> <span class="fu">analyze_rotation_bias</span><span class="op">(</span></span>
-<span>  angles <span class="op">=</span> <span class="va">rotation_data</span><span class="op">$</span><span class="va">angle</span>,</span>
-<span>  values <span class="op">=</span> <span class="va">rotation_data</span><span class="op">$</span><span class="va">root_count</span>,</span>
-<span>  bins <span class="op">=</span> <span class="fl">24</span>  <span class="co"># Number of angular bins</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Rotation bias metrics:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rotation_bias</span><span class="op">$</span><span class="va">metrics</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize rotation bias</span></span>
-<span><span class="fu">plot_rotation_bias</span><span class="op">(</span></span>
-<span>  <span class="va">rotation_bias</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Root Growth Rotation Bias"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># --- Large-sample likelihood ratio test ---</span></span>
+<span><span class="va">res_LR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"LR"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"p (LR): %.4f\n"</span>, <span class="va">res_LR</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="combined-temporal-and-directional-analysis">6. Combined Temporal and Directional Analysis<a class="anchor" aria-label="anchor" href="#combined-temporal-and-directional-analysis"></a>
+<h4 id="estimating-an-unknown-period">Estimating an Unknown Period<a class="anchor" aria-label="anchor" href="#estimating-an-unknown-period"></a>
 </h4>
-<p><strong>Purpose</strong>: Investigate if rotation bias changes with
-circadian rhythms.</p>
+<p>If you do not know the period in advance, set
+<code>fix_period = NULL</code> and provide starting values for all four
+parameters. The optimizer will estimate the period along with amplitude,
+phase, and offset.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># For this analysis, we need data that combines time and angular position</span></span>
-<span><span class="co"># Generate synthetic data for demonstration</span></span>
+<code class="sourceCode R"><span><span class="va">res_free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>,</span>
+<span>                        fix_period <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                        parStart   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">2</span>, phase <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>                                          offset <span class="op">=</span> <span class="fl">4</span>, period <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Create time points across 3 days</span></span>
-<span><span class="va">time_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">72</span>, by <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">n_times</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">time_points</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create angular positions</span></span>
-<span><span class="va">angle_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">345</span>, by <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
-<span><span class="va">n_angles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">angle_points</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create a matrix of root counts with time-dependent rotation bias</span></span>
-<span><span class="va">root_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">0</span>, nrow <span class="op">=</span> <span class="va">n_times</span>, ncol <span class="op">=</span> <span class="va">n_angles</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">root_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">angle_points</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">root_matrix</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">time_points</span></span>
-<span></span>
-<span><span class="co"># Simulate time-varying bias</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_times</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">time</span> <span class="op">&lt;-</span> <span class="va">time_points</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
-<span>  </span>
-<span>  <span class="co"># Bias center shifts over time (simulating heliotropism)</span></span>
-<span>  <span class="va">bias_center</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fl">180</span> <span class="op">+</span> <span class="fl">45</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="va">time</span> <span class="op">/</span> <span class="fl">24</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">360</span></span>
-<span>  </span>
-<span>  <span class="co"># Generate root counts with the time-dependent bias</span></span>
-<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">j</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_angles</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">angle</span> <span class="op">&lt;-</span> <span class="va">angle_points</span><span class="op">[</span><span class="va">j</span><span class="op">]</span></span>
-<span>    <span class="va">distance</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">angle</span> <span class="op">-</span> <span class="va">bias_center</span><span class="op">)</span>, <span class="fl">360</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">angle</span> <span class="op">-</span> <span class="va">bias_center</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="va">root_matrix</span><span class="op">[</span><span class="va">i</span>, <span class="va">j</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">1</span>, lambda <span class="op">=</span> <span class="fl">5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">distance</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="fl">1000</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># Analyze time-dependent rotation bias</span></span>
-<span><span class="va">temporal_bias</span> <span class="op">&lt;-</span> <span class="fu">analyze_temporal_rotation_bias</span><span class="op">(</span></span>
-<span>  root_matrix <span class="op">=</span> <span class="va">root_matrix</span>,</span>
-<span>  time_points <span class="op">=</span> <span class="va">time_points</span>,</span>
-<span>  angle_points <span class="op">=</span> <span class="va">angle_points</span>,</span>
-<span>  period <span class="op">=</span> <span class="fl">24</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Temporal rotation bias results:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">temporal_bias</span><span class="op">$</span><span class="va">summary</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize time-dependent rotation bias</span></span>
-<span><span class="fu">plot_temporal_bias</span><span class="op">(</span></span>
-<span>  <span class="va">temporal_bias</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Time-Dependent Root Growth Direction"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Estimated period: %.1f h | R²: %.3f | p: %.4f\n"</span>,</span>
+<span>            <span class="va">res_free</span><span class="op">$</span><span class="va">period</span>, <span class="va">res_free</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res_free</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Caution.</strong> With an unknown period, the model has four
+free parameters and the likelihood surface can be multimodal. Provide
+ecologically motivated starting values (e.g. <code>period = 24</code>
+for a diel hypothesis) and inspect the fitted curve before interpreting
+results.</p>
+</blockquote>
 </div>
-</div>
-<div class="section level3">
-<h3 id="advanced-applications">Advanced Applications<a class="anchor" aria-label="anchor" href="#advanced-applications"></a>
-</h3>
 <div class="section level4">
-<h4 id="comparing-rotation-bias-between-treatments">Comparing Rotation Bias Between Treatments<a class="anchor" aria-label="anchor" href="#comparing-rotation-bias-between-treatments"></a>
+<h4 id="plotting-the-fitted-curve">Plotting the Fitted Curve<a class="anchor" aria-label="anchor" href="#plotting-the-fitted-curve"></a>
 </h4>
-<p><strong>Purpose</strong>: Determine if different experimental
-treatments affect root directional preferences.</p>
+<p><code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> does not produce plots directly, but the
+fitted values are easily recovered via the underlying
+<code><a href="../reference/fit_sine_curve.html">fit_sine_curve()</a></code> helper (not exported; call via
+<code>RootScanR:::fit_sine_curve()</code>), or reconstruct the curve
+from the returned parameters:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Simulate data for two treatments</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Reconstruct the fitted sine from the returned parameters</span></span>
+<span><span class="va">x_seq</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
+<span><span class="va">y_fit</span>  <span class="op">&lt;-</span> <span class="va">res_F</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span></span>
+<span>           <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">res_F</span><span class="op">$</span><span class="va">period</span> <span class="op">*</span> <span class="op">(</span><span class="va">x_seq</span> <span class="op">+</span> <span class="va">res_F</span><span class="op">$</span><span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>           <span class="va">res_F</span><span class="op">$</span><span class="va">offset</span></span>
 <span></span>
-<span><span class="co"># Treatment 1: Strong downward bias</span></span>
-<span><span class="va">angles_t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, mean <span class="op">=</span> <span class="fl">180</span>, sd <span class="op">=</span> <span class="fl">30</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">360</span></span>
-<span><span class="va">counts_t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">100</span>, lambda <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Treatment 2: Weaker, more diffuse bias</span></span>
-<span><span class="va">angles_t2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, mean <span class="op">=</span> <span class="fl">180</span>, sd <span class="op">=</span> <span class="fl">60</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">360</span></span>
-<span><span class="va">counts_t2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fl">100</span>, lambda <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Analyze rotation bias for each treatment</span></span>
-<span><span class="va">bias_t1</span> <span class="op">&lt;-</span> <span class="fu">analyze_rotation_bias</span><span class="op">(</span><span class="va">angles_t1</span>, <span class="va">counts_t1</span>, bins <span class="op">=</span> <span class="fl">24</span><span class="op">)</span></span>
-<span><span class="va">bias_t2</span> <span class="op">&lt;-</span> <span class="fu">analyze_rotation_bias</span><span class="op">(</span><span class="va">angles_t2</span>, <span class="va">counts_t2</span>, bins <span class="op">=</span> <span class="fl">24</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Compare bias strength statistically</span></span>
-<span><span class="va">bias_comparison</span> <span class="op">&lt;-</span> <span class="fu">compare_rotation_bias</span><span class="op">(</span></span>
-<span>  <span class="va">bias_t1</span>, </span>
-<span>  <span class="va">bias_t2</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"rayleigh"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Bias comparison results:"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">bias_comparison</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize the comparison</span></span>
-<span><span class="fu">plot_bias_comparison</span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Treatment1 <span class="op">=</span> <span class="va">bias_t1</span>, Treatment2 <span class="op">=</span> <span class="va">bias_t2</span><span class="op">)</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Rotation Bias Comparison Between Treatments"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"grey50"</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"Time (hours)"</span>, ylab <span class="op">=</span> <span class="st">"Root growth index"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Rhythmicity fit (fixed 24-h period)"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">x_seq</span>, <span class="va">y_fit</span>, col <span class="op">=</span> <span class="st">"coral"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>,</span>
+<span>       legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"A = %.2f, R² = %.3f, p = %.4f"</span>,</span>
+<span>                        <span class="va">res_F</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>,</span>
+<span>       bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="interpreting-the-output">Interpreting the Output<a class="anchor" aria-label="anchor" href="#interpreting-the-output"></a>
+</h4>
+<p>The returned list includes:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Element</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>amplitude</code></td>
+<td>Estimated amplitude
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+</td>
+</tr>
+<tr class="even">
+<td><code>phase</code></td>
+<td>Phase shift
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+(modulo period)</td>
+</tr>
+<tr class="odd">
+<td><code>offset</code></td>
+<td>Baseline
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+</td>
+</tr>
+<tr class="even">
+<td><code>period</code></td>
+<td>Fixed or estimated period
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+</td>
+</tr>
+<tr class="odd">
+<td><code>peakTime</code></td>
+<td>Time of peak within one cycle
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>/</mi><mn>4</mn><mo>−</mo><mi>ϕ</mi><mrow><mspace width="0.444em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>⁡</mo></mrow><mspace width="0.222em"></mspace><mi>P</mi></mrow></mrow><annotation encoding="application/x-tex">P/4 - \phi \mod P</annotation></semantics></math>)</td>
+</tr>
+<tr class="even">
+<td><code>R2</code></td>
+<td>Coefficient of determination</td>
+</tr>
+<tr class="odd">
+<td><code>stat</code></td>
+<td>Test statistic (F, FLR, or LR depending on <code>method</code>)</td>
+</tr>
+<tr class="even">
+<td><code>p_value</code></td>
+<td>P-value for the test of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A \neq 0</annotation></semantics></math>
+</td>
+</tr>
+</tbody>
+</table>
+<p>A significant p-value indicates that a rhythmic component explains a
+non-trivial portion of the variance. Inspect
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
+to judge effect size — a significant but
+low-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
+result may reflect noise or a poorly chosen period.</p>
+<hr>
 </div>
 </div>
 <div class="section level3">
-<h3 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
+<h3 id="connecting-rotation-bias-and-rhythmicity">Connecting Rotation Bias and Rhythmicity<a class="anchor" aria-label="anchor" href="#connecting-rotation-bias-and-rhythmicity"></a>
 </h3>
-<p>This vignette demonstrates how to analyze rotation bias and circadian
-rhythms in root growth using the RootScanR package. These analyses can
-reveal important aspects of root growth strategies and responses to
-environmental cues or methodological quirks.</p>
-<p>Key takeaways: 1. Circadian rhythms can be detected and characterized
-using sine curve fitting 2. Statistical tests help validate the
-significance of observed rhythms 3. Rotation bias analysis quantifies
-directional preferences in root growth 4. Combined temporal and
-directional analysis can reveal complex growth patterns</p>
-<p>For more detailed information about specific functions and additional
-features, please refer to the function documentation and the package
-GitHub repository at <a href="https://github.com/jcunow/RootScanR" class="external-link">https://github.com/jcunow/RootScanR</a>.</p>
+<p>When rotation-censored images are used in a high-frequency monitoring
+setup, the two analyses can be connected in a straightforward
+pipeline:</p>
+<ol style="list-style-type: decimal">
+<li>For each session, apply <code><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift()</a></code>
+relative to a reference session to obtain per-session offsets.</li>
+<li>Pass each image through <code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> to harmonise
+the field of view.</li>
+<li>Extract root coverage or length per depth bin using
+<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code>.</li>
+<li>Test whether the resulting time series exhibits rhythmic dynamics
+using <code><a href="../reference/rhythmicity.html">rhythmicity()</a></code>.</li>
+</ol>
+<p>This ensures that apparent rhythmic signals are not artefacts of the
+tube rotating in and out of view between sessions.</p>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="further-reading">Further Reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
+</h3>
+<p>For depth profiling, trait extraction, and turnover analysis see the
+other RootScanR vignettes. Full function documentation is available at
+<a href="https://jcunow.github.io/RootScanR/">https://jcunow.github.io/RootScanR/</a>.
+Source code and issue tracker: <a href="https://github.com/jcunow/RootScanR" class="external-link">https://github.com/jcunow/RootScanR</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

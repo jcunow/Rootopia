@@ -1,337 +1,323 @@
-# Rotation Bias and Circadian Analysis with RootScanR
+# Rotation Bias and Rhythmicity Analysis with RootScanR
 
 ## Rotation Bias Analysis
 
 ### Introduction
 
-This vignette demonstrates how to analyze rotation and methodological
-bias of a minirhizotron setup using the **RootScanR** package. In
-minirhizotron studies, roots may exhibit preferential growth areas on
-the tube surface depending on the tube size and tube insertion angle.
-This might also affect how roots behave at the surface itself by e.g.,
-changing root growth angles.
+This vignette demonstrates how to detect and correct for rotational bias
+in minirhizotron setups using the **RootScanR** package. In
+minirhizotron studies, the scanner tube is inserted at an angle into the
+soil and can rotate slightly between sessions. Because the CI-600 and
+similar scanners do not cover a full 360° arc, sequential images from
+the same tube may not perfectly overlap. Left uncorrected, this rotation
+introduces a systematic spatial bias — roots near the scan edges are
+observed in some sessions but not others.
+
+RootScanR addresses this through three calibration functions:
+
+- [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
+  — locates the rotational zero point from tape coverage in the image
+- [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+  — quantifies the pixel offset between two sessions using image
+  correlation
+- [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+  — crops images to the shared, overlap region
+
+A fourth function,
+[`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md),
+locates the soil surface from tape markers; it is used to set the depth
+zero reference for subsequent depth profiling.
 
 ### Installation
 
 ``` r
 
-# Install the package from GitHub
+# Install from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
 
-# Load the package
 library(RootScanR)
-library(ggplot2)  # For enhanced plotting
+library(terra)
 ```
-
-### Key Functionalities
-
-The rotation bias and circadian analysis module includes:
-
-1.  **Sine Curve Fitting**: Model circadian rhythms in root growth data
-2.  **Statistical Testing**: Assess the significance of observed
-    rhythmic patterns
-3.  **Bias Quantification**: Calculate metrics for directional growth
-    preferences
-4.  **Visualization Tools**: Create informative plots of temporal
-    patterns
 
 ### Example Workflow
 
-#### 1. Preparing Time-Series Data
+#### 1. Estimate the Rotational Center from a Single Image
 
-**Purpose**: Organize your time-series observations of root growth for
-analysis.
+[`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
+detects the white adhesive tape that is attached to the upper side of
+the tube. Because more tape is visible on one side, the function can
+infer where the top of the tube (rotational zero) lies. It returns a
+pixel row index.
 
 ``` r
 
-# Example: Loading time-series data
-# In a real scenario, you would load your own data from files
-# The data should contain timestamps and root measurements
+# Load a segmented scan from the package example data
+data(seg_Oulanka2023_Session01_T067)
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# For demonstration, we'll generate synthetic data
-set.seed(32608)  # For reproducibility
-period <- 1     # cycle length
-n <- 150         # Number of observations
-timestamps <- runif(n, 0, 1*period)  # Random sampling times across 3 days
-amplitude <- 2   # Strength of the rhythm
-phase <- 6       # Time offset (hours)
-baseline <- 3    # Average growth rate
-noise <- 0.8       # Random variation
-
-# Simulate root growth with circadian pattern
-growth_rates <- amplitude * sin(2 * pi / period * (timestamps + phase)) + 
-                baseline + rnorm(n, 0, noise)
-
-# Create a data frame for analysis
-root_ts_data <- data.frame(
-  time = timestamps,
-  growth_rate = growth_rates
-)
-
-# Visualize the raw time-series data
-ggplot(root_ts_data, aes(x = time, y = growth_rate)) +
-  geom_point() +
-  labs(
-    title = "Root Growth Rate Time Series",
-    x = "Time (hours)",
-    y = "Growth Rate (mm/hour)"
-  ) +
-  theme_minimal()
+# Detect the rotation center (returns a pixel row position)
+r0 <- estimate_rotation_center(img)
+print(paste("Estimated rotation center (row):", r0))
 ```
 
-#### 2. Fitting Circadian Models
+Key parameters:
 
-**Purpose**: Detect and characterize circadian rhythms in root growth
-patterns.
+| Parameter | Description |
+|----|----|
+| `tape.brightness` | Brightness threshold (0–1) for classifying tape pixels |
+| `search.area` | Fraction of image width to analyse (tape is near the top) |
+| `nclasses` | Number of unsupervised clustering classes |
+| `tape.quantile` | Quantile used to align the brightness scale |
+
+------------------------------------------------------------------------
+
+#### 2. Estimate the Rotation Shift Between Two Sessions
+
+When the same tube is scanned in two different sessions, the scanner may
+have rotated.
+[`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+uses either cross-correlation (`"ccf"`) or phase correlation (`"phase"`)
+on a shared depth window to find the pixel offset.
 
 ``` r
 
-root_ts_data = root_ts_data %>% arrange(root_ts_data$time)
-# Fit a sine curve to the time-series data
-fit <- fit_sine_curve(
-  tt = root_ts_data$time,
-  yy = root_ts_data$growth_rate,
-  parStart = list(amp = 2, phase = 6, offset = 3, period = 1)
-)
+data(seg_Oulanka2023_Session01_T067)
+data(seg_Oulanka2023_Session03_T067)
 
-# Display model parameters
-print("sine curve fit:")
-print(fit)
+img1 <- seg_Oulanka2023_Session01_T067  # session 1
+img2 <- seg_Oulanka2023_Session03_T067  # session 3
 
-# Plot the data with fitted curve
-plot(
-  root_ts_data$time, 
-  root_ts_data$growth_rate,
-  title = "Circadian Rhythm in Root Growth"
-)
-lines(root_ts_data$time, fit$predicted, col = "coral" )
+# Phase correlation is generally more robust to brightness differences
+shift <- estimate_rotation_shift(img1, img2, cor.type = "phase",
+                                 fixed.depth.pixel = c(1000, 4000))
+
+cat("Rotation shift (x, y pixels):", shift, "\n")
 ```
 
-#### 3. Statistical Testing for Rhythmicity
+The returned vector contains the horizontal (depth) and vertical
+(rotation) pixel shifts. A large vertical shift means the tube rotated
+substantially between sessions.
 
-**Purpose**: Determine if the observed patterns are statistically
-significant circadian rhythms.
+------------------------------------------------------------------------
+
+#### 3. Censor Image Edges to the Shared Overlap Region
+
+Once the rotational center and shift are known,
+[`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+crops each image so that only the rows present in every session are
+retained. This eliminates the non-overlapping margins and makes root
+counts directly comparable across sessions.
+
+Two modes are available:
+
+- **`fixed.rotation = FALSE`**: cuts proportionally based on the
+  measured offset
+- **`fixed.rotation = TRUE`**: centers the crop on a specified row and
+  forces a fixed output width
 
 ``` r
 
-# Perform statistical tests to validate circadian rhythms (all identical - check)
+data(seg_Oulanka2023_Session01_T067)
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# 1. Wald Test (tests if amplitude is significantly different from zero)
-wald_result <- rhythmicity_test(
-  method = "Wald",
-  tt = root_ts_data$time,
-  yy = root_ts_data$growth_rate,
-  period = 24
-)
-print("Wald test for circadian rhythmicity:")
-print(wald_result)
+# Variable mode — trim proportionally to the measured shift
+censored_var <- rotation_censor(img,
+                                center.offset = 120,
+                                cut.buffer    = 0.02,
+                                fixed.rotation = FALSE)
 
-# 2. Likelihood Ratio Test (compares rhythmic vs. constant models)
-lr_result <- rhythmicity_test(
-  method = "LR",
-  tt = root_ts_data$time,
-  yy = root_ts_data$growth_rate,
-  period = 24
-)
-print("Likelihood Ratio test for circadian rhythmicity:")
-print(lr_result)
+# Fixed mode — crop to a 1000-pixel-wide window centred on row 220
+censored_fix <- rotation_censor(img,
+                                center.offset  = 220,
+                                cut.buffer     = 0.02,
+                                fixed.width    = 1000,
+                                fixed.rotation = TRUE)
 
-# 3. F Test (tests overall model significance)
-f_result <- rhythmicity_test(
-  method = "F",
-  tt = root_ts_data$time,
-  yy = root_ts_data$growth_rate,
-  period = 24
-)
-print("F test for circadian rhythmicity:")
-print(f_result)
+terra::plot(censored_fix, main = "Censored image (fixed rotation)")
 ```
 
-#### 4. Period Analysis
+> **Note on tube geometry.** The inner and outer tube diameters differ,
+> so the observed root length is a slight underestimate of the true root
+> length in the soil. A resize coefficient may be applied separately;
+> [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+> does not handle this correction.
 
-**Purpose**: Identify the dominant period in root growth patterns when
-the period is unknown.
+------------------------------------------------------------------------
+
+#### 4. Locate the Soil Surface
+
+[`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
+finds where soil begins by detecting the lower edge of the adhesive
+tape. It returns a data frame with two columns:
+
+- `soil0` — pixel column of the soil surface
+- `tape.end` — pixel column of the tape’s lower margin (with a safety
+  buffer)
+
+These values feed directly into
+[`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+as `start.soil`.
 
 ``` r
 
-# Scan for the most likely period in the data
-period_scan <- analyze_circadian_period(
-  time = root_ts_data$time,
-  values = root_ts_data$growth_rate,
-  period_range = c(12, 36),  # Test periods between 12 and 36 hours
-  step = 0.5                 # Step size in hours
-)
+data(rgb_Oulanka2023_Session03_T067)
+img_rgb <- rgb_Oulanka2023_Session03_T067
 
-# Plot period scan results
-plot_period_scan(
-  period_scan,
-  title = "Period Analysis of Root Growth"
-)
+surface <- estimate_soil_surface(img_rgb, dpi = 150)
+print(surface)
 
-# Identify the best-fitting period
-best_period <- period_scan$period[which.min(period_scan$residual_sum_squares)]
-print(paste0("Best-fitting period: ", round(best_period, 2), " hours"))
+# Use soil0 to anchor the depth map at the true soil surface
+cat("Soil surface at pixel column:", surface$soil0, "\n")
 ```
 
-#### 5. Rotation Bias Analysis
+Key parameters:
 
-**Purpose**: Quantify directional preferences in root growth around
-minirhizotron tubes.
+| Parameter | Description |
+|----|----|
+| `dpi` | Scanner resolution; needed to convert the pixel position to cm |
+| `tape.overlap` | Safety margin (cm) subtracted from the tape edge |
+| `inverse` | Set `TRUE` if the tape is darker than the soil |
+| `nclasses` | Number of clustering classes for tape detection |
+
+------------------------------------------------------------------------
+
+### Rhythmicity Analysis
+
+In some minirhizotron deployments, root observations are made at high
+temporal frequency (e.g. multiple times per day). In these datasets it
+can be useful to test whether root dynamics show rhythmic — for instance
+diel — patterns.
+
+[`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+fits a sine curve of the form
+
+``` math
+y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c
+```
+
+to a time series and tests whether the amplitude $`A`$ is significantly
+different from zero, using your choice of three statistical tests.
+
+#### Fitting and Testing
 
 ``` r
 
-# For rotation bias, we need data that includes angular positions
-# In a minirhizotron, this would be the angular position around the tube
-
-# For demonstration, we'll generate synthetic rotation data
 set.seed(42)
-n_roots <- 100
-angular_positions <- runif(n_roots, 0, 360)  # Angles in degrees
+x <- seq(0, 48, length.out = 120)           # 48 hours, 120 observations
+y <- 1.8 * sin(2 * pi / 24 * (x + 5)) +    # amplitude 1.8, 24-h period
+     4 + rnorm(120, 0, 1.2)                 # baseline + noise
 
-# Simulate a bias toward the bottom of the tube (180 degrees)
-bias_center <- 180
-bias_strength <- 0.5
-density <- bias_strength * dnorm(angular_positions, bias_center, 45) + 
-           (1 - bias_strength) * dunif(angular_positions, 0, 360)
-           
-# Normalize to create a probability of root presence
-probability <- density / sum(density) * n_roots
-root_counts <- rpois(n_roots, probability)
+# --- F-test (default) ---
+res_F <- rhythmicity(x, y, fix_period = 24, method = "F")
+cat(sprintf("Amplitude: %.2f | Phase: %.1f h | R²: %.3f | p (F): %.4f\n",
+            res_F$amplitude, res_F$phase, res_F$R2, res_F$p_value))
 
-# Create a data frame for analysis
-rotation_data <- data.frame(
-  angle = angular_positions,
-  root_count = root_counts
-)
+# --- Finite-sample likelihood ratio test ---
+res_FLR <- rhythmicity(x, y, fix_period = 24, method = "FLR")
+cat(sprintf("p (FLR): %.4f\n", res_FLR$p_value))
 
-# Analyze rotation bias
-rotation_bias <- analyze_rotation_bias(
-  angles = rotation_data$angle,
-  values = rotation_data$root_count,
-  bins = 24  # Number of angular bins
-)
-
-print("Rotation bias metrics:")
-print(rotation_bias$metrics)
-
-# Visualize rotation bias
-plot_rotation_bias(
-  rotation_bias,
-  title = "Root Growth Rotation Bias"
-)
+# --- Large-sample likelihood ratio test ---
+res_LR <- rhythmicity(x, y, fix_period = 24, method = "LR")
+cat(sprintf("p (LR): %.4f\n", res_LR$p_value))
 ```
 
-#### 6. Combined Temporal and Directional Analysis
+#### Estimating an Unknown Period
 
-**Purpose**: Investigate if rotation bias changes with circadian
-rhythms.
+If you do not know the period in advance, set `fix_period = NULL` and
+provide starting values for all four parameters. The optimizer will
+estimate the period along with amplitude, phase, and offset.
 
 ``` r
 
-# For this analysis, we need data that combines time and angular position
-# Generate synthetic data for demonstration
+res_free <- rhythmicity(x, y,
+                        fix_period = NULL,
+                        parStart   = list(amp = 2, phase = 0,
+                                          offset = 4, period = 20))
 
-# Create time points across 3 days
-time_points <- seq(0, 72, by = 3)
-n_times <- length(time_points)
-
-# Create angular positions
-angle_points <- seq(0, 345, by = 15)
-n_angles <- length(angle_points)
-
-# Create a matrix of root counts with time-dependent rotation bias
-root_matrix <- matrix(0, nrow = n_times, ncol = n_angles)
-colnames(root_matrix) <- angle_points
-rownames(root_matrix) <- time_points
-
-# Simulate time-varying bias
-for (i in 1:n_times) {
-  time <- time_points[i]
-  
-  # Bias center shifts over time (simulating heliotropism)
-  bias_center <- (180 + 45 * sin(2 * pi * time / 24)) %% 360
-  
-  # Generate root counts with the time-dependent bias
-  for (j in 1:n_angles) {
-    angle <- angle_points[j]
-    distance <- min(abs(angle - bias_center), 360 - abs(angle - bias_center))
-    root_matrix[i, j] <- rpois(1, lambda = 5 * exp(-distance^2/1000) + 1)
-  }
-}
-
-# Analyze time-dependent rotation bias
-temporal_bias <- analyze_temporal_rotation_bias(
-  root_matrix = root_matrix,
-  time_points = time_points,
-  angle_points = angle_points,
-  period = 24
-)
-
-print("Temporal rotation bias results:")
-print(temporal_bias$summary)
-
-# Visualize time-dependent rotation bias
-plot_temporal_bias(
-  temporal_bias,
-  title = "Time-Dependent Root Growth Direction"
-)
+cat(sprintf("Estimated period: %.1f h | R²: %.3f | p: %.4f\n",
+            res_free$period, res_free$R2, res_free$p_value))
 ```
 
-### Advanced Applications
+> **Caution.** With an unknown period, the model has four free
+> parameters and the likelihood surface can be multimodal. Provide
+> ecologically motivated starting values (e.g. `period = 24` for a diel
+> hypothesis) and inspect the fitted curve before interpreting results.
 
-#### Comparing Rotation Bias Between Treatments
+#### Plotting the Fitted Curve
 
-**Purpose**: Determine if different experimental treatments affect root
-directional preferences.
+[`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+does not produce plots directly, but the fitted values are easily
+recovered via the underlying
+[`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
+helper (not exported; call via `RootScanR:::fit_sine_curve()`), or
+reconstruct the curve from the returned parameters:
 
 ``` r
 
-# Simulate data for two treatments
-set.seed(123)
+# Reconstruct the fitted sine from the returned parameters
+x_seq  <- seq(min(x), max(x), length.out = 300)
+y_fit  <- res_F$amplitude *
+           sin(2 * pi / res_F$period * (x_seq + res_F$phase)) +
+           res_F$offset
 
-# Treatment 1: Strong downward bias
-angles_t1 <- rnorm(100, mean = 180, sd = 30) %% 360
-counts_t1 <- rpois(100, lambda = 5)
-
-# Treatment 2: Weaker, more diffuse bias
-angles_t2 <- rnorm(100, mean = 180, sd = 60) %% 360
-counts_t2 <- rpois(100, lambda = 5)
-
-# Analyze rotation bias for each treatment
-bias_t1 <- analyze_rotation_bias(angles_t1, counts_t1, bins = 24)
-bias_t2 <- analyze_rotation_bias(angles_t2, counts_t2, bins = 24)
-
-# Compare bias strength statistically
-bias_comparison <- compare_rotation_bias(
-  bias_t1, 
-  bias_t2,
-  method = "rayleigh"
-)
-
-print("Bias comparison results:")
-print(bias_comparison)
-
-# Visualize the comparison
-plot_bias_comparison(
-  list(Treatment1 = bias_t1, Treatment2 = bias_t2),
-  title = "Rotation Bias Comparison Between Treatments"
-)
+plot(x, y, pch = 16, col = "grey50",
+     xlab = "Time (hours)", ylab = "Root growth index",
+     main = "Rhythmicity fit (fixed 24-h period)")
+lines(x_seq, y_fit, col = "coral", lwd = 2)
+legend("topright",
+       legend = sprintf("A = %.2f, R² = %.3f, p = %.4f",
+                        res_F$amplitude, res_F$R2, res_F$p_value),
+       bty = "n")
 ```
 
-### Conclusion
+#### Interpreting the Output
 
-This vignette demonstrates how to analyze rotation bias and circadian
-rhythms in root growth using the RootScanR package. These analyses can
-reveal important aspects of root growth strategies and responses to
-environmental cues or methodological quirks.
+The returned list includes:
 
-Key takeaways: 1. Circadian rhythms can be detected and characterized
-using sine curve fitting 2. Statistical tests help validate the
-significance of observed rhythms 3. Rotation bias analysis quantifies
-directional preferences in root growth 4. Combined temporal and
-directional analysis can reveal complex growth patterns
+| Element     | Description                                           |
+|-------------|-------------------------------------------------------|
+| `amplitude` | Estimated amplitude $`A`$                             |
+| `phase`     | Phase shift $`\phi`$ (modulo period)                  |
+| `offset`    | Baseline $`c`$                                        |
+| `period`    | Fixed or estimated period $`P`$                       |
+| `peakTime`  | Time of peak within one cycle ($`P/4 - \phi \mod P`$) |
+| `R2`        | Coefficient of determination                          |
+| `stat`      | Test statistic (F, FLR, or LR depending on `method`)  |
+| `p_value`   | P-value for the test of $`A \neq 0`$                  |
 
-For more detailed information about specific functions and additional
-features, please refer to the function documentation and the package
-GitHub repository at <https://github.com/jcunow/RootScanR>.
+A significant p-value indicates that a rhythmic component explains a
+non-trivial portion of the variance. Inspect $`R^2`$ to judge effect
+size — a significant but low-$`R^2`$ result may reflect noise or a
+poorly chosen period.
+
+------------------------------------------------------------------------
+
+### Connecting Rotation Bias and Rhythmicity
+
+When rotation-censored images are used in a high-frequency monitoring
+setup, the two analyses can be connected in a straightforward pipeline:
+
+1.  For each session, apply
+    [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+    relative to a reference session to obtain per-session offsets.
+2.  Pass each image through
+    [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+    to harmonise the field of view.
+3.  Extract root coverage or length per depth bin using
+    [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md).
+4.  Test whether the resulting time series exhibits rhythmic dynamics
+    using
+    [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md).
+
+This ensures that apparent rhythmic signals are not artefacts of the
+tube rotating in and out of view between sessions.
+
+------------------------------------------------------------------------
+
+### Further Reading
+
+For depth profiling, trait extraction, and turnover analysis see the
+other RootScanR vignettes. Full function documentation is available at
+<https://jcunow.github.io/RootScanR/>. Source code and issue tracker:
+<https://github.com/jcunow/RootScanR>.

@@ -1,6 +1,7 @@
-# Create a kernel with specified shape for morphological operations
+# Create a morphological structuring element
 
-Create a kernel with specified shape for morphological operations
+Returns a \`cimg\` kernel of a given shape for use with
+\`imager::dilate()\` / \`imager::erode()\`.
 
 ## Usage
 
@@ -12,12 +13,13 @@ create_kernel(shape = "disk", size = 3)
 
 - shape:
 
-  Shape of the kernel: "square", "diamond", or "disk"
+  One of \`"disk"\` (default), \`"square"\`, or \`"diamond"\`.
 
 - size:
 
-  Size of the kernel (odd integer)
+  Kernel size in pixels (odd integer). Even values are silently
+  incremented by 1.
 
 ## Value
 
-A kernel as an imager cimg object
+A \`cimg\` kernel.
