@@ -40,3 +40,4 @@ img[13:15, 13:15] <- 0   # hole inside it
 img[40, 40]        <- 1  # isolated artifact
 report_image_components(img)
 }
+\keyword{internal}
