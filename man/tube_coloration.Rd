@@ -7,22 +7,23 @@
 tube_coloration(img, r = 0.2126, g = 0.7152, b = 0.0722)
 }
 \arguments{
-\item{img}{Three-band raster (RGB) or path to image}
+\item{img}{Three-band raster (RGB) or path to image.}
 
-\item{r}{Red channel weight}
+\item{r}{Red channel luminosity weight. Default follows ITU-R BT.709.}
 
-\item{g}{Green channel weight}
+\item{g}{Green channel luminosity weight.}
 
-\item{b}{Blue channel weight}
+\item{b}{Blue channel luminosity weight.}
 }
 \value{
-Data frame of color metrics
+A data frame with columns: rcc, gcc, bcc, hue, saturation,
+  luminosity, red, green, blue.
 }
 \description{
 Calculate Image Coloration Metrics
 }
 \examples{
 data(rgb_Oulanka2023_Session03_T067)
-img = terra::rast(rgb_Oulanka2023_Session03_T067)
-colorvector = tube_coloration(img)
+img <- terra::rast(rgb_Oulanka2023_Session03_T067)
+colorvector <- tube_coloration(img)
 }

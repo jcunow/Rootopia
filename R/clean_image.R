@@ -1,431 +1,359 @@
+# Image cleaning functions
+#
+# Dependencies: imager (for connected-component labelling, morphological ops)
+# All functions work on `cimg` objects internally; load_flexible_image() handles
+# conversion from SpatRaster / matrix / file path.
 
 
-#' Fill holes in binary images
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+#' Fill internal black holes in a binary image
 #'
-#' Identifies internal black regions ("holes") in a binary image and fills them by setting their pixel values to 1. Holes are defined as black areas (value = 0) completely surrounded by white (value = 1), i.e., not connected to the image border.
+#' Sets to 1 all black regions (value = 0) that are completely surrounded by
+#' white (value = 1) — i.e. not connected to the image border.
 #'
-#' @param img A `cimg` object representing a binary image (values 0 and 1).
-#' @param max_size Optional maximum size (in pixels) of holes to fill. If `NULL`, all holes are filled.
-#'
-#' @return A `cimg` object with holes filled (as 1s).
+#' @param img A `cimg` binary image (values 0 and 1).
+#' @param max_size Maximum hole size in pixels to fill.  If `NULL` (default),
+#'   all holes are filled regardless of size.
+#' @return A `cimg` with holes filled.
 #' @keywords internal
 fill_holes <- function(img, max_size = NULL) {
-  inv <- 1 - img
-  lbl <- imager::label(inv)
-  
+  inv  <- 1 - img
+  lbl  <- imager::label(inv)
+  nd   <- dim(lbl)
+
   border_labels <- unique(c(
-    lbl[1, , 1, 1],
-    lbl[dim(lbl)[1], , 1, 1],
-    lbl[, 1, 1, 1],
-    lbl[, dim(lbl)[2], 1, 1]
+    lbl[1,    , 1, 1],
+    lbl[nd[1],, 1, 1],
+    lbl[, 1,   1, 1],
+    lbl[, nd[2], 1, 1]
   ))
   border_labels <- border_labels[border_labels > 0]
-  
-  internal_mask <- !(lbl %in% border_labels)
-  internal_labels <- lbl * as.numeric(internal_mask)
-  
+
+  internal_labels <- lbl * as.numeric(!(lbl %in% border_labels))
+
   if (!is.null(max_size)) {
-    label_sizes <- table(internal_labels[internal_labels > 0])
-    allowed_labels <- as.integer(names(label_sizes[label_sizes <= max_size]))
-    fill_mask <- (internal_labels %in% allowed_labels)
+    sizes          <- table(internal_labels[internal_labels > 0])
+    allowed        <- as.integer(names(sizes[sizes <= max_size]))
+    fill_mask      <- internal_labels %in% allowed
   } else {
     fill_mask <- internal_labels > 0
   }
-  
+
   img[fill_mask] <- 1
-  return(img)
+  img
 }
 
 
-
-
-#' Remove small white artifacts from binary images
+#' Remove small isolated white artifacts from a binary image
 #'
-#' Identifies small internal white regions (objects) in a binary image and removes them by setting their pixel values to 0. Artifacts are defined as white areas (value = 1) not connected to the image border.
+#' Sets to 0 all white regions (value = 1) that are not connected to the
+#' image border.
 #'
-#' @param img A `cimg` object representing a binary image (values 0 and 1).
-#' @param max_size Optional maximum size (in pixels) of white objects to remove. If `NULL`, all isolated objects are removed.
-#'
-#' @return A `cimg` object with small white artifacts removed (set to 0).
+#' @param img A `cimg` binary image (values 0 and 1).
+#' @param max_size Maximum artifact size in pixels to remove.  If `NULL`
+#'   (default), all isolated white regions are removed.
+#' @return A `cimg` with artifacts removed.
 #' @keywords internal
 remove_small_objects <- function(img, max_size = NULL) {
   lbl <- imager::label(img)
-  
+  nd  <- dim(lbl)
+
   border_labels <- unique(c(
-    lbl[1, , 1, 1],
-    lbl[dim(lbl)[1], , 1, 1],
-    lbl[, 1, 1, 1],
-    lbl[, dim(lbl)[2], 1, 1]
+    lbl[1,    , 1, 1],
+    lbl[nd[1],, 1, 1],
+    lbl[, 1,   1, 1],
+    lbl[, nd[2], 1, 1]
   ))
   border_labels <- border_labels[border_labels > 0]
-  
-  internal_mask <- !(lbl %in% border_labels)
-  internal_labels <- lbl * as.numeric(internal_mask)
-  
+
+  internal_labels <- lbl * as.numeric(!(lbl %in% border_labels))
+
   if (!is.null(max_size)) {
-    label_sizes <- table(internal_labels[internal_labels > 0])
-    small_labels <- as.integer(names(label_sizes[label_sizes <= max_size]))
-    remove_mask <- (internal_labels %in% small_labels)
+    sizes        <- table(internal_labels[internal_labels > 0])
+    small        <- as.integer(names(sizes[sizes <= max_size]))
+    remove_mask  <- internal_labels %in% small
   } else {
     remove_mask <- internal_labels > 0
   }
-  
+
   img[remove_mask] <- 0
-  return(img)
+  img
 }
 
 
-
-
-
-
-
-
-#' Report sizes of holes and white artifacts in binary images
+#' Create a morphological structuring element
 #'
-#' Analyzes a binary image and prints the sizes of internal black holes (0-valued regions enclosed by 1s) and isolated white artifacts (1-valued regions not connected to the border). This function is useful for diagnosing what would be affected by `fill_holes()` and `remove_small_objects()` operations.
+#' Returns a `cimg` kernel of a given shape for use with
+#' `imager::dilate()` / `imager::erode()`.
 #'
-#' Holes are detected by inverting the image and applying connected component labeling. Any region that does not touch the image border is considered a candidate hole or artifact.
-#'
-#' @param img A `cimg` object representing a binary image with values 0 and 1.
-#'
-#' @return None (invisible `NULL`). The function prints human-readable summaries to the console.
-#'
-#' @details
-#' - Holes are black regions (0-valued pixels) completely enclosed by white (1-valued) areas.
-#' - Artifacts are small white regions (1-valued pixels) that are not connected to the image border.
-#' - Pixel counts are printed for each detected region.
-#'
-#' @examples
-#' #' # Create a complex test image with holes and artifacts
-#' 
-#'   img <- imager::as.cimg(matrix(0, 150, 150))  # Start with black background
-#'
-#'   # Create multiple white objects with black holes
-#'   img[20:50, 20:50] <- 1       # White square 1
-#'   img[30:35, 30:35] <- 0       # Small black hole in square 1
-#'
-#'   img[70:120, 70:120] <- 1     # White square 2
-#'   img[80:85, 80:85] <- 0       # Small black hole 1 in square 2
-#'   img[100:115, 100:115] <- 0   # Large black hole 2 in square 2
-#'   
-#' # Add small artifacts (1-pixel specks)
-#' img[10, 140] <- 1
-#' img[145, 15] <- 1
-#'
-#' # Add a 2×2 speck
-#' img[130:131, 40:41] <- 1
-#'
-#' # Add an irregular blob
-#' img[100:102, 10] <- 1
-#' img[101:102, 11] <- 1
-#' img[101, 12] <- 1
-#'
-#'   # Create a white ring (donut shape)
-#'   center_x <- 40
-#'   center_y <- 100
-#'for (i in 1:150) {
-#'  for (j in 1:150) {
-#'    dist <- sqrt((i - center_x)^2 + (j - center_y)^2)
-#'    if (dist <= 20 && dist >= 10) {
-#'      img[i, j,,] <- 1  
-#'  }}}
-#'  
-#' report_image_components(img)
-#'
-#' @keywords internal
-report_image_components <- function(img) {
-  cat("=== HOLES (black regions inside objects) ===\n")
-  
-  # Report holes
-  holes_and_bg <- 1 - img
-  lbl_holes <- imager::label(holes_and_bg)
-  
-  border_labels_holes <- unique(c(
-    lbl_holes[1, , 1, 1],
-    lbl_holes[dim(lbl_holes)[1], , 1, 1],
-    lbl_holes[, 1, 1, 1],
-    lbl_holes[, dim(lbl_holes)[2], 1, 1]
-  ))
-  
-  border_labels_holes <- border_labels_holes[border_labels_holes > 0]
-  
-  internal_mask_holes <- !(lbl_holes %in% border_labels_holes)
-  internal_labels_holes <- lbl_holes * as.numeric(internal_mask_holes)
-  hole_ids <- unique(as.numeric(internal_labels_holes[internal_labels_holes > 0]))
-  
-  if (length(hole_ids) == 0) {
-    cat("No holes found\n")
-  } else {
-    hole_sizes <- sapply(hole_ids, function(id) {
-      hole_coords <- which(internal_labels_holes == id, arr.ind = TRUE)
-      sum(img[hole_coords] == 0)
-    })
-    
-    for (i in seq_along(hole_ids)) {
-      cat(sprintf("Hole %d: %d pixels\n", hole_ids[i], hole_sizes[i]))
-    }
-  }
-  
-  cat("\n=== ARTIFACTS (small isolated white objects) ===\n")
-  
-  # Report artifacts
-  lbl_objects <- imager::label(img)
-  
-  border_labels_objects <- unique(c(
-    lbl_objects[1, , 1, 1],
-    lbl_objects[dim(lbl_objects)[1], , 1, 1],
-    lbl_objects[, 1, 1, 1],
-    lbl_objects[, dim(lbl_objects)[2], 1, 1]
-  ))
-  
-  border_labels_objects <- border_labels_objects[border_labels_objects > 0]
-  
-  internal_mask_objects <- !(lbl_objects %in% border_labels_objects)
-  internal_labels_objects <- lbl_objects * as.numeric(internal_mask_objects)
-  artifact_ids <- unique(as.numeric(internal_labels_objects[internal_labels_objects > 0]))
-  
-  if (length(artifact_ids) == 0) {
-    cat("No isolated artifacts found\n")
-  } else {
-    artifact_sizes <- sapply(artifact_ids, function(id) {
-      artifact_coords <- which(internal_labels_objects == id, arr.ind = TRUE)
-      sum(img[artifact_coords] == 1)
-    })
-    
-    for (i in seq_along(artifact_ids)) {
-      cat(sprintf("Artifact %d: %d pixels\n", artifact_ids[i], artifact_sizes[i]))
-    }
-  }
-}
-
-
-
-
-
-
-#' Smooth the edges of a root binary image
-#'
-#' @param img A binary image of root systems (imager cimg object)
-#' @param kernel_shape Shape of the kernel: "square", "diamond", or "disk"
-#' @param kernel_size Size of the kernel for morphological operations (odd integer). Use larger kernels for higher image resolution
-#' @param iterations Number of iterations for the smoothing process
-#' @return A smoothed binary image
-#' @export
-#' @keywords internal
-#'
-#' @importFrom imager dilate erode as.cimg is.cimg grayscale
-#' @examples
-#' 
-#' data("seg_Oulanka2023_Session01_T067")
-#' img <- seg_Oulanka2023_Session01_T067
-#' # Try different kernel shapes
-#' smoothed_square <- smooth_root_edges(img, kernel_shape = "square", kernel_size = 3)
-#' smoothed_diamond <- smooth_root_edges(img, kernel_shape = "diamond", kernel_size = 3)
-#' smoothed_disk <- smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3)
-#' plot(smoothed_disk)
-#' 
-smooth_root_edges <- function(img, kernel_shape = "disk", kernel_size = 3, iterations = 1) {
-  
-  # Try to convert to cimg
-  img <- load_flexible_image(img, output_format = "cimg",binarize = T)
-  
-  
-  # Ensure image is grayscale (3D array) if it's color (4D array)
-  if (imager::spectrum(img) > 1) {
-    img <- imager::grayscale(img)
-  }
-  
-  # Binarize the image if needed
-  #img <- img > 0.5
-  
-  # Create kernel based on selected shape
-  kern <- create_kernel(shape = kernel_shape, size = kernel_size)
-  
-  # Apply closing operation (dilation followed by erosion) multiple times
-  smoothed_img <- img
-  for (i in 1:iterations) {
-    smoothed_img <- imager::dilate(smoothed_img, kern)
-    smoothed_img <- imager::erode(smoothed_img, kern)
-  }
-  
-  return(smoothed_img)
-}
-
-
-
-
-
-
-
-#' Create a kernel with specified shape for morphological operations
-#'
-#' @param shape Shape of the kernel: "square", "diamond", or "disk"
-#' @param size Size of the kernel (odd integer)
-#' @return A kernel as an imager cimg object
+#' @param shape One of `"disk"` (default), `"square"`, or `"diamond"`.
+#' @param size Kernel size in pixels (odd integer).  Even values are silently
+#'   incremented by 1.
+#' @return A `cimg` kernel.
 #' @keywords internal
 create_kernel <- function(shape = "disk", size = 3) {
-  
-  # Ensure methods are valid
-  valid_shapes <- c( "square", "diamond", "disk")
-  methods <- intersect(shape, valid_shapes)
-  if (length(methods) == 0) {
-    stop("No valid shape specified. Choose from: 'square', 'diamond', 'disk'.")
-  }
-  # Ensure odd size for symmetry
-  if (size %% 2 == 0) size <- size + 1
-  
-  # Create empty kernel matrix
-  kern_matrix <- matrix(0, size, size)
-  center <- floor(size/2) + 1
-  radius <- floor(size/2)
-  
-  # Fill kernel based on shape
-  for (i in 1:size) {
-    for (j in 1:size) {
-      if (shape == "square") {
-        # Square: all positions filled
-        kern_matrix[i, j] <- 1
-      } else if (shape == "diamond") {
-        # Diamond: Manhattan distance <= radius
-        if (abs(i - center) + abs(j - center) <= radius) {
-          kern_matrix[i, j] <- 1
-        }
-      } else if (shape == "disk") {
-        # Disk/Circle: Euclidean distance <= radius
-        if (sqrt((i - center)^2 + (j - center)^2) <= radius) {
-          kern_matrix[i, j] <- 1
-        }
-      } else if (shape == "cross") {
-        # Cross shape
-        if (i == center || j == center) {
-          kern_matrix[i, j] <- 1
-        }
-      } else if (shape == "x") {
-        # X shape (diagonals)
-        if (abs(i - center) == abs(j - center)) {
-          kern_matrix[i, j] <- 1
-        }
-      }
+  valid <- c("square", "diamond", "disk")
+  if (!shape %in% valid)
+    stop(sprintf("Invalid kernel shape '%s'. Choose from: %s",
+                 shape, paste(valid, collapse = ", ")),
+         call. = FALSE)
+
+  if (size %% 2 == 0) size <- size + 1L
+
+  kern   <- matrix(0, size, size)
+  center <- floor(size / 2) + 1L
+  radius <- floor(size / 2)
+
+  for (i in seq_len(size)) {
+    for (j in seq_len(size)) {
+      kern[i, j] <- switch(shape,
+        square  = 1,
+        diamond = as.integer(abs(i - center) + abs(j - center) <= radius),
+        disk    = as.integer(sqrt((i - center)^2 + (j - center)^2) <= radius)
+      )
     }
   }
-  
-  # Convert matrix to cimg object
-  return(imager::as.cimg(kern_matrix))
+
+  imager::as.cimg(kern)
 }
 
 
+# ---------------------------------------------------------------------------
+# Exported diagnostic helper
+# ---------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-#' Clean binary images by filling holes, removing small artifacts, and optionally smoothing edges
+#' Report sizes of holes and isolated artifacts in a binary image
 #'
-#' This function performs a comprehensive cleaning operation on a binary image by:
-#' 1. Filling internal black holes (regions of 0 surrounded by 1s),
-#' 2. Removing small internal white artifacts (1s not connected to the image border), and
-#' 3. Optionally applying edge smoothing to refine boundaries of root structures or other objects.
+#' Prints a human-readable summary of all internal black holes and isolated
+#' white artifacts in `img`, together with their pixel counts.  Use this
+#' **before** calling [clean_image()] to decide on appropriate values for
+#' `max_hole_size` and `max_artifact_size`.
 #'
-#' Holes and artifacts are detected using connected component labeling. Objects touching the image border are preserved and not modified. Pixel connectivity is assumed to be 4-connected.
+#' @section Choosing thresholds:
+#' At 300 DPI a single root cross-section in a minirhizotron scan is
+#' roughly 5–150 px² depending on root diameter.  As a starting point:
+#' \itemize{
+#'   \item `max_artifact_size = 10` removes single-pixel noise and tiny
+#'         segmentation specks while preserving fine roots.
+#'   \item `max_hole_size = 50` fills small gaps inside roots without
+#'         merging genuinely separate objects.
+#' }
+#' Scale these linearly if your scanner DPI differs (e.g. at 150 DPI,
+#' halve both values).
 #'
-#' @param img A `cimg` object representing a binary image with pixel values 0 and 1.
-#' @param max_hole_size Maximum size (in pixels) of black holes to fill. If `NULL`, all holes are filled.
-#' @param max_artifact_size Maximum size (in pixels) of white artifacts to remove. If `NULL`, all isolated objects are removed.
-#' @param edge_smooth Logical; if `TRUE`, applies morphological smoothing to object edges.
-#' @param kernel_shape Shape of the morphological kernel used for smoothing. One of `"disk"` (default), `"square"`, etc., depending on your implementation of `smooth_root_edges()`.
-#' @param kernel_size Size of the structuring element used for edge smoothing.
-#' @param iterations Number of times the smoothing operation is applied.
-#' @param report Logical; if `TRUE`, the function returns a list with the cleaned image and a printed report on hole and artifact sizes. Defaults to `FALSE`.
-#' @param select.layer Integer specifying the layer to use if \code{img} is a multi-layer `SpatRaster`. Defaults to \code{NULL}, which may use package-specific defaults for each method.
-#'
-#' @return A cleaned `cimg` object. If `report = TRUE`, returns a list with two elements: the cleaned image and the printed summary.
-#'
-#' @examples
-#' # Create a complex test image with holes and artifacts
-#' 
-#'   img <- imager::as.cimg(matrix(0, 150, 150))  # Start with black background
-#'
-#'   # Create multiple white objects with black holes
-#'   img[20:50, 20:50] <- 1       # White square 1
-#'   img[30:35, 30:35] <- 0       # Small black hole in square 1
-#'
-#'   img[70:120, 70:120] <- 1     # White square 2
-#'   img[80:85, 80:85] <- 0       # Small black hole 1 in square 2
-#'   img[100:115, 100:115] <- 0   # Large black hole 2 in square 2
-#'   
-#' # Add small artifacts (1-pixel specks)
-#' img[10, 140] <- 1
-#' img[145, 15] <- 1
-#'
-#' # Add a 2×2 speck
-#' img[130:131, 40:41] <- 1
-#'
-#' # Add an irregular blob
-#' img[100:102, 10] <- 1
-#' img[101:102, 11] <- 1
-#' img[101, 12] <- 1
-#'
-#'   # Create a white ring (donut shape)
-#'   center_x <- 40
-#'   center_y <- 100
-#'for (i in 1:150) {
-#'  for (j in 1:150) {
-#'    dist <- sqrt((i - center_x)^2 + (j - center_y)^2)
-#'    if (dist <= 20 && dist >= 10) {
-#'      img[i, j,,] <- 1  
-#'  }}}
-#'
-#'
-#' # Clean with various thresholds
-#' cleaned1 <- clean_image(img, max_hole_size = 50, max_artifact_size = 10)
-#' cleaned2 <- clean_image(img, max_hole_size = 20, max_artifact_size = 30)
-#' cleaned3 <- clean_image(img, max_hole_size = 30, max_artifact_size = 20, 
-#'                         edge_smooth = TRUE, kernel_size = 3)
-#'
-#' # Plot results
-#' par(mfrow = c(2, 2))
-#' plot(img, main = "Original")
-#' plot(cleaned1, main = "Fill ≤50, Remove ≤10")
-#' plot(cleaned2, main = "Fill ≤20, Remove ≤30")
-#' plot(cleaned3, main = "Fill ≤30, Remove ≤20 + Smooth")
-#' par(mfrow = c(1, 1))
+#' @param img A `cimg` binary image (values 0 and 1), or any format accepted
+#'   by [load_flexible_image()].
+#' @return Invisibly `NULL`.  Prints to the console.
 #' @export
+#' @examples
+#' img <- imager::as.cimg(matrix(0, 50, 50))
+#' img[10:20, 10:20] <- 1   # white square
+#' img[13:15, 13:15] <- 0   # hole inside it
+#' img[40, 40]        <- 1  # isolated artifact
+#' report_image_components(img)
+report_image_components <- function(img) {
+  img <- load_flexible_image(img, output_format = "cimg", binarize = TRUE)
+
+  cat("=== HOLES (black regions enclosed by white) ===\n")
+  lbl_h   <- imager::label(1 - img)
+  nd      <- dim(lbl_h)
+  bl_h    <- unique(c(lbl_h[1,,1,1], lbl_h[nd[1],,1,1],
+                       lbl_h[,1,1,1], lbl_h[,nd[2],1,1]))
+  bl_h    <- bl_h[bl_h > 0]
+  int_h   <- lbl_h * as.numeric(!(lbl_h %in% bl_h))
+  ids_h   <- unique(as.numeric(int_h[int_h > 0]))
+
+  if (length(ids_h) == 0) {
+    cat("  No holes found.\n")
+  } else {
+    for (id in ids_h)
+      cat(sprintf("  Hole %d: %d px\n", id,
+                  sum(img[int_h == id] == 0, na.rm = TRUE)))
+  }
+
+  cat("\n=== ARTIFACTS (isolated white regions not touching border) ===\n")
+  lbl_a   <- imager::label(img)
+  bl_a    <- unique(c(lbl_a[1,,1,1], lbl_a[nd[1],,1,1],
+                       lbl_a[,1,1,1], lbl_a[,nd[2],1,1]))
+  bl_a    <- bl_a[bl_a > 0]
+  int_a   <- lbl_a * as.numeric(!(lbl_a %in% bl_a))
+  ids_a   <- unique(as.numeric(int_a[int_a > 0]))
+
+  if (length(ids_a) == 0) {
+    cat("  No isolated artifacts found.\n")
+  } else {
+    for (id in ids_a)
+      cat(sprintf("  Artifact %d: %d px\n", id,
+                  sum(img[int_a == id] == 1, na.rm = TRUE)))
+  }
+
+  invisible(NULL)
+}
+
+
+# ---------------------------------------------------------------------------
+# Edge smoothing (internal — not exported)
+# ---------------------------------------------------------------------------
+
+#' Smooth object edges with morphological closing
+#'
+#' Applies a morphological closing (dilation then erosion) to smooth the
+#' edges of binary objects.  Intended as a post-cleaning step before
+#' skeletonisation; do **not** apply after skeletonisation.
+#'
+#' @param img A `cimg` binary image or any format accepted by
+#'   [load_flexible_image()].
+#' @param kernel_shape One of `"disk"` (default), `"square"`, `"diamond"`.
+#' @param kernel_size Structuring element size (odd integer).  At 300 DPI,
+#'   `kernel_size = 3` is a good starting point.
+#' @param iterations Number of closing iterations.
+#' @return A `cimg` binary image.
+#' @importFrom imager dilate erode grayscale
+#' @keywords internal
+smooth_root_edges <- function(img,
+                               kernel_shape = "disk",
+                               kernel_size  = 3,
+                               iterations   = 1) {
+  img <- load_flexible_image(img, output_format = "cimg", binarize = TRUE)
+
+  if (imager::spectrum(img) > 1)
+    img <- imager::grayscale(img)
+
+  kern <- create_kernel(shape = kernel_shape, size = kernel_size)
+
+  for (i in seq_len(iterations)) {
+    img <- imager::dilate(img, kern)
+    img <- imager::erode(img, kern)
+  }
+
+  img
+}
+
+
+# ---------------------------------------------------------------------------
+# Main exported function
+# ---------------------------------------------------------------------------
+
+#' Clean a binary root image
+#'
+#' Performs three sequential cleaning operations on a binary segmented image:
+#' 1. **Hole filling** — fills black regions enclosed by white (segmentation
+#'    gaps inside roots).
+#' 2. **Artifact removal** — removes isolated white specks not connected to
+#'    the image border (false-positive root detections).
+#' 3. **Edge smoothing** *(optional, off by default)* — applies morphological
+#'    closing to smooth jagged root edges.
+#'
+#' @section Why clean before skeletonisation:
+#' `skeletonize_image()` uses the Medial Axis Transform, which is driven by
+#' the distance transform.  Small holes inside a root inflate the local
+#' distance values and force the medial axis to bifurcate around the hole,
+#' producing spurious branching points.  Isolated artifact pixels produce
+#' phantom skeleton segments.  Cleaning first yields a much cleaner skeleton.
+#'
+#' @section Choosing thresholds:
+#' Call [report_image_components()] on your image first to see the actual
+#' pixel counts of all holes and artifacts.  At 300 DPI, sensible starting
+#' values are `max_hole_size = 50` and `max_artifact_size = 10`.
+#'
+#' @section Edge smoothing caution:
+#' `edge_smooth = TRUE` applies a morphological closing that slightly dilates
+#' then erodes root edges.  This can merge closely adjacent roots and alter
+#' root diameter measurements.  Only use it when the segmentation output has
+#' very jagged edges; leave it off (`FALSE`, the default) otherwise.
+#'
+#' @param img A `cimg` object, `SpatRaster`, matrix, or file path.
+#' @param max_hole_size Maximum hole size in pixels to fill.  If `NULL`, all
+#'   enclosed holes are filled.  See **Choosing thresholds** above.
+#' @param max_artifact_size Maximum artifact size in pixels to remove.  If
+#'   `NULL`, all isolated white regions are removed.
+#' @param edge_smooth Logical.  Apply morphological closing after hole/artifact
+#'   cleaning.  Default `FALSE`.
+#' @param kernel_shape Structuring element shape for edge smoothing:
+#'   `"disk"` (default), `"square"`, or `"diamond"`.
+#' @param kernel_size Structuring element size (odd integer).  Default `3`.
+#' @param iterations Number of closing iterations for edge smoothing.
+#'   Default `1`.
+#' @param select.layer Integer or `NULL`.  Which layer to use for multi-layer
+#'   inputs.
+#' @param output_format Character.  Format of the returned object.  One of
+#'   `"spatrast"` (default), `"cimg"`, or `"matrix"`.  Using `"spatrast"`
+#'   means the result can be passed directly to `terra::plot()`,
+#'   `skeletonize_image()`, `root_length()`, etc. without any further
+#'   conversion.
+#' @param report Logical.  If `TRUE`, also calls [report_image_components()]
+#'   on the *original* (uncleaned) image before cleaning.  When
+#'   `output_format = "spatrast"` (default), the cleaned raster is returned
+#'   directly even when `report = TRUE`; the report is printed as a side
+#'   effect.  Default `FALSE`.
+#' @return A cleaned image in the format specified by `output_format`
+#'   (`SpatRaster`, `cimg`, or matrix).
+#' @export
+#' @seealso [report_image_components()], [skeletonize_image()]
+#' @examples
+#' data(seg_Oulanka2023_Session01_T067)
+#' img <- terra::rast(seg_Oulanka2023_Session01_T067)
+#'
+#' # Inspect before cleaning
+#' report_image_components(img)
+#'
+#' # Clean: fill small holes, remove tiny artifacts — returns SpatRaster
+#' cleaned <- clean_image(img,
+#'                        max_hole_size     = 50,
+#'                        max_artifact_size = 10,
+#'                        select.layer      = 2)
+#'
+#' terra::plot(cleaned)            # works directly, no conversion needed
+#' skel <- skeletonize_image(cleaned, methods = "MAT")
+#'
+#' # If you need a cimg for further imager operations:
+#' cleaned_cimg <- clean_image(img, max_hole_size = 50,
+#'                             output_format = "cimg", select.layer = 2)
 clean_image <- function(img,
-                        max_hole_size = NULL,
-                        max_artifact_size = NULL,
-                        edge_smooth = TRUE,
-                        kernel_shape = "disk",
-                        kernel_size = 3,
-                        iterations = 1,
-                        select.layer = NULL,
-                        report = FALSE) {
-  
-  img = load_flexible_image(img, output_format = "cimg", select.layer = select.layer, binarize = TRUE)
-  
-  # Use fast variants
-  img_filled <- fill_holes(img, max_hole_size)
+                         max_hole_size     = NULL,
+                         max_artifact_size = NULL,
+                         edge_smooth       = FALSE,
+                         kernel_shape      = "disk",
+                         kernel_size       = 3,
+                         iterations        = 1,
+                         select.layer      = NULL,
+                         output_format     = "spatrast",
+                         report            = FALSE) {
+
+  output_format <- match.arg(output_format, c("spatrast", "cimg", "matrix"))
+
+  img_cimg <- load_flexible_image(img,
+                                   output_format = "cimg",
+                                   select.layer  = select.layer,
+                                   binarize      = TRUE)
+
+  if (report) report_image_components(img_cimg)
+
+  img_filled  <- fill_holes(img_cimg, max_hole_size)
   img_cleaned <- remove_small_objects(img_filled, max_artifact_size)
-  
-  img_smooth <- if (edge_smooth) {
+
+  img_out <- if (edge_smooth) {
     smooth_root_edges(img_cleaned, kernel_shape, kernel_size, iterations)
   } else {
     img_cleaned
   }
-  
-  if (report) {
-    report_image_components(img)
-    return(list(image = img_smooth))
-  } else {
-    return(img_smooth)
-  }
+
+  # Convert to the requested output format
+  switch(output_format,
+    spatrast = {
+      r <- load_flexible_image(img_out,
+                                output_format = "spatrast",
+                                normalize     = FALSE,
+                                binarize      = FALSE)
+      # Ensure RGB metadata is set so terra::plotRGB() works on multi-layer results.
+      # For a single-layer binary image, use terra::plot() rather than plotRGB().
+      if (terra::nlyr(r) >= 3L) terra::RGB(r) <- 1:3
+      r
+    },
+    cimg   = img_out,
+    matrix = as.matrix(img_out)
+  )
 }
-
-
-

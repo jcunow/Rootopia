@@ -2,7 +2,7 @@
 % Please edit documentation in R/Zonestats3.R
 \name{analyze_soil_texture}
 \alias{analyze_soil_texture}
-\title{Texture calculation}
+\title{Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)}
 \usage{
 analyze_soil_texture(
   img.color,
@@ -12,22 +12,29 @@ analyze_soil_texture(
 )
 }
 \arguments{
-\item{img.color}{Three-band raster or path to image}
+\item{img.color}{Three-band raster (RGB) or path to image. Internally
+converted to a `raster::RasterBrick` as required by the `glcm` package.}
 
-\item{grays}{Number of gray levels}
+\item{grays}{Number of gray levels for GLCM quantization. Must be between
+2 and 255. Default is 7.}
 
-\item{window}{Window size for GLCM}
+\item{window}{Window size for GLCM calculation as a length-2 vector of odd
+positive integers, e.g. `c(9, 9)`. Default is `c(9, 9)`.}
 
-\item{metrics}{Texture metrics to calculate}
+\item{metrics}{Character vector of GLCM texture statistics to calculate.
+Valid options: "mean", "variance", "homogeneity", "contrast",
+"dissimilarity", "entropy", "second_moment", "correlation".}
 }
 \value{
-Raster with texture metrics
+A RasterLayer (or RasterBrick for multiple metrics) with texture
+  values.
 }
 \description{
-Texture calculation
+Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)
 }
 \examples{
 data(rgb_Oulanka2023_Session03_T067)
-img = raster::brick(rgb_Oulanka2023_Session03_T067)
-analyze_soil_texture(img, 7, c(9,9), metrics = "second_moment")
+img <- raster::brick(rgb_Oulanka2023_Session03_T067)
+analyze_soil_texture(img, grays = 7, window = c(9, 9),
+                     metrics = "second_moment")
 }

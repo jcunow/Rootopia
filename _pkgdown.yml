@@ -1,64 +1,3 @@
-# url: https://jcunow.github.io/RootScanR/
-# template:
-#   bootstrap: 5
-#   theme: breeze-light
-#   light-switch: true
-#   bslib:
-#     base_font:
-#       google: Roboto
-#     heading_font:
-#       google: Aleo
-#     code_font:
-#       google: JetBrains Mono
-# 
-# serarch: true
-# 
-# # navbar:
-# #   structure:
-# #     left:  [intro, reference, articles, tutorials, news]
-# #     right: [search, github, lightswitch]
-# 
-# 
-# # navbar:
-# #   left:
-# #   - text: Tutorial
-# #     href: articles/FlatBedScans_vignettes.html
-# #           articles/MinirhizotronScans_vignettes.html
-# #           articles/Rotation_Bias_vignettes.html
-# #   - text: News
-# #     href: news/index.html
-# #   - text: Reference
-# #     href: reference/index.html
-# #   structure:
-# #     right: [search, github, lightswitch]
-# 
-# home:
-#   title: "RootScanR: Extract Root Traits from Images"
-#   description: "R tools for extracting root traits from flatbed and minirhizotron images"
-#   path: index.md    
-# 
-# navbar:
-#   left:
-#     - text: Tutorial
-#       menu:
-#         - text: Flatbed Scans
-#           href: articles/FlatBedScans_vignettes.html
-#         - text: Minirhizotron Scans
-#           href: articles/MinirhizotronScans_vignettes.html
-#         - text: Rotation Bias
-#           href: articles/Rotation_Bias_vignettes.html
-#     - text: News
-#       href: news/index.html
-#     - text: Reference
-#       href: reference/index.html
-#   structure:
-#     right: [search, github, lightswitch]
-# 
-
-
-
-
-
 url: https://jcunow.github.io/RootScanR/
 
 template:
@@ -73,18 +12,24 @@ template:
     code_font:
       google: JetBrains Mono
 
-search: true  
+search: true
 
+home:
+  title: "RootScanR: Extract Root Traits from Images"
+  description: "R tools for extracting root traits from flatbed and minirhizotron images"
 
 navbar:
   left:
     - text: Tutorial
       menu:
-        - text: Flatbed Scans
+        - text: "Start here: Batch Processing"
+          href: articles/BatchProcessing_vignette.html
+        - text: "-------"
+        - text: Flatbed Scans (step-by-step)
           href: articles/FlatBedScans_vignettes.html
-        - text: Minirhizotron Scans
+        - text: Minirhizotron Scans (step-by-step)
           href: articles/MinirhizotronScans_vignettes.html
-        - text: Rotation Bias
+        - text: Rotation Bias Correction
           href: articles/Rotation_Bias_vignettes.html
     - text: News
       href: news/index.html
@@ -92,3 +37,81 @@ navbar:
       href: reference/index.html
   structure:
     right: [search, github, lightswitch]
+
+reference:
+  - title: "Batch processing"
+    desc: "High-level wrapper that runs a full depth-profile analysis over a directory of images."
+    contents:
+      - root_depth_metrics
+
+  - title: "Image loading and preprocessing"
+    desc: "Functions for loading, cleaning, thresholding, and transforming root images."
+    contents:
+      - load_flexible_image
+      - clean_image
+      - image_threshold
+      - rgb2gray
+      - rotation_censor
+      - skeletonize_image
+
+  - title: "Root traits"
+    desc: "Per-image trait extraction: length, diameter, architecture, and spatial metrics."
+    contents:
+      - root_length
+      - root_diameter
+      - root_thickness
+      - detect_skeleton_points
+      - count_pixels
+      - px.sum
+      - deep_drive
+      - root_scape_metrics
+      - root_accumulation
+
+  - title: "Depth mapping"
+    desc: "Functions for constructing and binning depth maps from minirhizotron geometry."
+    contents:
+      - create_depthmap
+      - binning
+      - zoning
+      - estimate_soil_surface
+      - estimate_rotation_center
+      - estimate_rotation_shift
+
+  - title: "Soil and colour characterisation"
+    desc: "Colour metrics, peat classification, and texture analysis."
+    contents:
+      - tube_coloration
+      - analyze_soil_texture
+      - classify_peat_rgb
+      - build_peat_centroids
+      - plot_peat_classification
+
+  - title: "Distribution analysis"
+    desc: "Statistical indices summarising root distribution with depth."
+    contents:
+      - RWDI
+      - RPI
+      - root_turnover
+      - rhythmicity
+      - modal_peaks
+      - circular_mean
+      - tail_weighted_js_divergence
+      - tail_weighted_kl_divergence
+      - tail_weighted_wasserstein_distance
+
+  - title: "Rotation bias"
+    desc: "Detect and correct for rotational artefacts in minirhizotron tube scans."
+    contents:
+      - fit_sine_curve
+      - create_root_buffer
+      - create_depthmap
+
+  - title: "Example data"
+    desc: "Built-in example images from the Oulanka 2023 field campaign."
+    contents:
+      - seg_Oulanka2023_Session01_T067
+      - seg_Oulanka2023_Session03_T067
+      - skl_Oulanka2023_Session01_T067
+      - skl_Oulanka2023_Session03_T067
+      - rgb_Oulanka2023_Session03_T067
+      - TurnoverDPC_data

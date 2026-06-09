@@ -2,21 +2,21 @@
 % Please edit documentation in R/Zonestats3.R
 \name{count_pixels}
 \alias{count_pixels}
-\title{counts all pixels in a segmented image}
+\title{Count all pixels in a segmented image}
 \usage{
 count_pixels(img)
 }
 \arguments{
-\item{img}{one layer image}
+\item{img}{A single-layer raster image (SpatRaster or compatible format).}
 }
 \value{
-a numeric value
+A numeric value — the sum of all non-NA pixel values.
 }
 \description{
-counts all pixels in a segmented image
+Count all pixels in a segmented image
 }
 \examples{
 data(seg_Oulanka2023_Session01_T067)
-img = terra::rast(seg_Oulanka2023_Session01_T067)[[2]]
-rootpixel  = count_pixels(img)
+img <- terra::rast(seg_Oulanka2023_Session01_T067)[[2]]
+rootpixel <- count_pixels(img)
 }

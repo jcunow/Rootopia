@@ -11,18 +11,18 @@ description: "R tools for root trait extraction from flatbed and minirhizotron i
 
 ---
 
-Welcome to **RootScanR**, an R package designed to extract quantitative belowground traits from **flatbed root scans** and **minirhizotron image sequences**. It provides flexible image preprocessing, trait estimation like root length & diameter, depth mapping, and distribution tools.
+Welcome to **RootScanR**, an R package designed to extract quantitative belowground traits from **flatbed root scans** and **minirhizotron image sequences**. It provides flexible image preprocessing, trait estimation like root length & diameter, depth mapping, and distribution tools. 
 
-
+ - some features are still experimental. At the moment, you will still need to provide a skeleton created elewhere (for example RootDetector). 
 
 
 ## 💡 What can RootScanR do?
 
-- 🖼️ Clean and process binary root images
-- 🌱 Estimate root length (skeletonize and Kimura Root Length)
-- 📏 Measure root diameters and modal distributions
-- 🕸️ Analyze root architecture (branching points, MST, loopiness)
-- 🥕 Spatial-spatial indecies (root angle distribution, rotation bias)
+- 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed scanners
+- 🌱 Estimate root length
+- 📏 Measure root diameters and distributions
+- 🕸️ Analyze root architecture (branching point, root tips, root angle distribution)
+- 🥕 Spatial-spatial indices (root angle distribution, rotation bias)
 ---
 
 ## 📘 Tutorials

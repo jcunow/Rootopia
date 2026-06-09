@@ -2,7 +2,8 @@
 % Please edit documentation in R/Zonestats3.R
 \name{root_scape_metrics}
 \alias{root_scape_metrics}
-\title{RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features akin to landscape analysis.}
+\title{RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features
+akin to landscape analysis.}
 \usage{
 root_scape_metrics(
   img,
@@ -13,22 +14,29 @@ root_scape_metrics(
 )
 }
 \arguments{
-\item{img}{segmented raster  (values = 0,1). Consider whether skeletonized raster is appropriate.}
+\item{img}{Segmented raster (values = 0, 1). Consider whether a skeletonized
+raster is more appropriate for your use case.}
 
-\item{indexD}{please specify depth. Will only affect the output column = "depth". Useful when used in a loop.}
+\item{indexD}{Depth index for the output column "depth". Useful when called
+inside a loop over depth bins.}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
+\item{select.layer}{Integer. Specifies which layer to use if the input is a
+multi-band image. Default is `NULL` (single-layer expected).}
 
-\item{metrics}{which ,metrics should be calculated from the available ones in 'landscapemetrics::calculate_lsm()'.}
+\item{metrics}{Character vector of metrics to calculate; must be valid names
+from `landscapemetrics::list_lsm()`.}
 }
 \value{
-a bunch of metric values
+A data frame of metric values with columns: metric, value, object,
+  depth.
 }
 \description{
-RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features akin to landscape analysis.
+RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features
+akin to landscape analysis.
 }
 \examples{
 data(seg_Oulanka2023_Session01_T067)
-img = terra::rast(seg_Oulanka2023_Session01_T067)
-RootScapeObject  = root_scape_metrics(img,indexD = 80, select.layer = 2,  metrics = c("lsm_c_ca"))
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
+RootScapeObject <- root_scape_metrics(img, indexD = 80, select.layer = 2,
+                                       metrics = c("lsm_c_ca"))
 }

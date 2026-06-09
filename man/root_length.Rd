@@ -4,16 +4,18 @@
 \alias{root_length}
 \title{Calculate Root Length using Kimura's Method with optimizations}
 \usage{
-root_length(img, unit = "cm", dpi = 300, select.layer = 1)
+root_length(img, unit = "cm", dpi = 300, select.layer = 2)
 }
 \arguments{
 \item{img}{A skeletonized root image raster}
 
-\item{unit}{Output unit ("px" or "cm")}
+\item{unit}{Output unit ("px", "cm", or "inch")}
 
 \item{dpi}{Image resolution (required when unit = "cm" or "inch")}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
+\item{select.layer}{Integer. Specifies which layer to use if the input is a
+multi-band image. Default is `2`, matching the RootDetector output format
+where layer 2 contains the root channel.}
 }
 \value{
 Numeric value representing root length in specified unit
@@ -23,6 +25,6 @@ Calculate Root Length using Kimura's Method with optimizations
 }
 \examples{
 data(skl_Oulanka2023_Session01_T067)
-img = terra::rast(skl_Oulanka2023_Session01_T067)
-RL = root_length(img = img,unit = "cm", dpi = 300, select.layer = 2)
+img <- terra::rast(skl_Oulanka2023_Session01_T067)
+RL <- root_length(img = img, unit = "cm", dpi = 300, select.layer = 2)
 }
