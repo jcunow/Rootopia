@@ -100,7 +100,7 @@ edges are observed in some sessions but not others.</p>
 <ul>
 <li>
 <code><a href="../reference/estimate_rotation_center.html">estimate_rotation_center()</a></code> — locates the rotational
-zero point from tape coverage in the image</li>
+zero point from tape coverage in a single image</li>
 <li>
 <code><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift()</a></code> — quantifies the pixel offset
 between two sessions using image correlation</li>
@@ -108,37 +108,34 @@ between two sessions using image correlation</li>
 <code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> — crops images to the shared, overlap
 region</li>
 </ul>
-<p>A fourth function, <code><a href="../reference/estimate_soil_surface.html">estimate_soil_surface()</a></code>, locates the
-soil surface from tape markers; it is used to set the depth zero
-reference for subsequent depth profiling.</p>
 </div>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
-<span><span class="co"># install.packages("remotes")</span></span>
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="co"># remotes::install_github("jcunow/RootScanR")</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/RootScanR" class="external-link">RootScanR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span></code></pre></div>
+<hr>
 </div>
 <div class="section level3">
-<h3 id="example-workflow">Example Workflow<a class="anchor" aria-label="anchor" href="#example-workflow"></a>
+<h3 id="workflow">Workflow<a class="anchor" aria-label="anchor" href="#workflow"></a>
 </h3>
 <div class="section level4">
-<h4 id="estimate-the-rotational-center-from-a-single-image">1. Estimate the Rotational Center from a Single Image<a class="anchor" aria-label="anchor" href="#estimate-the-rotational-center-from-a-single-image"></a>
+<h4 id="estimate-the-rotational-center-from-a-single-image">1. Estimate the rotational center from a single image<a class="anchor" aria-label="anchor" href="#estimate-the-rotational-center-from-a-single-image"></a>
 </h4>
 <p><code><a href="../reference/estimate_rotation_center.html">estimate_rotation_center()</a></code> detects the white adhesive
-tape that is attached to the upper side of the tube. Because more tape
-is visible on one side, the function can infer where the top of the tube
+tape attached to the upper side of the tube. Because more tape is
+visible on one side, the function infers where the top of the tube
 (rotational zero) lies. It returns a pixel row index.</p>
+<p>Since a tube has a fixed geometry, this only needs to be done once
+per tube — the rotational center does not change between sessions.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load a segmented scan from the package example data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Detect the rotation center (returns a pixel row position)</span></span>
 <span><span class="va">r0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_center.html">estimate_rotation_center</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Estimated rotation center (row):"</span>, <span class="va">r0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Key parameters:</p>
@@ -158,7 +155,7 @@ is visible on one side, the function can infer where the top of the tube
 </tr>
 <tr class="even">
 <td><code>search.area</code></td>
-<td>Fraction of image width to analyse (tape is near the top)</td>
+<td>Fraction of image width to analyse (tape is near one edge)</td>
 </tr>
 <tr class="odd">
 <td><code>nclasses</code></td>
@@ -173,206 +170,144 @@ is visible on one side, the function can infer where the top of the tube
 <hr>
 </div>
 <div class="section level4">
-<h4 id="estimate-the-rotation-shift-between-two-sessions">2. Estimate the Rotation Shift Between Two Sessions<a class="anchor" aria-label="anchor" href="#estimate-the-rotation-shift-between-two-sessions"></a>
+<h4 id="estimate-the-rotation-shift-between-two-sessions">2. Estimate the rotation shift between two sessions<a class="anchor" aria-label="anchor" href="#estimate-the-rotation-shift-between-two-sessions"></a>
 </h4>
 <p>When the same tube is scanned in two different sessions, the scanner
 may have rotated. <code><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift()</a></code> uses either
 cross-correlation (<code>"ccf"</code>) or phase correlation
 (<code>"phase"</code>) on a shared depth window to find the pixel
-offset.</p>
+offset. Phase correlation is generally more robust to brightness
+differences between sessions.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">img1</span> <span class="op">&lt;-</span> <span class="va">seg_Oulanka2023_Session01_T067</span>  <span class="co"># session 1</span></span>
-<span><span class="va">img2</span> <span class="op">&lt;-</span> <span class="va">seg_Oulanka2023_Session03_T067</span>  <span class="co"># session 3</span></span>
+<span><span class="va">shift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift</a></span><span class="op">(</span></span>
+<span>  <span class="va">seg_Oulanka2023_Session01_T067</span>,</span>
+<span>  <span class="va">seg_Oulanka2023_Session03_T067</span>,</span>
+<span>  cor.type          <span class="op">=</span> <span class="st">"phase"</span>,</span>
+<span>  fixed.depth.pixel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">4000</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Phase correlation is generally more robust to brightness differences</span></span>
-<span><span class="va">shift</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift</a></span><span class="op">(</span><span class="va">img1</span>, <span class="va">img2</span>, cor.type <span class="op">=</span> <span class="st">"phase"</span>,</span>
-<span>                                 fixed.depth.pixel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">4000</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rotation shift (x, y pixels):"</span>, <span class="va">shift</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
-<p>The returned vector contains the horizontal (depth) and vertical
-(rotation) pixel shifts. A large vertical shift means the tube rotated
-substantially between sessions.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rotation shift (depth px, rotation px):"</span>, <span class="va">shift</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<p>The returned vector is <code>c(x.lag, y.lag)</code> — the horizontal
+(depth axis) and vertical (rotation axis) pixel shifts. A large vertical
+shift means the tube rotated substantially between sessions.</p>
 <hr>
 </div>
 <div class="section level4">
-<h4 id="censor-image-edges-to-the-shared-overlap-region">3. Censor Image Edges to the Shared Overlap Region<a class="anchor" aria-label="anchor" href="#censor-image-edges-to-the-shared-overlap-region"></a>
+<h4 id="censor-image-edges-to-the-shared-overlap-region">3. Censor image edges to the shared overlap region<a class="anchor" aria-label="anchor" href="#censor-image-edges-to-the-shared-overlap-region"></a>
 </h4>
-<p>Once the rotational center and shift are known,
-<code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> crops each image so that only the rows
+<p><code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> crops each image so that only the rows
 present in every session are retained. This eliminates the
 non-overlapping margins and makes root counts directly comparable across
 sessions.</p>
 <p>Two modes are available:</p>
 <ul>
 <li>
-<strong><code>fixed.rotation = FALSE</code></strong>: cuts
-proportionally based on the measured offset</li>
+<strong><code>fixed.rotation = FALSE</code></strong> — cuts
+proportionally based on the measured offset; output width varies</li>
 <li>
-<strong><code>fixed.rotation = TRUE</code></strong>: centers the
-crop on a specified row and forces a fixed output width</li>
+<strong><code>fixed.rotation = TRUE</code></strong> — centres the
+crop on a specified row and forces a fixed output width; recommended
+when comparing multiple sessions</li>
 </ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Variable mode — trim proportionally to the measured shift</span></span>
-<span><span class="va">censored_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rotation_censor.html">rotation_censor</a></span><span class="op">(</span><span class="va">img</span>,</span>
-<span>                                center.offset <span class="op">=</span> <span class="fl">120</span>,</span>
-<span>                                cut.buffer    <span class="op">=</span> <span class="fl">0.02</span>,</span>
-<span>                                fixed.rotation <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co"># Fixed mode — crop to a 1800-pixel-wide window centred on the rotation center</span></span>
+<span><span class="va">censored</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rotation_censor.html">rotation_censor</a></span><span class="op">(</span></span>
+<span>  <span class="va">img</span>,</span>
+<span>  center.offset  <span class="op">=</span> <span class="va">r0</span>,</span>
+<span>  cut.buffer     <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>  fixed.width    <span class="op">=</span> <span class="fl">1800</span>,</span>
+<span>  fixed.rotation <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Fixed mode — crop to a 1000-pixel-wide window centred on row 220</span></span>
-<span><span class="va">censored_fix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rotation_censor.html">rotation_censor</a></span><span class="op">(</span><span class="va">img</span>,</span>
-<span>                                center.offset  <span class="op">=</span> <span class="fl">220</span>,</span>
-<span>                                cut.buffer     <span class="op">=</span> <span class="fl">0.02</span>,</span>
-<span>                                fixed.width    <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>                                fixed.rotation <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">censored_fix</span>, main <span class="op">=</span> <span class="st">"Censored image (fixed rotation)"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">censored</span>, main <span class="op">=</span> <span class="st">"Censored image"</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>Note on tube geometry.</strong> The inner and outer tube
-diameters differ, so the observed root length is a slight underestimate
-of the true root length in the soil. A resize coefficient may be applied
+diameters differ, so the observed root length slightly underestimates
+the true root length in the soil. A resize coefficient may be applied
 separately; <code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> does not handle this
 correction.</p>
 </blockquote>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="locate-the-soil-surface">4. Locate the Soil Surface<a class="anchor" aria-label="anchor" href="#locate-the-soil-surface"></a>
-</h4>
-<p><code><a href="../reference/estimate_soil_surface.html">estimate_soil_surface()</a></code> finds where soil begins by
-detecting the lower edge of the adhesive tape. It returns a data frame
-with two columns:</p>
-<ul>
-<li>
-<code>soil0</code> — pixel column of the soil surface</li>
-<li>
-<code>tape.end</code> — pixel column of the tape’s lower margin
-(with a safety buffer)</li>
-</ul>
-<p>These values feed directly into <code><a href="../reference/create_depthmap.html">create_depthmap()</a></code> as
-<code>start.soil</code>.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
-<span><span class="va">img_rgb</span> <span class="op">&lt;-</span> <span class="va">rgb_Oulanka2023_Session03_T067</span></span>
-<span></span>
-<span><span class="va">surface</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_soil_surface.html">estimate_soil_surface</a></span><span class="op">(</span><span class="va">img_rgb</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">surface</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Use soil0 to anchor the depth map at the true soil surface</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Soil surface at pixel column:"</span>, <span class="va">surface</span><span class="op">$</span><span class="va">soil0</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
-<p>Key parameters:</p>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr class="header">
-<th>Parameter</th>
-<th>Description</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>dpi</code></td>
-<td>Scanner resolution; needed to convert the pixel position to cm</td>
-</tr>
-<tr class="even">
-<td><code>tape.overlap</code></td>
-<td>Safety margin (cm) subtracted from the tape edge</td>
-</tr>
-<tr class="odd">
-<td><code>inverse</code></td>
-<td>Set <code>TRUE</code> if the tape is darker than the soil</td>
-</tr>
-<tr class="even">
-<td><code>nclasses</code></td>
-<td>Number of clustering classes for tape detection</td>
-</tr>
-</tbody>
-</table>
 <hr>
 </div>
 </div>
 <div class="section level3">
 <h3 id="rhythmicity-analysis">Rhythmicity Analysis<a class="anchor" aria-label="anchor" href="#rhythmicity-analysis"></a>
 </h3>
-<p>In some minirhizotron deployments, root observations are made at high
-temporal frequency (e.g. multiple times per day). In these datasets it
-can be useful to test whether root dynamics show rhythmic — for instance
-diel — patterns.</p>
+<p>In some deployments, minirhizotron observations are made at high
+temporal frequency (e.g. multiple scans per day over a short window). In
+these datasets it can be useful to test whether root observations show a
+rhythmic pattern across the sampling cycle.</p>
 <p><code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> fits a sine curve of the form</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>A</mi><mrow><mi mathvariant="normal">sin</mi><mo>⁡</mo></mrow><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mn>2</mn><mi>π</mi></mrow><mi>P</mi></mfrac><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>ϕ</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c</annotation></semantics></math></p>
-<p>to a time series and tests whether the amplitude
+<p>and tests whether the amplitude
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
 is significantly different from zero, using your choice of three
 statistical tests.</p>
+<blockquote>
+<p><strong>On period choice</strong>: the period
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+should reflect a biologically or methodologically meaningful cycle in
+your sampling design — for example the length of your monitoring
+campaign, or the interval at which conditions repeat. Use
+<code>fix_period = NULL</code> only if you genuinely want to estimate
+the period from the data and have enough observations to support a
+four-parameter fit.</p>
+</blockquote>
 <div class="section level4">
-<h4 id="fitting-and-testing">Fitting and Testing<a class="anchor" aria-label="anchor" href="#fitting-and-testing"></a>
+<h4 id="fitting-and-testing">Fitting and testing<a class="anchor" aria-label="anchor" href="#fitting-and-testing"></a>
 </h4>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">48</span>, length.out <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>           <span class="co"># 48 hours, 120 observations</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">1.8</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">24</span> <span class="op">*</span> <span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>    <span class="co"># amplitude 1.8, 24-h period</span></span>
-<span>     <span class="fl">4</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">120</span>, <span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span>                 <span class="co"># baseline + noise</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">48</span>, length.out <span class="op">=</span> <span class="fl">120</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">1.8</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">24</span> <span class="op">*</span> <span class="op">(</span><span class="va">x</span> <span class="op">+</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">4</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">120</span>, <span class="fl">0</span>, <span class="fl">1.2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- F-test (default) ---</span></span>
+<span><span class="co"># F-test (default) — most interpretable for small samples</span></span>
 <span><span class="va">res_F</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"F"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Amplitude: %.2f | Phase: %.1f h | R²: %.3f | p (F): %.4f\n"</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Amplitude: %.2f | Phase: %.1f | R²: %.3f | p: %.4f\n"</span>,</span>
 <span>            <span class="va">res_F</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res_F</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Finite-sample likelihood ratio test ---</span></span>
+<span><span class="co"># Finite-sample likelihood ratio test</span></span>
 <span><span class="va">res_FLR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"FLR"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"p (FLR): %.4f\n"</span>, <span class="va">res_FLR</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># --- Large-sample likelihood ratio test ---</span></span>
-<span><span class="va">res_LR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"LR"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"p (LR): %.4f\n"</span>, <span class="va">res_LR</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Large-sample likelihood ratio test</span></span>
+<span><span class="va">res_LR</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, fix_period <span class="op">=</span> <span class="fl">24</span>, method <span class="op">=</span> <span class="st">"LR"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="estimating-an-unknown-period">Estimating an Unknown Period<a class="anchor" aria-label="anchor" href="#estimating-an-unknown-period"></a>
+<h4 id="estimating-an-unknown-period">Estimating an unknown period<a class="anchor" aria-label="anchor" href="#estimating-an-unknown-period"></a>
 </h4>
-<p>If you do not know the period in advance, set
-<code>fix_period = NULL</code> and provide starting values for all four
-parameters. The optimizer will estimate the period along with amplitude,
-phase, and offset.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res_free</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>,</span>
 <span>                        fix_period <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>                        parStart   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>amp <span class="op">=</span> <span class="fl">2</span>, phase <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                                          offset <span class="op">=</span> <span class="fl">4</span>, period <span class="op">=</span> <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Estimated period: %.1f h | R²: %.3f | p: %.4f\n"</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Estimated period: %.1f | R²: %.3f | p: %.4f\n"</span>,</span>
 <span>            <span class="va">res_free</span><span class="op">$</span><span class="va">period</span>, <span class="va">res_free</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res_free</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
-<p><strong>Caution.</strong> With an unknown period, the model has four
-free parameters and the likelihood surface can be multimodal. Provide
-ecologically motivated starting values (e.g. <code>period = 24</code>
-for a diel hypothesis) and inspect the fitted curve before interpreting
-results.</p>
+<p><strong>Caution with free-period fits.</strong> With four free
+parameters the likelihood surface can be multimodal. Provide starting
+values grounded in your sampling design and always inspect the fitted
+curve before interpreting results.</p>
 </blockquote>
 </div>
 <div class="section level4">
-<h4 id="plotting-the-fitted-curve">Plotting the Fitted Curve<a class="anchor" aria-label="anchor" href="#plotting-the-fitted-curve"></a>
+<h4 id="plotting-the-fitted-curve">Plotting the fitted curve<a class="anchor" aria-label="anchor" href="#plotting-the-fitted-curve"></a>
 </h4>
-<p><code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> does not produce plots directly, but the
-fitted values are easily recovered via the underlying
-<code><a href="../reference/fit_sine_curve.html">fit_sine_curve()</a></code> helper (not exported; call via
-<code>RootScanR:::fit_sine_curve()</code>), or reconstruct the curve
-from the returned parameters:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Reconstruct the fitted sine from the returned parameters</span></span>
-<span><span class="va">x_seq</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
-<span><span class="va">y_fit</span>  <span class="op">&lt;-</span> <span class="va">res_F</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span></span>
-<span>           <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">res_F</span><span class="op">$</span><span class="va">period</span> <span class="op">*</span> <span class="op">(</span><span class="va">x_seq</span> <span class="op">+</span> <span class="va">res_F</span><span class="op">$</span><span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>           <span class="va">res_F</span><span class="op">$</span><span class="va">offset</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x_seq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
+<span><span class="va">y_fit</span> <span class="op">&lt;-</span> <span class="va">res_F</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span></span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">res_F</span><span class="op">$</span><span class="va">period</span> <span class="op">*</span> <span class="op">(</span><span class="va">x_seq</span> <span class="op">+</span> <span class="va">res_F</span><span class="op">$</span><span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>         <span class="va">res_F</span><span class="op">$</span><span class="va">offset</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"grey50"</span>,</span>
-<span>     xlab <span class="op">=</span> <span class="st">"Time (hours)"</span>, ylab <span class="op">=</span> <span class="st">"Root growth index"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Rhythmicity fit (fixed 24-h period)"</span><span class="op">)</span></span>
+<span>     xlab <span class="op">=</span> <span class="st">"Observation index"</span>, ylab <span class="op">=</span> <span class="st">"Root measurement"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Rhythmicity fit"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">x_seq</span>, <span class="va">y_fit</span>, col <span class="op">=</span> <span class="st">"coral"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>,</span>
 <span>       legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"A = %.2f, R² = %.3f, p = %.4f"</span>,</span>
@@ -380,9 +315,8 @@ from the returned parameters:</p>
 <span>       bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="interpreting-the-output">Interpreting the Output<a class="anchor" aria-label="anchor" href="#interpreting-the-output"></a>
+<h4 id="interpreting-the-output">Interpreting the output<a class="anchor" aria-label="anchor" href="#interpreting-the-output"></a>
 </h4>
-<p>The returned list includes:</p>
 <table class="table">
 <thead><tr class="header">
 <th>Element</th>
@@ -415,8 +349,7 @@ from the returned parameters:</p>
 </tr>
 <tr class="odd">
 <td><code>peakTime</code></td>
-<td>Time of peak within one cycle
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>/</mi><mn>4</mn><mo>−</mo><mi>ϕ</mi><mrow><mspace width="0.444em"></mspace><mrow><mi mathvariant="normal">mod</mi><mo>⁡</mo></mrow><mspace width="0.222em"></mspace><mi>P</mi></mrow></mrow><annotation encoding="application/x-tex">P/4 - \phi \mod P</annotation></semantics></math>)</td>
+<td>Time of peak within one cycle</td>
 </tr>
 <tr class="even">
 <td><code>R2</code></td>
@@ -424,52 +357,39 @@ from the returned parameters:</p>
 </tr>
 <tr class="odd">
 <td><code>stat</code></td>
-<td>Test statistic (F, FLR, or LR depending on <code>method</code>)</td>
+<td>Test statistic (F, FLR, or LR)</td>
 </tr>
 <tr class="even">
 <td><code>p_value</code></td>
-<td>P-value for the test of
+<td>P-value for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A \neq 0</annotation></semantics></math>
 </td>
 </tr>
 </tbody>
 </table>
-<p>A significant p-value indicates that a rhythmic component explains a
-non-trivial portion of the variance. Inspect
+<p>A significant p-value indicates a rhythmic component. Always inspect
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
-to judge effect size — a significant but
+alongside it — a significant but
 low-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^2</annotation></semantics></math>
-result may reflect noise or a poorly chosen period.</p>
+result may simply reflect a noisy dataset rather than a meaningful
+pattern.</p>
 <hr>
 </div>
 </div>
 <div class="section level3">
-<h3 id="connecting-rotation-bias-and-rhythmicity">Connecting Rotation Bias and Rhythmicity<a class="anchor" aria-label="anchor" href="#connecting-rotation-bias-and-rhythmicity"></a>
+<h3 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
 </h3>
-<p>When rotation-censored images are used in a high-frequency monitoring
-setup, the two analyses can be connected in a straightforward
-pipeline:</p>
-<ol style="list-style-type: decimal">
-<li>For each session, apply <code><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift()</a></code>
-relative to a reference session to obtain per-session offsets.</li>
-<li>Pass each image through <code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> to harmonise
-the field of view.</li>
-<li>Extract root coverage or length per depth bin using
-<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code>.</li>
-<li>Test whether the resulting time series exhibits rhythmic dynamics
-using <code><a href="../reference/rhythmicity.html">rhythmicity()</a></code>.</li>
-</ol>
-<p>This ensures that apparent rhythmic signals are not artefacts of the
-tube rotating in and out of view between sessions.</p>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="further-reading">Further Reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
-</h3>
-<p>For depth profiling, trait extraction, and turnover analysis see the
-other RootScanR vignettes. Full function documentation is available at
-<a href="https://jcunow.github.io/RootScanR/">https://jcunow.github.io/RootScanR/</a>.
-Source code and issue tracker: <a href="https://github.com/jcunow/RootScanR" class="external-link">https://github.com/jcunow/RootScanR</a>.</p>
+<ul>
+<li>
+<a href="BatchProcessing_vignette.html">Batch Processing</a> — the
+recommended starting point for processing multiple images</li>
+<li>
+<a href="MinirhizotronScans_vignettes.html">Minirhizotron Scans</a>
+— step-by-step depth analysis workflow</li>
+<li><a href="../reference/index.html">Function reference</a></li>
+<li>Source and issues: <a href="https://github.com/jcunow/RootScanR" class="external-link uri">https://github.com/jcunow/RootScanR</a>
+</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
