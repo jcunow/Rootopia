@@ -23,19 +23,14 @@ near the scan edges are observed in some sessions but not others.
 RootScanR addresses this through three calibration functions:
 
 - `estimate_rotation_center()` — locates the rotational zero point from tape
-  coverage in the image
+  coverage in a single image
 - `estimate_rotation_shift()` — quantifies the pixel offset between two sessions
   using image correlation
 - `rotation_censor()` — crops images to the shared, overlap region
 
-A fourth function, `estimate_soil_surface()`, locates the soil surface from
-tape markers; it is used to set the depth zero reference for subsequent depth
-profiling.
-
 ## Installation
 
 ```{r, eval=FALSE}
-# Install from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
 
@@ -43,21 +38,24 @@ library(RootScanR)
 library(terra)
 ```
 
-## Example Workflow
+---
 
-### 1. Estimate the Rotational Center from a Single Image
+## Workflow
 
-`estimate_rotation_center()` detects the white adhesive tape that is attached
-to the upper side of the tube. Because more tape is visible on one side, the
-function can infer where the top of the tube (rotational zero) lies. It returns
-a pixel row index.
+### 1. Estimate the rotational center from a single image
+
+`estimate_rotation_center()` detects the white adhesive tape attached to the
+upper side of the tube. Because more tape is visible on one side, the function
+infers where the top of the tube (rotational zero) lies. It returns a pixel
+row index.
+
+Since a tube has a fixed geometry, this only needs to be done once per tube —
+the rotational center does not change between sessions.
 
 ```{r, eval=FALSE}
-# Load a segmented scan from the package example data
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# Detect the rotation center (returns a pixel row position)
 r0 <- estimate_rotation_center(img)
 print(paste("Estimated rotation center (row):", r0))
 ```
@@ -67,150 +65,117 @@ Key parameters:
 | Parameter | Description |
 |---|---|
 | `tape.brightness` | Brightness threshold (0–1) for classifying tape pixels |
-| `search.area` | Fraction of image width to analyse (tape is near the top) |
+| `search.area` | Fraction of image width to analyse (tape is near one edge) |
 | `nclasses` | Number of unsupervised clustering classes |
 | `tape.quantile` | Quantile used to align the brightness scale |
 
 ---
 
-### 2. Estimate the Rotation Shift Between Two Sessions
+### 2. Estimate the rotation shift between two sessions
 
 When the same tube is scanned in two different sessions, the scanner may have
-rotated. `estimate_rotation_shift()` uses either cross-correlation (`"ccf"`) or
-phase correlation (`"phase"`) on a shared depth window to find the pixel offset.
+rotated. `estimate_rotation_shift()` uses either cross-correlation (`"ccf"`)
+or phase correlation (`"phase"`) on a shared depth window to find the pixel
+offset. Phase correlation is generally more robust to brightness differences
+between sessions.
 
 ```{r, eval=FALSE}
 data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 
-img1 <- seg_Oulanka2023_Session01_T067  # session 1
-img2 <- seg_Oulanka2023_Session03_T067  # session 3
+shift <- estimate_rotation_shift(
+  seg_Oulanka2023_Session01_T067,
+  seg_Oulanka2023_Session03_T067,
+  cor.type          = "phase",
+  fixed.depth.pixel = c(1000, 4000)
+)
 
-# Phase correlation is generally more robust to brightness differences
-shift <- estimate_rotation_shift(img1, img2, cor.type = "phase",
-                                 fixed.depth.pixel = c(1000, 4000))
-
-cat("Rotation shift (x, y pixels):", shift, "\n")
+cat("Rotation shift (depth px, rotation px):", shift, "\n")
 ```
 
-The returned vector contains the horizontal (depth) and vertical (rotation)
-pixel shifts. A large vertical shift means the tube rotated substantially
-between sessions.
+The returned vector is `c(x.lag, y.lag)` — the horizontal (depth axis) and
+vertical (rotation axis) pixel shifts. A large vertical shift means the tube
+rotated substantially between sessions.
 
 ---
 
-### 3. Censor Image Edges to the Shared Overlap Region
+### 3. Censor image edges to the shared overlap region
 
-Once the rotational center and shift are known, `rotation_censor()` crops each
-image so that only the rows present in every session are retained. This
-eliminates the non-overlapping margins and makes root counts directly comparable
-across sessions.
+`rotation_censor()` crops each image so that only the rows present in every
+session are retained. This eliminates the non-overlapping margins and makes
+root counts directly comparable across sessions.
 
 Two modes are available:
 
-- **`fixed.rotation = FALSE`**: cuts proportionally based on the measured offset
-- **`fixed.rotation = TRUE`**: centers the crop on a specified row and forces a
-  fixed output width
+- **`fixed.rotation = FALSE`** — cuts proportionally based on the measured
+  offset; output width varies
+- **`fixed.rotation = TRUE`** — centres the crop on a specified row and forces
+  a fixed output width; recommended when comparing multiple sessions
 
 ```{r, eval=FALSE}
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# Variable mode — trim proportionally to the measured shift
-censored_var <- rotation_censor(img,
-                                center.offset = 120,
-                                cut.buffer    = 0.02,
-                                fixed.rotation = FALSE)
+# Fixed mode — crop to a 1800-pixel-wide window centred on the rotation center
+censored <- rotation_censor(
+  img,
+  center.offset  = r0,
+  cut.buffer     = 0.02,
+  fixed.width    = 1800,
+  fixed.rotation = TRUE
+)
 
-# Fixed mode — crop to a 1000-pixel-wide window centred on row 220
-censored_fix <- rotation_censor(img,
-                                center.offset  = 220,
-                                cut.buffer     = 0.02,
-                                fixed.width    = 1000,
-                                fixed.rotation = TRUE)
-
-terra::plot(censored_fix, main = "Censored image (fixed rotation)")
+terra::plot(censored, main = "Censored image")
 ```
 
 > **Note on tube geometry.** The inner and outer tube diameters differ, so the
-> observed root length is a slight underestimate of the true root length in the
-> soil. A resize coefficient may be applied separately; `rotation_censor()`
+> observed root length slightly underestimates the true root length in the
+> soil. A resize coefficient may be applied separately;  `rotation_censor()`
 > does not handle this correction.
-
----
-
-### 4. Locate the Soil Surface
-
-`estimate_soil_surface()` finds where soil begins by detecting the lower edge
-of the adhesive tape. It returns a data frame with two columns:
-
-- `soil0` — pixel column of the soil surface
-- `tape.end` — pixel column of the tape's lower margin (with a safety buffer)
-
-These values feed directly into `create_depthmap()` as `start.soil`.
-
-```{r, eval=FALSE}
-data(rgb_Oulanka2023_Session03_T067)
-img_rgb <- rgb_Oulanka2023_Session03_T067
-
-surface <- estimate_soil_surface(img_rgb, dpi = 150)
-print(surface)
-
-# Use soil0 to anchor the depth map at the true soil surface
-cat("Soil surface at pixel column:", surface$soil0, "\n")
-```
-
-Key parameters:
-
-| Parameter | Description |
-|---|---|
-| `dpi` | Scanner resolution; needed to convert the pixel position to cm |
-| `tape.overlap` | Safety margin (cm) subtracted from the tape edge |
-| `inverse` | Set `TRUE` if the tape is darker than the soil |
-| `nclasses` | Number of clustering classes for tape detection |
 
 ---
 
 ## Rhythmicity Analysis
 
-In some minirhizotron deployments, root observations are made at high temporal
-frequency (e.g. multiple times per day). In these datasets it can be useful to
-test whether root dynamics show rhythmic — for instance diel — patterns.
+In some deployments, minirhizotron observations are made at high temporal
+frequency (e.g. multiple scans per day over a short window). In these datasets
+it can be useful to test whether root observations show a rhythmic pattern
+across the sampling cycle.
 
 `rhythmicity()` fits a sine curve of the form
 
 $$y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c$$
 
-to a time series and tests whether the amplitude $A$ is significantly different
-from zero, using your choice of three statistical tests.
+and tests whether the amplitude $A$ is significantly different from zero,
+using your choice of three statistical tests.
 
-### Fitting and Testing
+> **On period choice**: the period $P$ should reflect a biologically or
+> methodologically meaningful cycle in your sampling design — for example the
+> length of your monitoring campaign, or the interval at which conditions
+> repeat. Use `fix_period = NULL` only if you genuinely want to estimate the
+> period from the data and have enough observations to support a four-parameter
+> fit.
+
+### Fitting and testing
 
 ```{r, eval=FALSE}
 set.seed(42)
-x <- seq(0, 48, length.out = 120)           # 48 hours, 120 observations
-y <- 1.8 * sin(2 * pi / 24 * (x + 5)) +    # amplitude 1.8, 24-h period
-     4 + rnorm(120, 0, 1.2)                 # baseline + noise
+x <- seq(0, 48, length.out = 120)
+y <- 1.8 * sin(2 * pi / 24 * (x + 5)) + 4 + rnorm(120, 0, 1.2)
 
-# --- F-test (default) ---
+# F-test (default) — most interpretable for small samples
 res_F <- rhythmicity(x, y, fix_period = 24, method = "F")
-cat(sprintf("Amplitude: %.2f | Phase: %.1f h | R²: %.3f | p (F): %.4f\n",
+cat(sprintf("Amplitude: %.2f | Phase: %.1f | R²: %.3f | p: %.4f\n",
             res_F$amplitude, res_F$phase, res_F$R2, res_F$p_value))
 
-# --- Finite-sample likelihood ratio test ---
+# Finite-sample likelihood ratio test
 res_FLR <- rhythmicity(x, y, fix_period = 24, method = "FLR")
-cat(sprintf("p (FLR): %.4f\n", res_FLR$p_value))
 
-# --- Large-sample likelihood ratio test ---
-res_LR <- rhythmicity(x, y, fix_period = 24, method = "LR")
-cat(sprintf("p (LR): %.4f\n", res_LR$p_value))
+# Large-sample likelihood ratio test
+res_LR  <- rhythmicity(x, y, fix_period = 24, method = "LR")
 ```
 
-### Estimating an Unknown Period
-
-If you do not know the period in advance, set `fix_period = NULL` and provide
-starting values for all four parameters. The optimizer will estimate the period
-along with amplitude, phase, and offset.
+### Estimating an unknown period
 
 ```{r, eval=FALSE}
 res_free <- rhythmicity(x, y,
@@ -218,32 +183,25 @@ res_free <- rhythmicity(x, y,
                         parStart   = list(amp = 2, phase = 0,
                                           offset = 4, period = 20))
 
-cat(sprintf("Estimated period: %.1f h | R²: %.3f | p: %.4f\n",
+cat(sprintf("Estimated period: %.1f | R²: %.3f | p: %.4f\n",
             res_free$period, res_free$R2, res_free$p_value))
 ```
 
-> **Caution.** With an unknown period, the model has four free parameters and
-> the likelihood surface can be multimodal. Provide ecologically motivated
-> starting values (e.g. `period = 24` for a diel hypothesis) and inspect the
-> fitted curve before interpreting results.
+> **Caution with free-period fits.** With four free parameters the likelihood
+> surface can be multimodal. Provide starting values grounded in your sampling
+> design and always inspect the fitted curve before interpreting results.
 
-### Plotting the Fitted Curve
-
-`rhythmicity()` does not produce plots directly, but the fitted values are
-easily recovered via the underlying `fit_sine_curve()` helper (not exported;
-call via `RootScanR:::fit_sine_curve()`), or reconstruct the curve from the
-returned parameters:
+### Plotting the fitted curve
 
 ```{r, eval=FALSE}
-# Reconstruct the fitted sine from the returned parameters
-x_seq  <- seq(min(x), max(x), length.out = 300)
-y_fit  <- res_F$amplitude *
-           sin(2 * pi / res_F$period * (x_seq + res_F$phase)) +
-           res_F$offset
+x_seq <- seq(min(x), max(x), length.out = 300)
+y_fit <- res_F$amplitude *
+         sin(2 * pi / res_F$period * (x_seq + res_F$phase)) +
+         res_F$offset
 
 plot(x, y, pch = 16, col = "grey50",
-     xlab = "Time (hours)", ylab = "Root growth index",
-     main = "Rhythmicity fit (fixed 24-h period)")
+     xlab = "Observation index", ylab = "Root measurement",
+     main = "Rhythmicity fit")
 lines(x_seq, y_fit, col = "coral", lwd = 2)
 legend("topright",
        legend = sprintf("A = %.2f, R² = %.3f, p = %.4f",
@@ -251,9 +209,7 @@ legend("topright",
        bty = "n")
 ```
 
-### Interpreting the Output
-
-The returned list includes:
+### Interpreting the output
 
 | Element | Description |
 |---|---|
@@ -261,37 +217,22 @@ The returned list includes:
 | `phase` | Phase shift $\phi$ (modulo period) |
 | `offset` | Baseline $c$ |
 | `period` | Fixed or estimated period $P$ |
-| `peakTime` | Time of peak within one cycle ($P/4 - \phi \mod P$) |
+| `peakTime` | Time of peak within one cycle |
 | `R2` | Coefficient of determination |
-| `stat` | Test statistic (F, FLR, or LR depending on `method`) |
-| `p_value` | P-value for the test of $A \neq 0$ |
+| `stat` | Test statistic (F, FLR, or LR) |
+| `p_value` | P-value for $A \neq 0$ |
 
-A significant p-value indicates that a rhythmic component explains a
-non-trivial portion of the variance. Inspect $R^2$ to judge effect size — a
-significant but low-$R^2$ result may reflect noise or a poorly chosen period.
-
----
-
-## Connecting Rotation Bias and Rhythmicity
-
-When rotation-censored images are used in a high-frequency monitoring setup,
-the two analyses can be connected in a straightforward pipeline:
-
-1. For each session, apply `estimate_rotation_shift()` relative to a reference
-   session to obtain per-session offsets.
-2. Pass each image through `rotation_censor()` to harmonise the field of view.
-3. Extract root coverage or length per depth bin using `root_depth_metrics()`.
-4. Test whether the resulting time series exhibits rhythmic dynamics using
-   `rhythmicity()`.
-
-This ensures that apparent rhythmic signals are not artefacts of the tube
-rotating in and out of view between sessions.
+A significant p-value indicates a rhythmic component. Always inspect $R^2$
+alongside it — a significant but low-$R^2$ result may simply reflect a noisy
+dataset rather than a meaningful pattern.
 
 ---
 
-## Further Reading
+## Further reading
 
-For depth profiling, trait extraction, and turnover analysis see the other
-RootScanR vignettes. Full function documentation is available at
-[https://jcunow.github.io/RootScanR/](https://jcunow.github.io/RootScanR/).
-Source code and issue tracker: [https://github.com/jcunow/RootScanR](https://github.com/jcunow/RootScanR).
+- [Batch Processing](BatchProcessing_vignette.html) — the recommended starting
+  point for processing multiple images
+- [Minirhizotron Scans](MinirhizotronScans_vignettes.html) — step-by-step
+  depth analysis workflow
+- [Function reference](../reference/index.html)
+- Source and issues: <https://github.com/jcunow/RootScanR>

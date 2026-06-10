@@ -3,7 +3,6 @@ title: "Minirhizotron Scans Analysis with RootScanR in R"
 author: "Johannes Cunow"
 output:
   rmarkdown::html_vignette: default
-  pdf_document: default
 vignette: >
   %\VignetteIndexEntry{Minirhizotron Scans Analysis with RootScanR in R}
   %\VignetteEngine{knitr::rmarkdown}
@@ -14,328 +13,333 @@ vignette: >
 
 ## Introduction
 
-This vignette demonstrates how to analyze minirhizotron scans using the **RootScanR** package. Minirhizotrons are transparent tubes inserted into soil to observe root growth via scanning or imaging technology. RootScanR is designed for comprehensive analysis of these root system images, providing tools for image preparation, depth mapping, and extraction of meaningful root traits. To extract root traits, segmenting the image outside R is needed (see step 2).
+This vignette walks through the individual-function workflow for analysing
+minirhizotron images — loading, calibrating, depth-mapping, and extracting
+root traits step by step. It is aimed at users who want full control over each
+processing stage or who are working on a specific subset of functions.
 
-> **New to RootScanR?** If you want to process a whole set of images in one go, see the
-> [Batch Processing with `root_depth_metrics()`](BatchProcessing_vignette.html) vignette, which
-> wraps this entire workflow into a single function call with toggleable metric groups.
+> **New to RootScanR?** If you want to process a whole set of images in one
+> go, the [Batch Processing](BatchProcessing_vignette.html) vignette wraps
+> this entire workflow into a single `root_depth_metrics()` call. Start there.
 
-## Key Functionalities
-
-A typical workflow to analyze minirhizotron scans could look something like the following. Steps 2 and 3 depend on the scanner setup and available calibration data.
-
-1. **Image Stitching**: Combine sequential minirhizotron images to create complete tube scans
-2. **AI-Based Image Segmentation**: Work with images segmented by dedicated root detection software
-3. **In-situ Calibration**: Needed to accurately map image pixels to soil depth. An alternative is shown here but requires special attention
-4. **Depthmap Creation**: Generate depth information for each pixel in the root scans
-5. **Root Trait Extraction**: Calculate important root metrics (length, density, branching, etc.)
-6. **Spatial Root Features**: Extracting spatial-explicit root scape features e.g., entropy, root instance count, fractal dimension
-7. **Soil Characterization**: Analyze soil/peat properties from scan images
+> **Prerequisite**: RootScanR works with already-segmented images.
+> Segmentation must be done beforehand using
+> [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
+> [RootPainter](https://github.com/Abe404/root_painter).
 
 ## Installation
 
 ```{r, eval=FALSE}
-# Install the package from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
 
-# Load the package
 library(RootScanR)
-library(tidyverse)  # For data manipulation and visualization
-library(terra)      # For raster image handling
+library(terra)
+library(tidyverse)
 ```
 
-## Example Workflow
+---
 
-### 1. Image Stitching
+## Workflow overview
 
-**Purpose**: Combine multiple sequential images from longer minirhizotron tubes into a single composite image to enable proper depth alignment and remove overlap between images.
+1. Load images
+2. (Optional) Rotation censor — align field of view across sessions
+3. Create depth map
+4. Bin depths
+5. Extract root traits per depth bin
+6. Compute landscape and colour metrics
+7. Derive distribution indices
 
-> **Note**: `stitch_sequential_images()` is planned for a future release and is not yet available in the current version of RootScanR. Use external tools in the meantime — a ready-to-use Python script is available at <https://github.com/jcunow/ImageStitching>.
+---
 
-```{r, eval=FALSE}
-# Placeholder — stitch_sequential_images() is not yet exported (to be added).
-# Use external tools for now — e.g., Python code: https://github.com/jcunow/ImageStitching
-```
+### 1. Load images
 
-### 2. Image Segmentation Recommendations
-
-**Purpose**: Separate roots from background in the minirhizotron images.
-
-RootScanR works with segmented images but does not perform segmentation itself. We recommend using specialized tools:
-
-1. **RootDetector** ([GitHub](https://github.com/ExPlEcoGreifswald/RootDetector))
-   - Returns segmented and skeletonized images with different information channels
-   - Can distinguish between tape, roots, and background
-   - Supports root tracking for production, decay, and turnover analysis
-   - Reference: Peters et al. (2023), *Scientific Reports* **13**(1)
-
-2. **RootPainter** ([GitHub](https://github.com/Abe404/root_painter))
-   - Returns segmented images
-   - Uses interactive deep learning for improved segmentation
-   - Reference: Smith et al. (2022), *New Phytologist* **236**(2)
-
-**Tip**: For images with high root density, consider splitting your stitched images before segmentation and rejoining afterwards.
-
-**Tip**: Models can be sensitive to resolution. Try to match the DPI of your training data when applying a pre-trained model.
-
-### 3. Loading Images
-
-**Purpose**: Import your segmented and original RGB images for analysis.
+`load_flexible_image()` accepts SpatRasters, arrays, matrices, and file paths.
 
 ```{r, eval=FALSE}
-# Load a segmented image (replace with your file path).
-# The function accepts multiple different input formats.
-segmented_image <- load_flexible_image(
+# Segmented image from RootDetector or RootPainter
+seg <- load_flexible_image(
   "path/to/segmented_image.tif",
   output_format = "spatrast",
   normalize     = FALSE,
-  select.layer  = NULL,
-  binarize      = FALSE
+  binarize      = FALSE,   # keep original values; binarize later per layer
+  select.layer  = NULL
 )
 
-# Load corresponding RGB image for visual reference
-rgb_image <- load_flexible_image("path/to/rgb_image.tif", output_format = "spatrast")
+# RGB scan for colour analysis
+rgb <- load_flexible_image(
+  "path/to/rgb_image.tif",
+  output_format = "spatrast"
+)
 
-# Display the images
-plot(rgb_image,       main = "Original RGB Image")
-plot(segmented_image, main = "Segmented Image")
+# Package example data
+data(seg_Oulanka2023_Session01_T067)
+seg <- terra::rast(seg_Oulanka2023_Session01_T067)
 ```
 
-### 4. Tube Calibration
+---
 
-**Purpose**: Establish the relationship between image pixels and actual soil depth.
+### 2. Rotation censoring (optional, recommended for multi-session studies)
 
-In-situ calibration is highly recommended for accurate depth attribution. If calibration data is unavailable, RootScanR provides estimation functions using tape cover as proxy:
+When the same tube is scanned across sessions, the scanner may have rotated
+slightly. Use `rotation_censor()` to crop each image to the rows that are
+present in every session, so root counts are directly comparable. See the
+[Rotation Bias](Rotation_Bias_vignettes.html) vignette for how to estimate
+the rotation shift between sessions.
 
 ```{r, eval=FALSE}
-# Estimate soil surface position based on tape cover.
-# Here, 0.5 cm of tape beyond the true soil surface is assumed to block out light.
-soil_surface <- estimate_soil_surface(rgb_image, dpi = 300, tape.overlap = 0.5)
-print(paste0("Estimated soil surface begins at column: ", soil_surface$soil0))
+# Crop to a 1800-pixel-wide window centred on the estimated rotation centre.
+# Here we use half the image width as a simple default.
+r0 <- round(dim(seg)[1] / 2, 0)
 
-# Estimate rotation center.
-# This only works for asymmetric taping around the tube with more on the upper side.
-rotation_center <- estimate_rotation_center(rgb_image)
-print(paste0("Estimated rotation center at row: ", rotation_center))
+seg_censored <- rotation_censor(
+  seg,
+  center.offset  = r0,
+  fixed.rotation = TRUE,
+  fixed.width    = 1800
+)
 ```
 
-### 5. Depthmap Creation
+---
 
-**Purpose**: Create a map that assigns soil depth values to each pixel in the image.
+### 3. Create the depth map
+
+`create_depthmap()` assigns a soil depth value (cm) to every pixel based on
+tube geometry (diameter, tilt angle, DPI) and a sinusoidal correction for
+the curvature of cylindrical tubes.
+
+**Important parameters:**
+
+| Parameter | Description |
+|---|---|
+| `sinoid` | `TRUE` for cylindrical minirhizotron tubes; `FALSE` for flat windows |
+| `tube.thicc` | Inner tube diameter in cm (typically 4.4 or 7 cm) |
+| `tilt` | Insertion angle from vertical in degrees (often 30–45°) |
+| `dpi` | Scanner resolution |
+| `start.soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
+| `center.offset` | Fractional position of the rotational centre (0–1). 0.5 = centred. |
 
 ```{r, eval=FALSE}
-# Create a mask to exclude tape from soil analysis.
-# Assuming RootDetector format where red channel includes tape.
-tape_mask <- (segmented_image[[1]] - segmented_image[[2]]) / 255
-tape_mask <- terra::t(tape_mask)
+# Use layer 1 as spatial template; actual root layer is separate
+seg_template <- seg[[1]]
 
-# Calculate normalized rotation center position
-center_offset <- rotation_center / dim(segmented_image)[1]
-
-# Create the depthmap
 depth_map <- create_depthmap(
-  image         = segmented_image,
-  sinusoidal    = TRUE,    # Account for tube curvature
-  mask          = tape_mask,
-  soil_start    = soil_surface,
-  center_offset = center_offset
+  img           = seg_template,
+  sinoid        = TRUE,
+  tube.thicc    = 7,       # cm — measure your own tube
+  tilt          = 45,      # degrees
+  dpi           = 300,
+  start.soil    = 2.9,     # cm — from in-situ calibration
+  center.offset = 0.5      # 0 = top of tube, 1 = bottom
 )
 
-# Visualize the depthmap
-plot(depth_map, main = "Depth Map")
+# Align the depth map extent to the segmented image
+depth_map <- terra::flip(terra::t(depth_map))
+terra::ext(depth_map) <- terra::ext(seg_template)
+
+plot(depth_map, main = "Depth map (cm)")
 ```
 
-### 6. Depth Binning
+> **On `start.soil`**: accurate depth attribution requires knowing where
+> the soil surface is in the image. In-situ calibration (marking the tube at
+> installation) is the most reliable approach. Without calibration data, use
+> `start.soil = 0` and interpret depths as relative to the top of the scan.
 
-**Purpose**: Group depths into discrete intervals for statistical analysis and visualization.
+---
+
+### 4. Bin depths
+
+`binning()` rounds continuous depth values to discrete intervals. The bin
+width (`nn`) should match your analysis scale — 5 cm is a common choice.
 
 ```{r, eval=FALSE}
-# Create depth bins (5 cm intervals)
-binned_map <- binning(depthmap = depth_map, interval = 5)
-
-# Correct extent for plotting
-terra::ext(binned_map) <- c(0, dim(binned_map)[2], 0, dim(binned_map)[1])
-
-# Visualize binned depthmap
-transposed_map <- terra::t(binned_map)
-terra::plot(transposed_map, main = "Binned Depth Map (5 cm intervals)")
+depth_bins <- binning(depthmap = depth_map, nn = 5, round.option = "rounding")
 ```
 
-### 7. Root Skeletonization
+---
 
-**Purpose**: Create a single-pixel-wide representation of root structure for morphological analysis.
+### 5. Extract root traits per depth bin
+
+#### 5a. Root pixels and void pixels
 
 ```{r, eval=FALSE}
-# Create root skeleton using Medial Axis Transform (MAT) method.
-# Select layer 2 which typically contains root information in RootDetector output.
-skeleton <- skeletonize_image(
-  segmented_image,
-  methods      = "MAT",
-  select.layer = 2,
-  verbose      = TRUE
-)
+# Select the root channel (layer 2 in RootDetector output)
+root_layer <- terra::subset(seg, 2)
+root_layer <- load_flexible_image(root_layer, normalize = TRUE, binarize = TRUE,
+                                  output_format = "spatrast")
 
-# Visualize skeleton
-plot(skeleton, main = "Root Skeleton")
+# Root pixels per depth bin
+root_px_by_depth <- terra::zonal(root_layer, depth_bins, "sum", na.rm = TRUE)
+colnames(root_px_by_depth) <- c("depth", "rootpx")
+
+# Void pixels
+void_layer <- abs(root_layer - 1)
+void_px_by_depth <- terra::zonal(void_layer, depth_bins, "sum", na.rm = TRUE)
+colnames(void_px_by_depth) <- c("depth", "voidpx")
+
+depth_data <- merge(root_px_by_depth, void_px_by_depth, by = "depth")
+depth_data$rootpx.density <- depth_data$rootpx /
+                              (depth_data$rootpx + depth_data$voidpx) * 100
 ```
 
-### 8. Root Trait Extraction
-
-**Purpose**: Calculate quantitative root system traits for ecological analysis.
+#### 5b. Root length (Kimura method)
 
 ```{r, eval=FALSE}
-# Detect endpoints and branching points
-skeleton_points  <- detect_skeleton_points(skeleton)
-root_tips_n      <- count_pixels(skeleton_points$endpoints)
-branching_pts_n  <- count_pixels(skeleton_points$branching_points)
-print(paste0("Number of root tips: ",       root_tips_n))
-print(paste0("Number of branching points: ", branching_pts_n))
+# Skeletonize first
+skl <- skeletonize_image(root_layer, methods = "ZhangSuen", verbose = FALSE)
 
-# Calculate root length using Kimura's method
-rl <- root_length(skeleton, unit = "cm", dpi = 300, select.layer = 2)
-print(paste0("Total root length (cm): ", rl))
+# Root length per depth bin (cm)
+rl_by_depth <- terra::zonal(skl, depth_bins, "sum", na.rm = TRUE)
+rl_by_depth[[2]] <- rl_by_depth[[2]] / (300 / 2.54)   # pixels → cm
+colnames(rl_by_depth) <- c("depth", "rootlength")
 
-# Calculate root density
-root_pixels <- count_pixels(terra::subset(segmented_image, 2))
-void_area   <- abs(terra::subset(segmented_image, 2) - 1)
-void_pixels <- count_pixels(void_area)
-root_density <- root_pixels / (root_pixels + void_pixels)
-print(paste0("Root density: ", round(root_density, 3)))
-
-# Calculate maximum rooting depth ("deep drive")
-max_depth <- deep_drive(
-  RootMap  = segmented_image,
-  DepthMap = depth_map
-)
-print(paste0("Maximum rooting depth (cm): ", max_depth))
-
-# Calculate landscape metrics for root architecture
-root_metrics <- root_scape_metrics(
-  img     = segmented_image,
-  indexD  = 5,
-  metrics = c("lsm_c_ca", "lsm_l_ent", "lsm_c_pd", "lsm_c_enn_mn")
-)
-print("Root architecture metrics:")
-print(root_metrics)
+depth_data <- merge(depth_data, rl_by_depth, by = "depth")
+depth_data$rootlength.density <- depth_data$rootlength /
+  ((depth_data$rootpx + depth_data$voidpx) / (300 / 2.54)^2)
 ```
 
-### 9. Soil/Peat Characterization
-
-**Purpose**: Analyze soil properties visible in the minirhizotron images.
+#### 5c. Root diameter
 
 ```{r, eval=FALSE}
-# Analyze overall tube color
-tube_color_metrics <- tube_coloration(rgb_image)
-print("Overall tube color metrics:")
-print(tube_color_metrics)
-
-# Create buffer around roots to analyze soil without root & rhizosphere influence
-root_buffer <- create_root_buffer(segmented_image, width = 2, halo.only = FALSE)
-
-# Create soil-only image by removing root areas
-soil_image <- rgb_image - root_buffer
-
-# Analyze soil color (use tube_coloration, not tube_color)
-soil_color_metrics <- tube_coloration(soil_image)
-print("Soil color metrics:")
-print(soil_color_metrics)
-
-# Extract soil texture information using GLCM (Gray-Level Co-occurrence Matrix).
-# Note: analyze_soil_texture expects a raster::brick object (required by the glcm package).
-soil_raster  <- raster::brick(soil_image)
-soil_texture <- analyze_soil_texture(
-  img.color = soil_raster,
-  grays     = 7,
-  window    = c(9, 9),
-  metrics   = c("second_moment", "homogeneity")
+diam_result <- root_diameter(
+  root_layer,
+  skeleton.img = skl,
+  unit         = "cm",
+  select.layer = NULL
 )
-print("Soil texture metrics:")
-print(soil_texture)
+terra::ext(diam_result$diameter_rast) <- terra::ext(depth_bins)
+
+diam_by_depth <- terra::zonal(diam_result$diameter_rast, depth_bins,
+                               "mean", na.rm = TRUE)
+colnames(diam_by_depth) <- c("depth", "avg.diameter")
+
+depth_data <- merge(depth_data, diam_by_depth, by = "depth")
 ```
 
-### 10. Depth-Based Analysis
+#### 5d. Zoning individual depth slices
 
-**Purpose**: Analyze how root traits change with soil depth.
+`zoning()` masks the image to a specific depth range, useful when you want to
+run per-slice analyses (landscape metrics, colour, diameter quantiles).
 
 ```{r, eval=FALSE}
-# Load root map as binary raster
-root_map <- load_flexible_image(segmented_image, binarize = TRUE, output_format = "spatrast")
-
-# Pre-compute binned depth map (reused in every loop iteration)
-binned_depth <- binning(depthmap = depth_map, interval = bin_width)
-
-bin_width <- 2
-rl.df <- data.frame(
-  depth      = seq(0, 30, bin_width),
-  rl         = NA_real_,
-  rl.density = NA_real_,
-  rootpx     = NA_real_,
-  voidpx     = NA_real_
+# Extract a single 5 cm depth zone
+zone_10cm <- zoning(
+  img       = root_layer,
+  mode      = "depth",
+  depth_map = depth_bins,
+  depth     = 10           # selects the bin closest to 10 cm
 )
+```
 
-for (i in rl.df$depth) {
-  # Subset image to this depth zone
-  root_zone <- zoning(
-    img       = root_map,
-    mode      = "depth",
-    depth     = i,
-    depth_map = binned_depth
+---
+
+### 6. Landscape and colour metrics
+
+#### Landscape metrics (spatial structure)
+
+```{r, eval=FALSE}
+# Run per depth slice inside a loop; indexD labels the output rows
+lsm_list <- lapply(sort(unique(terra::values(depth_bins))), function(d) {
+  slice <- zoning(root_layer, mode = "depth", depth_map = depth_bins, depth = d)
+  root_scape_metrics(
+    img     = slice,
+    indexD  = d,
+    metrics = c("lsm_c_np", "lsm_c_enn_mn", "lsm_l_ent")
   )
+})
+lsm_df <- do.call(rbind, lsm_list)
+```
 
-  # Root length
-  rl.df$rl[rl.df$depth == i] <- tryCatch(
-    as.numeric(root_length(root_zone, unit = "cm", dpi = 150, select.layer = 1)),
-    error = function(e) {
-      message("root_length failed at depth ", i, ": ", e$message)
-      NA_real_
-    }
+> **Note**: landscape metrics are slow — one call per depth bin per image.
+> Consider enabling them only when you specifically need patch-level indices.
+
+#### Colour metrics
+
+```{r, eval=FALSE}
+# Align RGB to segmented image
+rgb_aligned <- terra::resample(rgb, root_layer, method = "bilinear")
+
+colour_list <- lapply(sort(unique(terra::values(depth_bins))), function(d) {
+  slice_seg <- zoning(root_layer,   mode = "depth", depth_map = depth_bins, depth = d)
+  slice_rgb <- zoning(rgb_aligned,  mode = "depth", depth_map = depth_bins, depth = d)
+
+  root_rgb <- slice_rgb; root_rgb[slice_seg == 0] <- NA
+  bg_rgb   <- slice_rgb; bg_rgb[slice_seg == 1]   <- NA
+
+  data.frame(
+    depth = d,
+    as.data.frame(tube_coloration(root_rgb)) |>
+      setNames(paste0(names(tube_coloration(root_rgb)), "_root")),
+    as.data.frame(tube_coloration(bg_rgb)) |>
+      setNames(paste0(names(tube_coloration(bg_rgb)), "_bg"))
   )
+})
+colour_df <- do.call(rbind, colour_list)
+```
 
-  # Root pixels
-  rl.df$rootpx[rl.df$depth == i] <- tryCatch(
-    as.numeric(count_pixels(root_zone)),
-    error = function(e) {
-      message("count_pixels (root) failed at depth ", i, ": ", e$message)
-      NA_real_
-    }
-  )
+---
 
-  # Void pixels (inverse of roots)
-  void_zone <- abs(root_zone - 1)
-  rl.df$voidpx[rl.df$depth == i] <- tryCatch(
-    as.numeric(count_pixels(void_zone)),
-    error = function(e) {
-      message("count_pixels (void) failed at depth ", i, ": ", e$message)
-      NA_real_
-    }
-  )
+### 7. Distribution indices
 
-  # Root length density
-  total_px <- rl.df$rootpx[rl.df$depth == i] + rl.df$voidpx[rl.df$depth == i]
-  rl.df$rl.density[rl.df$depth == i] <- if (!is.na(rl.df$rl[rl.df$depth == i]) && total_px > 0) {
-    rl.df$rl[rl.df$depth == i] / total_px
-  } else {
-    NA_real_
-  }
-}
+These tube-level summary metrics require a complete depth profile.
 
-# Visualize results
-ggplot(rl.df, aes(x = depth, y = scale(rl.density))) +
-  geom_line() +
-  geom_point() +
-  geom_line(aes(y = scale(rootpx)),            color = "steelblue4") +
-  geom_point(aes(y = scale(rootpx)),           color = "steelblue4") +
-  geom_line(aes(y = scale(voidpx + rootpx) / 10), color = "darkorange") +
-  geom_point(aes(y = scale(voidpx + rootpx) / 10), color = "darkorange") +
+```{r, eval=FALSE}
+# Root Weight Distribution Index — depth-weighted mean rooting depth
+rwdi_val <- RWDI(w = depth_data$depth, roots = depth_data$rootlength.density)
+
+# Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)
+rpi_val  <- RPI(roots = depth_data$rootlength.density, w = depth_data$depth)
+
+# Total length density — sum over the full profile
+total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
+
+cat(sprintf("RWDI: %.2f  RPI: %.3f  Total length density: %.4f\n",
+            rwdi_val, rpi_val, total_ld))
+```
+
+---
+
+### 8. Root turnover (two-timepoint comparison)
+
+```{r, eval=FALSE}
+data(skl_Oulanka2023_Session01_T067)
+data(skl_Oulanka2023_Session03_T067)
+t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
+t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
+
+turnover <- root_turnover(
+  img1   = t1,
+  img2   = t2,
+  method = "kimura",
+  dpi    = 300,
+  unit   = "cm"
+)
+print(turnover)
+```
+
+---
+
+### 9. Visualise
+
+```{r, eval=FALSE}
+ggplot(depth_data, aes(x = depth, y = rootlength.density)) +
+  geom_col(fill = "steelblue4") +
+  coord_flip() +
+  scale_x_reverse() +
   theme_minimal() +
-  labs(
-    title = "Root Length by Soil Depth",
-    x     = "Soil Depth (cm)",
-    y     = "Scaled value (SD units)"
-  )
+  labs(x = "Soil depth (cm)", y = "Root length density (cm / cm²)",
+       title = "Root length density profile")
 ```
 
-## Conclusion
+---
 
-This vignette demonstrates the core workflows for analyzing minirhizotron images with RootScanR. For more detailed information about specific functions and additional features, please refer to the function documentation and the package GitHub repository at <https://github.com/jcunow/RootScanR>.
+## What to read next
+
+- [Batch Processing](BatchProcessing_vignette.html) — the same workflow in a
+  single `root_depth_metrics()` call, with fault tolerance and ETA logging
+- [Flatbed Scans](FlatBedScans_vignettes.html) — trait extraction without a
+  depth dimension
+- [Rotation Bias](Rotation_Bias_vignettes.html) — correcting for tube rotation
+  between sessions
+- [Function reference](../reference/index.html) — full documentation for every
+  exported function

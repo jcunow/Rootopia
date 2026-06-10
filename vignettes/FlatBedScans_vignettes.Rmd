@@ -12,212 +12,241 @@ vignette: >
 
 ## Introduction
 
-##### Flatbed Root Scan Analysis: Trait Extraction and Quantification
+Flatbed scanning captures root morphology in a 2D plane with high resolution
+and controlled lighting. Unlike minirhizotron images, flatbed scans have no
+depth dimension — the full root system is visible at once and traits are
+computed globally rather than per depth bin.
 
-Flatbed scanning allows for the capture of root morphology in a 2D plane. RootScanR provides a suite of tools for processing 
-flatbed images of roots, including trait extraction, root length measurement, and morphology analysis. This vignette will guide you 
-through extracting root traits from flatbed scans to help quantify root systems for various ecological studies.
+This vignette covers the individual-function workflow for flatbed images. If
+you are working with minirhizotron tubes and want a single-call batch approach,
+see the [Batch Processing](BatchProcessing_vignette.html) vignette instead.
+
+> **Prerequisite**: RootScanR works with already-segmented images (root = 1,
+> background = 0). Segmentation must be done beforehand using
+> [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
+> [RootPainter](https://github.com/Abe404/root_painter).
 
 ## Installation
 
 ```{r, eval=FALSE}
-# Install the package from GitHub
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
 
-# Load the package
 library(RootScanR)
-library(tidyverse)  # For data manipulation and visualization
+library(terra)
+library(tidyverse)
 ```
 
-## Key Functionalities for Flatbed Scan Analysis
+---
 
-When working with flatbed scans, RootScanR offers these primary functions:
+## Workflow
 
-1. **Image Pre-processing**: Convert and prepare images for analysis
-2. **Skeletonization**: Create single-pixel-wide representation of root structures
-3. **Root Trait Extraction**: Calculate key morphological traits (length, diameter, density)
-4. **Architectural Analysis**: Assess root system complexity and structure
+### 1. Load images
 
-## Example Workflow
-
-### 1. Loading Images
-
-**Purpose**: Import flatbed scan images for analysis.
+`load_flexible_image()` accepts rasters, arrays, file paths, and most common
+image formats. Set `binarize = TRUE` to force the image to 0/1 values.
 
 ```{r, eval=FALSE}
-# Load a flatbed scan image (replace with your actual file path)
-flatbed_image <- load_flexible_image(
-  "path/to/flatbed_scan.tiff", 
-  verbose = TRUE
+# Segmented image (binary: root = 1, background = 0)
+seg <- load_flexible_image(
+  "path/to/segmented_scan.tif",
+  output_format = "spatrast",
+  normalize     = TRUE,
+  binarize      = TRUE,
+  select.layer  = 2        # RootDetector: layer 2 is the root channel
 )
 
-# Display the image
-plot(flatbed_image, main = "Original Flatbed Scan")
-```
-
-### 2. Image Pre-processing
-
-**Purpose**: Prepare the image for analysis by converting to binary format if needed.
-
-```{r, eval=FALSE}
-# Convert to binary image if not already binary
-# (skip this step if your image is already properly segmented)
-binary_image <- RootScanR::image_threshold
-  flatbed_image,
-  threshold = 0.4,  # or specify a threshold value
-  select.layer = 2,  
-  method = "global",
-  binary_01 = TRUE
+# Original RGB scan for colour analysis
+rgb <- load_flexible_image(
+  "path/to/rgb_scan.tif",
+  output_format = "spatrast",
+  normalize     = FALSE
 )
 
-# Display binary image
-plot(binary_image, main = "Binary Root Image")
+plot(seg, main = "Segmented scan")
+plot(rgb, main = "RGB scan")
 ```
 
-### 3. Skeletonization
+---
 
-**Purpose**: Create a single-pixel-wide representation of the root system for morphological analysis.
+### 2. Skeletonize
 
-```{r, eval=FALSE}
-# Skeletonize the root image
-skeleton <- skeletonize_roots(
-  binary_image,
-  method = "MAT",           # Medial Axis Transform
-  output_format = "spatrast" # Return as a SpatRaster object
-)
-
-# Visualize the skeleton
-plot(skeleton, main = "Root Skeleton")
-```
-
-### 4. Root Trait Extraction
-
-**Purpose**: Calculate quantitative metrics that describe root system morphology.
-
-#### 4.1 Branching Structure
-
-**Purpose**: Identify key structural elements of the root system.
+`skeletonize_image()` reduces roots to single-pixel-wide centrelines. This is
+required for root length (Kimura method) and diameter estimation.
 
 ```{r, eval=FALSE}
-# Detect root tips and branching points
-skeleton_features <- detect_skeleton_points(skeleton)
-
-# Count root tips (endpoints)
-root_tips <- count_pixels(skeleton_features$endpoints)
-print(paste0("Number of root tips: ", root_tips))
-
-# Count branching points
-branching_points <- count_pixels(skeleton_features$branching_points)
-print(paste0("Number of branching points: ", branching_points))
-
-# Calculate branching frequency
-branching_frequency <- branching_points / calculate_root_length(skeleton) * 100
-print(paste0("Branching frequency (per 100 cm): ", round(branching_frequency, 2)))
-```
-
-#### 4.2 Root Length
-
-**Purpose**: Calculate the total length of all roots in the image.
-
-```{r, eval=FALSE}
-# Calculate root length using Kimura's method
-root_length <- root_length(skeleton)
-print(paste0("Total root length (cm): ", round(root_length, 2)))
-```
-
-#### 4.3 Root Coverage and Density Conversion
-
-**Purpose**: Assess how much of the scan area is occupied by roots.
-
-```{r, eval=FALSE}
-# Create background (non-root) mask
-background <- (binary_image - 1) * -1
-
-# Count root and background pixels
-root_pixels <- count_pixels(binary_image)
-background_pixels <- count_pixels(background)
-
-# Calculate root density (proportion of area covered by roots)
-root_density <- root_pixels / (root_pixels + background_pixels)
-print(paste0("Root density: ", round(root_density, 4)))
-
-# Calculate root length density (proportion of area covered by roots)
-rootlength_density <- root_length / (root_pixels + background_pixels)
-print(paste0("Root length density: ", round(rootlength_density, 4)))
-
-```
-
-
-#### 4.4 Root Diameter
-
-**Purpose**: Estimate the thickness of roots at different positions.
-
-```{r, eval=FALSE}
-# Calculate root diameters
-diameter_map <- root_diameter(
-  root_map, 
+skl <- skeletonize_image(
+  seg,
+  methods      = c("ZhangSuen", "GuoHall"),  # ensemble for robustness
   select.layer = 2,
-  diagnostics = T,
-  skeleton_method = "MAT"  # Distance transform method
+  verbose      = TRUE
 )
 
-# Get summary statistics of root diameters
-diameter_stats = data.frame(diameter_map$diameters) %>%
-  mutate(diameters =lyr.1) %>%
-  summarise(
-    mean = mean( diameters, na.rm = TRUE),
-    sd = sd(diameters, na.rm = TRUE),
-    median = median(diameters)
-  )
-
-# or
-library(psych)
-diameter_stats <- describe(diameter_map$diameters)
-print("Root diameter statistics (mm):")
-print(diameter_stats)
-
-# Visualize diameter distribution
-h <- hist(
-  diameter_map$diameters, 
-  main = "Root Diameter Distribution",
-  xlab = "Diameter (mm)", 
-  plot = FALSE
-)
-
-
-plot(h$mids, h$counts, type = "h", lwd = 10, col = "lightblue",
-     log = "y", xlab = "Log-scaled Data", ylab = "Counts",
-     main = "Histogram with Log-Scaled Y-Axis")
-
+plot(skl, main = "Skeleton")
 ```
 
+Available methods: `"ZhangSuen"`, `"GuoHall"`, `"MAT"` (Medial Axis
+Transform), `"SteepestAscend"`. When multiple methods are supplied the results
+are combined.
 
-### 5. Visualization and Export
+---
 
-**Purpose**: Create visual representations of results and export data for further analysis.
+### 3. Root length
+
+`root_length()` uses Kimura's formula, which weights orthogonal and diagonal
+skeleton segments differently to approximate true path length.
 
 ```{r, eval=FALSE}
-library(grid)
-# overlay plotting
-g1 = ggplotGrob(flatbed_image)
-g2 = ggplotGrob(skeleton)
+rl <- root_length(skl, unit = "cm", dpi = 300, select.layer = NULL)
+cat("Total root length:", round(rl, 2), "cm\n")
+```
 
-grid.draw(g1)
-grid.draw(g2)
+---
 
-# Export results to CSV
-export_results <- data.frame(
-  sample_id = "example_scan",
-  total_length_cm = root_length,
-  root_tips = root_tips,
-  branching_points = branching_points,
-  branching_frequency = branching_frequency,
-  mean_diameter_mm = diameter_stats$mean,
-  root_density = root_density
+### 4. Root diameter
+
+`root_diameter()` estimates local root width from the distance transform. It
+returns a diameter raster and the raw diameter values.
+
+```{r, eval=FALSE}
+diam_result <- root_diameter(
+  seg,
+  skeleton.img    = skl,
+  skeleton_method = "MAT",
+  select.layer    = NULL,
+  unit            = "cm"
 )
 
-write.csv(export_results, "flatbed_scan_results.csv", row.names = FALSE)
+# Summary statistics
+diam_vals <- terra::values(diam_result$diameter_rast, na.rm = TRUE)
+cat(sprintf(
+  "Diameter — mean: %.3f cm  SD: %.3f cm  max: %.3f cm\n",
+  mean(diam_vals), sd(diam_vals), max(diam_vals)
+))
+
+# Distribution
+hist(diam_vals,
+     breaks = 40,
+     xlab   = "Diameter (cm)",
+     main   = "Root diameter distribution",
+     col    = "steelblue4")
 ```
-##### 
-For more detailed information about specific functions and additional features, please refer to the function documentation and the package GitHub repository at [https://github.com/jcunow/RootScanR](https://github.com/jcunow/RootScanR).
+
+For fine/coarse root separation, `modal_peaks()` can find diameter modes in
+the distribution:
+
+```{r, eval=FALSE}
+peaks <- modal_peaks(
+  diam_vals,
+  display_type         = "density",
+  prominence_threshold = length(diam_vals) / sqrt(length(diam_vals)),
+  mclust               = FALSE
+)
+cat("Diameter peaks at (cm):", paste(round(peaks$peak_x, 3), collapse = ", "), "\n")
+```
+
+---
+
+### 5. Pixel counts and area coverage
+
+```{r, eval=FALSE}
+root_px <- count_pixels(seg)
+void_px <- count_pixels(abs(seg - 1))
+
+root_area_pct <- root_px / (root_px + void_px) * 100
+cat(sprintf("Root area coverage: %.2f %%\n", root_area_pct))
+
+# Root length density (cm root per cm² scan area)
+scan_area_cm2 <- (root_px + void_px) / (300 / 2.54)^2
+rl_density    <- rl / scan_area_cm2
+cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
+```
+
+---
+
+### 6. Branching structure
+
+`detect_skeleton_points()` classifies skeleton pixels into endpoints (root
+tips) and branching points (forks).
+
+```{r, eval=FALSE}
+pts <- detect_skeleton_points(skl, select.layer = 2)
+
+n_tips    <- count_pixels(pts$endpoints)
+n_forks   <- count_pixels(pts$branching_points)
+branch_freq <- n_forks / rl * 100   # branching points per 100 cm
+
+cat(sprintf("Root tips: %d\n", n_tips))
+cat(sprintf("Branching points: %d\n", n_forks))
+cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
+```
+
+---
+
+### 7. Root-level landscape metrics
+
+`root_scape_metrics()` applies landscape ecology metrics to the binary root
+image, treating roots as "patches". Useful for characterising spatial
+complexity and connectivity.
+
+```{r, eval=FALSE}
+lsm <- root_scape_metrics(
+  img     = seg,
+  indexD  = NA,          # no depth index for flatbed scans
+  metrics = c("lsm_c_ca", "lsm_c_np", "lsm_c_enn_mn",
+              "lsm_c_area_mn", "lsm_l_ent")
+)
+print(lsm)
+```
+
+---
+
+### 8. Colour analysis
+
+`tube_coloration()` extracts mean chromatic coordinates and HSV values from
+an RGB image. On flatbed scans this characterises overall root pigmentation.
+
+```{r, eval=FALSE}
+# Root pixels only
+rgb_roots <- rgb
+rgb_roots[seg == 0] <- NA
+root_colour <- tube_coloration(rgb_roots)
+print(root_colour)
+
+# Background (soil / petri dish) pixels
+rgb_bg <- rgb
+rgb_bg[seg == 1] <- NA
+bg_colour <- tube_coloration(rgb_bg)
+print(bg_colour)
+```
+
+---
+
+### 9. Collecting results
+
+```{r, eval=FALSE}
+results <- data.frame(
+  sample_id          = "my_scan",
+  root_length_cm     = rl,
+  root_area_pct      = root_area_pct,
+  rl_density_cm_cm2  = rl_density,
+  n_tips             = n_tips,
+  n_forks            = n_forks,
+  branching_freq     = branch_freq,
+  mean_diameter_cm   = mean(diam_vals),
+  sd_diameter_cm     = sd(diam_vals)
+)
+
+write.csv(results, "flatbed_results.csv", row.names = FALSE)
+```
+
+---
+
+## What to read next
+
+- [Minirhizotron Scans](MinirhizotronScans_vignettes.html) — adds depth
+  mapping and per-bin analysis to the individual-function workflow
+- [Batch Processing](BatchProcessing_vignette.html) — wraps depth-resolved
+  analysis into a single function call
+- [Function reference](../reference/index.html) — full documentation for
+  every exported function
