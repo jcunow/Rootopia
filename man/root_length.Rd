@@ -2,29 +2,50 @@
 % Please edit documentation in R/Zonestats3.R
 \name{root_length}
 \alias{root_length}
-\title{Calculate Root Length using Kimura's Method with optimizations}
+\title{Root length estimation from skeleton images}
 \usage{
-root_length(img, unit = "cm", dpi = 300, select.layer = 2)
+root_length(
+  img,
+  unit = "cm",
+  dpi = 300,
+  select.layer = NULL,
+  method = c("kimura2", "kimura1", "freeman_basic", "freeman_corrected"),
+  show_messages = TRUE
+)
 }
 \arguments{
-\item{img}{A skeletonized root image raster}
+\item{img}{Skeletonized binary raster image}
 
-\item{unit}{Output unit ("px", "cm", or "inch")}
-
-\item{dpi}{Image resolution (required when unit = "cm" or "inch")}
-
-\item{select.layer}{Integer. Specifies which layer to use if the input is a
-multi-band image. Default is `2`, matching the RootDetector output format
-where layer 2 contains the root channel.}
+\item{method}{Character. One of:
+"freeman_basic", "freeman_corrected", "kimura1", "kimura2"}
 }
 \value{
-Numeric value representing root length in specified unit
+Root length in pixels or converted units
 }
 \description{
-Calculate Root Length using Kimura's Method with optimizations
+Root length is estimated from a skeletonized binary image using
+either Freeman chain-code based estimators or Kimura estimators.
 }
-\examples{
-data(skl_Oulanka2023_Session01_T067)
-img <- terra::rast(skl_Oulanka2023_Session01_T067)
-RL <- root_length(img = img, unit = "cm", dpi = 300, select.layer = 2)
+\details{
+Let Nd be the number of diagonal pixel connections and No the number
+of orthogonal pixel connections in the skeleton.
+
+Freeman methods treat the skeleton as a discrete chain-code path:
+- freeman_basic:
+  L = sqrt(2) * Nd + No
+
+- freeman_corrected:
+  L = 0.948 * (sqrt(2) * Nd + No)
+
+Kimura methods treat the skeleton as a discretized representation of
+an underlying continuous curve and reduce orientation bias:
+
+- kimura1:
+  L = sqrt(Nd^2 + (Nd + No)^2)
+
+- kimura2 (default):
+  L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2
+
+The Kimura2 estimator is generally preferred due to improved stability
+across object orientations and curvature distributions.
 }
