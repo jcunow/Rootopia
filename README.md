@@ -11,7 +11,7 @@
 
 Welcome to **RootScanR**, an R package designed to extract quantitative belowground traits from **flatbed root scans** and **minirhizotron image sequences**. It provides flexible image preprocessing, trait estimation like root length & diameter, depth mapping, and distribution tools. 
 
- - some features are still experimental. At the moment, you will still need to provide a skeleton created elewhere (for example RootDetector). 
+ - some features are still experimental. Be aware that this is an insect's playground and we love bugs. Just call them out if their behaviour is undesirable.
 
 
 ## 💡 What can RootScanR do?
