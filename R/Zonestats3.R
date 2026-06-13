@@ -1,116 +1,181 @@
 ########################
 
-#' Calculate Root Length using Kimura's Method with optimizations
+#' Root length estimation from skeleton images
 #'
-#' @param img A skeletonized root image raster
-#' @param unit Output unit ("px", "cm", or "inch")
-#' @param dpi Image resolution (required when unit = "cm" or "inch")
-#' @param select.layer Integer. Specifies which layer to use if the input is a
-#'   multi-band image. Default is `2`, matching the RootDetector output format
-#'   where layer 2 contains the root channel.
-#' @return Numeric value representing root length in specified unit
-#' @export
+#' Root length is estimated from a skeletonized binary image using
+#' either Freeman chain-code based estimators or Kimura estimators.
 #'
-#' @examples
-#' data(skl_Oulanka2023_Session01_T067)
-#' img <- terra::rast(skl_Oulanka2023_Session01_T067)
-#' RL <- root_length(img = img, unit = "cm", dpi = 300, select.layer = 2)
-root_length <- function(img, unit = "cm", dpi = 300, select.layer = 2) {
+#' Let Nd be the number of diagonal pixel connections and No the number
+#' of orthogonal pixel connections in the skeleton.
+#'
+#' Freeman methods treat the skeleton as a discrete chain-code path:
+#' - freeman_basic:
+#'   L = sqrt(2) * Nd + No
+#'
+#' - freeman_corrected:
+#'   L = 0.948 * (sqrt(2) * Nd + No)
+#'
+#' Kimura methods treat the skeleton as a discretized representation of
+#' an underlying continuous curve and reduce orientation bias:
+#'
+#' - kimura1:
+#'   L = sqrt(Nd^2 + (Nd + No)^2)
+#'
+#' - kimura2 (default):
+#'   L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2
+#'
+#' The Kimura2 estimator is generally preferred due to improved stability
+#' across object orientations and curvature distributions.
+#'
+#' @param method Character. One of:
+#'   "freeman_basic", "freeman_corrected", "kimura1", "kimura2"
+#' @param img Skeletonized binary raster image
+#' @return Root length in pixels or converted units
+root_length <- function(img,
+                        unit = "cm",
+                        dpi = 300,
+                        select.layer = NULL,
+                        method = c("kimura2",
+                                   "kimura1",
+                                   "freeman_basic",
+                                   "freeman_corrected"),
+                        show_messages = TRUE) {
+  
+  method <- match.arg(method)
+  
   tryCatch({
-    if (missing(img)) stop("Image input is required")
-
-    img <- load_flexible_image(img, select.layer = select.layer,
-                               output_format = "spatrast",
-                               normalize = TRUE, binarize = TRUE)
-
-    if (!unit %in% c("px", "cm", "inch")) {
-      stop("Unit must be either 'px', 'inch' or 'cm'")
+    
+    # -----------------------------
+    # Input validation
+    # -----------------------------
+    if (missing(img)) {
+      stop("Image input is required")
     }
-
+    
+    if (!unit %in% c("px", "cm", "inch")) {
+      stop("unit must be 'px', 'cm', or 'inch'")
+    }
+    
     if (unit %in% c("cm", "inch")) {
       if (missing(dpi) || !is.numeric(dpi) || dpi <= 0) {
-        stop("Valid positive numeric dpi value is required when unit = 'cm' or 'inch'")
+        stop("Valid positive dpi required for cm/inch conversion")
       }
     }
-
-    if ((is.null(select.layer) || select.layer < 1) && terra::nlyr(img) > 1) {
-      stop("Multiple layers present; select.layer should be a positive integer")
-    }
-
+    
+    # -----------------------------
+    # Load image
+    # -----------------------------
+    img <- load_flexible_image(
+      img,
+      select.layer = select.layer,
+      output_format = "spatrast",
+      normalize = TRUE,
+      binarize = TRUE
+    )
+    
     if (is.null(img) || terra::nlyr(img) < 1) {
-      stop("Invalid or empty image after loading")
+      stop("Invalid image after loading")
     }
-
-    if (all(is.na(terra::values(img)))) {
-      stop("Image contains no valid data (all NA values)")
+    
+    # ensure single layer safely
+    if (terra::nlyr(img) > 1) {
+      img <- img[[1]]
     }
-
+    
     vals <- unique(terra::values(img))
     vals <- vals[!is.na(vals)]
+    
     if (!all(vals %in% c(0, 1))) {
-      warning("Image may not be properly skeletonized (contains non-binary values)")
+      warning("Non-binary image detected after preprocessing")
     }
-
-    k0 <- matrix(c(0, 1, 0, 0, 1, 0, 0, 0, 0), nrow = 3, ncol = 3)
-    k1 <- matrix(c(0, 0, 0, 1, 1, 0, 0, 0, 0), nrow = 3, ncol = 3)
-
-    r0 <- tryCatch(
-      terra::focal(img, w = k0, fun = "sum", na.rm = TRUE),
-      error = function(e) stop("Error in focal operation with k0 matrix: ", e$message)
-    )
-    r1 <- tryCatch(
-      terra::focal(img, w = k1, fun = "sum", na.rm = TRUE),
-      error = function(e) stop("Error in focal operation with k1 matrix: ", e$message)
-    )
-    orth.img <- sum((r0 == 2) | (r1 == 2))
-
-    g0 <- matrix(c(1, 0, 0, 0, 1, 0, 0, 0, 0), nrow = 3, ncol = 3)
-    g1 <- matrix(c(0, 0, 1, 0, 1, 0, 0, 0, 0), nrow = 3, ncol = 3)
-
-    u0 <- tryCatch(
-      terra::focal(img, w = g0, fun = "sum", na.rm = TRUE),
-      error = function(e) stop("Error in focal operation with g0 matrix: ", e$message)
-    )
-    u1 <- tryCatch(
-      terra::focal(img, w = g1, fun = "sum", na.rm = TRUE),
-      error = function(e) stop("Error in focal operation with g1 matrix: ", e$message)
-    )
-    diag.img <- sum((u0 == 2) | (u1 == 2))
-
-    kimura.sum.diag <- tryCatch(
-      terra::global(diag.img, "sum", na.rm = TRUE),
-      error = function(e) stop("Error calculating diagonal sum: ", e$message)
-    )
-    kimura.sum.orth <- tryCatch(
-      terra::global(orth.img, "sum", na.rm = TRUE),
-      error = function(e) stop("Error calculating orthogonal sum: ", e$message)
-    )
-
-    rootlength <- if (unit == "px") {
-      round((kimura.sum.diag^2 +
-               (kimura.sum.diag + kimura.sum.orth / 2)^2)^0.5 +
-              kimura.sum.orth / 2)[[1]]
-    } else if (unit == "cm") {
-      round(((kimura.sum.diag^2 +
-                (kimura.sum.diag + kimura.sum.orth / 2)^2)^0.5 +
-               kimura.sum.orth / 2) / dpi / 2.54, 3)[[1]]
-    } else if (unit == "inch") {
-      round(((kimura.sum.diag^2 +
-                (kimura.sum.diag + kimura.sum.orth / 2)^2)^0.5 +
-               kimura.sum.orth / 2) / dpi, 3)[[1]]
+    
+    # -----------------------------
+    # Connectivity kernels
+    # -----------------------------
+    k0 <- matrix(c(0,1,0,
+                   0,1,0,
+                   0,0,0), 3, 3)
+    
+    k1 <- matrix(c(0,0,0,
+                   1,1,0,
+                   0,0,0), 3, 3)
+    
+    g0 <- matrix(c(1,0,0,
+                   0,1,0,
+                   0,0,0), 3, 3)
+    
+    g1 <- matrix(c(0,0,1,
+                   0,1,0,
+                   0,0,0), 3, 3)
+    
+    # -----------------------------
+    # Focal operations
+    # -----------------------------
+    r0 <- terra::focal(img, w = k0, fun = "sum", na.rm = TRUE)
+    r1 <- terra::focal(img, w = k1, fun = "sum", na.rm = TRUE)
+    
+    u0 <- terra::focal(img, w = g0, fun = "sum", na.rm = TRUE)
+    u1 <- terra::focal(img, w = g1, fun = "sum", na.rm = TRUE)
+    
+    # -----------------------------
+    # IMPORTANT: scalar extraction (fixes your error source)
+    # -----------------------------
+    orth.img <- (r0 == 2) | (r1 == 2)
+    diag.img <- (u0 == 2) | (u1 == 2)
+    
+    kimura.sum.orth <- terra::global(orth.img, "sum", na.rm = TRUE)[1,1]
+    kimura.sum.diag <- terra::global(diag.img, "sum", na.rm = TRUE)[1,1]
+    
+    if (show_messages) {
+      message(
+        "Diagonal: ", kimura.sum.diag,
+        " | Orthogonal: ", kimura.sum.orth
+      )
     }
-
-    if (is.null(rootlength) || length(rootlength) == 0 || !is.numeric(rootlength)) {
-      stop("Error calculating root length")
+    
+    # -----------------------------
+    # Length estimators
+    # -----------------------------
+    rootlength_px <- switch(
+      method,
+      
+      freeman_basic =
+        sqrt(2) * kimura.sum.diag + kimura.sum.orth,
+      
+      freeman_corrected =
+        0.948 * (sqrt(2) * kimura.sum.diag + kimura.sum.orth),
+      
+      kimura1 =
+        sqrt(kimura.sum.diag^2 +
+               (kimura.sum.diag + kimura.sum.orth)^2),
+      
+      kimura2 =
+        sqrt(kimura.sum.diag^2 +
+               (kimura.sum.diag + kimura.sum.orth/2)^2) +
+        kimura.sum.orth/2
+    )
+    
+    # -----------------------------
+    # Unit conversion
+    # -----------------------------
+    rootlength <- switch(
+      unit,
+      
+      px = rootlength_px,
+      cm = rootlength_px / dpi * 2.54,
+      inch = rootlength_px / dpi
+    )
+    
+    rootlength <- as.numeric(rootlength)
+    
+    if (is.na(rootlength) || rootlength < 0) {
+      stop("Invalid root length computed")
     }
-    if (rootlength < 0) {
-      warning("Calculated root length is negative, which may indicate an issue with the input image")
-    }
-
-    return(rootlength[[1]])
-
+    
+    return(rootlength)
+    
   }, error = function(e) {
-    stop("Error in root_length: ", e$message)
+    stop("root_length failed: ", e$message)
   })
 }
 
