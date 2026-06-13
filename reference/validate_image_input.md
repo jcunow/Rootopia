@@ -1,7 +1,7 @@
-# Validate Image Input Parameters
+# Validate image input
 
-Internal function to validate input parameters for image processing
-functions Used for image skeletonizing
+Checks structural validity and (optionally) enforces binary constraints
+for image processing routines.
 
 ## Usage
 
@@ -19,24 +19,24 @@ validate_image_input(
 
 - img:
 
-  The input image to validate
+  Input image (SpatRaster or compatible object)
 
 - allow_empty:
 
-  Logical, whether to allow empty images
+  Logical. Allow all-zero images.
 
 - min_dim:
 
-  Minimum required dimensions
+  Minimum allowed image dimensions.
 
 - require_binary:
 
-  Logical, whether to require binary values
+  Logical. Enforce binary values (0/1).
 
 - select.layer:
 
-  Layer to validate for multi-layer images
+  Layer index for multi-layer inputs.
 
 ## Value
 
-List containing validated and processed image data
+List containing validated image and metadata.

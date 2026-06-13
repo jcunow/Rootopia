@@ -1,72 +1,56 @@
-# Detect Skeleton Points: Branching Points and Endpoints
+# Detect endpoints and branching points in a skeleton image
 
-Identifies the branching points and endpoints of a skeletonized binary
-image.
+Computes local connectivity of each foreground pixel using an
+8-neighbourhood (Moore neighbourhood).
 
 ## Usage
 
 ``` r
-detect_skeleton_points(img, select.layer = 2)
+detect_skeleton_points(img, select.layer = NULL, skeletonize = FALSE)
 ```
 
 ## Arguments
 
 - img:
 
-  A matrix, data frame, or \`SpatRaster\` object representing the
-  skeletonized binary image.
+  Binary skeleton image. If `skeletonize = TRUE`, a segmented
+  (non-skeleton) mask can be supplied instead.
 
 - select.layer:
 
-  Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`2\`.
+  Layer index for multi-layer rasters
+
+- skeletonize:
+
+  Logical. If `TRUE`, `img` is treated as a segmented mask and reduced
+  to a skeleton internally via
+  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+  before detecting points. Default `FALSE` (assumes `img` is already a
+  skeleton).
 
 ## Value
 
-A named list containing two \`SpatRaster\` objects:
+List with:
 
-- `endpoints`: A binary raster where endpoints are marked as `1`.
+- endpoints:
 
-- `branching_points`: A binary raster where branching points are marked
-  as `1`.
+  SpatRaster marking pixels with exactly one neighbor
+
+- branching_points:
+
+  SpatRaster marking pixels with more than two neighbors
 
 ## Details
 
-This function detects key points in a skeletonized binary image:
+The computation proceeds as follows:
 
-- **Endpoints**: Pixels with exactly one neighbor in the skeleton.
+1\. Raster values are converted into a numeric matrix. 2. A 1-pixel
+zero-padding border is added around the matrix. 3. For each pixel in the
+original image: - A 3x3 window is extracted from the padded matrix - The
+center pixel is excluded - Neighbor count is computed as the sum of
+remaining 8 values
 
-- **Branching Points**: Pixels with more than two neighbors in the
-  skeleton.
+Classification rules: - Endpoint: pixel == 1 AND neighbor count == 1 -
+Branch point: pixel == 1 AND neighbor count \> 2
 
-The function uses a 3x3 neighborhood kernel to count the number of
-neighbors for each foreground pixel (`1`) in the image. Based on the
-neighbor count, points are classified as endpoints or branching points.
-
-The input image should be skeletonized (thin and connected) before using
-this function. If not already binary, the input image will be binarized
-internally.
-
-## See also
-
-[`skeletonize_image`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md),
-[`thin_image_zhangsuen`](https://jcunow.github.io/RootScanR/reference/thin_image_zhangsuen.md),
-[`thin_image_guohall`](https://jcunow.github.io/RootScanR/reference/thin_image_guohall.md)
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-library(terra)
-
-# Example skeletonized image
-skeleton <- rast(matrix(c(0, 1, 1, 0, 0, 1, 1, 0), nrow = 4))
-
-# Detect endpoints and branching points
-points <- detect_skeleton_points(skeleton)
-
-# Access results
-endpoints <- points$endpoints
-branching_points <- points$branching_points
-} # }
-```
+Outputs are converted back into SpatRaster objects.

@@ -111,7 +111,7 @@
           <code><a href="skeletonize_image.html">skeletonize_image()</a></code>
 
         </dt>
-        <dd>Skeletonization Wrapper Function</dd>
+        <dd>Skeletonize binary image</dd>
       </dl></div><div class="section level2">
       <h2 id="root-traits">Root traits<a class="anchor" aria-label="anchor" href="#root-traits"></a></h2>
 
@@ -127,7 +127,7 @@
           <code><a href="root_length.html">root_length()</a></code>
 
         </dt>
-        <dd>Calculate Root Length using Kimura's Method with optimizations</dd>
+        <dd>Root length estimation from skeleton images</dd>
 
         <dt>
 
@@ -148,7 +148,7 @@
           <code><a href="detect_skeleton_points.html">detect_skeleton_points()</a></code>
 
         </dt>
-        <dd>Detect Skeleton Points: Branching Points and Endpoints</dd>
+        <dd>Detect endpoints and branching points in a skeleton image</dd>
 
         <dt>
 
@@ -184,6 +184,78 @@
 
         </dt>
         <dd>Calculate root accumulation</dd>
+      </dl></div><div class="section level2">
+      <h2 id="root-branching-order">Root branching order<a class="anchor" aria-label="anchor" href="#root-branching-order"></a></h2>
+
+      <div class="section-desc"><p>Convert a root skeleton into a segment graph, assign tip/root/branch order, and summarise root architecture by order class.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="branch_order_map.html">branch_order_map()</a></code>
+
+        </dt>
+        <dd>Branch-order classification of a root skeleton</dd>
+
+        <dt>
+
+          <code><a href="root_graph_pipeline.html">root_graph_pipeline()</a></code>
+
+        </dt>
+        <dd>Skeleton-to-graph root ordering pipeline (pixel units)</dd>
+
+        <dt>
+
+          <code><a href="order_metrics.html">order_metrics()</a></code>
+
+        </dt>
+        <dd>Aggregate root architecture by order, or split focal-vs-rest</dd>
+
+        <dt>
+
+          <code><a href="summarize_orders.html">summarize_orders()</a></code>
+
+        </dt>
+        <dd>Per-order summary of length and diameter</dd>
+
+        <dt>
+
+          <code><a href="convert_root_units.html">convert_root_units()</a></code>
+
+        </dt>
+        <dd>Convert edge-table lengths and diameters to real units</dd>
+
+        <dt>
+
+          <code><a href="order_classification_map.html">order_classification_map()</a></code>
+
+        </dt>
+        <dd>Rasterise a per-segment value onto the image grid</dd>
+
+        <dt>
+
+          <code><a href="prune_terminal_segments.html">prune_terminal_segments()</a></code>
+
+        </dt>
+        <dd>Prune short or thin terminal segments</dd>
+
+        <dt>
+
+          <code><a href="render_order_overlay.html">render_order_overlay()</a></code>
+
+        </dt>
+        <dd>Write an order-coloured validation overlay (PNG)</dd>
+
+        <dt>
+
+          <code><a href="plot_order_window.html">plot_order_window()</a></code>
+
+        </dt>
+        <dd>Native-resolution validation of a sub-window</dd>
       </dl></div><div class="section level2">
       <h2 id="depth-mapping">Depth mapping<a class="anchor" aria-label="anchor" href="#depth-mapping"></a></h2>
 

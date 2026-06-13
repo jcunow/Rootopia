@@ -96,6 +96,7 @@ is dropped and listed in a warning at the end.</p>
 <span>  calc_landscape_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_color_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_angles <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_density_metrics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_distribution_indices <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_advanced_metrics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -117,8 +118,10 @@ is dropped and listed in a warning at the end.</p>
 
 <dt id="arg-path-skl">path.skl<a class="anchor" aria-label="anchor" href="#arg-path-skl"></a></dt>
 <dd><p>Character or <code>NULL</code>. Path to directory of skeletonised
-images (one-pixel-wide centrelines of roots).  Required for length,
-diameter, and angle metrics.  Default <code>NULL</code>.</p></dd>
+images (one-pixel-wide centrelines of roots), used for length, diameter,
+angle, and branching-order metrics. If <code>NULL</code> or a file is missing,
+the skeleton is computed internally via <code><a href="skeletonize_image.html">skeletonize_image()</a></code>.
+Default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-path-rgb">path.rgb<a class="anchor" aria-label="anchor" href="#arg-path-rgb"></a></dt>
@@ -250,6 +253,18 @@ downward direction) and <code>mean.steepness.angle</code> /
 Uses <code><a href="deep_drive.html">deep_drive()</a></code>.  Default <code>FALSE</code>.</p></dd>
 
 
+<dt id="arg-calc-root-order-metrics">calc_root_order_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-root-order-metrics"></a></dt>
+<dd><p>Logical. Build a per-image branching-order
+graph via <code><a href="branch_order_map.html">branch_order_map()</a></code> and summarise it both per depth bin
+and per tube.  Adds <code>mean.branch_order</code>, <code>max.branch_order</code>,
+<code>mean.root_order</code>, and <code>lateral_root_fraction</code> per depth bin,
+plus tube-level <code>main_root.*</code> / <code>lateral_roots.*</code> columns
+(length, diameter, branching frequency, etc., split by
+<code>order_metrics(..., focal = "thickest")</code>) and <code>n_root_orders</code>
+(the highest branch order found).  Requires a skeleton.  <strong>Slow</strong>:
+builds one segment graph per image.  Default <code>FALSE</code>.</p></dd>
+
+
 <dt id="arg-calc-density-metrics">calc_density_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-density-metrics"></a></dt>
 <dd><p>Logical. Compute <code>rootpx.density</code> (percent
 root area cover) and <code>rootlength.density</code> (cm root length per cm²
@@ -342,9 +357,12 @@ directories if necessary.</p>
 <dd><p>Always required.</p></dd>
 
   <dt><code>path.skl</code></dt>
-<dd><p>Required when <code>calc_root_length</code>,
-    <code>calc_diameter_stats</code>, <code>calc_diameter_quantiles</code>, or
-    <code>calc_root_angles</code> is <code>TRUE</code>.</p></dd>
+<dd><p>Optional. Used by <code>calc_root_length</code>,
+    <code>calc_diameter_stats</code>, <code>calc_diameter_quantiles</code>,
+    <code>calc_root_angles</code>, and <code>calc_root_order_metrics</code> when
+    supplied. If <code>path.skl</code> is <code>NULL</code> or a skeleton file is
+    missing for an image, the skeleton is computed internally from the
+    segmented image via <code><a href="skeletonize_image.html">skeletonize_image()</a></code>.</p></dd>
 
   <dt><code>path.rgb</code></dt>
 <dd><p>Required when <code>calc_color_metrics</code> is

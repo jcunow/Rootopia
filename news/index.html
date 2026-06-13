@@ -47,10 +47,28 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="rootscanr-110">RootScanR 1.1.0<a class="anchor" aria-label="anchor" href="#rootscanr-110"></a></h2>
+<ul><li>New root branching-order pipeline: <code><a href="../reference/root_graph_pipeline.html">root_graph_pipeline()</a></code>, <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code>, <code><a href="../reference/order_metrics.html">order_metrics()</a></code>, <code><a href="../reference/summarize_orders.html">summarize_orders()</a></code>, <code><a href="../reference/convert_root_units.html">convert_root_units()</a></code>, <code><a href="../reference/order_classification_map.html">order_classification_map()</a></code>, <code><a href="../reference/prune_terminal_segments.html">prune_terminal_segments()</a></code>, <code><a href="../reference/render_order_overlay.html">render_order_overlay()</a></code>, and <code><a href="../reference/plot_order_window.html">plot_order_window()</a></code> classify a root skeleton into a segment graph and assign tip/root/branch order (main axis vs. lateral roots).</li>
+<li>
+<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> gains <code>calc_root_order_metrics</code>, which runs the new branching-order pipeline per image and adds per-depth-bin (<code>mean.branch_order</code>, <code>max.branch_order</code>, <code>mean.root_order</code>, <code>lateral_root_fraction</code>) and per-tube (<code>main_root.*</code>, <code>lateral_roots.*</code>, <code>n_root_orders</code>) columns.</li>
+<li>Vignettes updated with a “Root branching order” section in the Minirhizotron, Flatbed, and Batch Processing tutorials.</li>
+<li>
+<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code>: <code>path.skl</code> is now optional. If it is <code>NULL</code> or a skeleton file is missing for an image, the skeleton is computed internally via <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>. The “Minimum requirements” table and documentation in the Batch Processing vignette have been corrected to reflect that both <code>path.skl</code> and <code>soil_starts</code> are optional.</li>
+<li>Fixed <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>, which previously called a non-existent <code>lut_thin()</code> function and would error on every call; it now correctly uses the LUT-based Zhang-Suen thinning implementation (<code><a href="../reference/lut_thin_fast.html">lut_thin_fast()</a></code>).</li>
+<li>Fixed <code><a href="../reference/root_diameter.html">root_diameter()</a></code>’s internal skeletonization fallback (used when <code>skeleton.img</code> is not supplied), which called <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> with a non-existent <code>methods = skeleton_method</code> argument and errored on every call. <code>skeleton_method</code> is now documented as currently unused.</li>
+<li>All remaining functions that consume a skeleton can now compute one internally via <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> if none is supplied:
+<ul><li>
+<code>root_length(img, skeletonize = TRUE)</code> and <code>detect_skeleton_points(img, skeletonize = TRUE)</code> treat <code>img</code> as a segmented mask and skeletonize it first.</li>
+<li>
+<code><a href="../reference/root_graph_pipeline.html">root_graph_pipeline()</a></code> and <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code> now accept <code>skel = NULL</code>; if omitted, the skeleton is computed from <code>mask</code> via <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>.</li>
+</ul></li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="rootscanr-100">RootScanR 1.0.0<a class="anchor" aria-label="anchor" href="#rootscanr-100"></a></h2>
 <ul><li>Initial CRAN submission.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

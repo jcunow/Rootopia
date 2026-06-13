@@ -61,4 +61,6 @@ production: Root production between timepoints - newroot - newroot
     im.t1 = time1,
     im.t2 = time2,
     method = "kimura")
+#> Diagonal: 14511 | Orthogonal: 40783
+#> Diagonal: 15358 | Orthogonal: 54560
 ```

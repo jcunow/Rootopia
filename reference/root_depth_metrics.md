@@ -35,6 +35,7 @@ root_depth_metrics(
   calc_landscape_metrics = FALSE,
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
+  calc_root_order_metrics = FALSE,
   calc_density_metrics = TRUE,
   calc_distribution_indices = TRUE,
   calc_advanced_metrics = TRUE,
@@ -55,8 +56,11 @@ root_depth_metrics(
 - path.skl:
 
   Character or `NULL`. Path to directory of skeletonised images
-  (one-pixel-wide centrelines of roots). Required for length, diameter,
-  and angle metrics. Default `NULL`.
+  (one-pixel-wide centrelines of roots), used for length, diameter,
+  angle, and branching-order metrics. If `NULL` or a file is missing,
+  the skeleton is computed internally via
+  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
+  Default `NULL`.
 
 - path.rgb:
 
@@ -190,6 +194,18 @@ root_depth_metrics(
   [`deep_drive()`](https://jcunow.github.io/RootScanR/reference/deep_drive.md).
   Default `FALSE`.
 
+- calc_root_order_metrics:
+
+  Logical. Build a per-image branching-order graph via
+  [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+  and summarise it both per depth bin and per tube. Adds
+  `mean.branch_order`, `max.branch_order`, `mean.root_order`, and
+  `lateral_root_fraction` per depth bin, plus tube-level `main_root.*` /
+  `lateral_roots.*` columns (length, diameter, branching frequency,
+  etc., split by `order_metrics(..., focal = "thickest")`) and
+  `n_root_orders` (the highest branch order found). Requires a skeleton.
+  **Slow**: builds one segment graph per image. Default `FALSE`.
+
 - calc_density_metrics:
 
   Logical. Compute `rootpx.density` (percent root area cover) and
@@ -283,8 +299,12 @@ those directories if necessary.
 
 - `path.skl`:
 
-  Required when `calc_root_length`, `calc_diameter_stats`,
-  `calc_diameter_quantiles`, or `calc_root_angles` is `TRUE`.
+  Optional. Used by `calc_root_length`, `calc_diameter_stats`,
+  `calc_diameter_quantiles`, `calc_root_angles`, and
+  `calc_root_order_metrics` when supplied. If `path.skl` is `NULL` or a
+  skeleton file is missing for an image, the skeleton is computed
+  internally from the segmented image via
+  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
 
 - `path.rgb`:
 

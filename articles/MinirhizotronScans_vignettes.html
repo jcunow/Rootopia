@@ -127,6 +127,8 @@ sessions</li>
 <li>Create depth map</li>
 <li>Bin depths</li>
 <li>Extract root traits per depth bin</li>
+<li>(Optional) Root branching order — classify segments as main axis
+vs. laterals</li>
 <li>Compute landscape and colour metrics</li>
 <li>Derive distribution indices</li>
 </ol>
@@ -295,7 +297,7 @@ scale — 5 cm is a common choice.</p>
 </h5>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Skeletonize first</span></span>
-<span><span class="va">skl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">root_layer</span>, methods <span class="op">=</span> <span class="st">"ZhangSuen"</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">skl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">root_layer</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Root length per depth bin (cm)</span></span>
 <span><span class="va">rl_by_depth</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal</a></span><span class="op">(</span><span class="va">skl</span>, <span class="va">depth_bins</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -342,12 +344,83 @@ colour, diameter quantiles).</p>
 </div>
 </div>
 <div class="section level4">
-<h4 id="landscape-and-colour-metrics">6. Landscape and colour metrics<a class="anchor" aria-label="anchor" href="#landscape-and-colour-metrics"></a>
+<h4 id="root-branching-order">6. Root branching order<a class="anchor" aria-label="anchor" href="#root-branching-order"></a>
+</h4>
+<p><code><a href="../reference/branch_order_map.html">branch_order_map()</a></code> turns the skeleton into a graph of
+root segments and classifies each one by <strong>branch order</strong>:
+the thickest, most central root in each connected component is order 1
+(the main axis); its laterals are order 2; their laterals order 3, and
+so on. This is useful for separating coarse “transport” roots from fine
+“absorptive” laterals.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">order_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span></span>
+<span>  skel  <span class="op">=</span> <span class="va">skl</span>,          <span class="co"># skeleton (single-layer SpatRaster)</span></span>
+<span>  mask  <span class="op">=</span> <span class="va">root_layer</span>,   <span class="co"># filled root mask, same grid — used for diameters</span></span>
+<span>  order <span class="op">=</span> <span class="st">"branch_order"</span>,</span>
+<span>  unit  <span class="op">=</span> <span class="st">"cm"</span>,</span>
+<span>  dpi   <span class="op">=</span> <span class="fl">300</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># One row per segment, with tip_order / root_order / branch_order columns</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">edges</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># One row per order class: length, diameter, tips, branch points</span></span>
+<span><span class="va">order_res</span><span class="op">$</span><span class="va">summary</span></span>
+<span></span>
+<span><span class="co"># Rasterised branch-order classes, aligned to `skl`</span></span>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">class_map</span>, main <span class="op">=</span> <span class="st">"Branch order"</span><span class="op">)</span></span></code></pre></div>
+<p>Use <code><a href="../reference/order_metrics.html">order_metrics()</a></code> to summarise the result either per
+order class or as a <strong>focal vs. rest</strong> split — for example,
+the thickest order class (the main root(s)) versus everything else:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Per-order-class table (same as order_res$summary)</span></span>
+<span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Main root(s) vs. all laterals</span></span>
+<span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="st">"thickest"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Order 1 vs. everything else</span></span>
+<span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p>To check the classification visually, write a colour-coded overlay
+PNG (or re-plot a sub-window at native resolution for QC):</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">order_res2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span></span>
+<span>  skel        <span class="op">=</span> <span class="va">skl</span>,</span>
+<span>  mask        <span class="op">=</span> <span class="va">root_layer</span>,</span>
+<span>  order       <span class="op">=</span> <span class="st">"branch_order"</span>,</span>
+<span>  unit        <span class="op">=</span> <span class="st">"cm"</span>,</span>
+<span>  dpi         <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  overlay_png <span class="op">=</span> <span class="st">"branch_order_overlay.png"</span>,</span>
+<span>  keep_segments <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Zoom into a 200x200 px window at 3x magnification</span></span>
+<span><span class="fu"><a href="../reference/plot_order_window.html">plot_order_window</a></span><span class="op">(</span></span>
+<span>  <span class="va">order_res2</span><span class="op">$</span><span class="va">edges</span>, <span class="va">skl</span>,</span>
+<span>  r_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">300</span><span class="op">)</span>, c_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">300</span><span class="op">)</span>,</span>
+<span>  scale <span class="op">=</span> <span class="fl">3</span>, file <span class="op">=</span> <span class="st">"branch_order_window.png"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Within <code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code></strong>: setting
+<code>calc_root_order_metrics = TRUE</code> runs this pipeline once per
+image and folds the results into the depth-binned output — see the <a href="BatchProcessing_vignette.html#root-branching-order-main-vs-lateral-roots">Batch
+Processing</a> vignette.</p>
+</blockquote>
+<blockquote>
+<p><strong>For more control</strong> over crossing resolution, pruning
+of weak tips, and the continuation rule used to group segments into
+roots, see <code><a href="../reference/root_graph_pipeline.html">?root_graph_pipeline</a></code> (the engine behind
+<code><a href="../reference/branch_order_map.html">branch_order_map()</a></code>).</p>
+</blockquote>
+<hr>
+</div>
+<div class="section level4">
+<h4 id="landscape-and-colour-metrics">7. Landscape and colour metrics<a class="anchor" aria-label="anchor" href="#landscape-and-colour-metrics"></a>
 </h4>
 <div class="section level5">
 <h5 id="landscape-metrics-spatial-structure">Landscape metrics (spatial structure)<a class="anchor" aria-label="anchor" href="#landscape-metrics-spatial-structure"></a>
 </h5>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run per depth slice inside a loop; indexD labels the output rows</span></span>
 <span><span class="va">lsm_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">depth_bins</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">slice</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span><span class="va">root_layer</span>, mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
@@ -367,7 +440,7 @@ need patch-level indices.</p>
 <div class="section level5">
 <h5 id="colour-metrics">Colour metrics<a class="anchor" aria-label="anchor" href="#colour-metrics"></a>
 </h5>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Align RGB to segmented image</span></span>
 <span><span class="va">rgb_aligned</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/resample.html" class="external-link">resample</a></span><span class="op">(</span><span class="va">rgb</span>, <span class="va">root_layer</span>, method <span class="op">=</span> <span class="st">"bilinear"</span><span class="op">)</span></span>
 <span></span>
@@ -391,11 +464,11 @@ need patch-level indices.</p>
 </div>
 </div>
 <div class="section level4">
-<h4 id="distribution-indices">7. Distribution indices<a class="anchor" aria-label="anchor" href="#distribution-indices"></a>
+<h4 id="distribution-indices">8. Distribution indices<a class="anchor" aria-label="anchor" href="#distribution-indices"></a>
 </h4>
 <p>These tube-level summary metrics require a complete depth
 profile.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Root Weight Distribution Index — depth-weighted mean rooting depth</span></span>
 <span><span class="va">rwdi_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RWDI.html">RWDI</a></span><span class="op">(</span>w <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, roots <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span><span class="op">)</span></span>
 <span></span>
@@ -410,9 +483,9 @@ profile.</p>
 <hr>
 </div>
 <div class="section level4">
-<h4 id="root-turnover-two-timepoint-comparison">8. Root turnover (two-timepoint comparison)<a class="anchor" aria-label="anchor" href="#root-turnover-two-timepoint-comparison"></a>
+<h4 id="root-turnover-two-timepoint-comparison">9. Root turnover (two-timepoint comparison)<a class="anchor" aria-label="anchor" href="#root-turnover-two-timepoint-comparison"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
@@ -429,9 +502,9 @@ profile.</p>
 <hr>
 </div>
 <div class="section level4">
-<h4 id="visualise">9. Visualise<a class="anchor" aria-label="anchor" href="#visualise"></a>
+<h4 id="visualise">10. Visualise<a class="anchor" aria-label="anchor" href="#visualise"></a>
 </h4>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">rootlength.density</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>

@@ -1,9 +1,6 @@
 ------------------------------------------------------------------------
 
-## RootScanR: Extract Root Traits from Images
-
-output: distill::distill_article description: “R tools for root trait
-extraction from flatbed and minirhizotron images.” —
+## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images.”
 
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/RootScanR/)
 
@@ -14,32 +11,37 @@ belowground traits from **flatbed root scans** and **minirhizotron image
 sequences**. It provides flexible image preprocessing, trait estimation
 like root length & diameter, depth mapping, and distribution tools.
 
-- some features are still experimental. At the moment, you will still
-  need to provide a skeleton created elewhere (for example
-  RootDetector).
+- some features are still experimental. Be aware that this is an
+  insect’s playground and we love bugs. Just call them out if their
+  behaviour is undesirable.
 
 ## 💡 What can RootScanR do?
 
 - 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed
   scanners
 
-- 🌱 Estimate root length
+- 🌱 Estimate root length, depth profiles, and turnover between sessions
 
-- 📏 Measure root diameters and distributions
+- 📏 Measure root diameters and diameter distributions
 
-- 🕸️ Analyze root architecture (branching point, root tips, root angle
-  distribution)
+- 🕸️ Analyze root architecture: branching points, root tips, branch/root
+  order (main axis vs. laterals), and root angle distribution
 
-- ## 🥕 Spatial-spatial indices (root angle distribution, rotation bias)
+- ## 🥕 Spatial indices (root distribution with depth, rotation bias)
 
 ## 📘 Tutorials
 
-Jump straight into hands-on tutorials:
+New to RootScanR? Start with the batch-processing tutorial — it runs the
+whole pipeline (loading, depth mapping, trait extraction) over a folder
+of images with a single function call. The step-by-step tutorials below
+are for when you need full control over an individual processing stage.
 
-- 📄 [Flatbed Scan
-  Workflow](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
-- 📄 [Minirhizotron
-  Workflow](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+- 🚀 [Start here: Batch
+  Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+- 📄 [Minirhizotron Workflow
+  (step-by-step)](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+- 📄 [Flatbed Scan Workflow
+  (step-by-step)](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
 - 📄 [Rotation Bias
   Correction](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
 
@@ -74,6 +76,10 @@ modal_peaks(diam_map$diameters, prominence_threshold = 10, mclust = F, adjust = 
 # Architecture
 metrics <- detect_skeleton_points(skel)
 print(metrics)
+
+# Branch order: main axis (order 1) vs. lateral roots (order >= 2)
+order_res <- branch_order_map(skel, mask = cleaned, order = "branch_order", unit = "cm", dpi = 150)
+order_metrics(order_res, focal = "thickest")
 
 # Visualize
 terra::plot(diam_map$diameter_rast)

@@ -29,8 +29,9 @@ root_diameter(
 
 - skeleton_method:
 
-  Character. The method to use for skeletonization. Default is
-  \`"MAT"\`. Will be skipped if skeleton \`SpatRaster\`is provided.
+  Character. Currently unused — \`skeletonize_image()\` only implements
+  LUT-based Zhang-Suen thinning. Kept for backward compatibility. Will
+  be skipped if skeleton \`SpatRaster\` is provided.
 
 - skeleton.img:
 
@@ -113,18 +114,14 @@ data(seg_Oulanka2023_Session01_T067)
 result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
   skeleton_method = "MAT", select.layer = 2, unit = "px",
   diagnostics = TRUE)
-#> 
-#> Applying method: MAT 
-#> 
-#> Distance transform computed
 #> Processing complete. Summary statistics:
-#> Mean diameter: 2.14
+#> Mean diameter: 2.23
 #> Median diameter: 2.00
-#> Number of valid measurements: 161904
+#> Number of valid measurements: 78956
 
 # Access results:
 print(result$mean_diameter)
-#> [1] 2.14191
+#> [1] 2.233119
 terra::plot(result$skeleton_rast)
 
 ```

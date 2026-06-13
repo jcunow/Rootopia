@@ -27,10 +27,10 @@ vignette.
 | What you need | Where it comes from |
 |----|----|
 | Segmented images (binary, root = 1) | [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or [RootPainter](https://github.com/Abe404/root_painter) |
-| Skeletonised images (one-pixel centrelines) | RootDetector (channel 2) — needed for length, diameter, angle metrics |
+| Skeletonised images (one-pixel centrelines) — *optional* | RootDetector (channel 2), or omit `path.skl` and [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
 | RGB images aligned to segmented images | Original scan — needed for colour metrics only |
 | Tube insertion angle per image | Field metadata |
-| Soil-surface pixel row per image | Field metadata or [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md) |
+| Soil-surface pixel row per image — *optional*, defaults to `0` | Field metadata or [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md); only needed if you want depths reported relative to the true soil surface rather than the top of the image |
 
 Images in the three directories must be in the **same alphabetical
 order** as each other; each position corresponds to the same physical
@@ -53,14 +53,17 @@ library(tidyverse)   # for downstream plotting
 
 ### Quick start — default metrics only
 
-This is the fastest way to get going. Only `path.seg` and `path.skl` are
-required; everything else has sensible defaults.
+This is the fastest way to get going. Only `path.seg` is required;
+everything else has sensible defaults. `path.skl` is optional — if
+omitted, skeletons needed for length, diameter, and angle metrics are
+computed internally via
+[`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
 
 ``` r
 
 result <- root_depth_metrics(
   path.seg = "scans/segmented/2022_02/",
-  path.skl = "scans/skeleton/2022_02/",
+  path.skl = "scans/skeleton/2022_02/",   # optional — computed internally if omitted
   session  = "2022_02"
 )
 
@@ -134,6 +137,7 @@ result <- root_depth_metrics(
   calc_diameter_quantiles = TRUE,   # 90th/95th/99th percentile + modal peaks
   calc_color_metrics      = TRUE,   # RGB colour per root vs background pixels
   calc_root_angles        = TRUE,   # deep_drive + steepness angle distribution
+  calc_root_order_metrics = TRUE,   # branching order (main vs lateral roots)
   calc_landscape_metrics  = FALSE   # slow — enable only when needed
 )
 ```
@@ -149,6 +153,7 @@ result <- root_depth_metrics(
 | `calc_landscape_metrics` | `enn_mn`, `joinent`, `relmutinf`, `np`, `contag`, `np_density` | **Slow** — one call per depth bin |
 | `calc_color_metrics` | `rcc_root`, `gcc_root`, …, `rcc_bg`, `gcc_bg`, … | Requires `path.rgb` |
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |
+| `calc_root_order_metrics` | Per bin: `mean.branch_order`, `max.branch_order`, `mean.root_order`, `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, …), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length` |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
 | `calc_distribution_indices` | `rwdi`, `rpi`, `total.length.density` | Tube-level summary |
 | `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter`, `rootsurface_rootvolume_ratio` | Auto-enables distribution indices + diameter stats |
@@ -171,6 +176,72 @@ result <- root_depth_metrics(
 )
 # Resulting columns include: rootlength.above.0.2mm, rootlength.above.0.5mm, ...
 ```
+
+------------------------------------------------------------------------
+
+### Root branching order (main vs. lateral roots)
+
+`calc_root_order_metrics = TRUE` builds a segment graph from the
+skeleton of each image (via
+[`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md))
+and classifies every root segment by its **branch order** — the
+thickest, most central root in each connected component is order 1 (the
+“main” axis), its laterals are order 2, their laterals order 3, and so
+on. See the [Minirhizotron
+Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.html#6-root-branching-order)
+vignette for a worked example of the underlying pipeline.
+
+``` r
+
+result <- root_depth_metrics(
+  path.seg                = "scans/segmented/2022_02/",
+  path.skl                = "scans/skeleton/2022_02/",
+  session                 = "2022_02",
+  calc_root_order_metrics = TRUE
+)
+```
+
+This adds two kinds of columns:
+
+**Per depth bin** — how branching order varies with depth:
+
+| Column | Meaning |
+|----|----|
+| `mean.branch_order` | Mean branch order of skeleton pixels in the bin |
+| `max.branch_order` | Highest branch order reached in the bin |
+| `mean.root_order` | Mean root order (max tip-order along each root) in the bin |
+| `lateral_root_fraction` | Fraction of skeleton pixels belonging to branch order \> 1 (laterals) |
+
+**Per tube** (repeated on every row of that tube) — main root
+vs. lateral roots, split by `order_metrics(..., focal = "thickest")`:
+
+| Column prefix | Meaning |
+|----|----|
+| `main_root.*` | Totals/means for the thickest (order-1) root(s): `total_length`, `mean_diameter`, `median_diameter`, `n_segments`, `n_tips`, `n_branch_points`, `length_fraction`, `mean_segment_length`, `branching_frequency` |
+| `lateral_roots.*` | The same set of statistics for everything else (order \>= 2) |
+| `n_root_orders` | Highest branch order found in the image |
+
+``` r
+
+library(ggplot2)
+
+ggplot(result, aes(x = depth, y = lateral_root_fraction, colour = Tube)) +
+  geom_line() +
+  geom_point() +
+  coord_flip() +
+  scale_x_reverse() +
+  theme_minimal() +
+  labs(
+    title = "Lateral Root Fraction by Depth",
+    x     = "Soil Depth (cm)",
+    y     = "Fraction of skeleton pixels with branch order > 1"
+  )
+```
+
+> **Slow.** This builds one segment graph per image, which is
+> considerably more expensive than the other metric groups. Disable it
+> (the default) for quick exploratory runs and enable it only when you
+> need architectural detail.
 
 ------------------------------------------------------------------------
 
@@ -339,6 +410,7 @@ result <- root_depth_metrics(
   calc_diameter_quantiles = TRUE,
   calc_color_metrics      = TRUE,
   calc_root_angles        = TRUE,
+  calc_root_order_metrics = TRUE,    # main vs. lateral root architecture
   calc_landscape_metrics  = FALSE,   # enable if you need patch metrics
 
   # Derived metrics

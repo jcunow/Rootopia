@@ -43,8 +43,10 @@ library(tidyverse)
 3.  Create depth map
 4.  Bin depths
 5.  Extract root traits per depth bin
-6.  Compute landscape and colour metrics
-7.  Derive distribution indices
+6.  (Optional) Root branching order — classify segments as main axis
+    vs. laterals
+7.  Compute landscape and colour metrics
+8.  Derive distribution indices
 
 ------------------------------------------------------------------------
 
@@ -194,7 +196,7 @@ depth_data$rootpx.density <- depth_data$rootpx /
 ``` r
 
 # Skeletonize first
-skl <- skeletonize_image(root_layer, methods = "ZhangSuen", verbose = FALSE)
+skl <- skeletonize_image(root_layer, verbose = FALSE)
 
 # Root length per depth bin (cm)
 rl_by_depth <- terra::zonal(skl, depth_bins, "sum", na.rm = TRUE)
@@ -244,7 +246,93 @@ zone_10cm <- zoning(
 
 ------------------------------------------------------------------------
 
-#### 6. Landscape and colour metrics
+#### 6. Root branching order
+
+[`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+turns the skeleton into a graph of root segments and classifies each one
+by **branch order**: the thickest, most central root in each connected
+component is order 1 (the main axis); its laterals are order 2; their
+laterals order 3, and so on. This is useful for separating coarse
+“transport” roots from fine “absorptive” laterals.
+
+``` r
+
+order_res <- branch_order_map(
+  skel  = skl,          # skeleton (single-layer SpatRaster)
+  mask  = root_layer,   # filled root mask, same grid — used for diameters
+  order = "branch_order",
+  unit  = "cm",
+  dpi   = 300
+)
+
+# One row per segment, with tip_order / root_order / branch_order columns
+head(order_res$edges)
+
+# One row per order class: length, diameter, tips, branch points
+order_res$summary
+
+# Rasterised branch-order classes, aligned to `skl`
+terra::plot(order_res$class_map, main = "Branch order")
+```
+
+Use
+[`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+to summarise the result either per order class or as a **focal
+vs. rest** split — for example, the thickest order class (the main
+root(s)) versus everything else:
+
+``` r
+
+# Per-order-class table (same as order_res$summary)
+order_metrics(order_res)
+
+# Main root(s) vs. all laterals
+order_metrics(order_res, focal = "thickest")
+
+# Order 1 vs. everything else
+order_metrics(order_res, focal = 1)
+```
+
+To check the classification visually, write a colour-coded overlay PNG
+(or re-plot a sub-window at native resolution for QC):
+
+``` r
+
+order_res2 <- branch_order_map(
+  skel        = skl,
+  mask        = root_layer,
+  order       = "branch_order",
+  unit        = "cm",
+  dpi         = 300,
+  overlay_png = "branch_order_overlay.png",
+  keep_segments = TRUE
+)
+
+# Zoom into a 200x200 px window at 3x magnification
+plot_order_window(
+  order_res2$edges, skl,
+  r_range = c(100, 300), c_range = c(100, 300),
+  scale = 3, file = "branch_order_window.png"
+)
+```
+
+> **Within
+> [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md)**:
+> setting `calc_root_order_metrics = TRUE` runs this pipeline once per
+> image and folds the results into the depth-binned output — see the
+> [Batch
+> Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.html#root-branching-order-main-vs-lateral-roots)
+> vignette.
+
+> **For more control** over crossing resolution, pruning of weak tips,
+> and the continuation rule used to group segments into roots, see
+> [`?root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
+> (the engine behind
+> [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)).
+
+------------------------------------------------------------------------
+
+#### 7. Landscape and colour metrics
 
 ##### Landscape metrics (spatial structure)
 
@@ -293,7 +381,7 @@ colour_df <- do.call(rbind, colour_list)
 
 ------------------------------------------------------------------------
 
-#### 7. Distribution indices
+#### 8. Distribution indices
 
 These tube-level summary metrics require a complete depth profile.
 
@@ -314,7 +402,7 @@ cat(sprintf("RWDI: %.2f  RPI: %.3f  Total length density: %.4f\n",
 
 ------------------------------------------------------------------------
 
-#### 8. Root turnover (two-timepoint comparison)
+#### 9. Root turnover (two-timepoint comparison)
 
 ``` r
 
@@ -335,7 +423,7 @@ print(turnover)
 
 ------------------------------------------------------------------------
 
-#### 9. Visualise
+#### 10. Visualise
 
 ``` r
 

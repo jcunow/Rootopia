@@ -1,9 +1,6 @@
 ------------------------------------------------------------------------
 
-## RootScanR: Extract Root Traits from Images
-
-output: distill::distill_article description: “R tools for root trait
-extraction from flatbed and minirhizotron images.” —
+## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images.”
 
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/RootScanR/)
 
@@ -14,32 +11,37 @@ belowground traits from **flatbed root scans** and **minirhizotron image
 sequences**. It provides flexible image preprocessing, trait estimation
 like root length & diameter, depth mapping, and distribution tools.
 
-- some features are still experimental. At the moment, you will still
-  need to provide a skeleton created elewhere (for example
-  RootDetector).
+- some features are still experimental. Be aware that this is an
+  insect’s playground and we love bugs. Just call them out if their
+  behaviour is undesirable.
 
 ## 💡 What can RootScanR do?
 
 - 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed
   scanners
 
-- 🌱 Estimate root length
+- 🌱 Estimate root length, depth profiles, and turnover between sessions
 
-- 📏 Measure root diameters and distributions
+- 📏 Measure root diameters and diameter distributions
 
-- 🕸️ Analyze root architecture (branching point, root tips, root angle
-  distribution)
+- 🕸️ Analyze root architecture: branching points, root tips, branch/root
+  order (main axis vs. laterals), and root angle distribution
 
-- ## 🥕 Spatial-spatial indices (root angle distribution, rotation bias)
+- ## 🥕 Spatial indices (root distribution with depth, rotation bias)
 
 ## 📘 Tutorials
 
-Jump straight into hands-on tutorials:
+New to RootScanR? Start with the batch-processing tutorial — it runs the
+whole pipeline (loading, depth mapping, trait extraction) over a folder
+of images with a single function call. The step-by-step tutorials below
+are for when you need full control over an individual processing stage.
 
-- 📄 [Flatbed Scan
-  Workflow](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
-- 📄 [Minirhizotron
-  Workflow](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+- 🚀 [Start here: Batch
+  Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+- 📄 [Minirhizotron Workflow
+  (step-by-step)](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+- 📄 [Flatbed Scan Workflow
+  (step-by-step)](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
 - 📄 [Rotation Bias
   Correction](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
 
@@ -74,6 +76,10 @@ modal_peaks(diam_map$diameters, prominence_threshold = 10, mclust = F, adjust = 
 # Architecture
 metrics <- detect_skeleton_points(skel)
 print(metrics)
+
+# Branch order: main axis (order 1) vs. lateral roots (order >= 2)
+order_res <- branch_order_map(skel, mask = cleaned, order = "branch_order", unit = "cm", dpi = 150)
+order_metrics(order_res, focal = "thickest")
 
 # Visualize
 terra::plot(diam_map$diameter_rast)
@@ -125,7 +131,7 @@ images.
 - [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
   : Censor image edges based on rotation
 - [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
-  : Skeletonization Wrapper Function
+  : Skeletonize binary image
 
 ## Root traits
 
@@ -133,13 +139,13 @@ Per-image trait extraction: length, diameter, architecture, and spatial
 metrics.
 
 - [`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
-  : Calculate Root Length using Kimura's Method with optimizations
+  : Root length estimation from skeleton images
 - [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
   : Estimate Root Diameters
 - [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
   : Approximate average Root Thickness
 - [`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
-  : Detect Skeleton Points: Branching Points and Endpoints
+  : Detect endpoints and branching points in a skeleton image
 - [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
   : Count all pixels in a segmented image
 - [`px.sum()`](https://jcunow.github.io/RootScanR/reference/px.sum.md) :
@@ -151,6 +157,30 @@ metrics.
   Features akin to landscape analysis.
 - [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
   : Calculate root accumulation
+
+## Root branching order
+
+Convert a root skeleton into a segment graph, assign tip/root/branch
+order, and summarise root architecture by order class.
+
+- [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+  : Branch-order classification of a root skeleton
+- [`root_graph_pipeline()`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
+  : Skeleton-to-graph root ordering pipeline (pixel units)
+- [`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+  : Aggregate root architecture by order, or split focal-vs-rest
+- [`summarize_orders()`](https://jcunow.github.io/RootScanR/reference/summarize_orders.md)
+  : Per-order summary of length and diameter
+- [`convert_root_units()`](https://jcunow.github.io/RootScanR/reference/convert_root_units.md)
+  : Convert edge-table lengths and diameters to real units
+- [`order_classification_map()`](https://jcunow.github.io/RootScanR/reference/order_classification_map.md)
+  : Rasterise a per-segment value onto the image grid
+- [`prune_terminal_segments()`](https://jcunow.github.io/RootScanR/reference/prune_terminal_segments.md)
+  : Prune short or thin terminal segments
+- [`render_order_overlay()`](https://jcunow.github.io/RootScanR/reference/render_order_overlay.md)
+  : Write an order-coloured validation overlay (PNG)
+- [`plot_order_window()`](https://jcunow.github.io/RootScanR/reference/plot_order_window.md)
+  : Native-resolution validation of a sub-window
 
 ## Depth mapping
 

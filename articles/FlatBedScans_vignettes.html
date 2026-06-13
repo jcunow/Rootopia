@@ -154,16 +154,14 @@ diameter estimation.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">skl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span></span>
 <span>  <span class="va">seg</span>,</span>
-<span>  methods      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ZhangSuen"</span>, <span class="st">"GuoHall"</span><span class="op">)</span>,  <span class="co"># ensemble for robustness</span></span>
 <span>  select.layer <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  verbose      <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">skl</span>, main <span class="op">=</span> <span class="st">"Skeleton"</span><span class="op">)</span></span></code></pre></div>
-<p>Available methods: <code>"ZhangSuen"</code>, <code>"GuoHall"</code>,
-<code>"MAT"</code> (Medial Axis Transform),
-<code>"SteepestAscend"</code>. When multiple methods are supplied the
-results are combined.</p>
+<p><code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> uses a LUT-based Zhang-Suen thinning
+algorithm to reduce the segmented mask to one-pixel-wide
+centrelines.</p>
 <hr>
 </div>
 <div class="section level4">
@@ -251,12 +249,50 @@ endpoints (root tips) and branching points (forks).</p>
 <hr>
 </div>
 <div class="section level4">
+<h4 id="b--branch-order-main-axis-vs--laterals">6b. Branch order (main axis vs. laterals)<a class="anchor" aria-label="anchor" href="#b--branch-order-main-axis-vs--laterals"></a>
+</h4>
+<p><code><a href="../reference/branch_order_map.html">branch_order_map()</a></code> goes one step further than
+<code><a href="../reference/detect_skeleton_points.html">detect_skeleton_points()</a></code>: it builds a full segment graph
+from the skeleton and classifies every segment by <strong>branch
+order</strong> — the thickest, most central root is order 1 (the main
+axis), its laterals are order 2, their laterals order 3, and so on.
+Because flatbed scans have no depth dimension, this is computed once for
+the whole image.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">order_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span></span>
+<span>  skel  <span class="op">=</span> <span class="va">skl</span>,    <span class="co"># skeleton from step 2</span></span>
+<span>  mask  <span class="op">=</span> <span class="va">seg</span>,    <span class="co"># filled root mask, same grid — used for diameters</span></span>
+<span>  order <span class="op">=</span> <span class="st">"branch_order"</span>,</span>
+<span>  unit  <span class="op">=</span> <span class="st">"cm"</span>,</span>
+<span>  dpi   <span class="op">=</span> <span class="fl">300</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># One row per order class: total length, mean diameter, tips, branch points</span></span>
+<span><span class="va">order_res</span><span class="op">$</span><span class="va">summary</span></span>
+<span></span>
+<span><span class="co"># Rasterised branch-order classes, aligned to the skeleton</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">class_map</span>, main <span class="op">=</span> <span class="st">"Branch order"</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/order_metrics.html">order_metrics()</a></code> can split the architecture into the main
+root(s) versus all laterals (selected by diameter, so it works
+regardless of how many order classes were found):</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">main_vs_lateral</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="st">"thickest"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">main_vs_lateral</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fraction of total root length that is lateral (order &gt;= 2)</span></span>
+<span><span class="va">lateral_length_fraction</span> <span class="op">&lt;-</span> <span class="va">main_vs_lateral</span><span class="op">$</span><span class="va">length_fraction</span><span class="op">[</span><span class="va">main_vs_lateral</span><span class="op">$</span><span class="va">group</span> <span class="op">==</span> <span class="st">"rest"</span><span class="op">]</span></span></code></pre></div>
+<p>See the <a href="MinirhizotronScans_vignettes.html#6-root-branching-order">Minirhizotron
+Scans</a> vignette for the full set of options, including overlay PNGs
+for visual QC.</p>
+<hr>
+</div>
+<div class="section level4">
 <h4 id="root-level-landscape-metrics">7. Root-level landscape metrics<a class="anchor" aria-label="anchor" href="#root-level-landscape-metrics"></a>
 </h4>
 <p><code><a href="../reference/root_scape_metrics.html">root_scape_metrics()</a></code> applies landscape ecology metrics
 to the binary root image, treating roots as “patches”. Useful for
 characterising spatial complexity and connectivity.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_scape_metrics.html">root_scape_metrics</a></span><span class="op">(</span></span>
 <span>  img     <span class="op">=</span> <span class="va">seg</span>,</span>
 <span>  indexD  <span class="op">=</span> <span class="cn">NA</span>,          <span class="co"># no depth index for flatbed scans</span></span>
@@ -272,7 +308,7 @@ characterising spatial complexity and connectivity.</p>
 <p><code><a href="../reference/tube_coloration.html">tube_coloration()</a></code> extracts mean chromatic coordinates
 and HSV values from an RGB image. On flatbed scans this characterises
 overall root pigmentation.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Root pixels only</span></span>
 <span><span class="va">rgb_roots</span> <span class="op">&lt;-</span> <span class="va">rgb</span></span>
 <span><span class="va">rgb_roots</span><span class="op">[</span><span class="va">seg</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
@@ -289,7 +325,7 @@ overall root pigmentation.</p>
 <div class="section level4">
 <h4 id="collecting-results">9. Collecting results<a class="anchor" aria-label="anchor" href="#collecting-results"></a>
 </h4>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  sample_id          <span class="op">=</span> <span class="st">"my_scan"</span>,</span>
 <span>  root_length_cm     <span class="op">=</span> <span class="va">rl</span>,</span>
@@ -299,7 +335,9 @@ overall root pigmentation.</p>
 <span>  n_forks            <span class="op">=</span> <span class="va">n_forks</span>,</span>
 <span>  branching_freq     <span class="op">=</span> <span class="va">branch_freq</span>,</span>
 <span>  mean_diameter_cm   <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/summarize-generics.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">diam_vals</span><span class="op">)</span>,</span>
-<span>  sd_diameter_cm     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">diam_vals</span><span class="op">)</span></span>
+<span>  sd_diameter_cm     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html" class="external-link">sd</a></span><span class="op">(</span><span class="va">diam_vals</span><span class="op">)</span>,</span>
+<span>  lateral_length_fraction <span class="op">=</span> <span class="va">lateral_length_fraction</span>,</span>
+<span>  n_root_orders      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">edges</span><span class="op">$</span><span class="va">branch_order</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span><span class="va">results</span>, <span class="st">"flatbed_results.csv"</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>

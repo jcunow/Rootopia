@@ -76,7 +76,6 @@ root length (Kimura method) and diameter estimation.
 
 skl <- skeletonize_image(
   seg,
-  methods      = c("ZhangSuen", "GuoHall"),  # ensemble for robustness
   select.layer = 2,
   verbose      = TRUE
 )
@@ -84,9 +83,9 @@ skl <- skeletonize_image(
 plot(skl, main = "Skeleton")
 ```
 
-Available methods: `"ZhangSuen"`, `"GuoHall"`, `"MAT"` (Medial Axis
-Transform), `"SteepestAscend"`. When multiple methods are supplied the
-results are combined.
+[`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
+mask to one-pixel-wide centrelines.
 
 ------------------------------------------------------------------------
 
@@ -191,6 +190,55 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 ------------------------------------------------------------------------
 
+#### 6b. Branch order (main axis vs. laterals)
+
+[`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+goes one step further than
+[`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md):
+it builds a full segment graph from the skeleton and classifies every
+segment by **branch order** — the thickest, most central root is order 1
+(the main axis), its laterals are order 2, their laterals order 3, and
+so on. Because flatbed scans have no depth dimension, this is computed
+once for the whole image.
+
+``` r
+
+order_res <- branch_order_map(
+  skel  = skl,    # skeleton from step 2
+  mask  = seg,    # filled root mask, same grid — used for diameters
+  order = "branch_order",
+  unit  = "cm",
+  dpi   = 300
+)
+
+# One row per order class: total length, mean diameter, tips, branch points
+order_res$summary
+
+# Rasterised branch-order classes, aligned to the skeleton
+plot(order_res$class_map, main = "Branch order")
+```
+
+[`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+can split the architecture into the main root(s) versus all laterals
+(selected by diameter, so it works regardless of how many order classes
+were found):
+
+``` r
+
+main_vs_lateral <- order_metrics(order_res, focal = "thickest")
+print(main_vs_lateral)
+
+# Fraction of total root length that is lateral (order >= 2)
+lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
+```
+
+See the [Minirhizotron
+Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.html#6-root-branching-order)
+vignette for the full set of options, including overlay PNGs for visual
+QC.
+
+------------------------------------------------------------------------
+
 #### 7. Root-level landscape metrics
 
 [`root_scape_metrics()`](https://jcunow.github.io/RootScanR/reference/root_scape_metrics.md)
@@ -247,7 +295,9 @@ results <- data.frame(
   n_forks            = n_forks,
   branching_freq     = branch_freq,
   mean_diameter_cm   = mean(diam_vals),
-  sd_diameter_cm     = sd(diam_vals)
+  sd_diameter_cm     = sd(diam_vals),
+  lateral_length_fraction = lateral_length_fraction,
+  n_root_orders      = max(order_res$edges$branch_order, na.rm = TRUE)
 )
 
 write.csv(results, "flatbed_results.csv", row.names = FALSE)

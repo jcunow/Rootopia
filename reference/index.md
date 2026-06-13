@@ -26,7 +26,7 @@ images.
 - [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
   : Censor image edges based on rotation
 - [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
-  : Skeletonization Wrapper Function
+  : Skeletonize binary image
 
 ## Root traits
 
@@ -34,13 +34,13 @@ Per-image trait extraction: length, diameter, architecture, and spatial
 metrics.
 
 - [`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
-  : Calculate Root Length using Kimura's Method with optimizations
+  : Root length estimation from skeleton images
 - [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
   : Estimate Root Diameters
 - [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
   : Approximate average Root Thickness
 - [`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
-  : Detect Skeleton Points: Branching Points and Endpoints
+  : Detect endpoints and branching points in a skeleton image
 - [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
   : Count all pixels in a segmented image
 - [`px.sum()`](https://jcunow.github.io/RootScanR/reference/px.sum.md) :
@@ -52,6 +52,30 @@ metrics.
   Features akin to landscape analysis.
 - [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
   : Calculate root accumulation
+
+## Root branching order
+
+Convert a root skeleton into a segment graph, assign tip/root/branch
+order, and summarise root architecture by order class.
+
+- [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+  : Branch-order classification of a root skeleton
+- [`root_graph_pipeline()`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
+  : Skeleton-to-graph root ordering pipeline (pixel units)
+- [`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+  : Aggregate root architecture by order, or split focal-vs-rest
+- [`summarize_orders()`](https://jcunow.github.io/RootScanR/reference/summarize_orders.md)
+  : Per-order summary of length and diameter
+- [`convert_root_units()`](https://jcunow.github.io/RootScanR/reference/convert_root_units.md)
+  : Convert edge-table lengths and diameters to real units
+- [`order_classification_map()`](https://jcunow.github.io/RootScanR/reference/order_classification_map.md)
+  : Rasterise a per-segment value onto the image grid
+- [`prune_terminal_segments()`](https://jcunow.github.io/RootScanR/reference/prune_terminal_segments.md)
+  : Prune short or thin terminal segments
+- [`render_order_overlay()`](https://jcunow.github.io/RootScanR/reference/render_order_overlay.md)
+  : Write an order-coloured validation overlay (PNG)
+- [`plot_order_window()`](https://jcunow.github.io/RootScanR/reference/plot_order_window.md)
+  : Native-resolution validation of a sub-window
 
 ## Depth mapping
 
