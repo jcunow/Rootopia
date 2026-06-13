@@ -3,7 +3,6 @@
 ---
 
 ## RootScanR: Extract Root Traits from Images
-output: distill::distill\_article
 description: "R tools for root trait extraction from flatbed and minirhizotron images."
 ---
 
