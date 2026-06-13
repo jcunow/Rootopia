@@ -2,8 +2,7 @@
 
 ---
 
-## RootScanR: Extract Root Traits from Images
-"R tools for root trait extraction from flatbed and minirhizotron images."
+## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images."
 ---
 
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/RootScanR/)
