@@ -184,18 +184,28 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
 #'
 #' Outputs are converted back into SpatRaster objects.
 #'
-#' @param img Binary skeleton image
+#' @param img Binary skeleton image. If \code{skeletonize = TRUE}, a segmented
+#'   (non-skeleton) mask can be supplied instead.
 #' @param select.layer Layer index for multi-layer rasters
+#' @param skeletonize Logical. If \code{TRUE}, \code{img} is treated as a
+#'   segmented mask and reduced to a skeleton internally via
+#'   \code{skeletonize_image()} before detecting points. Default
+#'   \code{FALSE} (assumes \code{img} is already a skeleton).
 #'
 #' @return List with:
 #' \item{endpoints}{SpatRaster marking pixels with exactly one neighbor}
 #' \item{branching_points}{SpatRaster marking pixels with more than two neighbors}
 #'
 #' @keywords internal
-detect_skeleton_points <- function(img) {
-  
+detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE) {
+
+  img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE,
+                             binarize = TRUE, select.layer = select.layer)
+  if (terra::nlyr(img) > 1) img <- img[[1]]
+  if (skeletonize) img <- skeletonize_image(img, verbose = FALSE)
+
   img <- matrix(terra::values(img), nrow = nrow(img), byrow = TRUE)
-  
+
   kernel <- matrix(1,3,3); kernel[2,2] <- 0
   
   padded <- matrix(0, nrow(img)+2, ncol(img)+2)
@@ -281,7 +291,7 @@ skeletonize_image <- function(img,
   n_root <- sum(terra::values(img_rast) == 1, na.rm = TRUE)
   if (n_root == 0) stop("No foreground pixels")
   
-  result <- lut_thin(img_rast, verbose = verbose)
+  result <- lut_thin_fast(img_rast, verbose = verbose)
   
   n_skel <- sum(terra::values(result) == 1, na.rm = TRUE)
   

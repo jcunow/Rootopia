@@ -6,7 +6,9 @@
 #' @param img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array.
 #'   The input image to process.
 #' @param diagnostics Logical. If `TRUE`, enables diagnostic plots and logging. Default is `FALSE`.
-#' @param skeleton_method Character. The method to use for skeletonization. Default is `"MAT"`. Will be skipped if skeleton `SpatRaster`is provided.
+#' @param skeleton_method Character. Currently unused — `skeletonize_image()`
+#'   only implements LUT-based Zhang-Suen thinning. Kept for backward
+#'   compatibility. Will be skipped if skeleton `SpatRaster` is provided.
 #' @param skeleton.img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.
 #' @param select.layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.
 #' @param unit output in pixel 'px', 'inch' or in 'cm'
@@ -138,7 +140,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
     if(is.null(skeleton.img) ){
       # Skeletonization with validation
       IMS <- tryCatch({
-        skeleton <- skeletonize_image(IM, methods = skeleton_method,select.layer = NULL)
+        skeleton <- skeletonize_image(IM, select.layer = NULL, verbose = FALSE)
         if (all(terra::values( skeleton) == 0)) {
           warning("Skeletonization produced empty result - check input image")
         }

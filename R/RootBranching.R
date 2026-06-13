@@ -36,6 +36,15 @@
 }
 
 
+#' Flip a matrix for image-style (x right, y up) plotting with graphics::image
+#'
+#' @param m A matrix.
+#' @return \code{m} transposed and with rows reversed.
+#' @keywords internal
+#' @noRd
+.flip_matrix <- function(m) t(apply(m, 2L, rev))
+
+
 #' Euclidean distance transform (distance to nearest background)
 #'
 #' Dispatches to \pkg{imager} when available, falling back to an exact pure-R
@@ -259,9 +268,8 @@ render_order_overlay <- function(segs, tip_order, dims, file,
     if (is.na(o)) na_img[p] <- 1 else ord_img[p] <- o
   }
   maxo <- suppressWarnings(max(tip_order, na.rm = TRUE)); if (!is.finite(maxo)) maxo <- 1L
-  flip <- function(m) t(apply(m, 2L, rev))
-  ord_f <- flip(ord_img); na_f <- flip(na_img)
-  mk_f  <- if (!is.null(mask)) flip((.to_binary_matrix(mask) > 0) * 1) else flip(matrix(0, nr, nc))
+  ord_f <- .flip_matrix(ord_img); na_f <- .flip_matrix(na_img)
+  mk_f  <- if (!is.null(mask)) .flip_matrix((.to_binary_matrix(mask) > 0) * 1) else .flip_matrix(matrix(0, nr, nc))
   xs <- seq(0, 1, length.out = nrow(ord_f)); ys <- seq(0, 1, length.out = ncol(ord_f))
   
   scale <- min(1, max_side / max(nr, nc))
@@ -304,8 +312,11 @@ render_order_overlay <- function(segs, tip_order, dims, file,
 #' from the thickest root). \code{color_by} selects which one the overlay uses.
 #'
 #' @param skel Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
-#'   matrix. Do not pre-convert a raster with \code{as.matrix()}.
+#'   matrix. Do not pre-convert a raster with \code{as.matrix()}. If
+#'   \code{NULL}, it is computed from \code{mask} via
+#'   \code{skeletonize_image()}.
 #' @param mask Filled root mask on the same grid for the distance transform.
+#'   Required if \code{skel} is \code{NULL}.
 #' @param verbose Print progress.
 #' @param dt_backend Distance-transform backend: \code{"auto"}, \code{"imager"}, or \code{"baseR"}.
 #' @param crop Crop to the foreground bounding box (with a 1-px pad) first.
@@ -324,7 +335,7 @@ render_order_overlay <- function(segs, tip_order, dims, file,
 #'   (if requested) \code{segments}.
 #' @seealso \code{\link{branch_order_map}}
 #' @export
-root_graph_pipeline <- function(skel, mask = NULL, verbose = TRUE,
+root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
                                 dt_backend = "auto", crop = TRUE,
                                 overlay_png = NULL, max_side = 2000,
                                 keep_segments = FALSE,
@@ -334,6 +345,11 @@ root_graph_pipeline <- function(skel, mask = NULL, verbose = TRUE,
                                 prune_min_length = 0, prune_min_diameter = 0, prune_iter = 0L) {
   color_by <- match.arg(color_by)
   t0 <- Sys.time()
+  if (is.null(skel)) {
+    if (is.null(mask)) stop("Either 'skel' or 'mask' must be supplied.")
+    if (verbose) cat("No 'skel' supplied; computing skeleton via skeletonize_image()...\n")
+    skel <- skeletonize_image(mask, verbose = FALSE)
+  }
   skel <- .to_binary_matrix(skel)
   if (is.null(mask)) {
     warning("No 'mask'; using skeleton for the DT (diameters ~1 px).")
@@ -436,10 +452,10 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
   if (!order_col %in% names(et)) order_col <- "tip_order"
   ord_vec <- et[[order_col]]
   off <- attr(et, "crop_offset"); ro <- as.integer(off["row"]); co <- as.integer(off["col"])
-  smat <- if (inherits(skel, "SpatRaster")) terra::as.matrix(skel, wide = TRUE) else as.matrix(skel)
+  smat <- .to_binary_matrix(skel)
   r0 <- r_range[1]; r1 <- r_range[2]; c0 <- c_range[1]; c1 <- c_range[2]
   hh <- r1 - r0 + 1L; ww <- c1 - c0 + 1L
-  skel_w <- (smat[r0:r1, c0:c1] > 0) * 1
+  skel_w <- smat[r0:r1, c0:c1]
   ord <- matrix(NA_real_, hh, ww)
   for (i in seq_along(segs)) {
     p <- segs[[i]]$coords
@@ -449,13 +465,13 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
     ord[cbind(R[keep] - r0 + 1L, C[keep] - c0 + 1L)] <- ord_vec[i]
   }
   maxo <- suppressWarnings(max(ord_vec, na.rm = TRUE)); if (!is.finite(maxo)) maxo <- 1L
-  flip <- function(m) t(apply(m, 2L, rev))
   pal <- grDevices::hcl.colors(max(maxo, 1L), "viridis")
   grDevices::png(file, width = ww * scale, height = hh * scale); on.exit(grDevices::dev.off())
   graphics::par(mar = c(0, 0, 0, 0))
-  xs <- seq(0, 1, length.out = nrow(flip(skel_w))); ys <- seq(0, 1, length.out = ncol(flip(skel_w)))
-  graphics::image(xs, ys, flip(skel_w), col = c("white", "grey75"), axes = FALSE, useRaster = TRUE)
-  graphics::image(xs, ys, flip(ord), col = pal, breaks = seq(0.5, maxo + 0.5, by = 1),
+  skel_f <- .flip_matrix(skel_w); ord_f <- .flip_matrix(ord)
+  xs <- seq(0, 1, length.out = nrow(skel_f)); ys <- seq(0, 1, length.out = ncol(skel_f))
+  graphics::image(xs, ys, skel_f, col = c("white", "grey75"), axes = FALSE, useRaster = TRUE)
+  graphics::image(xs, ys, ord_f, col = pal, breaks = seq(0.5, maxo + 0.5, by = 1),
                   add = TRUE, useRaster = TRUE)
   invisible(file)
 }
@@ -892,9 +908,11 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'
 #' @param skel Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
 #'   matrix. Pass the raster directly; do not pre-convert with \code{as.matrix()}.
+#'   If \code{NULL}, it is computed from \code{mask} via
+#'   \code{skeletonize_image()}.
 #' @param mask Filled (un-thinned) root mask on the same grid, used for the
 #'   distance transform / diameters. If \code{NULL}, the skeleton is used and
-#'   diameters collapse to ~1 px.
+#'   diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.
 #' @param order Which scheme labels \code{$class_map}/\code{$summary}:
 #'   \code{"branch_order"}, \code{"root_order"}, or \code{"tip_order"}.
 #' @param unit Reporting unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
@@ -923,7 +941,7 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' terra::plot(res$class_map)
 #' }
 #' @export
-branch_order_map <- function(skel, mask = NULL, order = c("branch_order", "root_order", "tip_order"),
+branch_order_map <- function(skel = NULL, mask = NULL, order = c("branch_order", "root_order", "tip_order"),
                              unit = "cm", dpi = 300, length_method = "polyline",
                              template = NULL, overlay_png = NULL, return_map = TRUE, ...) {
   order <- match.arg(order)
@@ -934,7 +952,8 @@ branch_order_map <- function(skel, mask = NULL, order = c("branch_order", "root_
               order = order, unit = unit, dpi = dpi, length_method = length_method)
   if (return_map) {
     tmpl <- if (!is.null(template)) template
-    else if (inherits(skel, "SpatRaster")) skel else NULL
+    else if (inherits(skel, "SpatRaster")) skel
+    else if (inherits(mask, "SpatRaster")) mask else NULL
     if (is.null(tmpl)) {
       warning("No SpatRaster template available; skipping class_map (pass template=).")
     } else {

@@ -26,6 +26,7 @@ root_depth_metrics(
   calc_landscape_metrics = FALSE,
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
+  calc_root_order_metrics = FALSE,
   calc_density_metrics = TRUE,
   calc_distribution_indices = TRUE,
   calc_advanced_metrics = TRUE,
@@ -40,8 +41,10 @@ root_depth_metrics(
 (foreground/root pixel = 1, background = 0).}
 
 \item{path.skl}{Character or \code{NULL}. Path to directory of skeletonised
-images (one-pixel-wide centrelines of roots).  Required for length,
-diameter, and angle metrics.  Default \code{NULL}.}
+images (one-pixel-wide centrelines of roots), used for length, diameter,
+angle, and branching-order metrics. If \code{NULL} or a file is missing,
+the skeleton is computed internally via \code{skeletonize_image()}.
+Default \code{NULL}.}
 
 \item{path.rgb}{Character or \code{NULL}. Path to directory of blended
 RGB images, aligned to the segmented images.  Required for colour metrics.
@@ -134,6 +137,16 @@ downward direction) and \code{mean.steepness.angle} /
 \code{sd.steepness.angle} (degrees, 0 = horizontal, 90 = vertical).
 Uses \code{deep_drive()}.  Default \code{FALSE}.}
 
+\item{calc_root_order_metrics}{Logical. Build a per-image branching-order
+graph via \code{branch_order_map()} and summarise it both per depth bin
+and per tube.  Adds \code{mean.branch_order}, \code{max.branch_order},
+\code{mean.root_order}, and \code{lateral_root_fraction} per depth bin,
+plus tube-level \code{main_root.*} / \code{lateral_roots.*} columns
+(length, diameter, branching frequency, etc., split by
+\code{order_metrics(..., focal = "thickest")}) and \code{n_root_orders}
+(the highest branch order found).  Requires a skeleton.  \strong{Slow}:
+builds one segment graph per image.  Default \code{FALSE}.}
+
 \item{calc_density_metrics}{Logical. Compute \code{rootpx.density} (percent
 root area cover) and \code{rootlength.density} (cm root length per cm²
 imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
@@ -218,9 +231,12 @@ directories if necessary.
 
 \describe{
   \item{\code{path.seg}}{Always required.}
-  \item{\code{path.skl}}{Required when \code{calc_root_length},
-    \code{calc_diameter_stats}, \code{calc_diameter_quantiles}, or
-    \code{calc_root_angles} is \code{TRUE}.}
+  \item{\code{path.skl}}{Optional. Used by \code{calc_root_length},
+    \code{calc_diameter_stats}, \code{calc_diameter_quantiles},
+    \code{calc_root_angles}, and \code{calc_root_order_metrics} when
+    supplied. If \code{path.skl} is \code{NULL} or a skeleton file is
+    missing for an image, the skeleton is computed internally from the
+    segmented image via \code{skeletonize_image()}.}
   \item{\code{path.rgb}}{Required when \code{calc_color_metrics} is
     \code{TRUE}.}
 }

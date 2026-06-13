@@ -67,6 +67,20 @@ reference:
       - root_scape_metrics
       - root_accumulation
 
+  - title: "Root branching order"
+    desc: "Convert a root skeleton into a segment graph, assign tip/root/branch
+      order, and summarise root architecture by order class."
+    contents:
+      - branch_order_map
+      - root_graph_pipeline
+      - order_metrics
+      - summarize_orders
+      - convert_root_units
+      - order_classification_map
+      - prune_terminal_segments
+      - render_order_overlay
+      - plot_order_window
+
   - title: "Depth mapping"
     desc: "Functions for constructing and binning depth maps from minirhizotron geometry."
     contents:

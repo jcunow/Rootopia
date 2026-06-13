@@ -5,7 +5,7 @@
 \title{Branch-order classification of a root skeleton}
 \usage{
 branch_order_map(
-  skel,
+  skel = NULL,
   mask = NULL,
   order = c("branch_order", "root_order", "tip_order"),
   unit = "cm",
@@ -19,11 +19,13 @@ branch_order_map(
 }
 \arguments{
 \item{skel}{Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
-matrix. Pass the raster directly; do not pre-convert with \code{as.matrix()}.}
+matrix. Pass the raster directly; do not pre-convert with \code{as.matrix()}.
+If \code{NULL}, it is computed from \code{mask} via
+\code{skeletonize_image()}.}
 
 \item{mask}{Filled (un-thinned) root mask on the same grid, used for the
 distance transform / diameters. If \code{NULL}, the skeleton is used and
-diameters collapse to ~1 px.}
+diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.}
 
 \item{order}{Which scheme labels \code{$class_map}/\code{$summary}:
 \code{"branch_order"}, \code{"root_order"}, or \code{"tip_order"}.}

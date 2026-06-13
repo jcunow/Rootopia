@@ -10,14 +10,21 @@ root_length(
   dpi = 300,
   select.layer = NULL,
   method = c("kimura2", "kimura1", "freeman_basic", "freeman_corrected"),
-  show_messages = TRUE
+  show_messages = TRUE,
+  skeletonize = FALSE
 )
 }
 \arguments{
-\item{img}{Skeletonized binary raster image}
+\item{img}{Skeletonized binary raster image. If \code{skeletonize = TRUE},
+a segmented (non-skeleton) mask can be supplied instead.}
 
 \item{method}{Character. One of:
 "freeman_basic", "freeman_corrected", "kimura1", "kimura2"}
+
+\item{skeletonize}{Logical. If \code{TRUE}, \code{img} is treated as a
+segmented mask and reduced to a skeleton internally via
+\code{skeletonize_image()} before computing length. Default
+\code{FALSE} (assumes \code{img} is already a skeleton).}
 }
 \value{
 Root length in pixels or converted units

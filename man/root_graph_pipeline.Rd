@@ -5,7 +5,7 @@
 \title{Skeleton-to-graph root ordering pipeline (pixel units)}
 \usage{
 root_graph_pipeline(
-  skel,
+  skel = NULL,
   mask = NULL,
   verbose = TRUE,
   dt_backend = "auto",
@@ -24,9 +24,12 @@ root_graph_pipeline(
 }
 \arguments{
 \item{skel}{Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
-matrix. Do not pre-convert a raster with \code{as.matrix()}.}
+matrix. Do not pre-convert a raster with \code{as.matrix()}. If
+\code{NULL}, it is computed from \code{mask} via
+\code{skeletonize_image()}.}
 
-\item{mask}{Filled root mask on the same grid for the distance transform.}
+\item{mask}{Filled root mask on the same grid for the distance transform.
+Required if \code{skel} is \code{NULL}.}
 
 \item{verbose}{Print progress.}
 

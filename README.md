@@ -17,18 +17,23 @@ Welcome to **RootScanR**, an R package designed to extract quantitative belowgro
 ## 💡 What can RootScanR do?
 
 - 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed scanners
-- 🌱 Estimate root length
-- 📏 Measure root diameters and distributions
-- 🕸️ Analyze root architecture (branching point, root tips, root angle distribution)
-- 🥕 Spatial-spatial indices (root angle distribution, rotation bias)
+- 🌱 Estimate root length, depth profiles, and turnover between sessions
+- 📏 Measure root diameters and diameter distributions
+- 🕸️ Analyze root architecture: branching points, root tips, branch/root order
+  (main axis vs. laterals), and root angle distribution
+- 🥕 Spatial indices (root distribution with depth, rotation bias)
 ---
 
 ## 📘 Tutorials
 
-Jump straight into hands-on tutorials:
+New to RootScanR? Start with the batch-processing tutorial — it runs the
+whole pipeline (loading, depth mapping, trait extraction) over a folder of
+images with a single function call. The step-by-step tutorials below are for
+when you need full control over an individual processing stage.
 
-* 📄 [Flatbed Scan Workflow](articles/FlatBedScans_vignettes.html)
-* 📄 [Minirhizotron Workflow](articles/MinirhizotronScans_vignettes.html)
+* 🚀 [Start here: Batch Processing](articles/BatchProcessing_vignette.html)
+* 📄 [Minirhizotron Workflow (step-by-step)](articles/MinirhizotronScans_vignettes.html)
+* 📄 [Flatbed Scan Workflow (step-by-step)](articles/FlatBedScans_vignettes.html)
 * 📄 [Rotation Bias Correction](articles/Rotation_Bias_vignettes.html)
 
 Each tutorial includes code, images, overlays, and tips for interpretation.
@@ -60,6 +65,10 @@ modal_peaks(diam_map$diameters, prominence_threshold = 10, mclust = F, adjust = 
 # Architecture
 metrics <- detect_skeleton_points(skel)
 print(metrics)
+
+# Branch order: main axis (order 1) vs. lateral roots (order >= 2)
+order_res <- branch_order_map(skel, mask = cleaned, order = "branch_order", unit = "cm", dpi = 150)
+order_metrics(order_res, focal = "thickest")
 
 # Visualize
 terra::plot(diam_map$diameter_rast)

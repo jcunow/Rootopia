@@ -29,7 +29,12 @@
 #'
 #' @param method Character. One of:
 #'   "freeman_basic", "freeman_corrected", "kimura1", "kimura2"
-#' @param img Skeletonized binary raster image
+#' @param img Skeletonized binary raster image. If \code{skeletonize = TRUE},
+#'   a segmented (non-skeleton) mask can be supplied instead.
+#' @param skeletonize Logical. If \code{TRUE}, \code{img} is treated as a
+#'   segmented mask and reduced to a skeleton internally via
+#'   \code{skeletonize_image()} before computing length. Default
+#'   \code{FALSE} (assumes \code{img} is already a skeleton).
 #' @return Root length in pixels or converted units
 root_length <- function(img,
                         unit = "cm",
@@ -39,7 +44,8 @@ root_length <- function(img,
                                    "kimura1",
                                    "freeman_basic",
                                    "freeman_corrected"),
-                        show_messages = TRUE) {
+                        show_messages = TRUE,
+                        skeletonize = FALSE) {
   
   method <- match.arg(method)
   
@@ -76,12 +82,19 @@ root_length <- function(img,
     if (is.null(img) || terra::nlyr(img) < 1) {
       stop("Invalid image after loading")
     }
-    
+
     # ensure single layer safely
     if (terra::nlyr(img) > 1) {
       img <- img[[1]]
     }
-    
+
+    # -----------------------------
+    # Skeletonize if a segmented (non-skeleton) mask was supplied
+    # -----------------------------
+    if (skeletonize) {
+      img <- skeletonize_image(img, verbose = FALSE)
+    }
+
     vals <- unique(terra::values(img))
     vals <- vals[!is.na(vals)]
     

@@ -21,9 +21,12 @@
 #' @section Which paths are required for which metrics:
 #' \describe{
 #'   \item{\code{path.seg}}{Always required.}
-#'   \item{\code{path.skl}}{Required when \code{calc_root_length},
-#'     \code{calc_diameter_stats}, \code{calc_diameter_quantiles}, or
-#'     \code{calc_root_angles} is \code{TRUE}.}
+#'   \item{\code{path.skl}}{Optional. Used by \code{calc_root_length},
+#'     \code{calc_diameter_stats}, \code{calc_diameter_quantiles},
+#'     \code{calc_root_angles}, and \code{calc_root_order_metrics} when
+#'     supplied. If \code{path.skl} is \code{NULL} or a skeleton file is
+#'     missing for an image, the skeleton is computed internally from the
+#'     segmented image via \code{skeletonize_image()}.}
 #'   \item{\code{path.rgb}}{Required when \code{calc_color_metrics} is
 #'     \code{TRUE}.}
 #' }
@@ -31,8 +34,10 @@
 #' @param path.seg Character. Path to directory of binary segmented images
 #'   (foreground/root pixel = 1, background = 0).
 #' @param path.skl Character or \code{NULL}. Path to directory of skeletonised
-#'   images (one-pixel-wide centrelines of roots).  Required for length,
-#'   diameter, and angle metrics.  Default \code{NULL}.
+#'   images (one-pixel-wide centrelines of roots), used for length, diameter,
+#'   angle, and branching-order metrics. If \code{NULL} or a file is missing,
+#'   the skeleton is computed internally via \code{skeletonize_image()}.
+#'   Default \code{NULL}.
 #' @param path.rgb Character or \code{NULL}. Path to directory of blended
 #'   RGB images, aligned to the segmented images.  Required for colour metrics.
 #'   Default \code{NULL}.
@@ -116,6 +121,15 @@
 #'   downward direction) and \code{mean.steepness.angle} /
 #'   \code{sd.steepness.angle} (degrees, 0 = horizontal, 90 = vertical).
 #'   Uses \code{deep_drive()}.  Default \code{FALSE}.
+#' @param calc_root_order_metrics Logical. Build a per-image branching-order
+#'   graph via \code{branch_order_map()} and summarise it both per depth bin
+#'   and per tube.  Adds \code{mean.branch_order}, \code{max.branch_order},
+#'   \code{mean.root_order}, and \code{lateral_root_fraction} per depth bin,
+#'   plus tube-level \code{main_root.*} / \code{lateral_roots.*} columns
+#'   (length, diameter, branching frequency, etc., split by
+#'   \code{order_metrics(..., focal = "thickest")}) and \code{n_root_orders}
+#'   (the highest branch order found).  Requires a skeleton.  \strong{Slow}:
+#'   builds one segment graph per image.  Default \code{FALSE}.
 #'
 #' @section Derived metrics:
 #' @param calc_density_metrics Logical. Compute \code{rootpx.density} (percent
@@ -250,6 +264,7 @@ root_depth_metrics <- function(
   calc_landscape_metrics  = FALSE,
   calc_color_metrics      = FALSE,
   calc_root_angles        = FALSE,
+  calc_root_order_metrics = FALSE,
   
   # ---------- derived metrics ------------------------------------------------
   calc_density_metrics       = TRUE,
@@ -331,6 +346,10 @@ root_depth_metrics <- function(
     message("[RootScanR] Auto-enabling calc_root_length (required for calc_diameter_quantiles).")
     calc_root_length <- TRUE
   }
+  if (calc_root_order_metrics && !calc_root_length) {
+    message("[RootScanR] Auto-enabling calc_root_length (required for calc_root_order_metrics).")
+    calc_root_length <- TRUE
+  }
   if (calc_density_metrics) {
     if (!calc_root_pixels) {
       message("[RootScanR] Auto-enabling calc_root_pixels (required for calc_density_metrics).")
@@ -361,13 +380,13 @@ root_depth_metrics <- function(
   }
   
   # Warn early about missing paths
-  needs_skl <- calc_root_length || calc_diameter_stats || calc_diameter_quantiles || calc_root_angles
+  needs_skl <- calc_root_length || calc_diameter_stats || calc_diameter_quantiles ||
+    calc_root_angles || calc_root_order_metrics
   if (needs_skl && is.null(im.ls.skl)) {
-    warning(paste(
-      "Skeleton directory (path.skl) not found or not supplied.",
-      "Disabling: calc_root_length, calc_diameter_stats, calc_diameter_quantiles, calc_root_angles."
-    ), call. = FALSE)
-    calc_root_length <- calc_diameter_stats <- calc_diameter_quantiles <- calc_root_angles <- FALSE
+    message(paste(
+      "[RootScanR] Skeleton directory (path.skl) not found or not supplied.",
+      "Skeletons will be computed internally per image via skeletonize_image()."
+    ))
   }
   if (calc_color_metrics && is.null(im.ls.rgb)) {
     warning("RGB directory (path.rgb) not found or not supplied. Disabling calc_color_metrics.",
@@ -410,6 +429,7 @@ root_depth_metrics <- function(
     do_landscape <- calc_landscape_metrics
     do_color     <- calc_color_metrics
     do_angles    <- calc_root_angles
+    do_order     <- calc_root_order_metrics
     do_density   <- calc_density_metrics
     
     # -------------------------------------------------------------------------
@@ -431,7 +451,7 @@ root_depth_metrics <- function(
     }
     
     im.skeleton <- NULL
-    if (do_length || do_diam_st || do_diam_q || do_angles) {
+    if (do_length || do_diam_st || do_diam_q || do_angles || do_order) {
       if (!is.null(im.ls.skl) && l <= length(im.ls.skl)) {
         im.skeleton <- .safe(sprintf("load skeleton [%s]", im.ls.skl[l]), {
           sk <- load_flexible_image(paste0(path.skl, im.ls.skl[l]),
@@ -442,8 +462,13 @@ root_depth_metrics <- function(
         })
       }
       if (is.null(im.skeleton)) {
-        message(sprintf("[RootScanR] %s: skeleton unavailable — disabling length/diameter/angle metrics.", tube))
-        do_length <- do_diam_st <- do_diam_q <- do_angles <- FALSE
+        im.skeleton <- .safe(sprintf("skeletonize [%s]", seg_file), {
+          skeletonize_image(im, verbose = FALSE)
+        })
+      }
+      if (is.null(im.skeleton)) {
+        message(sprintf("[RootScanR] %s: skeleton unavailable — disabling length/diameter/angle/order metrics.", tube))
+        do_length <- do_diam_st <- do_diam_q <- do_angles <- do_order <- FALSE
       }
     }
     
@@ -619,8 +644,66 @@ root_depth_metrics <- function(
       }
     }
     
+    # -------------------------------------------------------------------------
+    # 3f2. Root branching-order metrics (per bin + per tube)
+    # -------------------------------------------------------------------------
+    if (do_order && !is.null(im.skeleton)) {
+      ord_res <- .safe("root order metrics", {
+
+        bo <- branch_order_map(skel = im.skeleton, mask = im, order = "branch_order",
+                               unit = "cm", dpi = dpi, return_map = TRUE,
+                               template = im.skeleton, verbose = FALSE)
+        et <- bo$edges
+
+        bo_map <- bo$class_map
+        terra::ext(bo_map) <- terra::ext(bm)
+        ro_map <- order_classification_map(et, im.skeleton, value = "root_order")
+        terra::ext(ro_map) <- terra::ext(bm)
+
+        bo_mean <- terra::zonal(bo_map, bm, "mean", na.rm = TRUE); colnames(bo_mean) <- c("depth", "mean.branch_order")
+        bo_max  <- terra::zonal(bo_map, bm, "max",  na.rm = TRUE); colnames(bo_max)  <- c("depth", "max.branch_order")
+        ro_mean <- terra::zonal(ro_map, bm, "mean", na.rm = TRUE); colnames(ro_mean) <- c("depth", "mean.root_order")
+
+        lateral_px <- (bo_map > 1) * 1
+        ordered_px <- (!is.na(bo_map)) * 1
+        lat_z <- terra::zonal(lateral_px, bm, "sum", na.rm = TRUE); colnames(lat_z) <- c("depth", "lateral_px")
+        tot_z <- terra::zonal(ordered_px, bm, "sum", na.rm = TRUE); colnames(tot_z) <- c("depth", "ordered_px")
+
+        per_bin <- Reduce(function(a, b) merge(a, b, by = "depth", all = TRUE),
+                          list(bo_mean, bo_max, ro_mean, lat_z, tot_z))
+        per_bin$lateral_root_fraction <- ifelse(per_bin$ordered_px > 0,
+                                                 per_bin$lateral_px / per_bin$ordered_px, NA_real_)
+        per_bin$lateral_px <- per_bin$ordered_px <- NULL
+
+        # Tube-level main-root vs lateral-root summary (thickest order = main root)
+        om <- order_metrics(bo, focal = "thickest")
+        metric_cols <- c("n_segments", "n_tips", "n_branch_points", "total_length",
+                         "length_fraction", "mean_segment_length", "branching_frequency",
+                         "mean_diameter", "median_diameter")
+        grp_map <- c(focal = "main_root", rest = "lateral_roots")
+        tube_row <- as.list(setNames(rep(NA_real_, length(metric_cols) * length(grp_map)),
+                                     as.vector(outer(grp_map, metric_cols, paste, sep = "."))))
+        for (i in seq_len(nrow(om))) {
+          g <- grp_map[[om$group[i]]]
+          for (m in metric_cols) tube_row[[paste0(g, ".", m)]] <- om[[m]][i]
+        }
+        tube_row$n_root_orders <- suppressWarnings(max(et$branch_order, na.rm = TRUE))
+        if (!is.finite(tube_row$n_root_orders)) tube_row$n_root_orders <- NA_real_
+
+        list(per_bin = per_bin, tube = tube_row)
+      })
+
+      if (!is.null(ord_res)) {
+        roots <- merge(roots, ord_res$per_bin, by = "depth", all.x = TRUE)
+        for (nm in names(ord_res$tube)) roots[[nm]] <- ord_res$tube[[nm]]
+      } else {
+        roots[c("mean.branch_order", "max.branch_order", "mean.root_order",
+               "lateral_root_fraction")] <- NA_real_
+      }
+    }
+
     roots$Tube <- tube
-    
+
     # -------------------------------------------------------------------------
     # 3g. Density metrics (Level 1 derived)
     # -------------------------------------------------------------------------

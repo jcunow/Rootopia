@@ -18,7 +18,9 @@ root_diameter(
 \item{img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array.
 The input image to process.}
 
-\item{skeleton_method}{Character. The method to use for skeletonization. Default is `"MAT"`. Will be skipped if skeleton `SpatRaster`is provided.}
+\item{skeleton_method}{Character. Currently unused — `skeletonize_image()`
+only implements LUT-based Zhang-Suen thinning. Kept for backward
+compatibility. Will be skipped if skeleton `SpatRaster` is provided.}
 
 \item{skeleton.img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.}
 

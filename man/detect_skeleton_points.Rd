@@ -4,12 +4,18 @@
 \alias{detect_skeleton_points}
 \title{Detect endpoints and branching points in a skeleton image}
 \usage{
-detect_skeleton_points(img)
+detect_skeleton_points(img, select.layer = NULL, skeletonize = FALSE)
 }
 \arguments{
-\item{img}{Binary skeleton image}
+\item{img}{Binary skeleton image. If \code{skeletonize = TRUE}, a segmented
+(non-skeleton) mask can be supplied instead.}
 
 \item{select.layer}{Layer index for multi-layer rasters}
+
+\item{skeletonize}{Logical. If \code{TRUE}, \code{img} is treated as a
+segmented mask and reduced to a skeleton internally via
+\code{skeletonize_image()} before detecting points. Default
+\code{FALSE} (assumes \code{img} is already a skeleton).}
 }
 \value{
 List with:
