@@ -17,16 +17,26 @@ library(pkgnet)
 knitr::opts_chunk$set(
     echo = FALSE
     , warning=FALSE
+    , message=FALSE
     , out.width='100%'
 )
 pkgnet:::silence_logger()
 
-reporters <- list(DependencyReporter$new(), FunctionReporter$new())
+# Function report first, dependency report below it.
+reporters <- list(FunctionReporter$new(), DependencyReporter$new())
 
 reporters <- lapply(
           X = reporters
           , FUN = function(reporter){
-              reporter$set_package(pkg_name = "RootScanR")
+              # set_package() runs static analysis (cyclocomp, lintr, etc.)
+              # which prints progress bars / messages directly to the console.
+              # Swallow that output so it doesn't end up in the rendered report.
+              invisible(utils::capture.output(
+                suppressMessages(suppressWarnings(
+                  reporter$set_package(pkg_name = "RootScanR")
+                ))
+                , type = "message"
+              ))
               return(reporter)
           }
       )
@@ -36,10 +46,13 @@ reporters <- lapply(
 ```{r warning=FALSE}
 reportSections <- lapply(reporters, function(reporter) {
   report_env <- list2env(list(reporter = reporter))
-  knitr::knit_child(
-    reporter$report_markdown_path
-    , envir = report_env
-  )
+  suppressMessages(suppressWarnings(
+    knitr::knit_child(
+      reporter$report_markdown_path
+      , envir = report_env
+      , quiet = TRUE
+    )
+  ))
 })
 
 ```
