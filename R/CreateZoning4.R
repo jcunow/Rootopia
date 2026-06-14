@@ -187,7 +187,7 @@ binning = function(depthmap, nn, round.option="rounding") {
 #' @param select_layer Integer scalar. Selects which layer to extract from \code{img} if multi-layer. Use \code{NULL} to keep all layers.
 #' @param crop_extent Numeric vector of length 4 in format \code{c(xmin, xmax, ymin, ymax)} for spatial cropping applied before zoning operations. Use \code{NULL} for no cropping.
 #' @param mode Character string specifying the zoning mode. One of \code{"depth"}, \code{"rotation"}, or \code{"both"}. Default is \code{"rotation"}.
-#' @param rotation_slices Numeric vector of length 2 specifying start and end slice indices for rotation zoning (e.g., \code{c(2, 4)}). Values must be between 1 and \code{rotation_total_slices}. Required if \code{mode} is \code{"rotation"} or \code{"both"}.
+#' @param rotation_slices Numeric vector of length 2 specifying start and end slice indices for rotation zoning (e.g., \code{c(2, 4)}). Use \code{c(i, i)} to select a single slice \code{i}. Values must be between 1 and \code{rotation_total_slices}, with \code{rotation_slices[1] <= rotation_slices[2]}. Required if \code{mode} is \code{"rotation"} or \code{"both"}.
 #' @param rotation_total_slices Integer scalar specifying the total number of conceptual slices along the x-axis for rotation zoning. Required if \code{mode} is \code{"rotation"} or \code{"both"}.
 #'
 #' @return A \code{terra::SpatRaster} object containing the zoned and optionally cropped image data. Pixels not matching the zoning criteria are set to \code{NA}.
@@ -314,8 +314,8 @@ zoning <- function(
     if (is.null(rotation_total_slices) || length(rotation_total_slices) != 1 || rotation_total_slices < 1) {
       stop("rotation_total_slices must be positive numeric scalar for mode 'rotation' or 'both'")
     }
-    if (rotation_slices[1] >= rotation_slices[2]) {
-      stop("rotation_slices must have increasing values: rotation_slices[1] < rotation_slices[2]")
+    if (rotation_slices[1] > rotation_slices[2]) {
+      stop("rotation_slices must be non-decreasing: rotation_slices[1] <= rotation_slices[2]")
     }
     if (any(rotation_slices > rotation_total_slices)) {
       stop("Values in rotation_slices cannot be greater than rotation_total_slices")

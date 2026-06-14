@@ -33,7 +33,13 @@
 #'   \item{skeleton_rast}{`SpatRaster`. Binary raster mask of skeletonized regions.}
 #'   \item{diameter_rast}{`SpatRaster`. Raster showing diameters in the skeletonized regions.}
 #'   \item{distance_map_rast}{`SpatRaster`. Raster showing the distance transform values.}
-#'   \item{root_volume}{Numeric. The sum of root volume - assuming cylindrical roots}
+#'   \item{root_volume}{Numeric. Total root volume, in `unit`^3. Each skeleton
+#'     pixel is modelled as a cylinder of radius `diameter / 2` and length 1
+#'     pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.}
+#'   \item{root_surface_area}{Numeric. Total root lateral surface area, in
+#'     `unit`^2. Each skeleton pixel's cylinder contributes a lateral surface
+#'     of `2 * pi * r * l = pi * d * l`; values are summed and converted from
+#'     px^2.}
 #' }
 #'
 #'@examples
@@ -172,15 +178,26 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
     skl <- DsSKL
     skl[skl > 0] <- 1
 
+    # Diameters in pixels, used for the volume/surface area calculations below
+    # (each skeleton pixel is treated as a cylinder segment of length 1 px).
+    diameters_px <- terra::values(DsSKL, na.rm = TRUE)
+
+    # length of one pixel edge in the requested unit
+    px_to_unit <- switch(unit,
+      cm   = 2.54 / dpi,
+      inch = 1 / dpi,
+      px   = 1
+    )
+
     # outpur unit conversion
     if(unit == "cm") {
       DsSKL = DsSKL / (dpi / 2.54)
     }else if(unit == "inch"){
       DsSKL = DsSKL / (dpi)
     }else if(unit == "px"){
-      DsSKL = DsSKL 
+      DsSKL = DsSKL
     }
-    
+
 
     # Compute statistics with validation
     tryCatch({
@@ -192,9 +209,13 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
       median_diameter <- terra::global(DsSKL,
                                        fun = function(x) stats::median(x, na.rm = TRUE))$global
       diameters <- terra::values(DsSKL, na.rm = TRUE)
-      
-      root.volume <- sum(diameters**2 * pi, na.rm = TRUE)
-  
+
+      # Per-pixel cylinder: radius r_i = d_i / 2, length l_i = 1 px.
+      # Volume  = pi * r_i^2 * l_i  -> sum, then convert px^3 -> unit^3
+      # Surface = 2 * pi * r_i * l_i = pi * d_i * l_i -> sum, then px^2 -> unit^2
+      root.volume      <- sum(pi * (diameters_px / 2)^2, na.rm = TRUE) * px_to_unit^3
+      root.surface.area <- sum(pi * diameters_px,         na.rm = TRUE) * px_to_unit^2
+
       # Validate statistics
       if (any(is.na(c(mean_diameter, median_diameter)))) {
         stop("Failed to compute diameter statistics")
@@ -221,7 +242,8 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
       skeleton_rast = skl,
       diameter_rast = DsSKL,
       distance_map_rast = Ds,
-      root_volume = root.volume
+      root_volume = root.volume,
+      root_surface_area = root.surface.area
     ))
 
   }, error = function(e) {

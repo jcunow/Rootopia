@@ -28,7 +28,7 @@ zoning(
 
 \item{mode}{Character string specifying the zoning mode. One of \code{"depth"}, \code{"rotation"}, or \code{"both"}. Default is \code{"rotation"}.}
 
-\item{rotation_slices}{Numeric vector of length 2 specifying start and end slice indices for rotation zoning (e.g., \code{c(2, 4)}). Values must be between 1 and \code{rotation_total_slices}. Required if \code{mode} is \code{"rotation"} or \code{"both"}.}
+\item{rotation_slices}{Numeric vector of length 2 specifying start and end slice indices for rotation zoning (e.g., \code{c(2, 4)}). Use \code{c(i, i)} to select a single slice \code{i}. Values must be between 1 and \code{rotation_total_slices}, with \code{rotation_slices[1] <= rotation_slices[2]}. Required if \code{mode} is \code{"rotation"} or \code{"both"}.}
 
 \item{rotation_total_slices}{Integer scalar specifying the total number of conceptual slices along the x-axis for rotation zoning. Required if \code{mode} is \code{"rotation"} or \code{"both"}.}
 }

@@ -153,7 +153,11 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
       output_format == "SpatRast"||
       output_format == "SPATRASTER" ||
       output_format == "SPATRAST" ) {
-    return(terra::rast(arr))
+    r <- terra::rast(arr)
+    # Register RGB(A) channel metadata so terra::plotRGB() works on 3/4-band
+    # outputs without a separate terra::RGB(r) <- ... call by the caller.
+    if (terra::nlyr(r) %in% c(3L, 4L)) terra::RGB(r) <- seq_len(terra::nlyr(r))
+    return(r)
   }
   else if (output_format == "RasterBrick" ||
            output_format == "rasterbrick" ||

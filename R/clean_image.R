@@ -265,7 +265,23 @@ smooth_root_edges <- function(img,
 #' root diameter measurements.  Only use it when the segmentation output has
 #' very jagged edges; leave it off (`FALSE`, the default) otherwise.
 #'
+#' @section Optional pre-thresholding:
+#' If the input is not yet a clean binary mask (e.g. a raw probability /
+#' grayscale image from a segmentation model), set `pre_threshold` to binarize
+#' it via [image_threshold()] *before* hole-filling and artifact removal. This
+#' runs first because [image_threshold()] expects a non-binary `SpatRaster`;
+#' once thresholded, the result feeds into the same hole-filling /
+#' artifact-removal / edge-smoothing steps as a normal binary mask.
+#'
 #' @param img A `cimg` object, `SpatRaster`, matrix, or file path.
+#' @param pre_threshold Numeric (0-1) or `NULL` (default). If not `NULL`,
+#'   [image_threshold()] is applied to `img` first, using this value as its
+#'   `threshold` argument, before any hole-filling or artifact removal.
+#' @param pre_threshold_method Thresholding method passed to
+#'   [image_threshold()] when `pre_threshold` is set: `"global"` (default) or
+#'   `"adaptive"`.
+#' @param pre_threshold_window_size Window size passed to [image_threshold()]
+#'   when `pre_threshold_method = "adaptive"`. Default `15`.
 #' @param max_hole_size Maximum hole size in pixels to fill.  If `NULL`, all
 #'   enclosed holes are filled.  See **Choosing thresholds** above.
 #' @param max_artifact_size Maximum artifact size in pixels to remove.  If
@@ -292,7 +308,7 @@ smooth_root_edges <- function(img,
 #' @return A cleaned image in the format specified by `output_format`
 #'   (`SpatRaster`, `cimg`, or matrix).
 #' @export
-#' @seealso [report_image_components()], [skeletonize_image()]
+#' @seealso [report_image_components()], [skeletonize_image()], [image_threshold()]
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
@@ -308,6 +324,9 @@ smooth_root_edges <- function(img,
 #' cleaned_cimg <- clean_image(img, max_hole_size = 50,
 #'                             output_format = "cimg", select.layer = 2)
 clean_image <- function(img,
+                         pre_threshold              = NULL,
+                         pre_threshold_method       = "global",
+                         pre_threshold_window_size  = 15,
                          max_hole_size     = NULL,
                          max_artifact_size = NULL,
                          edge_smooth       = FALSE,
@@ -319,6 +338,23 @@ clean_image <- function(img,
                          report            = FALSE) {
 
   output_format <- match.arg(output_format, c("spatrast", "cimg", "matrix"))
+
+  if (!is.null(pre_threshold)) {
+    img <- load_flexible_image(img,
+                                output_format = "spatrast",
+                                select.layer  = select.layer,
+                                normalize     = FALSE,
+                                binarize      = FALSE)
+    img <- image_threshold(img,
+                            threshold   = pre_threshold,
+                            method      = pre_threshold_method,
+                            window_size = pre_threshold_window_size,
+                            select.layer = NULL,
+                            mask.layer   = NULL,
+                            binary_01    = TRUE,
+                            deblur       = FALSE)
+    select.layer <- NULL
+  }
 
   img_cimg <- load_flexible_image(img,
                                    output_format = "cimg",

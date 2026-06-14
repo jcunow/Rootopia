@@ -374,6 +374,31 @@ cat(sprintf("RWDI: %.2f  RPI: %.3f  Total length density: %.4f\n",
             rwdi_val, rpi_val, total_ld))
 ```
 
+`root_accumulation()` complements these by returning the cumulative profile
+itself — useful for plotting how root mass/length accumulates with depth, or
+for comparing the *shape* of accumulation curves between tubes/plots.
+
+```{r, eval=FALSE}
+# Cumulative root pixel count with depth, per tube
+depth_data$Tube <- "T067"   # add a grouping column if not already present
+
+depth_data$rootpx.cumulative <- root_accumulation(
+  depth_data,
+  group    = "Tube",
+  depth    = "depth",
+  variable = "rootpx",
+  stdrz    = "relative"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
+)
+
+plot(depth_data$depth, depth_data$rootpx.cumulative, type = "l",
+     xlab = "Depth (cm)", ylab = "Cumulative root pixel fraction",
+     main = "Root accumulation with depth")
+```
+
+`stdrz = "relative"` rescales the cumulative curve to end at 1, which makes
+accumulation curves directly comparable between tubes that differ in total
+root abundance — only the *shape* of the depth distribution is compared.
+
 ---
 
 ### 9. Root turnover (two-timepoint comparison)

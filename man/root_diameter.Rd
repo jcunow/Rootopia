@@ -42,7 +42,13 @@ A list containing:
   \item{skeleton_rast}{`SpatRaster`. Binary raster mask of skeletonized regions.}
   \item{diameter_rast}{`SpatRaster`. Raster showing diameters in the skeletonized regions.}
   \item{distance_map_rast}{`SpatRaster`. Raster showing the distance transform values.}
-  \item{root_volume}{Numeric. The sum of root volume - assuming cylindrical roots}
+  \item{root_volume}{Numeric. Total root volume, in `unit`^3. Each skeleton
+    pixel is modelled as a cylinder of radius `diameter / 2` and length 1
+    pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.}
+  \item{root_surface_area}{Numeric. Total root lateral surface area, in
+    `unit`^2. Each skeleton pixel's cylinder contributes a lateral surface
+    of `2 * pi * r * l = pi * d * l`; values are summed and converted from
+    px^2.}
 }
 }
 \description{

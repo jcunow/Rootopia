@@ -2,7 +2,7 @@
 % Please edit documentation in R/Zonestats3.R
 \name{root_thickness}
 \alias{root_thickness}
-\title{Approximate average Root Thickness}
+\title{Approximate average root thickness (deprecated)}
 \usage{
 root_thickness(kimuralength, rootpx, dpi = 300)
 }
@@ -17,7 +17,17 @@ root_thickness(kimuralength, rootpx, dpi = 300)
 A numeric value in cm representing approximate average root diameter.
 }
 \description{
-Estimates mean root diameter from total root length and root pixel count.
+`root_thickness()` is a naive estimator that back-calculates
+  an average diameter from a total root length and a total root pixel
+  count (`area / length`), assuming every pixel belongs to a single root of
+  uniform width. It ignores branching, overlapping roots, and the actual
+  local width distribution.
+
+  [root_diameter()] computes per-pixel diameters directly from the
+  distance transform of the segmented mask, and returns `mean_diameter`,
+  `median_diameter`, `quantiles`, `root_volume`, and `root_surface_area`
+  (lateral surface area, assuming cylindrical root segments). Use those
+  instead of `root_thickness()`.
 }
 \examples{
 root.thicc <- root_thickness(kimuralength = 300, rootpx = 9500, dpi = 300)

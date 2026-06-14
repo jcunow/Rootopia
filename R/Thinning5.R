@@ -3,56 +3,6 @@
 # Zhang–Suen LUT thinning + endpoints + overlay
 ##################################
 
-#' Validate image input
-#'
-#' Checks structural validity and (optionally) enforces binary constraints
-#' for image processing routines.
-#'
-#' @param img Input image (SpatRaster or compatible object)
-#' @param allow_empty Logical. Allow all-zero images.
-#' @param min_dim Minimum allowed image dimensions.
-#' @param require_binary Logical. Enforce binary values (0/1).
-#' @param select.layer Layer index for multi-layer inputs.
-#'
-#' @return List containing validated image and metadata.
-#'
-#' @keywords internal
-validate_image_input <- function(img,
-                                 allow_empty = FALSE,
-                                 min_dim = c(3,3),
-                                 require_binary = TRUE,
-                                 select.layer = NULL) {
-  
-  if (is.null(img)) stop("Input image cannot be NULL")
-  
-  if (any(dim(img)[1:2] < min_dim)) {
-    stop(sprintf("Image must be at least %dx%d", min_dim[1], min_dim[2]))
-  }
-  
-  v <- terra::values(img)
-  
-  if (!allow_empty && all(v == 0, na.rm = TRUE)) {
-    stop("Input image is empty")
-  }
-  
-  if (any(is.nan(v)) || any(is.infinite(v))) {
-    stop("Image contains NaN/Inf")
-  }
-  
-  if (require_binary) {
-    if (!all(v %in% c(0,1))) {
-      if (all(abs(v - round(v)) < 1e-10, na.rm = TRUE)) {
-        img <- round(img)
-      }
-      if (!all(terra::values(img) %in% c(0,1))) {
-        stop("Image must be binary (0/1)")
-      }
-    }
-  }
-  
-  list(img = img, dims = dim(img))
-}
-
 
 
 #' Zhang–Suen thinning using lookup table (LUT implementation)
