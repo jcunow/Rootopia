@@ -35,6 +35,8 @@ navbar:
       href: news/index.html
     - text: Reference
       href: reference/index.html
+    - text: Package Structure
+      href: articles/pkgnet-report.html
   structure:
     right: [search, github, lightswitch]
 
