@@ -92,7 +92,7 @@ or phase correlation (`"phase"`) on a shared depth window to find the pixel
 offset. Phase correlation is generally more robust to brightness differences
 between sessions.
 
-```{r, eval=FALSE}
+```{r, fig.width=14, fig.height=8, dpi=300}
 data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 
@@ -103,7 +103,10 @@ shift <- estimate_rotation_shift(
   fixed.depth.pixel = c(1000, 4000)
 )
 
-cat("Rotation shift (depth px, rotation px):", shift, "\n")
+cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
+
+# Visual inspection
+estimate_rotation_shift(img1, img2, cor.type = "phase", select.layer = 2, overlay = T)
 ```
 
 The returned vector is `c(x.lag, y.lag)` — the horizontal (depth axis) and
@@ -134,16 +137,23 @@ Two modes are available:
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# Fixed mode — crop to a 1800-pixel-wide window centred on the rotation center
+# rotation centre (absolute row) to centre the crop on
+r0 <- estimate_rotation_center(img)
+
+# preview the crop (green = kept, red = cut) and apply it in one call.
+# fixed.width must be <= image height (1144 rows here) to sit symmetrically.
 censored <- rotation_censor(
   img,
   center.offset  = r0,
   cut.buffer     = 0.02,
-  fixed.width    = 1800,
-  fixed.rotation = TRUE
+  fixed.width    = 800,
+  fixed.rotation = TRUE,
+  overlay        = TRUE,
+  main = "Rotation censor: kept window (green) vs cut (red)"
 )
 
-terra::plot(censored, main = "Censored image")
+
+
 ```
 
 > **Note on tube geometry.** The inner and outer tube diameters differ, so the
@@ -175,28 +185,36 @@ face of the installation, or an installation-angle artefact).
 
 ```{r, eval=FALSE}
 data(seg_Oulanka2023_Session01_T067)
-seg <- terra::rast(seg_Oulanka2023_Session01_T067)
-root_layer <- terra::subset(seg, 2)
-root_layer <- load_flexible_image(root_layer, normalize = TRUE, binarize = TRUE,
+
+root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, normalize = TRUE, binarize = TRUE, select.layer = 2,
                                   output_format = "spatrast")
 
-n_slices <- 16   # resolution around the circumference; higher = finer
 
-slice_traits <- do.call(rbind, lapply(seq_len(n_slices), function(i) {
-  slice <- zoning(
-    root_layer,
-    mode                  = "rotation",
-    rotation_slices       = c(i, i),
-    rotation_total_slices = n_slices
-  )
+# rotation trim: drop the top 33% of rows
+e <- terra::ext(root_layer)
+root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
+plot(root_layer)
+# --> the trimming avoids noisy deep layer and tape artefacts at the top
 
-  data.frame(
-    slice  = i,
-    rootpx = count_pixels(slice)
-  )
-}))
+# create circumferential zones
+n_slices <- 48
+slices <- slice_rotation(root_layer, n_slices)
 
-slice_traits$rootpx.fraction <- slice_traits$rootpx / sum(slice_traits$rootpx)
+# tallies from the binary mask: roots = 1, soil/background = 0
+n_root <- function(s) { v <- terra::values(s, mat = FALSE); sum(v > 0,  na.rm = TRUE) }
+n_soil <- function(s) { v <- terra::values(s, mat = FALSE); sum(v == 0, na.rm = TRUE) }
+
+slice_traits <- data.frame(
+  slice   = seq_len(n_slices),
+  rootlen = sapply(slices, root_length, unit = "cm", dpi = 300),  # cm
+  rootpx  = sapply(slices, n_root),
+  soilpx  = sapply(slices, n_soil)
+)
+
+# root length per observed area (root + soil pixels)
+slice_traits$rld <- slice_traits$rootlen /
+                    ((slice_traits$rootpx + slice_traits$soilpx) * (2.54/300)^2)
+#slice_traits$rld.fraction <- slice_traits$rld / sum(slice_traits$rld, na.rm = TRUE)
 ```
 
 ### Test for a circumferential (top-down) pattern
@@ -204,15 +222,16 @@ slice_traits$rootpx.fraction <- slice_traits$rootpx / sum(slice_traits$rootpx)
 ```{r, eval=FALSE}
 res <- rhythmicity(
   x          = slice_traits$slice,
-  y          = slice_traits$rootpx.fraction,
+  y          = slice_traits$rld,
   fix_period = n_slices,
   method     = "F",
-  parStart   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootpx.fraction),
+  parStart   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootlen),
                      period = n_slices)
 )
 
-cat(sprintf("Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
-            res$amplitude, res$phase, res$R2, res$p_value))
+cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
+            res$offset, res$amplitude, res$phase, res$R2, res$p_value))
+cat("The top-down difference is", round((res$amplitude*2) / res$offset,2), " -> circa twice as large as the mean"    )
 ```
 
 A significant, non-trivial amplitude indicates that root abundance varies
@@ -228,18 +247,48 @@ fit_seq   <- res$amplitude *
               sin(2 * pi / n_slices * (slice_seq + res$phase)) +
               res$offset
 
-plot(slice_traits$slice, slice_traits$rootpx.fraction, pch = 16, col = "grey50",
+plot(slice_traits$slice, slice_traits$rld, pch = 16, col = "grey50",
      xlab = "Circumferential slice (1 = top, going around the tube)",
-     ylab = "Root pixel fraction",
+     ylab = "Root Length Density (cm / cm2)",
      main = "Root distribution around tube circumference")
 lines(slice_seq, fit_seq, col = "coral", lwd = 2)
+abline( a = res$offset, b = 0, col  = "grey40", lty = 3)
+
+segments(x0 = res$peakTime,
+         x1 = res$peakTime,
+         y0 = res$offset,
+         y1 = res$offset + res$amplitude,
+         lwd = 2, lty = 2,
+         col = "grey40")
+segments(x0 = res$peakTime + res$period/2,
+         x1 = res$peakTime +  res$period/2,
+         y0 = res$offset,
+         y1 = res$offset -  res$amplitude,
+         lwd = 2, lty = 2,
+         col = "grey40")
 legend("topright",
        legend = sprintf("A = %.4f, R² = %.3f, p = %.4f",
                         res$amplitude, res$R2, res$p_value),
        bty = "n")
+
+
+# cross section view
+library(ggplot2)
+inner <- 6
+ggplot(slice_traits, aes(slice, rld + inner)) +
+    geom_col(fill = "steelblue") +
+    coord_polar(start = pi) +
+  xlab("") + ylab ("")+ ggtitle("Circumferential Root Length Distribution")+
+  theme_light()+
+  theme(axis.text = element_blank()) + 
+  annotate("rect",
+           xmin = -Inf, xmax = Inf,
+           ymin = 0, ymax = inner,
+           fill = "white", color = NA)
+
 ```
 
-> **Going further**: the same slice loop can be combined with `zoning(mode =
+> **Going further**: the same slice loop can be combined with `slice_rotation(mode =
 > "both")` to additionally split each circumferential slice by depth bin,
 > producing a slice x depth grid. Fitting `rhythmicity()` separately within
 > each depth bin (x = slice, y = trait per slice) tests whether the
@@ -261,7 +310,7 @@ Two extensions are planned and not yet implemented:
    pattern, the fitted phase (`res$phase` / `res$peakTime`) marks the
    circumferential position of peak root density. This could be used as a
    data-driven alternative or complement to `estimate_rotation_center()`,
-   which currently relies only on tape coverage.
+   which currently relies only on tape coverage. Though, field calibrations are absolutely the preferred option.
 
 ---
 

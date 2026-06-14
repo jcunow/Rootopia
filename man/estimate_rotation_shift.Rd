@@ -2,39 +2,48 @@
 % Please edit documentation in R/Calibration3.R
 \name{estimate_rotation_shift}
 \alias{estimate_rotation_shift}
-\title{Detect rotation shift between two images}
+\title{Estimate rotational/depth shift between two root scans}
 \usage{
 estimate_rotation_shift(
   img1,
   img2,
   cor.type = "phase",
-  fixed.depth.pixel = c(1000, 4000),
+  fixed.depth.pixel = NULL,
   fixed.width = NULL,
-  select.layer = NULL
+  select.layer = NULL,
+  window = TRUE,
+  overlay = FALSE,
+  overlay.layer = 2
 )
 }
 \arguments{
-\item{img1}{Reference image (3-channel RGB)}
+\item{img1, img2}{Image inputs (paths, arrays, or rasters).}
 
-\item{img2}{Subsequent image to compare (3-channel RGB)}
+\item{cor.type}{"phase" (phase correlation) or "ccf" (normalized cross-corr).}
 
-\item{cor.type}{Correlation type: "ccf" (cross) or "phase" (frequency domain)}
+\item{fixed.depth.pixel}{Depth band along COLUMNS. Length-2 = range start:end;
+longer = explicit column indices; NULL = use full width.}
 
-\item{fixed.depth.pixel}{Depth range to analyze c(start, end)}
+\item{fixed.width}{Optional: restrict the ROTATION axis (rows), centered.}
 
-\item{fixed.width}{Width of analysis region in pixels}
+\item{select.layer}{Layer to use for multi-band inputs.}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
+\item{window}{Demean + Hann-window before FFT to suppress edge artefacts.}
+
+\item{overlay}{If TRUE, also draw a before/after magenta-green overlay.}
+
+\item{overlay.layer}{Layer to display in the overlay (root mask, default 2).}
 }
 \value{
-Vector of shifts (x,y) in pixels
+Named numeric vector: depth (column lag), rotation (row lag), peak.
 }
 \description{
-Calculates the rotation shift between two sequential images using either
-cross-correlation or phase correlation methods.
+Estimate rotational/depth shift between two root scans
 }
 \examples{
-img1 = seg_Oulanka2023_Session01_T067
-img2 = seg_Oulanka2023_Session03_T067
-y.lag = estimate_rotation_shift(img1,img2,"phase")
+data(seg_Oulanka2023_Session01_T067)
+data(seg_Oulanka2023_Session03_T067)
+img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
+img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
+estimate_rotation_shift(img1, img2, cor.type = "phase", select.layer = 2)
 }

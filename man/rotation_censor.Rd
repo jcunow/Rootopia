@@ -10,39 +10,48 @@ rotation_censor(
   cut.buffer = 0.02,
   fixed.rotation = TRUE,
   fixed.width = 500,
-  select.layer = NULL
+  select.layer = NULL,
+  overlay = FALSE,
+  ...
 )
 }
 \arguments{
-\item{img}{Input image to censor}
+\item{img}{Input image as raster, file name, or array.}
 
-\item{center.offset}{Rotation shift in rows (from estimate_rotation_shift())}
+\item{center.offset}{Numeric. Meaning depends on \code{fixed.rotation}:
+when \code{TRUE}, the row to centre the kept window on (an absolute row,
+e.g. from \code{estimate_rotation_center()}); when \code{FALSE}, the
+rotation shift in rows to trim (e.g. from \code{estimate_rotation_shift()}).}
 
-\item{cut.buffer}{Proportion of image to cut when fixed_rotation=FALSE}
+\item{cut.buffer}{Extra proportion of the rotation axis to trim (variable mode).}
 
-\item{fixed.rotation}{Use fixed output dimensions}
+\item{fixed.rotation}{Logical. If \code{TRUE}, return a fixed-width window.}
 
-\item{fixed.width}{Output width when fixed_rotation=TRUE}
+\item{fixed.width}{Output width in rows when \code{fixed.rotation = TRUE}.}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
+\item{select.layer}{Integer or \code{NULL}. Layer to use for multi-band inputs.}
+
+\item{overlay}{Logical. If \code{TRUE}, plot the full image with the kept
+window (green outline) and discarded margins (red shading) before cropping.
+Default \code{FALSE}.}
+
+\item{...}{Passed to the underlying \code{terra} plotting call when
+\code{overlay = TRUE}.}
 }
 \value{
-Cropped raster image
+A cropped \code{SpatRaster} (returned invisibly when
+  \code{overlay = TRUE}), or \code{NULL} if the result is empty.
 }
 \description{
-Crops image edges to handle non-overlapping regions between sequential scans.
+Crops the rotation axis (rows) of a root scan. In fixed mode it returns a
+fixed-width window centred on a given row (e.g. the rotation centre from
+\code{estimate_rotation_center()}); in variable mode it trims a band sized by
+a measured offset. Optionally previews what is kept versus cut.
 }
 \examples{
 data(seg_Oulanka2023_Session01_T067)
-img = terra::rast(seg_Oulanka2023_Session01_T067)
-censored.raster = rotation_censor(img,
-                         center.offset = 120,
-                         cut.buffer = 0.02,
-                         fixed.rotation = FALSE)
-                         
-censored.raster = rotation_censor(img,
-                         center.offset = 220,
-                         cut.buffer = 0.02,
-                         fixed.width = 1000,
-                         fixed.rotation = TRUE)
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
+r0  <- estimate_rotation_center(img)
+rotation_censor(img, center.offset = r0, fixed.width = 800,
+                fixed.rotation = TRUE, overlay = TRUE)
 }
