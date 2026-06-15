@@ -21,6 +21,8 @@ Depends:
 Imports: 
     dplyr,
     glcm,
+    grDevices,
+    graphics,
     imagefx,
     imager,
     landscapemetrics,
@@ -30,7 +32,10 @@ Imports:
     RStoolbox,
     stats,
     terra(>= 1.8),
-    transport
+    tidyr,
+    stringr,
+    transport,
+    utils
 Suggests:
     knitr,
     rmarkdown,
@@ -38,7 +43,6 @@ Suggests:
     png,
     tidyverse,
     tiff,
-    stringr,
     testthat (>= 3.0.0)
 VignetteBuilder: 
     knitr

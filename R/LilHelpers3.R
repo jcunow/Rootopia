@@ -116,7 +116,6 @@
 #' sourced from the 'abind' package:  https://doi.org/10.32614/CRAN.package.abind under MIT-license
 #'
 #'
-#' @import utils
 #' @return merged multidimensional arrays
 #' @keywords internal
 abind2 = function (..., along = N, rev.along = NULL, new.names = NULL,

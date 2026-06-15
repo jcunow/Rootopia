@@ -299,7 +299,7 @@ skeletonize_image <- function(img,
     # ----------------------------
     # write pixel-exact PNG
     # ----------------------------
-    png(
+    grDevices::png(
       filename = overlay_png_path,
       width = ncol(overlay_col),
       height = nrow(overlay_col),
@@ -307,11 +307,11 @@ skeletonize_image <- function(img,
       type = "cairo-png"
     )
     
-    par(mar = c(0,0,0,0), xaxs = "i", yaxs = "i")
-    plot.new()
+    graphics::par(mar = c(0,0,0,0), xaxs = "i", yaxs = "i")
+    graphics::plot.new()
     
-    rasterImage(
-      as.raster(overlay_col),
+    graphics::rasterImage(
+      grDevices::as.raster(overlay_col),
       0, 0, 1, 1
     )
     

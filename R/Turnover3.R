@@ -17,7 +17,6 @@
 #'   - newroot%per_t2: Percentage of new roots at second timepoint
 #' @keywords internal
 #'
-#' @import raster
 #'
 #' @examples
 #'   data(skl_Oulanka2023_Session01_T067)
@@ -83,8 +82,8 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 
   # Main execution with error handling
   tryCatch({
-    im.t1 <- load_flexible_image(im.t1,select.layer = select.layer, normalize = T, output_format = "spatrast")
-    im.t2 <- load_flexible_image(im.t2,select.layer = select.layer, normalize = T, output_format = "spatrast")
+    im.t1 <- load_flexible_image(im.t1,select.layer = select.layer, normalize = TRUE, output_format = "spatrast")
+    im.t2 <- load_flexible_image(im.t2,select.layer = select.layer, normalize = TRUE, output_format = "spatrast")
     im.t1 = ceiling(im.t1)
     im.t2 = ceiling(im.t2)
     validate_inputs(im.t1,im.t2)
