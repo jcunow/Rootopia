@@ -105,7 +105,7 @@ reference:
   - title: "Distribution analysis"
     desc: "Statistical indices summarising root distribution with depth."
     contents:
-      - RWDI
+      - MRD
       - RPI
       - root_turnover
       - rhythmicity

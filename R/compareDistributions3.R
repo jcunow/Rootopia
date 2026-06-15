@@ -405,12 +405,12 @@ tail_weighted_wasserstein_distance <- function(Q, P, inverse = FALSE,
   })
 }
 
-# Enhanced RWDI function with error handling
-#' Calculate Root Weight Depth Index
+# Enhanced MRD function with error handling
+#' Calculate Mean Rooting Depth
 #'
 #' @param w Numeric vector of weights (typically depths)
 #' @param roots Numeric vector of root coverage values
-#' @return Numeric RWDI value
+#' @return Numeric MRD value
 #' @export
 #' @examples
 #' w <- seq(5, 25, 5)
@@ -439,16 +439,16 @@ MRD <- function(w, roots) {
       stop("sum of roots cannot be zero")
     }
 
-    # Calculate RWDI with small epsilon to avoid division by zero
-    rwdi <- sum((w + .Machine$double.eps) * roots) / sum(roots)
+    # Calculate MRD with small epsilon to avoid division by zero
+    mrd <- sum((w + .Machine$double.eps) * roots) / sum(roots)
 
-    if (!is.finite(rwdi)) {
-      stop("Invalid RWDI calculated")
+    if (!is.finite(mrd)) {
+      stop("Invalid MRD calculated")
     }
 
-    return(rwdi)
+    return(mrd)
   }, error = function(e) {
-    stop("Error in RWDI: ", e$message)
+    stop("Error in MRD: ", e$message)
   })
 }
 

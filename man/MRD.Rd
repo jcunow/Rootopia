@@ -2,7 +2,7 @@
 % Please edit documentation in R/compareDistributions3.R
 \name{MRD}
 \alias{MRD}
-\title{Calculate Root Weight Depth Index}
+\title{Calculate Mean Rooting Depth}
 \usage{
 MRD(w, roots)
 }
@@ -12,10 +12,10 @@ MRD(w, roots)
 \item{roots}{Numeric vector of root coverage values}
 }
 \value{
-Numeric RWDI value
+Numeric MRD value
 }
 \description{
-Calculate Root Weight Depth Index
+Calculate Mean Rooting Depth
 }
 \examples{
 w <- seq(5, 25, 5)

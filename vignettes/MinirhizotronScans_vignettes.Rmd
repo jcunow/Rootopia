@@ -362,7 +362,7 @@ These tube-level summary metrics require a complete depth profile.
 
 ```{r, eval=FALSE}
 # Root Weight Distribution Index — depth-weighted mean rooting depth
-rwdi_val <- RWDI(w = depth_data$depth, roots = depth_data$rootlength.density)
+mrd_val <- MRD(w = depth_data$depth, roots = depth_data$rootlength.density)
 
 # Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)
 rpi_val  <- RPI(roots = depth_data$rootlength.density, w = depth_data$depth)
@@ -370,8 +370,8 @@ rpi_val  <- RPI(roots = depth_data$rootlength.density, w = depth_data$depth)
 # Total length density — sum over the full profile
 total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
 
-cat(sprintf("RWDI: %.2f  RPI: %.3f  Total length density: %.4f\n",
-            rwdi_val, rpi_val, total_ld))
+cat(sprintf("MRD: %.2f  RPI: %.3f  Total length density: %.4f\n",
+            mrd_val, rpi_val, total_ld))
 ```
 
 `root_accumulation()` complements these by returning the cumulative profile
