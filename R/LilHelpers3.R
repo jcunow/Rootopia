@@ -558,6 +558,7 @@ image_threshold <- function(img, threshold = 0.4, method = "global", window_size
 #' @param depth Character string specifying depth column name
 #' @param variable Character string specifying accumulating values column
 #' @param stdrz Character string specifying standardization method
+#' @export
 #'
 #' @return Numeric vector of accumulated values
 #'

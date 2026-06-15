@@ -55,7 +55,7 @@
 #'
 #' @param insertion_angles Numeric. Insertion angle of the tube or window from
 #'   vertical, in \strong{degrees}.  \code{0} = perfectly vertical,
-#' \code{30} = tilted 30 degrees from vertical (a common minirhizotron angle).
+#'   \code{30} = tilted 30 degrees from vertical (a common minirhizotron angle).
 #'   Used by \code{create_depthmap()} to correct the depth scale.
 #'   Default \code{0}.
 #' @param soil_starts Numeric. Pixel row (in the original, un-rotated image)
@@ -63,7 +63,7 @@
 #'   Default \code{0}.
 #' @param tube_names Character or \code{NULL}. Sample/tube identifiers added as
 #'   the \code{Tube} column.  If \code{NULL}, names are derived from characters
-#' 3-5 from the right of the segmented file name, prefixed with \code{"T"}
+#'   3-5 from the right of the segmented file name, prefixed with \code{"T"}
 #'   (e.g. \code{"T042"}).  Adjust if your naming convention differs.
 #'   Default \code{NULL}.
 #' @param session Character. Session or campaign label added as the
@@ -76,7 +76,7 @@
 #'   \strong{centimetres}.  Passed to \code{create_depthmap()} as
 #'   \code{tube.thicc}.  Its role in flat-window geometry (\code{flat_geometry
 #'   = TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
-#' and may be ignored -- leave at the default unless you know it matters for
+#'   and may be ignored -- leave at the default unless you know it matters for
 #'   your setup.  Default \code{7}.
 #' @param depth_interval_cm Numeric. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
@@ -133,20 +133,20 @@
 #'
 # --- Derived metrics ---
 #' @param calc_density_metrics Logical. Compute \code{rootpx.density} (percent
-#' root area cover) and \code{rootlength.density} (cm root length per cm^2
+#'   root area cover) and \code{rootlength.density} (cm root length per cm^2
 #'   imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
 #'   \code{calc_root_length}.  Default \code{TRUE}.
 #' @param calc_distribution_indices Logical. Compute tube-level indices:
 #'   \code{mrd} (mean rooting depth), \code{rpi} (root
 #'   penetration index), and \code{total.length.density} (summed length
-#' density over all bins, in cm root per cm^2 per cm depth). Auto-enables
+#'   density over all bins, in cm root per cm^2 per cm depth).  Auto-enables
 #'   \code{calc_density_metrics}.  Default \code{TRUE}.
 #' @param calc_advanced_metrics Logical. Compute per-bin derived metrics:
 #'   \code{rootlength.fraction} (each bin's length density as a fraction of the
 #'   tube total), \code{mean.var.diameter} (mean of within-bin diameter
 #'   variance), and \code{rootsurface_rootvolume_ratio} (lateral surface area
 #'   over cylinder volume, summed over skeleton pixels in the bin and expressed
-#' as cm^2 per cm^3). Auto-enables \code{calc_distribution_indices} and
+#'   as cm^2 per cm^3).  Auto-enables \code{calc_distribution_indices} and
 #'   \code{calc_diameter_stats}.  Default \code{TRUE}.
 #'
 # --- Diameter threshold settings (used when \code{calc_diameter_quantiles = TRUE}) ---
@@ -165,7 +165,7 @@
 #'   per-image time, cumulative elapsed time, estimated remaining time, and
 #'   predicted clock-time of completion.  Default \code{TRUE}.
 #'
-#' @return A data frame with one row per tube x depth-bin combination. Always
+#' @return A data frame with one row per tube x depth-bin combination.  Always
 #'   present columns: \code{Tube}, \code{Session}, \code{Plot}, \code{depth}.
 #'   All other columns depend on which metric groups are enabled; disabled or
 #'   failed metrics appear as \code{NA} rather than being absent.  Returns
@@ -179,7 +179,7 @@
 #' \eqn{\pi r_i^2 l_i}.  Their ratio simplifies to \eqn{2 / r_i}.
 #' \code{rootsurface_rootvolume_ratio} is the length-weighted mean of
 #' \eqn{2 / r_i} over all skeleton pixels in the depth bin, in units of
-#' cm\eqn{^{-1}} (cm^2 surface per cm^3 volume). Thicker roots have a smaller
+#' cm\eqn{^{-1}} (cm^2 surface per cm^3 volume).  Thicker roots have a smaller
 #' ratio; fine roots have a larger ratio.
 #'
 #' \strong{Fault tolerance.}  Every metric block is wrapped in
@@ -513,7 +513,7 @@ root_depth_metrics <- function(
     # -------------------------------------------------------------------------
     DepthMap <- .safe("create_depthmap", {
       dm <- create_depthmap(
-        img = im,
+        img         = im,
         sinoid      = !flat_geometry,
         dpi         = dpi,
         start.soil  = soil0,
@@ -568,7 +568,7 @@ root_depth_metrics <- function(
         # length calculation -- the sinusoidal correction is for the depth axis
         # only, not for path-length geometry.
         dm_flat <- create_depthmap(
-          img            = im,
+          img           = im,
           sinoid        = FALSE,
           dpi           = dpi,
           start.soil    = soil0,
@@ -783,7 +783,7 @@ root_depth_metrics <- function(
           .safe(sprintf("landscape (depth=%g)", d), {
             rs   <- root_scape_metrics(im.sl, metrics = lsm_names)
             rs$depth <- d
-            wide <- tidyr::pivot_wider(rs, names_from = metric, values_from = value)
+            wide <- tidyr::pivot_wider(rs, names_from = "metric", values_from = "value")
             wide$object <- NULL
             for (m in setdiff(c("depth", stringr::str_sub(lsm_names, start = 7)), names(wide)))
               wide[[m]] <- NA_real_
@@ -880,7 +880,7 @@ root_depth_metrics <- function(
               st   <- abs(sin(dev * pi / 180)) * 90
               data.frame(depth = d, deep_drive = dv,
                          mean.steepness.angle = mean(st, na.rm = TRUE),
-                         sd.steepness.angle = stats::sd(st, na.rm = TRUE))
+                         sd.steepness.angle   = stats::sd(st,   na.rm = TRUE))
             }
           }, fallback = data.frame(depth = d, deep_drive = NA_real_,
                                    mean.steepness.angle = NA_real_,
@@ -972,51 +972,51 @@ root_depth_metrics <- function(
       "rootlength.density" %in% names(r)) {
     coag1 <- .safe("distribution indices", {
       r |>
-        dplyr::group_by(Tube) |>
-        dplyr::filter(!is.na(depth) & !is.na(rootlength.density)) |>
+        dplyr::group_by(dplyr::.data$Tube) |>
+        dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
         dplyr::summarise(
-          mrd  = RootScanR::MRD(w = depth, roots = rootlength.density),
-          rpi   = RootScanR::RPI(w = depth, roots = rootlength.density),
+          mrd   = RootScanR::MRD(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
+          rpi   = RootScanR::RPI(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
           # total.length.density: sum of (length density x bin size) across all bins
           # units: cm root per cm^2 (integrated over the full depth profile)
-          total.length.density = sum(rootlength.density * depth_interval_cm, na.rm = TRUE),
+          total.length.density = sum(dplyr::.data$rootlength.density * depth_interval_cm, na.rm = TRUE),
           .groups = "drop"
         )
     })
     if (!is.null(coag1)) r <- dplyr::full_join(r, coag1, by = "Tube")
   }
-  
+
   # ---------------------------------------------------------------------------
   # Level 3: per-bin advanced metrics
   # ---------------------------------------------------------------------------
   rr <- r
   if (calc_advanced_metrics && calc_distribution_indices &&
       "rootlength.density" %in% names(r)) {
-    
+
     coag2 <- .safe("advanced metrics", {
-      
+
       r |>
-        dplyr::group_by(Tube, depth) |>
-        dplyr::filter(!is.na(depth) & !is.na(rootlength.density)) |>
+        dplyr::group_by(dplyr::.data$Tube, dplyr::.data$depth) |>
+        dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
         dplyr::summarise(
-          
+
           # Fraction of the tube's total length density contributed by this bin
           rootlength.fraction = if (calc_density_metrics && "total.length.density" %in% names(dplyr::pick(dplyr::everything())))
-            rootlength.density / total.length.density else NA_real_,
-          
+            dplyr::.data$rootlength.density / dplyr::.data$total.length.density else NA_real_,
+
           # Joint entropy per unit root pixel density
           # (meaningful only when landscape metrics are available)
           ent_per_rootpx = if (calc_landscape_metrics && "joinent" %in% names(dplyr::pick(dplyr::everything())))
-            joinent / rootpx.density else NA_real_,
-          
+            dplyr::.data$joinent / dplyr::.data$rootpx.density else NA_real_,
+
           # Number of root patches per unit root pixel density
           patch_density_norm = if ("np_density" %in% names(dplyr::pick(dplyr::everything())))
-            np_density / rootpx.density else NA_real_,
-          
+            dplyr::.data$np_density / dplyr::.data$rootpx.density else NA_real_,
+
           # Mean within-bin diameter variance (averaged over any sub-grouping)
           mean.var.diameter = if (calc_diameter_stats && "var.diameter" %in% names(dplyr::pick(dplyr::everything())))
-            mean(var.diameter, na.rm = TRUE) else NA_real_,
-          
+            mean(dplyr::.data$var.diameter, na.rm = TRUE) else NA_real_,
+
           # Surface-to-volume ratio (cm^-1).
           # Each skeleton pixel i contributes a cylinder of length l_i (cm)
           # and radius r_i = avg.diameter / 2.
@@ -1032,9 +1032,9 @@ root_depth_metrics <- function(
             calc_diameter_stats && calc_density_metrics &&
             all(c("avg.diameter", "rootlength.density") %in%
                 names(dplyr::pick(dplyr::everything()))) &&
-            !is.na(avg.diameter) && avg.diameter > 0
-          ) 2 / (avg.diameter / 2) else NA_real_,
-          
+            !is.na(dplyr::.data$avg.diameter) && dplyr::.data$avg.diameter > 0
+          ) 2 / (dplyr::.data$avg.diameter / 2) else NA_real_,
+
           .groups = "drop"
         )
     })
