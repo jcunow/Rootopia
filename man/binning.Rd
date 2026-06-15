@@ -25,6 +25,6 @@ img = terra::rast(seg_Oulanka2023_Session01_T067)
 mask = img[[1]] - img[[2]]
 mask[mask == 255] <- NA
 img = img
-depthmap = create_depthmap(img,mask,start.soil = 2.9, select.layer = 2 )
+depthmap = create_depthmap(img,mask,start.soil = 2.9 )
 binned.map = binning(depthmap,nn = 5)
 }

@@ -16,8 +16,9 @@ root_length(
 }
 \arguments{
 \item{img}{Skeletonized binary raster image. If \code{skeletonize = TRUE},
-a segmented (non-skeleton) mask can be supplied instead.
-#' @param unit Character. Output unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.}
+a segmented (non-skeleton) mask can be supplied instead.}
+
+\item{unit}{Character. Output unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.}
 
 \item{dpi}{Numeric. Scan resolution (dots per inch); required for cm/inch conversion.}
 
