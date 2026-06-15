@@ -2,7 +2,7 @@
 % Please edit documentation in R/Thinning5.R
 \name{lut_thin_fast}
 \alias{lut_thin_fast}
-\title{Zhang–Suen thinning using lookup table (LUT implementation)}
+\title{Zhang-Suen thinning using lookup table (LUT implementation)}
 \usage{
 lut_thin_fast(img, max_iter = 200L, verbose = FALSE)
 }
@@ -30,8 +30,8 @@ The algorithm operates as follows:
    - The 3x3 neighbourhood is extracted
    - A weighted sum (mask encoding) produces a unique neighbourhood code
 5. The code is used as an index into a 256-entry lookup table:
-   - LUT value 1 or 3 → pixel removed in first sub-step
-   - LUT value 2 or 3 → pixel removed in second sub-step
+   - LUT value 1 or 3 -> pixel removed in first sub-step
+   - LUT value 2 or 3 -> pixel removed in second sub-step
 6. Pixels are updated in-place in the vector representation
 7. Iteration stops when no pixels are removed or max_iter is reached
 

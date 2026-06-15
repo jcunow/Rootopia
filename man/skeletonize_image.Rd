@@ -25,7 +25,7 @@ Binary SpatRaster representing skeletonized image
 }
 \description{
 Applies iterative morphological thinning using a LUT-based
-implementation of the Zhang–Suen skeletonization algorithm.
+implementation of the Zhang-Suen skeletonization algorithm.
 }
 \details{
 Processing steps:

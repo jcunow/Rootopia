@@ -8,8 +8,8 @@ build_peat_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 }
 \arguments{
 \item{picks}{A named list of RGB pick matrices. Each element corresponds to
-one class and must be a numeric matrix with 3 columns (R, G, B), values
-0–255, with one row per pick. Names become class names in the output.}
+  one class and must be a numeric matrix with 3 columns (R, G, B), values
+0-255, with one row per pick. Names become class names in the output.}
 
 \item{max_dist}{A named numeric vector of per-class LAB distance thresholds,
 matched by name to \code{picks}. Pixels further than this from a class
@@ -23,11 +23,11 @@ with the prior centroids using \code{alpha}. Only classes present in both
 that are absent from \code{prior} are added as-is.}
 
 \item{alpha}{Numeric in [0, 1]. Blend weight for the prior centroids.
-\code{alpha = 0} (default) ignores the prior entirely — centroids are
-derived purely from the new picks. \code{alpha = 1} returns the prior
-unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
-\code{alpha} progressively as you collect more new picks to gradually
-shift calibration toward the new dataset.}
+\code{alpha = 0} (default) ignores the prior entirely -- centroids are
+  derived purely from the new picks. \code{alpha = 1} returns the prior
+  unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
+  \code{alpha} progressively as you collect more new picks to gradually
+  shift calibration toward the new dataset.}
 
 \item{verbose}{Logical. Print per-class summaries and inter-class distance
 matrix. Default \code{TRUE}.}
@@ -44,7 +44,7 @@ intra-class spread, per-class coverage, and inter-class distance warnings.
 }
 \examples{
 \dontrun{
-# Clean break — new picks only
+# Clean break -- new picks only
 cents <- build_peat_centroids(new_picks, max_dist)
 
 # Blend: 30\% old calibration, 70\% new picks
@@ -55,9 +55,9 @@ cents <- build_peat_centroids(new_picks, max_dist,
 # Iterative refinement across sessions:
 # session 1
 cents <- build_peat_centroids(picks_s1, max_dist)
-# session 2 — downweight session 1 to 20\%
+# session 2 -- downweight session 1 to 20\%
 cents <- build_peat_centroids(picks_s2, max_dist, prior = cents, alpha = 0.2)
-# session 3 — downweight accumulated prior to 10\%
+# session 3 -- downweight accumulated prior to 10\%
 cents <- build_peat_centroids(picks_s3, max_dist, prior = cents, alpha = 0.1)
 }
 

@@ -5,9 +5,9 @@
 # based on fixed LAB centroids derived from manual color calibration.
 #
 # Public functions:
-#   classify_peat_rgb()       — classify a SpatRaster, return map + metrics
-#   build_peat_centroids()    — derive centroids from user RGB picks
-#   plot_peat_classification() — visualise output of classify_peat_rgb()
+# classify_peat_rgb() -- classify a SpatRaster, return map + metrics
+# build_peat_centroids() -- derive centroids from user RGB picks
+# plot_peat_classification() -- visualise output of classify_peat_rgb()
 #
 # Internal helpers (not exported):
 #   .rgb_to_lab()
@@ -69,7 +69,7 @@
   K <- nrow(centroids_lab)
   C <- as.matrix(centroids_lab)
   
-  # N x K squared distance matrix — keep explicit matrix() at every step
+  # N x K squared distance matrix -- keep explicit matrix() at every step
   # to prevent pmax/arithmetic from silently dropping dimensions
   px_sq  <- rowSums(lab_pixels^2)                              # length N
   cross  <- matrix(tcrossprod(lab_pixels, C), nrow = N)        # N x K
@@ -126,7 +126,7 @@
 #'
 #' @param picks A named list of RGB pick matrices. Each element corresponds to
 #'   one class and must be a numeric matrix with 3 columns (R, G, B), values
-#'   0–255, with one row per pick. Names become class names in the output.
+#' 0-255, with one row per pick. Names become class names in the output.
 #' @param max_dist A named numeric vector of per-class LAB distance thresholds,
 #'   matched by name to \code{picks}. Pixels further than this from a class
 #'   centroid cannot be assigned to that class.
@@ -137,7 +137,7 @@
 #'   \code{picks} and \code{prior} are blended; new classes in \code{picks}
 #'   that are absent from \code{prior} are added as-is.
 #' @param alpha Numeric in [0, 1]. Blend weight for the prior centroids.
-#'   \code{alpha = 0} (default) ignores the prior entirely — centroids are
+#' \code{alpha = 0} (default) ignores the prior entirely -- centroids are
 #'   derived purely from the new picks. \code{alpha = 1} returns the prior
 #'   unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
 #'   \code{alpha} progressively as you collect more new picks to gradually
@@ -150,7 +150,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Clean break — new picks only
+#' # Clean break -- new picks only
 #' cents <- build_peat_centroids(new_picks, max_dist)
 #'
 #' # Blend: 30% old calibration, 70% new picks
@@ -161,9 +161,9 @@
 #' # Iterative refinement across sessions:
 #' # session 1
 #' cents <- build_peat_centroids(picks_s1, max_dist)
-#' # session 2 — downweight session 1 to 20%
+#' # session 2 -- downweight session 1 to 20%
 #' cents <- build_peat_centroids(picks_s2, max_dist, prior = cents, alpha = 0.2)
-#' # session 3 — downweight accumulated prior to 10%
+#' # session 3 -- downweight accumulated prior to 10%
 #' cents <- build_peat_centroids(picks_s3, max_dist, prior = cents, alpha = 0.1)
 #' }
 #'
@@ -249,7 +249,7 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
     close <- which(d < 15 & d > 0, arr.ind = TRUE)
     close <- close[close[, 1] < close[, 2], , drop = FALSE]
     if (nrow(close) > 0) {
-      cat("\nWARNING — close centroid pairs (< 15 LAB units):\n")
+      cat("\nWARNING -- close centroid pairs (< 15 LAB units):\n")
       for (i in seq_len(nrow(close))) {
         r <- close[i, 1]; cc <- close[i, 2]
         cat(sprintf("  %-16s <-> %-16s  %.1f\n",
@@ -283,10 +283,10 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' distance threshold are labelled "unclassified".
 #'
 #' @param img A \code{SpatRaster} with at least 3 layers interpreted as R, G, B
-#'   (in that order). Values may be 0–255 or 0–1 (auto-detected).
+#' (in that order). Values may be 0-255 or 0-1 (auto-detected).
 #' @param centroids A \code{data.frame} with columns \code{class}, \code{L},
 #'   \code{A}, \code{B}, \code{MAX_DIST}. Defaults to a set of centroids
-#'   calibrated on Oulanka 2023 minirhizotron scans — see
+#' calibrated on Oulanka 2023 minirhizotron scans -- see
 #'   \code{\link{build_peat_centroids}} to derive centroids for your own data.
 #' @param downsample_fact Integer spatial aggregation factor applied before
 #'   classification for speed. \code{NULL} (default) uses full resolution.
@@ -524,7 +524,7 @@ classify_peat_rgb <- function(img,
 #'     \item{\code{"vibrant"}}{Saturated, high-contrast colours defined in
 #'       \code{vibrant_colors}.}
 #'     \item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
-#'       colour — useful for sanity-checking centroid values.}
+#' colour -- useful for sanity-checking centroid values.}
 #'   }
 #' @param class_colors Named character vector of hex colours for
 #'   \code{"contrast"} mode. Names must match class names in

@@ -55,7 +55,7 @@
 #'
 #' @param insertion_angles Numeric. Insertion angle of the tube or window from
 #'   vertical, in \strong{degrees}.  \code{0} = perfectly vertical,
-#'   \code{30} = tilted 30° from vertical (a common minirhizotron angle).
+#' \code{30} = tilted 30 degrees from vertical (a common minirhizotron angle).
 #'   Used by \code{create_depthmap()} to correct the depth scale.
 #'   Default \code{0}.
 #' @param soil_starts Numeric. Pixel row (in the original, un-rotated image)
@@ -63,7 +63,7 @@
 #'   Default \code{0}.
 #' @param tube_names Character or \code{NULL}. Sample/tube identifiers added as
 #'   the \code{Tube} column.  If \code{NULL}, names are derived from characters
-#'   3–5 from the right of the segmented file name, prefixed with \code{"T"}
+#' 3-5 from the right of the segmented file name, prefixed with \code{"T"}
 #'   (e.g. \code{"T042"}).  Adjust if your naming convention differs.
 #'   Default \code{NULL}.
 #' @param session Character. Session or campaign label added as the
@@ -76,7 +76,7 @@
 #'   \strong{centimetres}.  Passed to \code{create_depthmap()} as
 #'   \code{tube.thicc}.  Its role in flat-window geometry (\code{flat_geometry
 #'   = TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
-#'   and may be ignored — leave at the default unless you know it matters for
+#' and may be ignored -- leave at the default unless you know it matters for
 #'   your setup.  Default \code{7}.
 #' @param depth_interval_cm Numeric. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
@@ -133,20 +133,20 @@
 #'
 # --- Derived metrics ---
 #' @param calc_density_metrics Logical. Compute \code{rootpx.density} (percent
-#'   root area cover) and \code{rootlength.density} (cm root length per cm²
+#' root area cover) and \code{rootlength.density} (cm root length per cm^2
 #'   imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
 #'   \code{calc_root_length}.  Default \code{TRUE}.
 #' @param calc_distribution_indices Logical. Compute tube-level indices:
 #'   \code{mrd} (mean rooting depth), \code{rpi} (root
 #'   penetration index), and \code{total.length.density} (summed length
-#'   density over all bins, in cm root per cm² per cm depth).  Auto-enables
+#' density over all bins, in cm root per cm^2 per cm depth). Auto-enables
 #'   \code{calc_density_metrics}.  Default \code{TRUE}.
 #' @param calc_advanced_metrics Logical. Compute per-bin derived metrics:
 #'   \code{rootlength.fraction} (each bin's length density as a fraction of the
 #'   tube total), \code{mean.var.diameter} (mean of within-bin diameter
 #'   variance), and \code{rootsurface_rootvolume_ratio} (lateral surface area
 #'   over cylinder volume, summed over skeleton pixels in the bin and expressed
-#'   as cm² per cm³).  Auto-enables \code{calc_distribution_indices} and
+#' as cm^2 per cm^3). Auto-enables \code{calc_distribution_indices} and
 #'   \code{calc_diameter_stats}.  Default \code{TRUE}.
 #'
 # --- Diameter threshold settings (used when \code{calc_diameter_quantiles = TRUE}) ---
@@ -165,7 +165,7 @@
 #'   per-image time, cumulative elapsed time, estimated remaining time, and
 #'   predicted clock-time of completion.  Default \code{TRUE}.
 #'
-#' @return A data frame with one row per tube × depth-bin combination.  Always
+#' @return A data frame with one row per tube x depth-bin combination. Always
 #'   present columns: \code{Tube}, \code{Session}, \code{Plot}, \code{depth}.
 #'   All other columns depend on which metric groups are enabled; disabled or
 #'   failed metrics appear as \code{NA} rather than being absent.  Returns
@@ -179,7 +179,7 @@
 #' \eqn{\pi r_i^2 l_i}.  Their ratio simplifies to \eqn{2 / r_i}.
 #' \code{rootsurface_rootvolume_ratio} is the length-weighted mean of
 #' \eqn{2 / r_i} over all skeleton pixels in the depth bin, in units of
-#' cm\eqn{^{-1}} (cm² surface per cm³ volume).  Thicker roots have a smaller
+#' cm\eqn{^{-1}} (cm^2 surface per cm^3 volume). Thicker roots have a smaller
 #' ratio; fine roots have a larger ratio.
 #'
 #' \strong{Fault tolerance.}  Every metric block is wrapped in
@@ -191,7 +191,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Minimal — fast default metrics only
+#' # Minimal -- fast default metrics only
 #' result <- root_depth_metrics(
 #'   path.seg         = "scans/segmented/2022_02/",
 #'   path.skl         = "scans/skeleton/2022_02/",
@@ -421,7 +421,7 @@ root_depth_metrics <- function(
     angle    <- insertion_angles[l]
     soil0    <- soil_starts[l]
     
-    # Local flag copies — degraded per image without affecting other images
+    # Local flag copies -- degraded per image without affecting other images
     do_pixels    <- calc_root_pixels
     do_length    <- calc_root_length
     do_diam_st   <- calc_diameter_stats
@@ -443,7 +443,7 @@ root_depth_metrics <- function(
       img
     })
     if (is.null(im)) {
-      message(sprintf("[RootScanR] [%d/%d] %s: could not load segmented image — skipping.",
+      message(sprintf("[RootScanR] [%d/%d] %s: could not load segmented image -- skipping.",
                       l, n_images, tube))
       failed_imgs <- c(failed_imgs, seg_file)
       img_times   <- c(img_times, proc.time()[["elapsed"]] - t_img)
@@ -467,7 +467,7 @@ root_depth_metrics <- function(
         })
       }
       if (is.null(im.skeleton)) {
-        message(sprintf("[RootScanR] %s: skeleton unavailable — disabling length/diameter/angle/order metrics.", tube))
+        message(sprintf("[RootScanR] %s: skeleton unavailable -- disabling length/diameter/angle/order metrics.", tube))
         do_length <- do_diam_st <- do_diam_q <- do_angles <- do_order <- FALSE
       }
     }
@@ -479,7 +479,7 @@ root_depth_metrics <- function(
                         terra::rast(paste0(path.rgb, im.ls.rgb[l])))
       }
       if (is.null(im.rgb)) {
-        message(sprintf("[RootScanR] %s: RGB image unavailable — disabling calc_color_metrics.", tube))
+        message(sprintf("[RootScanR] %s: RGB image unavailable -- disabling calc_color_metrics.", tube))
         do_color <- FALSE
       }
     }
@@ -526,7 +526,7 @@ root_depth_metrics <- function(
       dm
     })
     if (is.null(DepthMap)) {
-      message(sprintf("[RootScanR] [%d/%d] %s: create_depthmap failed — skipping.", l, n_images, tube))
+      message(sprintf("[RootScanR] [%d/%d] %s: create_depthmap failed -- skipping.", l, n_images, tube))
       failed_imgs <- c(failed_imgs, seg_file)
       img_times   <- c(img_times, proc.time()[["elapsed"]] - t_img)
       next
@@ -565,7 +565,7 @@ root_depth_metrics <- function(
       rl_res <- .safe("root length", {
         
         # Flat depth map (sinoid = FALSE) used to derive flow directions for
-        # length calculation — the sinusoidal correction is for the depth axis
+        # length calculation -- the sinusoidal correction is for the depth axis
         # only, not for path-length geometry.
         dm_flat <- create_depthmap(
           img            = im,
@@ -624,7 +624,7 @@ root_depth_metrics <- function(
         dm
       })
       if (is.null(rd.map)) {
-        message(sprintf("[RootScanR] %s: diameter map failed — disabling diameter metrics.", tube))
+        message(sprintf("[RootScanR] %s: diameter map failed -- disabling diameter metrics.", tube))
         do_diam_st <- do_diam_q <- FALSE
       }
     }
@@ -713,7 +713,7 @@ root_depth_metrics <- function(
           roots$rootpx.density <<- roots$rootpx / (roots$rootpx + roots$voidpx) * 100
         }
         if (do_length && do_pixels && all(c("rootlength", "rootpx", "voidpx") %in% names(roots))) {
-          # rootlength.density: cm root length per cm² of imaged area per bin
+          # rootlength.density: cm root length per cm^2 of imaged area per bin
           roots$rootlength.density <<-
             roots$rootlength / ((roots$rootpx + roots$voidpx) / (dpi / 2.54)^2)
         }
@@ -756,7 +756,7 @@ root_depth_metrics <- function(
             if (all(dim(gg.full) == dim(bm))) {
               terra::ext(gg.full) <- terra::ext(bm)
             } else {
-              message(sprintf("[RootScanR] %s: gg.full/bm dimension mismatch — disabling calc_root_angles.", tube))
+              message(sprintf("[RootScanR] %s: gg.full/bm dimension mismatch -- disabling calc_root_angles.", tube))
               gg.full   <- NULL
               do_angles <- FALSE
             }
@@ -977,8 +977,8 @@ root_depth_metrics <- function(
         dplyr::summarise(
           mrd  = RootScanR::MRD(w = depth, roots = rootlength.density),
           rpi   = RootScanR::RPI(w = depth, roots = rootlength.density),
-          # total.length.density: sum of (length density × bin size) across all bins
-          # units: cm root per cm² (integrated over the full depth profile)
+          # total.length.density: sum of (length density x bin size) across all bins
+          # units: cm root per cm^2 (integrated over the full depth profile)
           total.length.density = sum(rootlength.density * depth_interval_cm, na.rm = TRUE),
           .groups = "drop"
         )

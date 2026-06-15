@@ -142,7 +142,7 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
   if((output_format == "matrix" || 
       output_format == "Matrix" ||
       output_format == "MATRIX") && dims[3] > 1 ){
-    warning("You cannot convert a 3D image to 2D matrix. An array is returned instead. Consider specifying ´select.layer´ if you want to return a matrix.")
+    warning("You cannot convert a 3D image to 2D matrix. An array is returned instead. Consider specifying 'select.layer' if you want to return a matrix.")
     output_format = "array"
   }
   

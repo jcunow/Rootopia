@@ -14,12 +14,12 @@ classify_peat_rgb(
 }
 \arguments{
 \item{img}{A \code{SpatRaster} with at least 3 layers interpreted as R, G, B
-(in that order). Values may be 0–255 or 0–1 (auto-detected).}
+(in that order). Values may be 0-255 or 0-1 (auto-detected).}
 
 \item{centroids}{A \code{data.frame} with columns \code{class}, \code{L},
-\code{A}, \code{B}, \code{MAX_DIST}. Defaults to a set of centroids
-calibrated on Oulanka 2023 minirhizotron scans — see
-\code{\link{build_peat_centroids}} to derive centroids for your own data.}
+  \code{A}, \code{B}, \code{MAX_DIST}. Defaults to a set of centroids
+calibrated on Oulanka 2023 minirhizotron scans -- see
+  \code{\link{build_peat_centroids}} to derive centroids for your own data.}
 
 \item{downsample_fact}{Integer spatial aggregation factor applied before
 classification for speed. \code{NULL} (default) uses full resolution.

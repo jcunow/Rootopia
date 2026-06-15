@@ -1,11 +1,11 @@
 ##################################
 # Skeletonization pipeline (clean)
-# Zhang–Suen LUT thinning + endpoints + overlay
+# Zhang-Suen LUT thinning + endpoints + overlay
 ##################################
 
 
 
-#' Zhang–Suen thinning using lookup table (LUT implementation)
+#' Zhang-Suen thinning using lookup table (LUT implementation)
 #'
 #' Performs iterative skeletonization of a binary raster using a
 #' lookup-table encoding of 3x3 neighbourhood configurations.
@@ -19,8 +19,8 @@
 #'    - The 3x3 neighbourhood is extracted
 #'    - A weighted sum (mask encoding) produces a unique neighbourhood code
 #' 5. The code is used as an index into a 256-entry lookup table:
-#'    - LUT value 1 or 3 → pixel removed in first sub-step
-#'    - LUT value 2 or 3 → pixel removed in second sub-step
+#'    - LUT value 1 or 3 -> pixel removed in first sub-step
+#'    - LUT value 2 or 3 -> pixel removed in second sub-step
 #' 6. Pixels are updated in-place in the vector representation
 #' 7. Iteration stops when no pixels are removed or max_iter is reached
 #'
@@ -101,7 +101,7 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
   }
   
   if (verbose) {
-    message(sprintf("LUT thinning: %d iters | %d → %d px",
+    message(sprintf("LUT thinning: %d iters | %d -> %d px",
                     iter, n_start, sum(v == 1L)))
   }
   
@@ -182,7 +182,7 @@ detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE
 #' Skeletonize binary image
 #'
 #' Applies iterative morphological thinning using a LUT-based
-#' implementation of the Zhang–Suen skeletonization algorithm.
+#' implementation of the Zhang-Suen skeletonization algorithm.
 #'
 #' Processing steps:
 #'
@@ -246,7 +246,7 @@ skeletonize_image <- function(img,
   n_skel <- sum(terra::values(result) == 1, na.rm = TRUE)
   
   if (verbose) {
-    cat(sprintf("Root: %d → Skeleton: %d\n", n_root, n_skel))
+    cat(sprintf("Root: %d -> Skeleton: %d\n", n_root, n_skel))
   }
   
   # -------------------------
@@ -287,7 +287,7 @@ skeletonize_image <- function(img,
     pal <- c(
       "white",     # 0 background
       "grey65",    # 1 root structure
-      "#0072B2"    # 2 skeleton (Okabe–Ito blue)
+      "#0072B2" # 2 skeleton (Okabe-Ito blue)
     )
     
     overlay_col <- matrix(
