@@ -100,7 +100,7 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
 #' mask = img[[1]] - img[[2]]
 #' mask[mask == 255] <- NA
 #' img = img
-#' depthmap = create_depthmap(img,mask,start.soil = 2.9, select.layer = 2 )
+#' depthmap = create_depthmap(img,mask,start.soil = 2.9 )
 #' binned.map = binning(depthmap,nn = 5)
 binning = function(depthmap, nn, round.option="rounding") {
   
