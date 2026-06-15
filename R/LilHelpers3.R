@@ -662,6 +662,7 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
 #' @param r Weight for red channel
 #' @param g Weight for green channel
 #' @param b Weight for blue channel
+#' @export
 #'
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
