@@ -7,7 +7,7 @@
 prune_terminal_segments(segs, DT, min_length = 0, min_diameter = 0, iter = 1L)
 }
 \arguments{
-\item{segs}{Segment list from \code{\link{trace_segments}}.}
+\item{segs}{Segment list from \code{trace_segments}.}
 
 \item{DT}{Distance-transform matrix (for the diameter test).}
 

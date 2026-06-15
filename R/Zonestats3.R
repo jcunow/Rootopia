@@ -31,6 +31,10 @@
 #'   "freeman_basic", "freeman_corrected", "kimura1", "kimura2"
 #' @param img Skeletonized binary raster image. If \code{skeletonize = TRUE},
 #'   a segmented (non-skeleton) mask can be supplied instead.
+#'   #' @param unit Character. Output unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
+#' @param dpi Numeric. Scan resolution (dots per inch); required for cm/inch conversion.
+#' @param select.layer Numeric. Which layer to select if \code{img} has multiple layers.
+#' @param show_messages Logical. If \code{TRUE}, prints informational messages during processing.
 #' @param skeletonize Logical. If \code{TRUE}, \code{img} is treated as a
 #'   segmented mask and reduced to a skeleton internally via
 #'   \code{skeletonize_image()} before computing length. Default

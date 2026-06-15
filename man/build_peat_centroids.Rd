@@ -16,7 +16,7 @@ matched by name to \code{picks}. Pixels further than this from a class
 centroid cannot be assigned to that class.}
 
 \item{prior}{Optional \code{data.frame} of existing centroids (same format
-as the output of this function, or \code{\link{.default_peat_centroids}}).
+as the output of this function, or \code{.default_peat_centroids()}).
 When supplied, the new centroids derived from \code{picks} are blended
 with the prior centroids using \code{alpha}. Only classes present in both
 \code{picks} and \code{prior} are blended; new classes in \code{picks}

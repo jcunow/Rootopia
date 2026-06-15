@@ -45,9 +45,8 @@ to \code{skel} when it is a raster.}
 \item{return_map}{Build \code{$class_map}.}
 
 \item{...}{Passed to \code{\link{root_graph_pipeline}} (e.g. \code{dt_backend},
-\code{crossing_straight}, \code{prune_iter}).}
-
-\item{diam_weight}{Diameter-vs-angle weight for the continuation rule (>= 0).}
+\code{crossing_straight}, \code{prune_iter}, and \code{diam_weight} —
+the diameter-vs-angle weight for the continuation rule, >= 0).}
 }
 \value{
 An object of class \code{"branchOrderMap"}: a list with \code{$edges},

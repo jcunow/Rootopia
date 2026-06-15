@@ -197,7 +197,7 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
           output_format == "Magick-Image" ||
           output_format == "MAGICK" ||
           output_format == "MAGICK-IMAGE" ){
-    return(imager::cimg2magick(supressWarnings(imager::as.cimg(arr))))
+    return(imager::cimg2magick(suppressWarnings(imager::as.cimg(arr))))
   }
   else {
     stop("Unsupported output format.\n", supported_formats_string(type = "Output"))

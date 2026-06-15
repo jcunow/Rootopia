@@ -186,7 +186,7 @@ trace_segments <- function(skel) {
 
 #' Per-segment measurements from traced segments
 #'
-#' @param segs Output of \code{\link{trace_segments}} / \code{\link{resolve_crossings}}.
+#' @param segs Output of \code{trace_segments} / \code{\link{resolve_crossings}}.
 #' @param DT Distance-transform matrix on the (cropped) mask.
 #' @return A data.frame with \code{edge_id}, \code{from}, \code{to}, \code{n_px},
 #'   \code{n_orth}, \code{n_diag}, \code{length} (sqrt(2) polyline, px),
@@ -229,7 +229,7 @@ build_edge_table <- function(segs, DT) {
 compute_tip_order <- function(edge_tbl) {
   if (is.null(edge_tbl) || nrow(edge_tbl) == 0L) return(edge_tbl)
   nodes <- unique(c(edge_tbl$from, edge_tbl$to))
-  ni <- setNames(seq_along(nodes), nodes)
+  ni <- stats::setNames(seq_along(nodes), nodes)
   fi <- as.integer(ni[edge_tbl$from]); ti <- as.integer(ni[edge_tbl$to])
   M <- length(nodes); E <- nrow(edge_tbl)
   active <- rep(TRUE, E); ord <- rep(NA_integer_, E); round <- 0L
@@ -496,7 +496,7 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
 #' dissolving the crossing-induced cycle. Genuine branches (degree 3) and
 #' ambiguous nodes are left untouched.
 #'
-#' @param segs Segment list from \code{\link{trace_segments}}.
+#' @param segs Segment list from \code{trace_segments}.
 #' @param straight_dot A crossing is resolved only if both candidate pairs have
 #'   tangent dot product below this (more negative = straighter; -0.5 ~ >120deg).
 #' @param look Pixels used to estimate endpoint tangents.
@@ -721,7 +721,7 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
 #' Skeleton-level pruning before the pipeline is an alternative, fully modular
 #' approach.
 #'
-#' @param segs Segment list from \code{\link{trace_segments}}.
+#' @param segs Segment list from \code{trace_segments}.
 #' @param DT Distance-transform matrix (for the diameter test).
 #' @param min_length Minimum segment length (px) to keep a terminal segment.
 #' @param min_diameter Minimum segment diameter (px) to keep a terminal segment.
@@ -919,13 +919,14 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' @param dpi Scan resolution (dots per inch); required for cm/inch.
 #' @param length_method \code{"polyline"} (sqrt(2) chain code, follows curves) or
 #'   \code{"kimura"} (per-segment Kimura correction, better for straight segments).
-#' @param diam_weight Diameter-vs-angle weight for the continuation rule (>= 0).
+
 #' @param template \code{SpatRaster} defining the \code{$class_map} grid; defaults
 #'   to \code{skel} when it is a raster.
 #' @param overlay_png Optional path; writes the order-coloured validation PNG.
 #' @param return_map Build \code{$class_map}.
 #' @param ... Passed to \code{\link{root_graph_pipeline}} (e.g. \code{dt_backend},
-#'   \code{crossing_straight}, \code{prune_iter}).
+#'   \code{crossing_straight}, \code{prune_iter}, and \code{diam_weight} —
+#'   the diameter-vs-angle weight for the continuation rule, >= 0).
 #' @return An object of class \code{"branchOrderMap"}: a list with \code{$edges},
 #'   \code{$summary}, \code{$class_map} (\code{SpatRaster}; chosen order per pixel,
 #'   \code{NA} off-root), and \code{$order}, \code{$unit}, \code{$dpi},

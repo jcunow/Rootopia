@@ -79,7 +79,7 @@ The result is a data frame with one row per tube × depth-bin combination.
 Always-present columns: `Tube`, `Session`, `Plot`, `depth`.
 Default metric columns: `rootpx`, `voidpx`, `rootlength`, `avg.diameter`,
 `max.diameter`, `var.diameter`, `rootpx.density`, `rootlength.density`,
-`rwdi`, `rpi`, `total.length.density`, `rootlength.fraction`,
+`mrd`, `rpi`, `total.length.density`, `rootlength.fraction`,
 `mean.var.diameter`, `rootsurface_rootvolume_ratio`.
 
 ---
@@ -156,7 +156,7 @@ result <- root_depth_metrics(
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |
 | `calc_root_order_metrics` | Per bin: `mean.branch_order`, `max.branch_order`, `mean.root_order`, `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, ...), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length` |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
-| `calc_distribution_indices` | `rwdi`, `rpi`, `total.length.density` | Tube-level summary |
+| `calc_distribution_indices` | `mrd`, `rpi`, `total.length.density` | Tube-level summary |
 | `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter`, `rootsurface_rootvolume_ratio` | Auto-enables distribution indices + diameter stats |
 
 ---
@@ -355,13 +355,13 @@ ggplot(result, aes(x = depth, y = avg.diameter)) +
     y     = "Average Diameter (cm)"
   )
 
-# RWDI distribution across tubes
-ggplot(result |> dplyr::distinct(Tube, rwdi), aes(x = rwdi)) +
+# mrd distribution across tubes
+ggplot(result |> dplyr::distinct(Tube, mrd), aes(x = mrd)) +
   geom_histogram(bins = 15, fill = "steelblue4", colour = "white") +
   theme_minimal() +
   labs(
-    title = "Root Weight Distribution Index (RWDI)",
-    x     = "RWDI",
+    title = "Mean Root Depth Distribution (MRD)",
+    x     = "MRD",
     y     = "Count"
   )
 ```

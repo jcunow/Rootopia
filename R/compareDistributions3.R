@@ -411,11 +411,12 @@ tail_weighted_wasserstein_distance <- function(Q, P, inverse = FALSE,
 #' @param w Numeric vector of weights (typically depths)
 #' @param roots Numeric vector of root coverage values
 #' @return Numeric RWDI value
+#' @export
 #' @examples
 #' w <- seq(5, 25, 5)
 #' roots <- c(0, 10, 7, 3, 1)
-#' rwdi <- RWDI(w, roots)
-RWDI <- function(w, roots) {
+#' mean_rooting_depth <- MRD(w, roots)
+MRD <- function(w, roots) {
   tryCatch({
     # Validate inputs
     if (!is.numeric(w) || !is.numeric(roots)) {
@@ -458,6 +459,7 @@ RWDI <- function(w, roots) {
 #' @param roots Numeric vector of root coverage values
 #' @param w Numeric vector of weights (typically depths)
 #' @return Numeric RPI value between -1 and 1
+#' @export
 #' @examples
 #' w <- seq(5, 25, 5)
 #' roots <- c(0, 10, 7, 3, 1)

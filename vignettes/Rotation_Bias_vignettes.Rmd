@@ -43,7 +43,7 @@ section below.
 
 ## Installation
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 # install.packages("remotes")
 # remotes::install_github("jcunow/RootScanR")
 

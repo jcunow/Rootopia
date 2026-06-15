@@ -28,6 +28,7 @@ Imports:
     landscapemetrics,
     mclust,
     minpack.lm,
+    pkgnet,
     raster,
     RStoolbox,
     stats,

@@ -131,7 +131,7 @@
 #'   matched by name to \code{picks}. Pixels further than this from a class
 #'   centroid cannot be assigned to that class.
 #' @param prior Optional \code{data.frame} of existing centroids (same format
-#'   as the output of this function, or \code{\link{.default_peat_centroids}}).
+#'   as the output of this function, or \code{.default_peat_centroids()}).
 #'   When supplied, the new centroids derived from \code{picks} are blended
 #'   with the prior centroids using \code{alpha}. Only classes present in both
 #'   \code{picks} and \code{prior} are blended; new classes in \code{picks}
@@ -193,7 +193,7 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
     
     lab  <- .rgb_to_lab(mat)
     lm   <- colMeans(lab)
-    lsd  <- if (nrow(lab) > 1) apply(lab, 2, sd) else c(0, 0, 0)
+    lsd <- if (nrow(lab) > 1) apply(lab, 2, stats::sd) else c(0, 0, 0)
     to_c <- sqrt(rowSums(sweep(lab, 2, lm)^2))
     
     if (nrow(lab) > 1) {
@@ -375,7 +375,7 @@ classify_peat_rgb <- function(img,
   
   # --- Extract pixel matrix --------------------------------------------------
   pixels     <- terra::values(img_work)
-  valid_mask <- complete.cases(pixels)
+  valid_mask <- stats::complete.cases(pixels)
   pixels_rgb <- pixels[valid_mask, , drop = FALSE]
   msg(sprintf("Valid pixels: %d (%.1f%%)",
               sum(valid_mask), 100 * mean(valid_mask)))
@@ -584,19 +584,19 @@ plot_peat_classification <- function(result,
     color_mode,
     centroid = {
       cols <- mapply(.lab_to_rgb_hex, centroids$L, centroids$A, centroids$B)
-      c(setNames(unname(cols), as.character(seq_len(nrow(centroids)))),
+      c(stats::setNames(unname(cols), as.character(seq_len(nrow(centroids)))),
         "0" = unname(class_colors["unclassified"]))
     },
     vibrant = {
       cols <- sapply(centroids$class, function(n)
         if (n %in% names(vibrant_colors)) vibrant_colors[[n]] else "#CCCCCC")
-      c(setNames(unname(cols), as.character(seq_len(nrow(centroids)))),
+      c(stats::setNames(unname(cols), as.character(seq_len(nrow(centroids)))),
         "0" = unname(vibrant_colors["unclassified"]))
     },
     {  # "contrast" (default)
       cols <- sapply(centroids$class, function(n)
         if (n %in% names(class_colors)) class_colors[[n]] else "#CCCCCC")
-      c(setNames(unname(cols), as.character(seq_len(nrow(centroids)))),
+      c(stats::setNames(unname(cols), as.character(seq_len(nrow(centroids)))),
         "0" = unname(class_colors["unclassified"]))
     }
   )
@@ -623,7 +623,7 @@ plot_peat_classification <- function(result,
   leg_fills  <- unname(pal[leg_ids])
   
   # Map colours for IDs present in raster
-  map_ids  <- sort(unique(na.omit(terra::values(class_map))))
+  map_ids <- sort(unique(stats::na.omit(terra::values(class_map))))
   map_cols <- unname(pal[as.character(map_ids)])
   
   # Open device
@@ -638,7 +638,7 @@ plot_peat_classification <- function(result,
   # Panel 1: class map
   graphics::par(mar = c(2, 2, 3, 0.5))
   # plot() on a numeric raster with a pre-built colour vector keyed to sorted unique IDs
-  plot_ids <- sort(unique(na.omit(as.vector(terra::values(class_map)))))
+  plot_ids <- sort(unique(stats::na.omit(as.vector(terra::values(class_map)))))
   plot_cols <- unname(pal[as.character(plot_ids)])
   terra::plot(class_map,
               col    = plot_cols,

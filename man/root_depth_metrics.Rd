@@ -153,8 +153,8 @@ imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
 \code{calc_root_length}.  Default \code{TRUE}.}
 
 \item{calc_distribution_indices}{Logical. Compute tube-level indices:
-\code{rwdi} (root weight distribution index), \code{rpi} (root
-proliferation index), and \code{total.length.density} (summed length
+\code{mrd} (mean rooting depth), \code{rpi} (root
+penetration index), and \code{total.length.density} (summed length
 density over all bins, in cm root per cm² per cm depth).  Auto-enables
 \code{calc_density_metrics}.  Default \code{TRUE}.}
 
@@ -246,30 +246,6 @@ directories if necessary.
 
 All metadata arguments below accept either a single value (recycled to all
 images) or a vector of length equal to the number of images.
-}
-
-\section{Scan and geometry settings}{
-
-}
-
-\section{Core metrics (on by default)}{
-
-}
-
-\section{Extended metrics (off by default)}{
-
-}
-
-\section{Derived metrics}{
-
-}
-
-\section{Diameter threshold settings (used when \code{calc_diameter_quantiles = TRUE})}{
-
-}
-
-\section{Output}{
-
 }
 
 \examples{

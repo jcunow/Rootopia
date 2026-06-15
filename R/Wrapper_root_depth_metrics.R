@@ -69,7 +69,7 @@
 #' @param session Character. Session or campaign label added as the
 #'   \code{Session} column, e.g. \code{"2022_02"}.  Default \code{""}.
 #'
-#' @section Scan and geometry settings:
+# --- Scan and geometry settings ---
 #' @param dpi Numeric. Scanner resolution in \strong{dots per inch}.  Used to
 #'   convert pixel distances to physical units (cm).  Default \code{300}.
 #' @param tube_diameter_cm Numeric. Inner diameter of the minirhizotron tube in
@@ -88,7 +88,7 @@
 #'   sinusoidal correction is needed (\code{sinoid = FALSE}).  Default
 #'   \code{FALSE}.
 #'
-#' @section Core metrics (on by default):
+# --- Core metrics (on by default) ---
 #' @param calc_root_pixels Logical. Count \code{rootpx} (foreground pixels) and
 #'   \code{voidpx} (background pixels) per depth bin.  Required for density
 #'   metrics.  Default \code{TRUE}.
@@ -100,7 +100,7 @@
 #'   variance of root diameter (cm) using the distance-transform approach in
 #'   \code{root_diameter()}.  Default \code{TRUE}.
 #'
-#' @section Extended metrics (off by default):
+# --- Extended metrics (off by default) ---
 #' @param calc_diameter_quantiles Logical. Compute the 90th, 95th, and 99th
 #'   percentile of the diameter distribution per bin, conditional means above
 #'   each quantile, threshold-based root lengths (see
@@ -131,14 +131,14 @@
 #'   (the highest branch order found).  Requires a skeleton.  \strong{Slow}:
 #'   builds one segment graph per image.  Default \code{FALSE}.
 #'
-#' @section Derived metrics:
+# --- Derived metrics ---
 #' @param calc_density_metrics Logical. Compute \code{rootpx.density} (percent
 #'   root area cover) and \code{rootlength.density} (cm root length per cm²
 #'   imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
 #'   \code{calc_root_length}.  Default \code{TRUE}.
 #' @param calc_distribution_indices Logical. Compute tube-level indices:
-#'   \code{rwdi} (root weight distribution index), \code{rpi} (root
-#'   proliferation index), and \code{total.length.density} (summed length
+#'   \code{mrd} (mean rooting depth), \code{rpi} (root
+#'   penetration index), and \code{total.length.density} (summed length
 #'   density over all bins, in cm root per cm² per cm depth).  Auto-enables
 #'   \code{calc_density_metrics}.  Default \code{TRUE}.
 #' @param calc_advanced_metrics Logical. Compute per-bin derived metrics:
@@ -149,14 +149,14 @@
 #'   as cm² per cm³).  Auto-enables \code{calc_distribution_indices} and
 #'   \code{calc_diameter_stats}.  Default \code{TRUE}.
 #'
-#' @section Diameter threshold settings (used when \code{calc_diameter_quantiles = TRUE}):
+# --- Diameter threshold settings (used when \code{calc_diameter_quantiles = TRUE}) ---
 #' @param diameter_thresholds Numeric vector. Diameter cut-offs for computing
 #'   \code{rootlength.above.*} and \code{avg.diameter.above.*} columns.
 #'   Units are set by \code{diameter_threshold_unit}.  Default \code{c(0.2, 0.5, 1)}.
 #' @param diameter_threshold_unit Character. Unit of \code{diameter_thresholds}:
 #'   \code{"mm"} (default), \code{"cm"}, or \code{"px"}.
 #'
-#' @section Output:
+# --- Output ---
 #' @param output_path Character or \code{NULL}. If provided, the result is saved
 #'   as an \code{.RData} file at this path.  The exported object is named
 #'   \code{root.depth.metrics}.  Parent directories are created if they do not
@@ -513,7 +513,7 @@ root_depth_metrics <- function(
     # -------------------------------------------------------------------------
     DepthMap <- .safe("create_depthmap", {
       dm <- create_depthmap(
-        im          = im,
+        img = im,
         sinoid      = !flat_geometry,
         dpi         = dpi,
         start.soil  = soil0,
@@ -568,7 +568,7 @@ root_depth_metrics <- function(
         # length calculation — the sinusoidal correction is for the depth axis
         # only, not for path-length geometry.
         dm_flat <- create_depthmap(
-          im            = im,
+          img            = im,
           sinoid        = FALSE,
           dpi           = dpi,
           start.soil    = soil0,
@@ -681,7 +681,7 @@ root_depth_metrics <- function(
                          "length_fraction", "mean_segment_length", "branching_frequency",
                          "mean_diameter", "median_diameter")
         grp_map <- c(focal = "main_root", rest = "lateral_roots")
-        tube_row <- as.list(setNames(rep(NA_real_, length(metric_cols) * length(grp_map)),
+        tube_row <- as.list(stats::setNames(rep(NA_real_, length(metric_cols) * length(grp_map)),
                                      as.vector(outer(grp_map, metric_cols, paste, sep = "."))))
         for (i in seq_len(nrow(om))) {
           g <- grp_map[[om$group[i]]]
@@ -880,7 +880,7 @@ root_depth_metrics <- function(
               st   <- abs(sin(dev * pi / 180)) * 90
               data.frame(depth = d, deep_drive = dv,
                          mean.steepness.angle = mean(st, na.rm = TRUE),
-                         sd.steepness.angle   = sd(st,   na.rm = TRUE))
+                         sd.steepness.angle = stats::sd(st, na.rm = TRUE))
             }
           }, fallback = data.frame(depth = d, deep_drive = NA_real_,
                                    mean.steepness.angle = NA_real_,
@@ -975,7 +975,7 @@ root_depth_metrics <- function(
         dplyr::group_by(Tube) |>
         dplyr::filter(!is.na(depth) & !is.na(rootlength.density)) |>
         dplyr::summarise(
-          rwdi  = RootScanR::RWDI(w = depth, roots = rootlength.density),
+          mrd  = RootScanR::MRD(w = depth, roots = rootlength.density),
           rpi   = RootScanR::RPI(w = depth, roots = rootlength.density),
           # total.length.density: sum of (length density × bin size) across all bins
           # units: cm root per cm² (integrated over the full depth profile)
