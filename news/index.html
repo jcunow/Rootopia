@@ -25,7 +25,7 @@
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnetreport.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -48,34 +48,10 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.0" id="rootscanr-110">RootScanR 1.1.0<a class="anchor" aria-label="anchor" href="#rootscanr-110"></a></h2>
-<ul><li><p><code><a href="../reference/load_flexible_image.html">load_flexible_image()</a></code>: <code>SpatRaster</code> outputs with 3 or 4 layers now get <code><a href="https://rspatial.github.io/terra/reference/RGB.html" class="external-link">terra::RGB()</a></code> metadata set automatically, so <code><a href="https://rspatial.github.io/terra/reference/plotRGB.html" class="external-link">terra::plotRGB()</a></code> works without an extra manual call. The orphaned, unintegrated <code>cimg_to_spatrast()</code> patch (and its man page) have been removed since the fix is now applied directly.</p></li>
-<li><p><code><a href="../reference/root_diameter.html">root_diameter()</a></code>: fixed <code>root_volume</code>, which previously summed <code>diameter^2 * pi</code> (off by a factor of 4, and missing the per-pixel length term entirely). Volume is now <code>sum(pi * (diameter/2)^2)</code> per skeleton pixel (cylinder of radius <code>diameter/2</code>, length 1 px), converted to <code>unit^3</code>. Also adds <code>root_surface_area</code> (<code>sum(pi * diameter)</code> per skeleton pixel, converted to <code>unit^2</code>) — the lateral surface area of the same cylinders.</p></li>
-<li><p><code><a href="../reference/root_thickness.html">root_thickness()</a></code> is now deprecated (<code><a href="https://rdrr.io/r/base/Deprecated.html" class="external-link">.Deprecated()</a></code>); it is a naive area/length estimator that ignores branching and local width variation. Use <code><a href="../reference/root_diameter.html">root_diameter()</a></code>’s <code>mean_diameter</code>, <code>median_diameter</code>, <code>root_volume</code>, and new <code>root_surface_area</code> instead.</p></li>
-<li><p><code><a href="../reference/clean_image.html">clean_image()</a></code> gains optional <code>pre_threshold</code>, <code>pre_threshold_method</code>, and <code>pre_threshold_window_size</code> arguments. When <code>pre_threshold</code> is set, <code><a href="../reference/image_threshold.html">image_threshold()</a></code> binarizes the input <em>before</em> hole-filling and artifact removal, so non-binary (e.g. probability/grayscale) inputs can be cleaned directly.</p></li>
-<li><p><code>zoning(mode = "rotation")</code>: <code>rotation_slices = c(i, i)</code> now selects a single circumferential slice <code>i</code> (previously required <code>rotation_slices[1] &lt; rotation_slices[2]</code> and errored on equal values). This enables looping over individual rotation-axis slices, e.g. for per-slice trait extraction.</p></li>
-<li><p>Minirhizotron vignette: added a “Cumulative root accumulation with depth” example using <code><a href="../reference/root_accumulation.html">root_accumulation()</a></code>.</p></li>
-<li><p>Rotation Bias vignette: replaced the temporally-framed “Rhythmicity Analysis” section with a “Circumferential zoning and rhythmicity” section that uses <code>zoning(mode = "rotation")</code> to split the tube surface into circumferential slices and applies <code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> / <code><a href="../reference/fit_sine_curve.html">fit_sine_curve()</a></code> to test for a systematic (top-down / side-to-side) pattern in root distribution around the tube. Notes planned future work: a combined rotation-shift + censor helper, and estimating the rotation center from the amplitude peak of this circumferential fit.</p></li>
-<li><p>New root branching-order pipeline: <code><a href="../reference/root_graph_pipeline.html">root_graph_pipeline()</a></code>, <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code>, <code><a href="../reference/order_metrics.html">order_metrics()</a></code>, <code><a href="../reference/summarize_orders.html">summarize_orders()</a></code>, <code><a href="../reference/convert_root_units.html">convert_root_units()</a></code>, <code><a href="../reference/order_classification_map.html">order_classification_map()</a></code>, <code><a href="../reference/prune_terminal_segments.html">prune_terminal_segments()</a></code>, <code><a href="../reference/render_order_overlay.html">render_order_overlay()</a></code>, and <code><a href="../reference/plot_order_window.html">plot_order_window()</a></code> classify a root skeleton into a segment graph and assign tip/root/branch order (main axis vs. lateral roots).</p></li>
-<li><p><code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> gains <code>calc_root_order_metrics</code>, which runs the new branching-order pipeline per image and adds per-depth-bin (<code>mean.branch_order</code>, <code>max.branch_order</code>, <code>mean.root_order</code>, <code>lateral_root_fraction</code>) and per-tube (<code>main_root.*</code>, <code>lateral_roots.*</code>, <code>n_root_orders</code>) columns.</p></li>
-<li><p>Vignettes updated with a “Root branching order” section in the Minirhizotron, Flatbed, and Batch Processing tutorials.</p></li>
-<li><p><code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code>: <code>path.skl</code> is now optional. If it is <code>NULL</code> or a skeleton file is missing for an image, the skeleton is computed internally via <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>. The “Minimum requirements” table and documentation in the Batch Processing vignette have been corrected to reflect that both <code>path.skl</code> and <code>soil_starts</code> are optional.</p></li>
-<li><p>Fixed <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>, which previously called a non-existent <code>lut_thin()</code> function and would error on every call; it now correctly uses the LUT-based Zhang-Suen thinning implementation (<code><a href="../reference/lut_thin_fast.html">lut_thin_fast()</a></code>).</p></li>
-<li><p>Fixed <code><a href="../reference/root_diameter.html">root_diameter()</a></code>’s internal skeletonization fallback (used when <code>skeleton.img</code> is not supplied), which called <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> with a non-existent <code>methods = skeleton_method</code> argument and errored on every call. <code>skeleton_method</code> is now documented as currently unused.</p></li>
-<li>
-<p>All remaining functions that consume a skeleton can now compute one internally via <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> if none is supplied:</p>
-<ul><li>
-<code>root_length(img, skeletonize = TRUE)</code> and <code>detect_skeleton_points(img, skeletonize = TRUE)</code> treat <code>img</code> as a segmented mask and skeletonize it first.</li>
-<li>
-<code><a href="../reference/root_graph_pipeline.html">root_graph_pipeline()</a></code> and <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code> now accept <code>skel = NULL</code>; if omitted, the skeleton is computed from <code>mask</code> via <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>.</li>
-</ul></li>
-</ul></div>
-    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="rootscanr-100">RootScanR 1.0.0<a class="anchor" aria-label="anchor" href="#rootscanr-100"></a></h2>
 <ul><li>Initial CRAN submission.</li>
 </ul></div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside></div>
+  </main></div>
 
 
     <footer><div class="pkgdown-footer-left">

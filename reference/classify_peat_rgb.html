@@ -31,7 +31,7 @@ distance threshold are labelled "unclassified".'></head><body>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnetreport.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -77,15 +77,21 @@ distance threshold are labelled "unclassified".</p>
 
 
 <dl><dt id="arg-img">img<a class="anchor" aria-label="anchor" href="#arg-img"></a></dt>
-<dd><p>A <code>SpatRaster</code> with at least 3 layers interpreted as R, G, B
-(in that order). Values may be 0-255 or 0-1 (auto-detected).</p></dd>
+<dd><p>An RGB image with at least 3 layers/channels interpreted as
+R, G, B (in that order). Values may be 0-255 or 0-1 (auto-detected).
+Converted internally via <code><a href="load_flexible_image.html">load_flexible_image()</a></code>, so any of its
+supported formats are accepted: file path (.jpg, .jpeg, .png, .tif,
+.tiff, .bmp), <code>SpatRaster</code>, <code>RasterLayer</code>/<code>RasterBrick</code>,
+<code>cimg</code>, <code>magick-image</code>, <code>matrix</code>, or <code>array</code>.</p></dd>
 
 
 <dt id="arg-centroids">centroids<a class="anchor" aria-label="anchor" href="#arg-centroids"></a></dt>
 <dd><p>A <code>data.frame</code> with columns <code>class</code>, <code>L</code>,
-  <code>A</code>, <code>B</code>, <code>MAX_DIST</code>. Defaults to a set of centroids
-calibrated on Oulanka 2023 minirhizotron scans – see
-  <code><a href="build_peat_centroids.html">build_peat_centroids</a></code> to derive centroids for your own data.</p></dd>
+<code>A</code>, <code>B</code>, <code>MAX_DIST</code> (see <strong>Centroid table format</strong>
+below). Defaults to a set of centroids calibrated on Oulanka 2023
+minirhizotron scans – see <strong>Building your own centroids</strong> below
+and <code><a href="build_peat_centroids.html">build_peat_centroids</a></code> to derive centroids for your own
+data.</p></dd>
 
 
 <dt id="arg-downsample-fact">downsample_fact<a class="anchor" aria-label="anchor" href="#arg-downsample-fact"></a></dt>
@@ -132,6 +138,90 @@ needed.</p></dd>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="centroid-table-format">Centroid table format<a class="anchor" aria-label="anchor" href="#centroid-table-format"></a></h2>
+
+
+<p>The <code>centroids</code> table has one row per material class and these
+columns:</p><dl><dt><code>class</code></dt>
+<dd><p>Character. Name of the class (e.g.
+    <code>"dark_peat"</code>, <code>"root"</code>). Becomes the factor level in
+    <code>result$map</code> and the <code>class</code> column of <code>result$metrics</code>.</p></dd>
+
+  <dt><code>L</code>, <code>A</code>, <code>B</code></dt>
+<dd><p>Numeric. The class centroid's
+    coordinates in CIE LAB colour space (D65 illuminant): <code>L</code> is
+    lightness (0 = black, 100 = white), <code>A</code> is the green-red axis
+    (negative = green, positive = red), and <code>B</code> is the blue-yellow
+    axis (negative = blue, positive = yellow). These are the *mean* LAB
+    values of the representative pixels for that class.</p></dd>
+
+  <dt><code>MAX_DIST</code></dt>
+<dd><p>Numeric. The per-class assignment radius, in
+    Euclidean LAB units. A pixel is assigned to the class whose centroid
+    is nearest in LAB space, but only if that distance is <code>&lt;=
+    MAX_DIST</code>; otherwise the pixel is labelled <code>"unclassified"</code>.
+    Larger values classify more pixels but risk merging visually distinct
+    materials; smaller values leave more pixels unclassified. Typical
+    values are roughly 10-30.</p></dd>
+
+
+</dl><p>Pixel RGB values are converted to LAB internally before distances are
+computed, so <code>L</code>/<code>A</code>/<code>B</code> are never raw RGB numbers.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="building-your-own-centroids-picks-">Building your own centroids (picks)<a class="anchor" aria-label="anchor" href="#building-your-own-centroids-picks-"></a></h2>
+
+
+<p>The default <code>centroids</code> table was calibrated on one specific scanner
+and site, so for other datasets you should derive your own using
+<code><a href="build_peat_centroids.html">build_peat_centroids</a></code>.</p>
+<p>That function requires <code>picks</code>: a named list where each element is an
+<code>N x 3</code> numeric matrix of RGB values (0–255), with one row per
+manually selected pixel that is known to belong to a given material class.
+The more representative pixels supplied for each class, the more robust the
+resulting centroid will be.</p>
+<div class="sourceCode"><pre><code><span></span>
+<span><span class="va">picks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  dark_peat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">32</span>, <span class="fl">28</span>, <span class="fl">25</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">30</span>, <span class="fl">27</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">29</span>, <span class="fl">25</span>, <span class="fl">22</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">31</span>, <span class="fl">27</span>, <span class="fl">24</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  root <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">215</span>, <span class="fl">180</span>, <span class="fl">130</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">220</span>, <span class="fl">185</span>, <span class="fl">135</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">210</span>, <span class="fl">175</span>, <span class="fl">128</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">218</span>, <span class="fl">182</span>, <span class="fl">132</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">max_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  dark_peat <span class="op">=</span> <span class="fl">14</span>,</span>
+<span>  root      <span class="op">=</span> <span class="fl">26</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_peat_centroids.html">build_peat_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_peat_rgb.html">classify_peat_rgb</a></span><span class="op">(</span></span>
+<span>  <span class="va">img</span>,</span>
+<span>  centroids <span class="op">=</span> <span class="va">cents</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+
+<p>Each row of a pick matrix represents a single RGB observation:</p>
+<div class="sourceCode"><pre><code><span></span>
+<span><span class="co">#      R    G    B</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">215</span>, <span class="fl">180</span>, <span class="fl">130</span><span class="op">)</span></span></code></pre></div>
+
+<p>Typically, picks are obtained by interactively sampling representative
+pixels from an image and grouping them by material class. The resulting
+centroids are calculated in CIE LAB colour space, not RGB space.</p>
+<p><code><a href="build_peat_centroids.html">build_peat_centroids()</a></code> converts the supplied RGB picks to LAB,
+computes a centroid for each class, and reports intra-class spread and
+inter-class distances to help assess whether the chosen
+<code>MAX_DIST</code> values are appropriate.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="build_peat_centroids.html">build_peat_centroids</a></code>, <code><a href="plot_peat_classification.html">plot_peat_classification</a></code></p></div>
     </div>
@@ -140,19 +230,17 @@ needed.</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">img</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="st">"scan.tiff"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">img</span>    <span class="op">&lt;-</span> <span class="va">seg_Oulanka2023_Session01_T067</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">classify_peat_rgb</span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Access outputs</span></span></span>
 <span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Zonal stats with a depth-band raster</span></span></span>
-<span class="r-in"><span><span class="va">zones</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="st">"depth_zones.tif"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">zstats</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, <span class="va">zones</span>, fun <span class="op">=</span> <span class="st">"freq"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Custom centroids</span></span></span>
-<span class="r-in"><span><span class="va">cents</span>  <span class="op">&lt;-</span> <span class="fu"><a href="build_peat_centroids.html">build_peat_centroids</a></span><span class="op">(</span><span class="va">my_picks</span>, <span class="va">my_max_dist</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Custom centroids -- see "Building your own centroids (picks)" above for</span></span></span>
+<span class="r-in"><span><span class="co"># how to construct `picks` and `max_dist`</span></span></span>
+<span class="r-in"><span><span class="va">cents</span>  <span class="op">&lt;-</span> <span class="fu"><a href="build_peat_centroids.html">build_peat_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">classify_peat_rgb</span><span class="op">(</span><span class="va">img</span>, centroids <span class="op">=</span> <span class="va">cents</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

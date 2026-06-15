@@ -33,5 +33,4 @@ rgb2gray(img, r = 0.21, g = 0.72, b = 0.07)
 data(seg_Oulanka2023_Session01_T067)
 img = seg_Oulanka2023_Session01_T067
 gray.raster = rgb2gray(img)
-#> Error in rgb2gray(img): could not find function "rgb2gray"
 ```

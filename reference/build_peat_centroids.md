@@ -19,6 +19,12 @@ build_peat_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
   A named list of RGB pick matrices. Each element corresponds to one
   class and must be a numeric matrix with 3 columns (R, G, B), values
   0-255, with one row per pick. Names become class names in the output.
+  See
+  [`classify_peat_rgb`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)'s
+  **Building your own centroids (picks)** section for a worked example
+  of constructing these matrices from an image (e.g. by cropping
+  representative patches and calling
+  [`terra::values()`](https://rspatial.github.io/terra/reference/values.html)).
 
 - max_dist:
 

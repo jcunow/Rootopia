@@ -31,7 +31,7 @@ intra-class spread, per-class coverage, and inter-class distance warnings."></he
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnetreport.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -72,8 +72,12 @@ intra-class spread, per-class coverage, and inter-class distance warnings.</p>
 
 <dl><dt id="arg-picks">picks<a class="anchor" aria-label="anchor" href="#arg-picks"></a></dt>
 <dd><p>A named list of RGB pick matrices. Each element corresponds to
-  one class and must be a numeric matrix with 3 columns (R, G, B), values
-0-255, with one row per pick. Names become class names in the output.</p></dd>
+one class and must be a numeric matrix with 3 columns (R, G, B), values
+0-255, with one row per pick. Names become class names in the output.
+See <code><a href="classify_peat_rgb.html">classify_peat_rgb</a></code>'s <strong>Building your own
+centroids (picks)</strong> section for a worked example of constructing these
+matrices from an image (e.g. by cropping representative patches and
+calling <code><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">terra::values()</a></code>).</p></dd>
 
 
 <dt id="arg-max-dist">max_dist<a class="anchor" aria-label="anchor" href="#arg-max-dist"></a></dt>
@@ -94,10 +98,10 @@ that are absent from <code>prior</code> are added as-is.</p></dd>
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
 <dd><p>Numeric in [0, 1]. Blend weight for the prior centroids.
 <code>alpha = 0</code> (default) ignores the prior entirely – centroids are
-  derived purely from the new picks. <code>alpha = 1</code> returns the prior
-  unchanged. <code>alpha = 0.5</code> weights old and new equally. Decrease
-  <code>alpha</code> progressively as you collect more new picks to gradually
-  shift calibration toward the new dataset.</p></dd>
+derived purely from the new picks. <code>alpha = 1</code> returns the prior
+unchanged. <code>alpha = 0.5</code> weights old and new equally. Decrease
+<code>alpha</code> progressively as you collect more new picks to gradually
+shift calibration toward the new dataset.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
