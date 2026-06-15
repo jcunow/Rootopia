@@ -17,6 +17,6 @@ A `cimg` with holes filled.
 }
 \description{
 Sets to 1 all black regions (value = 0) that are completely surrounded by
-white (value = 1) — i.e. not connected to the image border.
+white (value = 1) -- i.e. not connected to the image border.
 }
 \keyword{internal}

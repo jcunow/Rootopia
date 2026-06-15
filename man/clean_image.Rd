@@ -72,11 +72,11 @@ A cleaned image in the format specified by `output_format`
 }
 \description{
 Performs three sequential cleaning operations on a binary segmented image:
-1. **Hole filling** — fills black regions enclosed by white (segmentation
+1. **Hole filling** -- fills black regions enclosed by white (segmentation
    gaps inside roots).
 2. **Artifact removal** — removes isolated white specks not connected to
    the image border (false-positive root detections).
-3. **Edge smoothing** *(optional, off by default)* — applies morphological
+3. **Edge smoothing** *(optional, off by default)* -- applies morphological
    closing to smooth jagged root edges.
 }
 \section{Why clean before skeletonisation}{
@@ -118,7 +118,7 @@ data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
 
-# Clean: fill small holes, remove tiny artifacts — returns SpatRaster
+# Clean: fill small holes, remove tiny artifacts -- returns SpatRaster
 cleaned <- clean_image(img,
                        max_hole_size     = 50,
                        max_artifact_size = 10,

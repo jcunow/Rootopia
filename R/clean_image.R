@@ -12,7 +12,7 @@
 #' Fill internal black holes in a binary image
 #'
 #' Sets to 1 all black regions (value = 0) that are completely surrounded by
-#' white (value = 1) — i.e. not connected to the image border.
+#' white (value = 1) -- i.e. not connected to the image border.
 #'
 #' @param img A `cimg` binary image (values 0 and 1).
 #' @param max_size Maximum hole size in pixels to fill.  If `NULL` (default),
@@ -134,7 +134,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 #'
 #' @section Choosing thresholds:
 #' At 300 DPI a single root cross-section in a minirhizotron scan is
-#' roughly 5–150 px² depending on root diameter.  As a starting point:
+#' roughly 5–150 px^2 depending on root diameter.  As a starting point:
 #' \itemize{
 #'   \item `max_artifact_size = 10` removes single-pixel noise and tiny
 #'         segmentation specks while preserving fine roots.
@@ -149,11 +149,13 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' @return Invisibly `NULL`.  Prints to the console.
 #' @keywords internal
 #' @examples
+#' \dontrun{
 #' img <- imager::as.cimg(matrix(0, 50, 50))
 #' img[10:20, 10:20] <- 1   # white square
 #' img[13:15, 13:15] <- 0   # hole inside it
 #' img[40, 40]        <- 1  # isolated artifact
 #' report_image_components(img)
+#' }
 report_image_components <- function(img) {
   img <- load_flexible_image(img, output_format = "cimg", binarize = TRUE)
 
@@ -195,7 +197,7 @@ report_image_components <- function(img) {
 
 
 # ---------------------------------------------------------------------------
-# Edge smoothing (internal — not exported)
+# Edge smoothing (internal -- not exported)
 # ---------------------------------------------------------------------------
 
 #' Smooth object edges with morphological closing
@@ -240,11 +242,11 @@ smooth_root_edges <- function(img,
 #' Clean a binary root image
 #'
 #' Performs three sequential cleaning operations on a binary segmented image:
-#' 1. **Hole filling** — fills black regions enclosed by white (segmentation
+#' 1. **Hole filling** -- fills black regions enclosed by white (segmentation
 #'    gaps inside roots).
 #' 2. **Artifact removal** — removes isolated white specks not connected to
 #'    the image border (false-positive root detections).
-#' 3. **Edge smoothing** *(optional, off by default)* — applies morphological
+#' 3. **Edge smoothing** *(optional, off by default)* -- applies morphological
 #'    closing to smooth jagged root edges.
 #'
 #' @section Why clean before skeletonisation:
@@ -314,7 +316,7 @@ smooth_root_edges <- function(img,
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
 #'
 #'
-#' # Clean: fill small holes, remove tiny artifacts — returns SpatRaster
+#' # Clean: fill small holes, remove tiny artifacts -- returns SpatRaster
 #' cleaned <- clean_image(img,
 #'                        max_hole_size     = 50,
 #'                        max_artifact_size = 10,
