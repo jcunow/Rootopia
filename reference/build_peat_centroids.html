@@ -31,6 +31,7 @@ intra-class spread, per-class coverage, and inter-class distance warnings."></he
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -71,8 +72,8 @@ intra-class spread, per-class coverage, and inter-class distance warnings.</p>
 
 <dl><dt id="arg-picks">picks<a class="anchor" aria-label="anchor" href="#arg-picks"></a></dt>
 <dd><p>A named list of RGB pick matrices. Each element corresponds to
-one class and must be a numeric matrix with 3 columns (R, G, B), values
-0–255, with one row per pick. Names become class names in the output.</p></dd>
+  one class and must be a numeric matrix with 3 columns (R, G, B), values
+0-255, with one row per pick. Names become class names in the output.</p></dd>
 
 
 <dt id="arg-max-dist">max_dist<a class="anchor" aria-label="anchor" href="#arg-max-dist"></a></dt>
@@ -83,7 +84,7 @@ centroid cannot be assigned to that class.</p></dd>
 
 <dt id="arg-prior">prior<a class="anchor" aria-label="anchor" href="#arg-prior"></a></dt>
 <dd><p>Optional <code>data.frame</code> of existing centroids (same format
-as the output of this function, or <code>.default_peat_centroids</code>).
+as the output of this function, or <code>.default_peat_centroids()</code>).
 When supplied, the new centroids derived from <code>picks</code> are blended
 with the prior centroids using <code>alpha</code>. Only classes present in both
 <code>picks</code> and <code>prior</code> are blended; new classes in <code>picks</code>
@@ -92,11 +93,11 @@ that are absent from <code>prior</code> are added as-is.</p></dd>
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
 <dd><p>Numeric in [0, 1]. Blend weight for the prior centroids.
-<code>alpha = 0</code> (default) ignores the prior entirely — centroids are
-derived purely from the new picks. <code>alpha = 1</code> returns the prior
-unchanged. <code>alpha = 0.5</code> weights old and new equally. Decrease
-<code>alpha</code> progressively as you collect more new picks to gradually
-shift calibration toward the new dataset.</p></dd>
+<code>alpha = 0</code> (default) ignores the prior entirely – centroids are
+  derived purely from the new picks. <code>alpha = 1</code> returns the prior
+  unchanged. <code>alpha = 0.5</code> weights old and new equally. Decrease
+  <code>alpha</code> progressively as you collect more new picks to gradually
+  shift calibration toward the new dataset.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -113,7 +114,7 @@ matrix. Default <code>TRUE</code>.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Clean break — new picks only</span></span></span>
+<span class="r-in"><span><span class="co"># Clean break -- new picks only</span></span></span>
 <span class="r-in"><span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu">build_peat_centroids</span><span class="op">(</span><span class="va">new_picks</span>, <span class="va">max_dist</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Blend: 30% old calibration, 70% new picks</span></span></span>
@@ -124,9 +125,9 @@ matrix. Default <code>TRUE</code>.</p></dd>
 <span class="r-in"><span><span class="co"># Iterative refinement across sessions:</span></span></span>
 <span class="r-in"><span><span class="co"># session 1</span></span></span>
 <span class="r-in"><span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu">build_peat_centroids</span><span class="op">(</span><span class="va">picks_s1</span>, <span class="va">max_dist</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># session 2 — downweight session 1 to 20%</span></span></span>
+<span class="r-in"><span><span class="co"># session 2 -- downweight session 1 to 20%</span></span></span>
 <span class="r-in"><span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu">build_peat_centroids</span><span class="op">(</span><span class="va">picks_s2</span>, <span class="va">max_dist</span>, prior <span class="op">=</span> <span class="va">cents</span>, alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># session 3 — downweight accumulated prior to 10%</span></span></span>
+<span class="r-in"><span><span class="co"># session 3 -- downweight accumulated prior to 10%</span></span></span>
 <span class="r-in"><span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu">build_peat_centroids</span><span class="op">(</span><span class="va">picks_s3</span>, <span class="va">max_dist</span>, prior <span class="op">=</span> <span class="va">cents</span>, alpha <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

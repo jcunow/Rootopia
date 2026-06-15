@@ -1,18 +1,16 @@
 ------------------------------------------------------------------------
 
-## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images.”
+## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images
 
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/RootScanR/)
-
-------------------------------------------------------------------------
 
 Welcome to **RootScanR**, an R package designed to extract quantitative
 belowground traits from **flatbed root scans** and **minirhizotron image
 sequences**. It provides flexible image preprocessing, trait estimation
 like root length & diameter, depth mapping, and distribution tools.
 
-- some features are still experimental. Be aware that this is an
-  insect’s playground and we love bugs. Just call them out if their
+- some features are still experimental. This package is an insect’s
+  playground and we love bugs here. Just call them out if their
   behaviour is undesirable.
 
 ## 💡 What can RootScanR do?
@@ -143,7 +141,7 @@ metrics.
 - [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
   : Estimate Root Diameters
 - [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
-  : Approximate average Root Thickness
+  : Approximate average root thickness (deprecated)
 - [`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
   : Detect endpoints and branching points in a skeleton image
 - [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
@@ -191,15 +189,14 @@ geometry.
   : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
 - [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
   : Bin continuous depth values into discrete intervals
-- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
-  Zone Image Data by Depth and/or Rotation Slices with Optional Spatial
-  Cropping
+- [`slice_rotation()`](https://jcunow.github.io/RootScanR/reference/slice_rotation.md)
+  : Slice a scan along the rotation (circumferential) axis
 - [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
   : Estimate soil surface position using tape markers
 - [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
   : Estimates rotation from tape coverage
 - [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
-  : Detect rotation shift between two images
+  : Estimate rotational/depth shift between two root scans
 
 ## Soil and colour characterisation
 
@@ -220,8 +217,8 @@ Colour metrics, peat classification, and texture analysis.
 
 Statistical indices summarising root distribution with depth.
 
-- [`RWDI()`](https://jcunow.github.io/RootScanR/reference/RWDI.md) :
-  Calculate Root Weight Depth Index
+- [`MRD()`](https://jcunow.github.io/RootScanR/reference/MRD.md) :
+  Calculate Mean Rooting Depth
 - [`RPI()`](https://jcunow.github.io/RootScanR/reference/RPI.md) :
   Calculate Root Penetration Index
 - [`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
@@ -279,5 +276,7 @@ Built-in example images from the Oulanka 2023 field campaign.
   R](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md):
 - [Minirhizotron Scans Analysis with RootScanR in
   R](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md):
+- [RootScanR Package Report, by
+  pkgnet](https://jcunow.github.io/RootScanR/articles/pkgnetreport.md):
 - [Rotation Bias and Rhythmicity Analysis with
   RootScanR](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md):

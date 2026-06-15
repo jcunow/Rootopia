@@ -40,4 +40,5 @@ Numeric vector of accumulated values
 df = data.frame(depth = c(seq(0,80,20),seq(0,80,20)),
                Plot = c(rep("a",5),rep("b",5)), rootpx = c(5,50,20,15,5,10,40,30,10,5) )
 accum_root = root_accumulation(df,group = "Plot", depth = "depth", variable = "rootpx")
+#> Error in root_accumulation(df, group = "Plot", depth = "depth", variable = "rootpx"): could not find function "root_accumulation"
 ```

@@ -73,11 +73,9 @@ branch_order_map(
 
   Passed to
   [`root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
-  (e.g. `dt_backend`, `crossing_straight`, `prune_iter`).
-
-- diam_weight:
-
-  Diameter-vs-angle weight for the continuation rule (\>= 0).
+  (e.g. `dt_backend`, `crossing_straight`, `prune_iter`, and
+  `diam_weight` — the diameter-vs-angle weight for the continuation
+  rule, \>= 0).
 
 ## Value
 

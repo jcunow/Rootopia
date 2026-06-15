@@ -1,7 +1,6 @@
-# Detect rotation shift between two images
+# Estimate rotational/depth shift between two root scans
 
-Calculates the rotation shift between two sequential images using either
-cross-correlation or phase correlation methods.
+Estimate rotational/depth shift between two root scans
 
 ## Usage
 
@@ -10,48 +9,63 @@ estimate_rotation_shift(
   img1,
   img2,
   cor.type = "phase",
-  fixed.depth.pixel = c(1000, 4000),
+  fixed.depth.pixel = NULL,
   fixed.width = NULL,
-  select.layer = NULL
+  select.layer = NULL,
+  window = TRUE,
+  overlay = FALSE,
+  overlay.layer = 2
 )
 ```
 
 ## Arguments
 
-- img1:
+- img1, img2:
 
-  Reference image (3-channel RGB)
-
-- img2:
-
-  Subsequent image to compare (3-channel RGB)
+  Image inputs (paths, arrays, or rasters).
 
 - cor.type:
 
-  Correlation type: "ccf" (cross) or "phase" (frequency domain)
+  "phase" (phase correlation) or "ccf" (normalized cross-corr).
 
 - fixed.depth.pixel:
 
-  Depth range to analyze c(start, end)
+  Depth band along COLUMNS. Length-2 = range start:end; longer =
+  explicit column indices; NULL = use full width.
 
 - fixed.width:
 
-  Width of analysis region in pixels
+  Optional: restrict the ROTATION axis (rows), centered.
 
 - select.layer:
 
-  Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`NULL\`.
+  Layer to use for multi-band inputs.
+
+- window:
+
+  Demean + Hann-window before FFT to suppress edge artefacts.
+
+- overlay:
+
+  If TRUE, also draw a before/after magenta-green overlay.
+
+- overlay.layer:
+
+  Layer to display in the overlay (root mask, default 2).
 
 ## Value
 
-Vector of shifts (x,y) in pixels
+Named numeric vector: depth (column lag), rotation (row lag), peak.
 
 ## Examples
 
 ``` r
-img1 = seg_Oulanka2023_Session01_T067
-img2 = seg_Oulanka2023_Session03_T067
-y.lag = estimate_rotation_shift(img1,img2,"phase")
-#> Warning: Warning in estimate_rotation_shift: Images differ in size by -17 x 0 pixels
+data(seg_Oulanka2023_Session01_T067)
+data(seg_Oulanka2023_Session03_T067)
+img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
+img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
+estimate_rotation_shift(img1, img2, cor.type = "phase", select.layer = 2)
+#> Warning: Image size mismatch detected; cropping to common extent
+#>        depth     rotation         peak 
+#> -18.00000000  -9.00000000   0.03476661 
 ```

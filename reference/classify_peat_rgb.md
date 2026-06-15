@@ -22,13 +22,13 @@ classify_peat_rgb(
 - img:
 
   A `SpatRaster` with at least 3 layers interpreted as R, G, B (in that
-  order). Values may be 0–255 or 0–1 (auto-detected).
+  order). Values may be 0-255 or 0-1 (auto-detected).
 
 - centroids:
 
   A `data.frame` with columns `class`, `L`, `A`, `B`, `MAX_DIST`.
   Defaults to a set of centroids calibrated on Oulanka 2023
-  minirhizotron scans — see
+  minirhizotron scans – see
   [`build_peat_centroids`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
   to derive centroids for your own data.
 

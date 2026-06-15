@@ -229,9 +229,9 @@ depth_data <- merge(depth_data, diam_by_depth, by = "depth")
 
 ##### 5d. Zoning individual depth slices
 
-[`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
-masks the image to a specific depth range, useful when you want to run
-per-slice analyses (landscape metrics, colour, diameter quantiles).
+`zoning()` masks the image to a specific depth range, useful when you
+want to run per-slice analyses (landscape metrics, colour, diameter
+quantiles).
 
 ``` r
 
@@ -388,7 +388,7 @@ These tube-level summary metrics require a complete depth profile.
 ``` r
 
 # Root Weight Distribution Index — depth-weighted mean rooting depth
-rwdi_val <- RWDI(w = depth_data$depth, roots = depth_data$rootlength.density)
+mrd_val <- MRD(w = depth_data$depth, roots = depth_data$rootlength.density)
 
 # Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)
 rpi_val  <- RPI(roots = depth_data$rootlength.density, w = depth_data$depth)
@@ -396,9 +396,37 @@ rpi_val  <- RPI(roots = depth_data$rootlength.density, w = depth_data$depth)
 # Total length density — sum over the full profile
 total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
 
-cat(sprintf("RWDI: %.2f  RPI: %.3f  Total length density: %.4f\n",
-            rwdi_val, rpi_val, total_ld))
+cat(sprintf("MRD: %.2f  RPI: %.3f  Total length density: %.4f\n",
+            mrd_val, rpi_val, total_ld))
 ```
+
+[`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
+complements these by returning the cumulative profile itself — useful
+for plotting how root mass/length accumulates with depth, or for
+comparing the *shape* of accumulation curves between tubes/plots.
+
+``` r
+
+# Cumulative root pixel count with depth, per tube
+depth_data$Tube <- "T067"   # add a grouping column if not already present
+
+depth_data$rootpx.cumulative <- root_accumulation(
+  depth_data,
+  group    = "Tube",
+  depth    = "depth",
+  variable = "rootpx",
+  stdrz    = "relative"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
+)
+
+plot(depth_data$depth, depth_data$rootpx.cumulative, type = "l",
+     xlab = "Depth (cm)", ylab = "Cumulative root pixel fraction",
+     main = "Root accumulation with depth")
+```
+
+`stdrz = "relative"` rescales the cumulative curve to end at 1, which
+makes accumulation curves directly comparable between tubes that differ
+in total root abundance — only the *shape* of the depth distribution is
+compared.
 
 ------------------------------------------------------------------------
 

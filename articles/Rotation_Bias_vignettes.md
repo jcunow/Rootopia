@@ -13,7 +13,7 @@ the same tube may not perfectly overlap. Left uncorrected, this rotation
 introduces a systematic spatial bias — roots near the scan edges are
 observed in some sessions but not others.
 
-RootScanR addresses this through three calibration functions:
+RootScanR addresses this through four functions:
 
 - [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
   — locates the rotational zero point from tape coverage in a single
@@ -23,6 +23,22 @@ RootScanR addresses this through three calibration functions:
   correlation
 - [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
   — crops images to the shared, overlap region
+- `zoning(mode = "rotation")` — splits the tube surface into slices
+  along the rotation axis (circumference), so that root traits can be
+  summarised separately for each slice
+
+The last point matters beyond rotation correction itself: once the tube
+circumference is split into slices, the
+[`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+/
+[`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
+family — normally introduced for time-series data — can be applied to
+the sequence of per-slice root traits to test whether roots are
+distributed **evenly around the tube circumference**, or whether there
+is a systematic top-down / side-to-side pattern (e.g. more roots on the
+underside of the tube). This is a *spatial*, not temporal, application
+of those functions — see the [Circumferential zoning and
+rhythmicity](#circumferential-zoning-and-rhythmicity) section below.
 
 ### Installation
 
@@ -32,8 +48,29 @@ RootScanR addresses this through three calibration functions:
 # remotes::install_github("jcunow/RootScanR")
 
 library(RootScanR)
+```
+
+    ## Warning: replacing previous import 'dplyr::union' by 'raster::union' when
+    ## loading 'RootScanR'
+
+    ## Warning: replacing previous import 'dplyr::intersect' by 'raster::intersect'
+    ## when loading 'RootScanR'
+
+    ## Warning: replacing previous import 'dplyr::select' by 'raster::select' when
+    ## loading 'RootScanR'
+
+    ## Warning: replacing previous import 'raster::select' by 'dplyr::select' when
+    ## loading 'RootScanR'
+
+    ## Warning: replacing previous import 'raster::plot' by 'graphics::plot' when
+    ## loading 'RootScanR'
+
+``` r
+
 library(terra)
 ```
+
+    ## terra 1.9.27
 
 ------------------------------------------------------------------------
 
@@ -89,13 +126,40 @@ shift <- estimate_rotation_shift(
   cor.type          = "phase",
   fixed.depth.pixel = c(1000, 4000)
 )
-
-cat("Rotation shift (depth px, rotation px):", shift, "\n")
 ```
+
+    ## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size
+    ## mismatch detected; cropping to common extent
+
+``` r
+
+cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
+```
+
+    ## Rotation shift (depth px, rotation px):  -18 -9
+
+``` r
+
+# Visual inspection
+estimate_rotation_shift(seg_Oulanka2023_Session01_T067, seg_Oulanka2023_Session03_T067, cor.type = "phase", select.layer = 2, overlay = T)
+```
+
+    ## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size
+    ## mismatch detected; cropping to common extent
+
+![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-3-1.png)
 
 The returned vector is `c(x.lag, y.lag)` — the horizontal (depth axis)
 and vertical (rotation axis) pixel shifts. A large vertical shift means
 the tube rotated substantially between sessions.
+
+> **Planned**: a single helper that estimates
+> [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+> between two sessions and then applies
+> [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+> using that shift directly, so that aligning session coverage becomes a
+> one-step operation. Until then, use the two functions as shown in
+> steps 2 and 3.
 
 ------------------------------------------------------------------------
 
@@ -119,16 +183,20 @@ Two modes are available:
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# Fixed mode — crop to a 1800-pixel-wide window centred on the rotation center
+# rotation centre (absolute row) to centre the crop on
+r0 <- estimate_rotation_center(img)
+
+# preview the crop (green = kept, red = cut) and apply it in one call.
+# fixed.width must be <= image height (1144 rows here) to sit symmetrically.
 censored <- rotation_censor(
   img,
   center.offset  = r0,
   cut.buffer     = 0.02,
-  fixed.width    = 1800,
-  fixed.rotation = TRUE
+  fixed.width    = 800,
+  fixed.rotation = TRUE,
+  overlay        = TRUE,
+  main = "Rotation censor: kept window (green) vs cut (red)"
 )
-
-terra::plot(censored, main = "Censored image")
 ```
 
 > **Note on tube geometry.** The inner and outer tube diameters differ,
@@ -139,103 +207,169 @@ terra::plot(censored, main = "Censored image")
 
 ------------------------------------------------------------------------
 
-### Rhythmicity Analysis
+### Circumferential zoning and rhythmicity
 
-In some deployments, minirhizotron observations are made at high
-temporal frequency (e.g. multiple scans per day over a short window). In
-these datasets it can be useful to test whether root observations show a
-rhythmic pattern across the sampling cycle.
+A minirhizotron image is a long, narrow strip that represents a slice of
+the tube’s circumference, with depth running along one axis and the
+rotation (circumferential) position running along the other.
+`zoning(mode = "rotation")` divides the image along this rotation axis
+into `rotation_total_slices` equal slices, and
+`rotation_slices = c(i, i)` extracts a single slice `i`.
 
+Looping over slices gives a sequence of root-trait values indexed by
+circumferential position. The
 [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
-fits a sine curve of the form
+/
+[`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
+functions — which fit
+$`y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c`$ and test
+whether $`A \neq 0`$ — are agnostic to what `x` represents. Applied to
+this sequence with `x` = slice index and the period `P` fixed to
+`rotation_total_slices` (one full turn around the tube), they test
+whether roots are distributed **evenly around the tube** or concentrated
+on one side (e.g. a systematic top-down bias from gravitropism, light
+incidence on one face of the installation, or an installation-angle
+artefact).
 
-``` math
-y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c
-```
-
-and tests whether the amplitude $`A`$ is significantly different from
-zero, using your choice of three statistical tests.
-
-> **On period choice**: the period $`P`$ should reflect a biologically
-> or methodologically meaningful cycle in your sampling design — for
-> example the length of your monitoring campaign, or the interval at
-> which conditions repeat. Use `fix_period = NULL` only if you genuinely
-> want to estimate the period from the data and have enough observations
-> to support a four-parameter fit.
-
-#### Fitting and testing
+#### Extract a root trait per circumferential slice
 
 ``` r
 
-set.seed(42)
-x <- seq(0, 48, length.out = 120)
-y <- 1.8 * sin(2 * pi / 24 * (x + 5)) + 4 + rnorm(120, 0, 1.2)
+data(seg_Oulanka2023_Session01_T067)
 
-# F-test (default) — most interpretable for small samples
-res_F <- rhythmicity(x, y, fix_period = 24, method = "F")
-cat(sprintf("Amplitude: %.2f | Phase: %.1f | R²: %.3f | p: %.4f\n",
-            res_F$amplitude, res_F$phase, res_F$R2, res_F$p_value))
+root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, normalize = TRUE, binarize = TRUE, select.layer = 2,
+                                  output_format = "spatrast")
 
-# Finite-sample likelihood ratio test
-res_FLR <- rhythmicity(x, y, fix_period = 24, method = "FLR")
 
-# Large-sample likelihood ratio test
-res_LR  <- rhythmicity(x, y, fix_period = 24, method = "LR")
+# rotation trim: drop the top 33% of rows
+e <- terra::ext(root_layer)
+root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
+plot(root_layer)
+# --> the trimming avoids noisy deep layer and tape artefacts at the top
+
+# create circumferential zones
+n_slices <- 48
+slices <- slice_rotation(root_layer, n_slices)
+
+# tallies from the binary mask: roots = 1, soil/background = 0
+n_root <- function(s) { v <- terra::values(s, mat = FALSE); sum(v > 0,  na.rm = TRUE) }
+n_soil <- function(s) { v <- terra::values(s, mat = FALSE); sum(v == 0, na.rm = TRUE) }
+
+slice_traits <- data.frame(
+  slice   = seq_len(n_slices),
+  rootlen = sapply(slices, root_length, unit = "cm", dpi = 300),  # cm
+  rootpx  = sapply(slices, n_root),
+  soilpx  = sapply(slices, n_soil)
+)
+
+# root length per observed area (root + soil pixels)
+slice_traits$rld <- slice_traits$rootlen /
+                    ((slice_traits$rootpx + slice_traits$soilpx) * (2.54/300)^2)
+#slice_traits$rld.fraction <- slice_traits$rld / sum(slice_traits$rld, na.rm = TRUE)
 ```
 
-#### Estimating an unknown period
+#### Test for a circumferential (top-down) pattern
 
 ``` r
 
-res_free <- rhythmicity(x, y,
-                        fix_period = NULL,
-                        parStart   = list(amp = 2, phase = 0,
-                                          offset = 4, period = 20))
+res <- rhythmicity(
+  x          = slice_traits$slice,
+  y          = slice_traits$rld,
+  fix_period = n_slices,
+  method     = "F",
+  parStart   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootlen),
+                     period = n_slices)
+)
 
-cat(sprintf("Estimated period: %.1f | R²: %.3f | p: %.4f\n",
-            res_free$period, res_free$R2, res_free$p_value))
+cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
+            res$offset, res$amplitude, res$phase, res$R2, res$p_value))
+cat("The top-down difference is", round((res$amplitude*2) / res$offset,2), " -> circa twice as large as the mean"    )
 ```
 
-> **Caution with free-period fits.** With four free parameters the
-> likelihood surface can be multimodal. Provide starting values grounded
-> in your sampling design and always inspect the fitted curve before
-> interpreting results.
+A significant, non-trivial amplitude indicates that root abundance
+varies systematically with circumferential position — i.e. there is more
+root material on one side of the tube than the other. `res$phase` (and
+`res$peakTime`) identify *which* slice the pattern peaks at.
 
-#### Plotting the fitted curve
+#### Visualise the fit
 
 ``` r
 
-x_seq <- seq(min(x), max(x), length.out = 300)
-y_fit <- res_F$amplitude *
-         sin(2 * pi / res_F$period * (x_seq + res_F$phase)) +
-         res_F$offset
+slice_seq <- seq(1, n_slices, length.out = 200)
+fit_seq   <- res$amplitude *
+              sin(2 * pi / n_slices * (slice_seq + res$phase)) +
+              res$offset
 
-plot(x, y, pch = 16, col = "grey50",
-     xlab = "Observation index", ylab = "Root measurement",
-     main = "Rhythmicity fit")
-lines(x_seq, y_fit, col = "coral", lwd = 2)
+plot(slice_traits$slice, slice_traits$rld, pch = 16, col = "grey50",
+     xlab = "Circumferential slice (1 = top, going around the tube)",
+     ylab = "Root Length Density (cm / cm2)",
+     main = "Root distribution around tube circumference")
+lines(slice_seq, fit_seq, col = "coral", lwd = 2)
+abline( a = res$offset, b = 0, col  = "grey40", lty = 3)
+
+segments(x0 = res$peakTime,
+         x1 = res$peakTime,
+         y0 = res$offset,
+         y1 = res$offset + res$amplitude,
+         lwd = 2, lty = 2,
+         col = "grey40")
+segments(x0 = res$peakTime + res$period/2,
+         x1 = res$peakTime +  res$period/2,
+         y0 = res$offset,
+         y1 = res$offset -  res$amplitude,
+         lwd = 2, lty = 2,
+         col = "grey40")
 legend("topright",
-       legend = sprintf("A = %.2f, R² = %.3f, p = %.4f",
-                        res_F$amplitude, res_F$R2, res_F$p_value),
+       legend = sprintf("A = %.4f, R² = %.3f, p = %.4f",
+                        res$amplitude, res$R2, res$p_value),
        bty = "n")
+
+
+# cross section view
+library(ggplot2)
+inner <- 6
+ggplot(slice_traits, aes(slice, rld + inner)) +
+    geom_col(fill = "steelblue") +
+    coord_polar(start = pi) +
+  xlab("") + ylab ("")+ ggtitle("Circumferential Root Length Distribution")+
+  theme_light()+
+  theme(axis.text = element_blank()) + 
+  annotate("rect",
+           xmin = -Inf, xmax = Inf,
+           ymin = 0, ymax = inner,
+           fill = "white", color = NA)
 ```
 
-#### Interpreting the output
+> **Going further**: the same slice loop can be combined with
+> `slice_rotation(mode = "both")` to additionally split each
+> circumferential slice by depth bin, producing a slice x depth grid.
+> Fitting
+> [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+> separately within each depth bin (x = slice, y = trait per slice)
+> tests whether the circumferential pattern is consistent with depth or
+> changes from shallow to deep — i.e. a genuine *top-down amplitude*
+> gradient.
 
-| Element     | Description                          |
-|-------------|--------------------------------------|
-| `amplitude` | Estimated amplitude $`A`$            |
-| `phase`     | Phase shift $`\phi`$ (modulo period) |
-| `offset`    | Baseline $`c`$                       |
-| `period`    | Fixed or estimated period $`P`$      |
-| `peakTime`  | Time of peak within one cycle        |
-| `R2`        | Coefficient of determination         |
-| `stat`      | Test statistic (F, FLR, or LR)       |
-| `p_value`   | P-value for $`A \neq 0`$             |
+------------------------------------------------------------------------
 
-A significant p-value indicates a rhythmic component. Always inspect
-$`R^2`$ alongside it — a significant but low-$`R^2`$ result may simply
-reflect a noisy dataset rather than a meaningful pattern.
+### Future directions
+
+Two extensions are planned and not yet implemented:
+
+1.  **Combined rotation-shift + censor helper** (mentioned in step 2):
+    estimate
+    [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+    between two sessions and automatically apply
+    [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+    with that shift, so aligning session coverage is a single call.
+2.  **Estimating the rotation center from the amplitude peak**: if the
+    circumferential analysis above reveals a strong, consistent
+    sinusoidal pattern, the fitted phase (`res$phase` / `res$peakTime`)
+    marks the circumferential position of peak root density. This could
+    be used as a data-driven alternative or complement to
+    [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md),
+    which currently relies only on tape coverage. Though, field
+    calibrations are absolutely the preferred option.
 
 ------------------------------------------------------------------------
 

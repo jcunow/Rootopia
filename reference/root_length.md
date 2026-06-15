@@ -24,10 +24,27 @@ root_length(
   Skeletonized binary raster image. If `skeletonize = TRUE`, a segmented
   (non-skeleton) mask can be supplied instead.
 
+- unit:
+
+  Character. Output unit: `"cm"`, `"inch"`, or `"px"`.
+
+- dpi:
+
+  Numeric. Scan resolution (dots per inch); required for cm/inch
+  conversion.
+
+- select.layer:
+
+  Numeric. Which layer to select if `img` has multiple layers.
+
 - method:
 
   Character. One of: "freeman_basic", "freeman_corrected", "kimura1",
   "kimura2"
+
+- show_messages:
+
+  Logical. If `TRUE`, prints informational messages during processing.
 
 - skeletonize:
 

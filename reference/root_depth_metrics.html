@@ -39,6 +39,7 @@ is dropped and listed in a warning at the end."></head><body>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -148,10 +149,10 @@ applied to <code>list.files(path.rgb)</code>.  Default <code>NULL</code>.</p></d
 
 <dt id="arg-insertion-angles">insertion_angles<a class="anchor" aria-label="anchor" href="#arg-insertion-angles"></a></dt>
 <dd><p>Numeric. Insertion angle of the tube or window from
-vertical, in <strong>degrees</strong>.  <code>0</code> = perfectly vertical,
-<code>30</code> = tilted 30° from vertical (a common minirhizotron angle).
-Used by <code><a href="create_depthmap.html">create_depthmap()</a></code> to correct the depth scale.
-Default <code>0</code>.</p></dd>
+  vertical, in <strong>degrees</strong>.  <code>0</code> = perfectly vertical,
+<code>30</code> = tilted 30 degrees from vertical (a common minirhizotron angle).
+  Used by <code><a href="create_depthmap.html">create_depthmap()</a></code> to correct the depth scale.
+  Default <code>0</code>.</p></dd>
 
 
 <dt id="arg-soil-starts">soil_starts<a class="anchor" aria-label="anchor" href="#arg-soil-starts"></a></dt>
@@ -162,10 +163,10 @@ Default <code>0</code>.</p></dd>
 
 <dt id="arg-tube-names">tube_names<a class="anchor" aria-label="anchor" href="#arg-tube-names"></a></dt>
 <dd><p>Character or <code>NULL</code>. Sample/tube identifiers added as
-the <code>Tube</code> column.  If <code>NULL</code>, names are derived from characters
-3–5 from the right of the segmented file name, prefixed with <code>"T"</code>
-(e.g. <code>"T042"</code>).  Adjust if your naming convention differs.
-Default <code>NULL</code>.</p></dd>
+  the <code>Tube</code> column.  If <code>NULL</code>, names are derived from characters
+3-5 from the right of the segmented file name, prefixed with <code>"T"</code>
+  (e.g. <code>"T042"</code>).  Adjust if your naming convention differs.
+  Default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-session">session<a class="anchor" aria-label="anchor" href="#arg-session"></a></dt>
@@ -180,11 +181,11 @@ convert pixel distances to physical units (cm).  Default <code>300</code>.</p></
 
 <dt id="arg-tube-diameter-cm">tube_diameter_cm<a class="anchor" aria-label="anchor" href="#arg-tube-diameter-cm"></a></dt>
 <dd><p>Numeric. Inner diameter of the minirhizotron tube in
-<strong>centimetres</strong>.  Passed to <code><a href="create_depthmap.html">create_depthmap()</a></code> as
-<code>tube.thicc</code>.  Its role in flat-window geometry (<code>flat_geometry
-= TRUE</code>) is uncertain; it likely has a default inside <code><a href="create_depthmap.html">create_depthmap()</a></code>
-and may be ignored — leave at the default unless you know it matters for
-your setup.  Default <code>7</code>.</p></dd>
+  <strong>centimetres</strong>.  Passed to <code><a href="create_depthmap.html">create_depthmap()</a></code> as
+  <code>tube.thicc</code>.  Its role in flat-window geometry (<code>flat_geometry
+  = TRUE</code>) is uncertain; it likely has a default inside <code><a href="create_depthmap.html">create_depthmap()</a></code>
+and may be ignored – leave at the default unless you know it matters for
+  your setup.  Default <code>7</code>.</p></dd>
 
 
 <dt id="arg-depth-interval-cm">depth_interval_cm<a class="anchor" aria-label="anchor" href="#arg-depth-interval-cm"></a></dt>
@@ -267,27 +268,27 @@ builds one segment graph per image.  Default <code>FALSE</code>.</p></dd>
 
 <dt id="arg-calc-density-metrics">calc_density_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-density-metrics"></a></dt>
 <dd><p>Logical. Compute <code>rootpx.density</code> (percent
-root area cover) and <code>rootlength.density</code> (cm root length per cm²
-imaged area) per bin.  Auto-enables <code>calc_root_pixels</code> and
-<code>calc_root_length</code>.  Default <code>TRUE</code>.</p></dd>
+root area cover) and <code>rootlength.density</code> (cm root length per cm^2
+  imaged area) per bin.  Auto-enables <code>calc_root_pixels</code> and
+  <code>calc_root_length</code>.  Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-calc-distribution-indices">calc_distribution_indices<a class="anchor" aria-label="anchor" href="#arg-calc-distribution-indices"></a></dt>
 <dd><p>Logical. Compute tube-level indices:
-<code>rwdi</code> (root weight distribution index), <code>rpi</code> (root
-proliferation index), and <code>total.length.density</code> (summed length
-density over all bins, in cm root per cm² per cm depth).  Auto-enables
-<code>calc_density_metrics</code>.  Default <code>TRUE</code>.</p></dd>
+  <code>mrd</code> (mean rooting depth), <code>rpi</code> (root
+  penetration index), and <code>total.length.density</code> (summed length
+density over all bins, in cm root per cm^2 per cm depth). Auto-enables
+  <code>calc_density_metrics</code>.  Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-calc-advanced-metrics">calc_advanced_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-advanced-metrics"></a></dt>
 <dd><p>Logical. Compute per-bin derived metrics:
-<code>rootlength.fraction</code> (each bin's length density as a fraction of the
-tube total), <code>mean.var.diameter</code> (mean of within-bin diameter
-variance), and <code>rootsurface_rootvolume_ratio</code> (lateral surface area
-over cylinder volume, summed over skeleton pixels in the bin and expressed
-as cm² per cm³).  Auto-enables <code>calc_distribution_indices</code> and
-<code>calc_diameter_stats</code>.  Default <code>TRUE</code>.</p></dd>
+  <code>rootlength.fraction</code> (each bin's length density as a fraction of the
+  tube total), <code>mean.var.diameter</code> (mean of within-bin diameter
+  variance), and <code>rootsurface_rootvolume_ratio</code> (lateral surface area
+  over cylinder volume, summed over skeleton pixels in the bin and expressed
+as cm^2 per cm^3). Auto-enables <code>calc_distribution_indices</code> and
+  <code>calc_diameter_stats</code>.  Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-diameter-thresholds">diameter_thresholds<a class="anchor" aria-label="anchor" href="#arg-diameter-thresholds"></a></dt>
@@ -316,7 +317,7 @@ predicted clock-time of completion.  Default <code>TRUE</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with one row per tube × depth-bin combination.  Always
+    <p>A data frame with one row per tube x depth-bin combination. Always
   present columns: <code>Tube</code>, <code>Session</code>, <code>Plot</code>, <code>depth</code>.
   All other columns depend on which metric groups are enabled; disabled or
   failed metrics appear as <code>NA</code> rather than being absent.  Returns
@@ -331,7 +332,7 @@ lateral surface area is \(2 \pi r_i l_i\) and the volume is
 \(\pi r_i^2 l_i\).  Their ratio simplifies to \(2 / r_i\).
 <code>rootsurface_rootvolume_ratio</code> is the length-weighted mean of
 \(2 / r_i\) over all skeleton pixels in the depth bin, in units of
-cm\(^{-1}\) (cm² surface per cm³ volume).  Thicker roots have a smaller
+cm\(^{-1}\) (cm^2 surface per cm^3 volume). Thicker roots have a smaller
 ratio; fine roots have a larger ratio.</p>
 <p><strong>Fault tolerance.</strong>  Every metric block is wrapped in
 <code>tryCatch</code>.  Failures produce a <code>[RootScanR] SKIPPED</code> message and
@@ -377,47 +378,11 @@ directories if necessary.</p>
 <p>All metadata arguments below accept either a single value (recycled to all
 images) or a vector of length equal to the number of images.</p>
     </div>
-    <div class="section level2">
-    <h2 id="scan-and-geometry-settings">Scan and geometry settings<a class="anchor" aria-label="anchor" href="#scan-and-geometry-settings"></a></h2>
-
-
-
-    </div>
-    <div class="section level2">
-    <h2 id="core-metrics-on-by-default-">Core metrics (on by default)<a class="anchor" aria-label="anchor" href="#core-metrics-on-by-default-"></a></h2>
-
-
-
-    </div>
-    <div class="section level2">
-    <h2 id="extended-metrics-off-by-default-">Extended metrics (off by default)<a class="anchor" aria-label="anchor" href="#extended-metrics-off-by-default-"></a></h2>
-
-
-
-    </div>
-    <div class="section level2">
-    <h2 id="derived-metrics">Derived metrics<a class="anchor" aria-label="anchor" href="#derived-metrics"></a></h2>
-
-
-
-    </div>
-    <div class="section level2">
-    <h2 id="diameter-threshold-settings-used-when-calc-diameter-quantiles-true-">Diameter threshold settings (used when <code>calc_diameter_quantiles = TRUE</code>)<a class="anchor" aria-label="anchor" href="#diameter-threshold-settings-used-when-calc-diameter-quantiles-true-"></a></h2>
-
-
-
-    </div>
-    <div class="section level2">
-    <h2 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a></h2>
-
-
-
-    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># Minimal — fast default metrics only</span></span></span>
+<span class="r-in"><span><span class="co"># Minimal -- fast default metrics only</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">root_depth_metrics</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  path.seg         <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span></span>
 <span class="r-in"><span>  path.skl         <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span></span>

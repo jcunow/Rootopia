@@ -1,17 +1,20 @@
 # Clean a binary root image
 
 Performs three sequential cleaning operations on a binary segmented
-image: 1. \*\*Hole filling\*\* — fills black regions enclosed by white
+image: 1. \*\*Hole filling\*\* – fills black regions enclosed by white
 (segmentation gaps inside roots). 2. \*\*Artifact removal\*\* — removes
 isolated white specks not connected to the image border (false-positive
 root detections). 3. \*\*Edge smoothing\*\* \*(optional, off by
-default)\* — applies morphological closing to smooth jagged root edges.
+default)\* – applies morphological closing to smooth jagged root edges.
 
 ## Usage
 
 ``` r
 clean_image(
   img,
+  pre_threshold = NULL,
+  pre_threshold_method = "global",
+  pre_threshold_window_size = 15,
   max_hole_size = NULL,
   max_artifact_size = NULL,
   edge_smooth = FALSE,
@@ -29,6 +32,23 @@ clean_image(
 - img:
 
   A \`cimg\` object, \`SpatRaster\`, matrix, or file path.
+
+- pre_threshold:
+
+  Numeric (0-1) or \`NULL\` (default). If not \`NULL\`,
+  \[image_threshold()\] is applied to \`img\` first, using this value as
+  its \`threshold\` argument, before any hole-filling or artifact
+  removal.
+
+- pre_threshold_method:
+
+  Thresholding method passed to \[image_threshold()\] when
+  \`pre_threshold\` is set: \`"global"\` (default) or \`"adaptive"\`.
+
+- pre_threshold_window_size:
+
+  Window size passed to \[image_threshold()\] when
+  \`pre_threshold_method = "adaptive"\`. Default \`15\`.
 
 - max_hole_size:
 
@@ -106,9 +126,20 @@ and alter root diameter measurements. Only use it when the segmentation
 output has very jagged edges; leave it off (\`FALSE\`, the default)
 otherwise.
 
+## Optional pre-thresholding
+
+If the input is not yet a clean binary mask (e.g. a raw probability /
+grayscale image from a segmentation model), set \`pre_threshold\` to
+binarize it via \[image_threshold()\] \*before\* hole-filling and
+artifact removal. This runs first because \[image_threshold()\] expects
+a non-binary \`SpatRaster\`; once thresholded, the result feeds into the
+same hole-filling / artifact-removal / edge-smoothing steps as a normal
+binary mask.
+
 ## See also
 
-\[report_image_components()\], \[skeletonize_image()\]
+\[report_image_components()\], \[skeletonize_image()\],
+\[image_threshold()\]
 
 ## Examples
 
@@ -117,7 +148,7 @@ data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
 
-# Clean: fill small holes, remove tiny artifacts — returns SpatRaster
+# Clean: fill small holes, remove tiny artifacts -- returns SpatRaster
 cleaned <- clean_image(img,
                        max_hole_size     = 50,
                        max_artifact_size = 10,

@@ -31,6 +31,7 @@ distance threshold are labelled "unclassified".'></head><body>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -77,14 +78,14 @@ distance threshold are labelled "unclassified".</p>
 
 <dl><dt id="arg-img">img<a class="anchor" aria-label="anchor" href="#arg-img"></a></dt>
 <dd><p>A <code>SpatRaster</code> with at least 3 layers interpreted as R, G, B
-(in that order). Values may be 0–255 or 0–1 (auto-detected).</p></dd>
+(in that order). Values may be 0-255 or 0-1 (auto-detected).</p></dd>
 
 
 <dt id="arg-centroids">centroids<a class="anchor" aria-label="anchor" href="#arg-centroids"></a></dt>
 <dd><p>A <code>data.frame</code> with columns <code>class</code>, <code>L</code>,
-<code>A</code>, <code>B</code>, <code>MAX_DIST</code>. Defaults to a set of centroids
-calibrated on Oulanka 2023 minirhizotron scans — see
-<code><a href="build_peat_centroids.html">build_peat_centroids</a></code> to derive centroids for your own data.</p></dd>
+  <code>A</code>, <code>B</code>, <code>MAX_DIST</code>. Defaults to a set of centroids
+calibrated on Oulanka 2023 minirhizotron scans – see
+  <code><a href="build_peat_centroids.html">build_peat_centroids</a></code> to derive centroids for your own data.</p></dd>
 
 
 <dt id="arg-downsample-fact">downsample_fact<a class="anchor" aria-label="anchor" href="#arg-downsample-fact"></a></dt>

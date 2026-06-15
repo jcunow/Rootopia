@@ -54,4 +54,5 @@ decay
 data(TurnoverDPC_data)
 img = terra::rast(TurnoverDPC_data)
 DPCs = turnover_dpc(img = img, im.return = FALSE)
+#> Error in turnover_dpc(img = img, im.return = FALSE): could not find function "turnover_dpc"
 ```

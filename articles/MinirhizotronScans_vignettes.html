@@ -44,6 +44,7 @@
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -329,12 +330,12 @@ scale — 5 cm is a common choice.</p>
 <div class="section level5">
 <h5 id="d--zoning-individual-depth-slices">5d. Zoning individual depth slices<a class="anchor" aria-label="anchor" href="#d--zoning-individual-depth-slices"></a>
 </h5>
-<p><code><a href="../reference/zoning.html">zoning()</a></code> masks the image to a specific depth range,
+<p><code>zoning()</code> masks the image to a specific depth range,
 useful when you want to run per-slice analyses (landscape metrics,
 colour, diameter quantiles).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract a single 5 cm depth zone</span></span>
-<span><span class="va">zone_10cm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span></span>
+<span><span class="va">zone_10cm</span> <span class="op">&lt;-</span> <span class="fu">zoning</span><span class="op">(</span></span>
 <span>  img       <span class="op">=</span> <span class="va">root_layer</span>,</span>
 <span>  mode      <span class="op">=</span> <span class="st">"depth"</span>,</span>
 <span>  depth_map <span class="op">=</span> <span class="va">depth_bins</span>,</span>
@@ -423,7 +424,7 @@ roots, see <code><a href="../reference/root_graph_pipeline.html">?root_graph_pip
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Run per depth slice inside a loop; indexD labels the output rows</span></span>
 <span><span class="va">lsm_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">depth_bins</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">slice</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span><span class="va">root_layer</span>, mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span>  <span class="va">slice</span> <span class="op">&lt;-</span> <span class="fu">zoning</span><span class="op">(</span><span class="va">root_layer</span>, mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="../reference/root_scape_metrics.html">root_scape_metrics</a></span><span class="op">(</span></span>
 <span>    img     <span class="op">=</span> <span class="va">slice</span>,</span>
 <span>    indexD  <span class="op">=</span> <span class="va">d</span>,</span>
@@ -445,8 +446,8 @@ need patch-level indices.</p>
 <span><span class="va">rgb_aligned</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/resample.html" class="external-link">resample</a></span><span class="op">(</span><span class="va">rgb</span>, <span class="va">root_layer</span>, method <span class="op">=</span> <span class="st">"bilinear"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">colour_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">depth_bins</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">slice_seg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span><span class="va">root_layer</span>,   mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
-<span>  <span class="va">slice_rgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/zoning.html">zoning</a></span><span class="op">(</span><span class="va">rgb_aligned</span>,  mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span>  <span class="va">slice_seg</span> <span class="op">&lt;-</span> <span class="fu">zoning</span><span class="op">(</span><span class="va">root_layer</span>,   mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span>  <span class="va">slice_rgb</span> <span class="op">&lt;-</span> <span class="fu">zoning</span><span class="op">(</span><span class="va">rgb_aligned</span>,  mode <span class="op">=</span> <span class="st">"depth"</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="va">root_rgb</span> <span class="op">&lt;-</span> <span class="va">slice_rgb</span>; <span class="va">root_rgb</span><span class="op">[</span><span class="va">slice_seg</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
 <span>  <span class="va">bg_rgb</span>   <span class="op">&lt;-</span> <span class="va">slice_rgb</span>; <span class="va">bg_rgb</span><span class="op">[</span><span class="va">slice_seg</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span>   <span class="op">&lt;-</span> <span class="cn">NA</span></span>
@@ -470,7 +471,7 @@ need patch-level indices.</p>
 profile.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Root Weight Distribution Index — depth-weighted mean rooting depth</span></span>
-<span><span class="va">rwdi_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RWDI.html">RWDI</a></span><span class="op">(</span>w <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, roots <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span><span class="op">)</span></span>
+<span><span class="va">mrd_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MRD.html">MRD</a></span><span class="op">(</span>w <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, roots <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)</span></span>
 <span><span class="va">rpi_val</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RPI.html">RPI</a></span><span class="op">(</span>roots <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span>, w <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span><span class="op">)</span></span>
@@ -478,14 +479,37 @@ profile.</p>
 <span><span class="co"># Total length density — sum over the full profile</span></span>
 <span><span class="va">total_ld</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span> <span class="op">*</span> <span class="fl">5</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"RWDI: %.2f  RPI: %.3f  Total length density: %.4f\n"</span>,</span>
-<span>            <span class="va">rwdi_val</span>, <span class="va">rpi_val</span>, <span class="va">total_ld</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"MRD: %.2f  RPI: %.3f  Total length density: %.4f\n"</span>,</span>
+<span>            <span class="va">mrd_val</span>, <span class="va">rpi_val</span>, <span class="va">total_ld</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/root_accumulation.html">root_accumulation()</a></code> complements these by returning the
+cumulative profile itself — useful for plotting how root mass/length
+accumulates with depth, or for comparing the <em>shape</em> of
+accumulation curves between tubes/plots.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Cumulative root pixel count with depth, per tube</span></span>
+<span><span class="va">depth_data</span><span class="op">$</span><span class="va">Tube</span> <span class="op">&lt;-</span> <span class="st">"T067"</span>   <span class="co"># add a grouping column if not already present</span></span>
+<span></span>
+<span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx.cumulative</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_accumulation.html">root_accumulation</a></span><span class="op">(</span></span>
+<span>  <span class="va">depth_data</span>,</span>
+<span>  group    <span class="op">=</span> <span class="st">"Tube"</span>,</span>
+<span>  depth    <span class="op">=</span> <span class="st">"depth"</span>,</span>
+<span>  variable <span class="op">=</span> <span class="st">"rootpx"</span>,</span>
+<span>  stdrz    <span class="op">=</span> <span class="st">"relative"</span>   <span class="co"># "counts" (raw), "additive" (/max), or "relative" (/sum)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, <span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx.cumulative</span>, type <span class="op">=</span> <span class="st">"l"</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"Depth (cm)"</span>, ylab <span class="op">=</span> <span class="st">"Cumulative root pixel fraction"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Root accumulation with depth"</span><span class="op">)</span></span></code></pre></div>
+<p><code>stdrz = "relative"</code> rescales the cumulative curve to end
+at 1, which makes accumulation curves directly comparable between tubes
+that differ in total root abundance — only the <em>shape</em> of the
+depth distribution is compared.</p>
 <hr>
 </div>
 <div class="section level4">
 <h4 id="root-turnover-two-timepoint-comparison">9. Root turnover (two-timepoint comparison)<a class="anchor" aria-label="anchor" href="#root-turnover-two-timepoint-comparison"></a>
 </h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
@@ -504,7 +528,7 @@ profile.</p>
 <div class="section level4">
 <h4 id="visualise">10. Visualise<a class="anchor" aria-label="anchor" href="#visualise"></a>
 </h4>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">rootlength.density</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>

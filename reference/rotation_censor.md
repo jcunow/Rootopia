@@ -1,7 +1,11 @@
 # Censor image edges based on rotation
 
-Crops image edges to handle non-overlapping regions between sequential
-scans.
+Crops the rotation axis (rows) of a root scan. In fixed mode it returns
+a fixed-width window centred on a given row (e.g. the rotation centre
+from
+[`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md));
+in variable mode it trims a band sized by a measured offset. Optionally
+previews what is kept versus cut.
 
 ## Usage
 
@@ -12,7 +16,9 @@ rotation_censor(
   cut.buffer = 0.02,
   fixed.rotation = TRUE,
   fixed.width = 500,
-  select.layer = NULL
+  select.layer = NULL,
+  overlay = FALSE,
+  ...
 )
 ```
 
@@ -20,48 +26,53 @@ rotation_censor(
 
 - img:
 
-  Input image to censor
+  Input image as raster, file name, or array.
 
 - center.offset:
 
-  Rotation shift in rows (from estimate_rotation_shift())
+  Numeric. Meaning depends on `fixed.rotation`: when `TRUE`, the row to
+  centre the kept window on (an absolute row, e.g. from
+  [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md));
+  when `FALSE`, the rotation shift in rows to trim (e.g. from
+  [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)).
 
 - cut.buffer:
 
-  Proportion of image to cut when fixed_rotation=FALSE
+  Extra proportion of the rotation axis to trim (variable mode).
 
 - fixed.rotation:
 
-  Use fixed output dimensions
+  Logical. If `TRUE`, return a fixed-width window.
 
 - fixed.width:
 
-  Output width when fixed_rotation=TRUE
+  Output width in rows when `fixed.rotation = TRUE`.
 
 - select.layer:
 
-  Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`NULL\`.
+  Integer or `NULL`. Layer to use for multi-band inputs.
+
+- overlay:
+
+  Logical. If `TRUE`, plot the full image with the kept window (green
+  outline) and discarded margins (red shading) before cropping. Default
+  `FALSE`.
+
+- ...:
+
+  Passed to the underlying `terra` plotting call when `overlay = TRUE`.
 
 ## Value
 
-Cropped raster image
+A cropped `SpatRaster` (returned invisibly when `overlay = TRUE`), or
+`NULL` if the result is empty.
 
 ## Examples
 
 ``` r
 data(seg_Oulanka2023_Session01_T067)
-img = terra::rast(seg_Oulanka2023_Session01_T067)
-censored.raster = rotation_censor(img,
-                         center.offset = 120,
-                         cut.buffer = 0.02,
-                         fixed.rotation = FALSE)
-                         
-censored.raster = rotation_censor(img,
-                         center.offset = 220,
-                         cut.buffer = 0.02,
-                         fixed.width = 1000,
-                         fixed.rotation = TRUE)
-#> New image dimension: 720 is smaller than specified fixed.width: 1000. Too strong offset for this fixed.width. Consider adjusting the fixed.width.
-#> Max. possible fixed.width with this offset is: 1848(+-1 rounding error)
+img <- terra::rast(seg_Oulanka2023_Session01_T067)
+r0  <- estimate_rotation_center(img)
+rotation_censor(img, center.offset = r0, fixed.width = 800,
+                fixed.rotation = TRUE, overlay = TRUE)
 ```

@@ -91,7 +91,15 @@ A list containing:
 
 - root_volume:
 
-  Numeric. The sum of root volume - assuming cylindrical roots
+  Numeric. Total root volume, in \`unit\`^3. Each skeleton pixel is
+  modelled as a cylinder of radius \`diameter / 2\` and length 1 pixel;
+  volumes (\`pi \* r^2 \* l\`) are summed and converted from px^3.
+
+- root_surface_area:
+
+  Numeric. Total root lateral surface area, in \`unit\`^2. Each skeleton
+  pixel's cylinder contributes a lateral surface of \`2 \* pi \* r \* l
+  = pi \* d \* l\`; values are summed and converted from px^2.
 
 ## Details
 

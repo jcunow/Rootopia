@@ -6,18 +6,18 @@
 <url><loc>https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/articles/index.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/articles/pkgnetreport.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/authors.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/index.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/news/index.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/MRD.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/RPI.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/RWDI.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/TurnoverDPC_data.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/abind2.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/binning.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/branch_order_map.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/build_peat_centroids.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/cimg_to_spatrast.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/circular_mean.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/clean_image.html</loc></url>
@@ -65,6 +65,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/skeletonize_image.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session01_T067.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session03_T067.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/slice_rotation.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/smooth_root_edges.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/summarize_orders.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/supported_formats_string.html</loc></url>
@@ -76,7 +77,5 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/turnover_dpc.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/turnover_tc.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/validate_conversion_params.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/validate_image_input.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/zoning.html</loc></url>
 </urlset>
 

@@ -40,7 +40,7 @@ plot_peat_classification(
 
   `"centroid"`
 
-  :   Each class rendered as its actual LAB centroid colour — useful for
+  :   Each class rendered as its actual LAB centroid colour – useful for
       sanity-checking centroid values.
 
 - class_colors:

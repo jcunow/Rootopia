@@ -1,7 +1,7 @@
 # Fill internal black holes in a binary image
 
 Sets to 1 all black regions (value = 0) that are completely surrounded
-by white (value = 1) — i.e. not connected to the image border.
+by white (value = 1) – i.e. not connected to the image border.
 
 ## Usage
 

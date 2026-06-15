@@ -27,6 +27,7 @@ either Freeman chain-code based estimators or Kimura estimators."></head><body>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -76,9 +77,25 @@ either Freeman chain-code based estimators or Kimura estimators.</p>
 a segmented (non-skeleton) mask can be supplied instead.</p></dd>
 
 
+<dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
+<dd><p>Character. Output unit: <code>"cm"</code>, <code>"inch"</code>, or <code>"px"</code>.</p></dd>
+
+
+<dt id="arg-dpi">dpi<a class="anchor" aria-label="anchor" href="#arg-dpi"></a></dt>
+<dd><p>Numeric. Scan resolution (dots per inch); required for cm/inch conversion.</p></dd>
+
+
+<dt id="arg-select-layer">select.layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
+<dd><p>Numeric. Which layer to select if <code>img</code> has multiple layers.</p></dd>
+
+
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>Character. One of:
 "freeman_basic", "freeman_corrected", "kimura1", "kimura2"</p></dd>
+
+
+<dt id="arg-show-messages">show_messages<a class="anchor" aria-label="anchor" href="#arg-show-messages"></a></dt>
+<dd><p>Logical. If <code>TRUE</code>, prints informational messages during processing.</p></dd>
 
 
 <dt id="arg-skeletonize">skeletonize<a class="anchor" aria-label="anchor" href="#arg-skeletonize"></a></dt>

@@ -85,8 +85,8 @@ root_depth_metrics(
 - insertion_angles:
 
   Numeric. Insertion angle of the tube or window from vertical, in
-  **degrees**. `0` = perfectly vertical, `30` = tilted 30° from vertical
-  (a common minirhizotron angle). Used by
+  **degrees**. `0` = perfectly vertical, `30` = tilted 30 degrees from
+  vertical (a common minirhizotron angle). Used by
   [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
   to correct the depth scale. Default `0`.
 
@@ -99,7 +99,7 @@ root_depth_metrics(
 - tube_names:
 
   Character or `NULL`. Sample/tube identifiers added as the `Tube`
-  column. If `NULL`, names are derived from characters 3–5 from the
+  column. If `NULL`, names are derived from characters 3-5 from the
   right of the segmented file name, prefixed with `"T"` (e.g. `"T042"`).
   Adjust if your naming convention differs. Default `NULL`.
 
@@ -121,7 +121,7 @@ root_depth_metrics(
   as `tube.thicc`. Its role in flat-window geometry
   (`flat_geometry = TRUE`) is uncertain; it likely has a default inside
   [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
-  and may be ignored — leave at the default unless you know it matters
+  and may be ignored – leave at the default unless you know it matters
   for your setup. Default `7`.
 
 - depth_interval_cm:
@@ -209,16 +209,16 @@ root_depth_metrics(
 - calc_density_metrics:
 
   Logical. Compute `rootpx.density` (percent root area cover) and
-  `rootlength.density` (cm root length per cm² imaged area) per bin.
+  `rootlength.density` (cm root length per cm^2 imaged area) per bin.
   Auto-enables `calc_root_pixels` and `calc_root_length`. Default
   `TRUE`.
 
 - calc_distribution_indices:
 
-  Logical. Compute tube-level indices: `rwdi` (root weight distribution
-  index), `rpi` (root proliferation index), and `total.length.density`
-  (summed length density over all bins, in cm root per cm² per cm
-  depth). Auto-enables `calc_density_metrics`. Default `TRUE`.
+  Logical. Compute tube-level indices: `mrd` (mean rooting depth), `rpi`
+  (root penetration index), and `total.length.density` (summed length
+  density over all bins, in cm root per cm^2 per cm depth). Auto-enables
+  `calc_density_metrics`. Default `TRUE`.
 
 - calc_advanced_metrics:
 
@@ -226,8 +226,8 @@ root_depth_metrics(
   bin's length density as a fraction of the tube total),
   `mean.var.diameter` (mean of within-bin diameter variance), and
   `rootsurface_rootvolume_ratio` (lateral surface area over cylinder
-  volume, summed over skeleton pixels in the bin and expressed as cm²
-  per cm³). Auto-enables `calc_distribution_indices` and
+  volume, summed over skeleton pixels in the bin and expressed as cm^2
+  per cm^3). Auto-enables `calc_distribution_indices` and
   `calc_diameter_stats`. Default `TRUE`.
 
 - diameter_thresholds:
@@ -256,7 +256,7 @@ root_depth_metrics(
 
 ## Value
 
-A data frame with one row per tube × depth-bin combination. Always
+A data frame with one row per tube x depth-bin combination. Always
 present columns: `Tube`, `Session`, `Plot`, `depth`. All other columns
 depend on which metric groups are enabled; disabled or failed metrics
 appear as `NA` rather than being absent. Returns `NULL` invisibly if
@@ -271,7 +271,7 @@ lateral surface area is \\2 \pi r_i l_i\\ and the volume is \\\pi r_i^2
 l_i\\. Their ratio simplifies to \\2 / r_i\\.
 `rootsurface_rootvolume_ratio` is the length-weighted mean of \\2 /
 r_i\\ over all skeleton pixels in the depth bin, in units of cm\\^{-1}\\
-(cm² surface per cm³ volume). Thicker roots have a smaller ratio; fine
+(cm^2 surface per cm^3 volume). Thicker roots have a smaller ratio; fine
 roots have a larger ratio.
 
 **Fault tolerance.** Every metric block is wrapped in `tryCatch`.
@@ -315,23 +315,11 @@ those directories if necessary.
 All metadata arguments below accept either a single value (recycled to
 all images) or a vector of length equal to the number of images.
 
-## Scan and geometry settings
-
-## Core metrics (on by default)
-
-## Extended metrics (off by default)
-
-## Derived metrics
-
-## Diameter threshold settings (used when `calc_diameter_quantiles = TRUE`)
-
-## Output
-
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Minimal — fast default metrics only
+# Minimal -- fast default metrics only
 result <- root_depth_metrics(
   path.seg         = "scans/segmented/2022_02/",
   path.skl         = "scans/skeleton/2022_02/",

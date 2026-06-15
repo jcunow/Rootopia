@@ -38,7 +38,7 @@ metrics.
 - [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
   : Estimate Root Diameters
 - [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
-  : Approximate average Root Thickness
+  : Approximate average root thickness (deprecated)
 - [`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
   : Detect endpoints and branching points in a skeleton image
 - [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
@@ -86,15 +86,14 @@ geometry.
   : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
 - [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
   : Bin continuous depth values into discrete intervals
-- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
-  Zone Image Data by Depth and/or Rotation Slices with Optional Spatial
-  Cropping
+- [`slice_rotation()`](https://jcunow.github.io/RootScanR/reference/slice_rotation.md)
+  : Slice a scan along the rotation (circumferential) axis
 - [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
   : Estimate soil surface position using tape markers
 - [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
   : Estimates rotation from tape coverage
 - [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
-  : Detect rotation shift between two images
+  : Estimate rotational/depth shift between two root scans
 
 ## Soil and colour characterisation
 
@@ -115,8 +114,8 @@ Colour metrics, peat classification, and texture analysis.
 
 Statistical indices summarising root distribution with depth.
 
-- [`RWDI()`](https://jcunow.github.io/RootScanR/reference/RWDI.md) :
-  Calculate Root Weight Depth Index
+- [`MRD()`](https://jcunow.github.io/RootScanR/reference/MRD.md) :
+  Calculate Mean Rooting Depth
 - [`RPI()`](https://jcunow.github.io/RootScanR/reference/RPI.md) :
   Calculate Root Penetration Index
 - [`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)

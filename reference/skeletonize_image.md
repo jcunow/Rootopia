@@ -1,7 +1,7 @@
 # Skeletonize binary image
 
 Applies iterative morphological thinning using a LUT-based
-implementation of the Zhang–Suen skeletonization algorithm.
+implementation of the Zhang-Suen skeletonization algorithm.
 
 ## Usage
 

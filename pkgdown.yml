@@ -5,8 +5,9 @@ articles:
   BatchProcessing_vignette: BatchProcessing_vignette.html
   FlatBedScans_vignettes: FlatBedScans_vignettes.html
   MinirhizotronScans_vignettes: MinirhizotronScans_vignettes.html
+  pkgnetreport: pkgnetreport.html
   Rotation_Bias_vignettes: Rotation_Bias_vignettes.html
-last_built: 2026-06-13T21:38Z
+last_built: 2026-06-15T20:33Z
 urls:
   reference: https://jcunow.github.io/RootScanR/reference
   article: https://jcunow.github.io/RootScanR/articles

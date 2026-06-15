@@ -18,7 +18,7 @@ build_peat_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 
   A named list of RGB pick matrices. Each element corresponds to one
   class and must be a numeric matrix with 3 columns (R, G, B), values
-  0–255, with one row per pick. Names become class names in the output.
+  0-255, with one row per pick. Names become class names in the output.
 
 - max_dist:
 
@@ -29,7 +29,7 @@ build_peat_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 - prior:
 
   Optional `data.frame` of existing centroids (same format as the output
-  of this function, or `.default_peat_centroids`). When supplied, the
+  of this function, or `.default_peat_centroids()`). When supplied, the
   new centroids derived from `picks` are blended with the prior
   centroids using `alpha`. Only classes present in both `picks` and
   `prior` are blended; new classes in `picks` that are absent from
@@ -38,7 +38,7 @@ build_peat_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 - alpha:
 
   Numeric in \[0, 1\]. Blend weight for the prior centroids. `alpha = 0`
-  (default) ignores the prior entirely — centroids are derived purely
+  (default) ignores the prior entirely – centroids are derived purely
   from the new picks. `alpha = 1` returns the prior unchanged.
   `alpha = 0.5` weights old and new equally. Decrease `alpha`
   progressively as you collect more new picks to gradually shift
@@ -57,7 +57,7 @@ A `data.frame` with columns `class`, `L`, `A`, `B`, `MAX_DIST`.
 
 ``` r
 if (FALSE) { # \dontrun{
-# Clean break — new picks only
+# Clean break -- new picks only
 cents <- build_peat_centroids(new_picks, max_dist)
 
 # Blend: 30% old calibration, 70% new picks
@@ -68,9 +68,9 @@ cents <- build_peat_centroids(new_picks, max_dist,
 # Iterative refinement across sessions:
 # session 1
 cents <- build_peat_centroids(picks_s1, max_dist)
-# session 2 — downweight session 1 to 20%
+# session 2 -- downweight session 1 to 20%
 cents <- build_peat_centroids(picks_s2, max_dist, prior = cents, alpha = 0.2)
-# session 3 — downweight accumulated prior to 10%
+# session 3 -- downweight accumulated prior to 10%
 cents <- build_peat_centroids(picks_s3, max_dist, prior = cents, alpha = 0.1)
 } # }
 ```

@@ -27,6 +27,7 @@ The input can be a file path, raster, image object, or array, which is converted
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/pkgnet-report.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -126,7 +127,15 @@ compatibility. Will be skipped if skeleton `SpatRaster` is provided.</p></dd>
 <dd><p>`SpatRaster`. Raster showing the distance transform values.</p></dd>
 
   <dt>root_volume</dt>
-<dd><p>Numeric. The sum of root volume - assuming cylindrical roots</p></dd>
+<dd><p>Numeric. Total root volume, in `unit`^3. Each skeleton
+    pixel is modelled as a cylinder of radius `diameter / 2` and length 1
+    pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.</p></dd>
+
+  <dt>root_surface_area</dt>
+<dd><p>Numeric. Total root lateral surface area, in
+    `unit`^2. Each skeleton pixel's cylinder contributes a lateral surface
+    of `2 * pi * r * l = pi * d * l`; values are summed and converted from
+    px^2.</p></dd>
 
 
 </dl></div>
