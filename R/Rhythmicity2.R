@@ -32,6 +32,7 @@
 #'   - residuals: Residuals (y - predicted)
 #'
 #' @importFrom minpack.lm nls.lm
+#' @export
 #' @examples
 #' set.seed(1)
 #' x <- seq(0, 48, length.out = 100)
