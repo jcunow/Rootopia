@@ -61,20 +61,20 @@ applied to \code{list.files(path.skl)}.  Default \code{NULL}.}
 applied to \code{list.files(path.rgb)}.  Default \code{NULL}.}
 
 \item{insertion_angles}{Numeric. Insertion angle of the tube or window from
-  vertical, in \strong{degrees}.  \code{0} = perfectly vertical,
+vertical, in \strong{degrees}.  \code{0} = perfectly vertical,
 \code{30} = tilted 30 degrees from vertical (a common minirhizotron angle).
-  Used by \code{create_depthmap()} to correct the depth scale.
-  Default \code{0}.}
+Used by \code{create_depthmap()} to correct the depth scale.
+Default \code{0}.}
 
 \item{soil_starts}{Numeric. Pixel row (in the original, un-rotated image)
 at which the soil surface begins.  Used to set the zero-depth reference.
 Default \code{0}.}
 
 \item{tube_names}{Character or \code{NULL}. Sample/tube identifiers added as
-  the \code{Tube} column.  If \code{NULL}, names are derived from characters
+the \code{Tube} column.  If \code{NULL}, names are derived from characters
 3-5 from the right of the segmented file name, prefixed with \code{"T"}
-  (e.g. \code{"T042"}).  Adjust if your naming convention differs.
-  Default \code{NULL}.}
+(e.g. \code{"T042"}).  Adjust if your naming convention differs.
+Default \code{NULL}.}
 
 \item{session}{Character. Session or campaign label added as the
 \code{Session} column, e.g. \code{"2022_02"}.  Default \code{""}.}
@@ -83,11 +83,11 @@ Default \code{0}.}
 convert pixel distances to physical units (cm).  Default \code{300}.}
 
 \item{tube_diameter_cm}{Numeric. Inner diameter of the minirhizotron tube in
-  \strong{centimetres}.  Passed to \code{create_depthmap()} as
-  \code{tube.thicc}.  Its role in flat-window geometry (\code{flat_geometry
-  = TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
+\strong{centimetres}.  Passed to \code{create_depthmap()} as
+\code{tube.thicc}.  Its role in flat-window geometry (\code{flat_geometry
+= TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
 and may be ignored -- leave at the default unless you know it matters for
-  your setup.  Default \code{7}.}
+your setup.  Default \code{7}.}
 
 \item{depth_interval_cm}{Numeric. Size of each depth bin in
 \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
@@ -149,22 +149,22 @@ builds one segment graph per image.  Default \code{FALSE}.}
 
 \item{calc_density_metrics}{Logical. Compute \code{rootpx.density} (percent
 root area cover) and \code{rootlength.density} (cm root length per cm^2
-  imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
-  \code{calc_root_length}.  Default \code{TRUE}.}
+imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
+\code{calc_root_length}.  Default \code{TRUE}.}
 
 \item{calc_distribution_indices}{Logical. Compute tube-level indices:
-  \code{mrd} (mean rooting depth), \code{rpi} (root
-  penetration index), and \code{total.length.density} (summed length
-density over all bins, in cm root per cm^2 per cm depth). Auto-enables
-  \code{calc_density_metrics}.  Default \code{TRUE}.}
+\code{mrd} (mean rooting depth), \code{rpi} (root
+penetration index), and \code{total.length.density} (summed length
+density over all bins, in cm root per cm^2 per cm depth).  Auto-enables
+\code{calc_density_metrics}.  Default \code{TRUE}.}
 
 \item{calc_advanced_metrics}{Logical. Compute per-bin derived metrics:
-  \code{rootlength.fraction} (each bin's length density as a fraction of the
-  tube total), \code{mean.var.diameter} (mean of within-bin diameter
-  variance), and \code{rootsurface_rootvolume_ratio} (lateral surface area
-  over cylinder volume, summed over skeleton pixels in the bin and expressed
-as cm^2 per cm^3). Auto-enables \code{calc_distribution_indices} and
-  \code{calc_diameter_stats}.  Default \code{TRUE}.}
+\code{rootlength.fraction} (each bin's length density as a fraction of the
+tube total), \code{mean.var.diameter} (mean of within-bin diameter
+variance), and \code{rootsurface_rootvolume_ratio} (lateral surface area
+over cylinder volume, summed over skeleton pixels in the bin and expressed
+as cm^2 per cm^3).  Auto-enables \code{calc_distribution_indices} and
+\code{calc_diameter_stats}.  Default \code{TRUE}.}
 
 \item{diameter_thresholds}{Numeric vector. Diameter cut-offs for computing
 \code{rootlength.above.*} and \code{avg.diameter.above.*} columns.
@@ -183,7 +183,7 @@ per-image time, cumulative elapsed time, estimated remaining time, and
 predicted clock-time of completion.  Default \code{TRUE}.}
 }
 \value{
-A data frame with one row per tube x depth-bin combination. Always
+A data frame with one row per tube x depth-bin combination.  Always
   present columns: \code{Tube}, \code{Session}, \code{Plot}, \code{depth}.
   All other columns depend on which metric groups are enabled; disabled or
   failed metrics appear as \code{NA} rather than being absent.  Returns
@@ -208,7 +208,7 @@ lateral surface area is \eqn{2 \pi r_i l_i} and the volume is
 \eqn{\pi r_i^2 l_i}.  Their ratio simplifies to \eqn{2 / r_i}.
 \code{rootsurface_rootvolume_ratio} is the length-weighted mean of
 \eqn{2 / r_i} over all skeleton pixels in the depth bin, in units of
-cm\eqn{^{-1}} (cm^2 surface per cm^3 volume). Thicker roots have a smaller
+cm\eqn{^{-1}} (cm^2 surface per cm^3 volume).  Thicker roots have a smaller
 ratio; fine roots have a larger ratio.
 
 \strong{Fault tolerance.}  Every metric block is wrapped in
