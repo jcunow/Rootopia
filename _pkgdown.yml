@@ -83,15 +83,15 @@ reference:
       - render_order_overlay
       - plot_order_window
 
-   - title: "Depth mapping"
-     desc: "Functions for constructing and binning depth maps from minirhizotron geometry."
-     contents:
-       - create_depthmap
-       - binning
-       - slice_rotation
-       - estimate_soil_surface
-       - estimate_rotation_center
-       - estimate_rotation_shift
+  - title: "Depth mapping"
+    desc: "Functions for constructing and binning depth maps from minirhizotron geometry."
+    contents:
+      - create_depthmap
+      - binning
+      - slice_rotation
+      - estimate_soil_surface
+      - estimate_rotation_center
+      - estimate_rotation_shift
 
   - title: "Soil and colour characterisation"
     desc: "Colour metrics, peat classification, and texture analysis."
