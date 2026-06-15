@@ -18,15 +18,15 @@ plot_peat_classification(
 \item{result}{A list returned by \code{\link{classify_peat_rgb}}.}
 
 \item{color_mode}{Character. One of \code{"contrast"} (default),
-  \code{"vibrant"}, or \code{"centroid"}.
-  \describe{
-    \item{\code{"contrast"}}{Muted, distinguishable colours defined in
-      \code{class_colors}.}
-    \item{\code{"vibrant"}}{Saturated, high-contrast colours defined in
-      \code{vibrant_colors}.}
-    \item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
-colour -- useful for sanity-checking centroid values.}
-  }}
+\code{"vibrant"}, or \code{"centroid"}.
+\describe{
+  \item{\code{"contrast"}}{Muted, distinguishable colours defined in
+    \code{class_colors}.}
+  \item{\code{"vibrant"}}{Saturated, high-contrast colours defined in
+    \code{vibrant_colors}.}
+  \item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
+    colour -- useful for sanity-checking centroid values.}
+}}
 
 \item{class_colors}{Named character vector of hex colours for
 \code{"contrast"} mode. Names must match class names in

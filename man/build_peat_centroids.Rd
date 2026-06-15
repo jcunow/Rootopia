@@ -8,8 +8,12 @@ build_peat_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 }
 \arguments{
 \item{picks}{A named list of RGB pick matrices. Each element corresponds to
-  one class and must be a numeric matrix with 3 columns (R, G, B), values
-0-255, with one row per pick. Names become class names in the output.}
+one class and must be a numeric matrix with 3 columns (R, G, B), values
+0-255, with one row per pick. Names become class names in the output.
+See \code{\link{classify_peat_rgb}}'s \strong{Building your own
+centroids (picks)} section for a worked example of constructing these
+matrices from an image (e.g. by cropping representative patches and
+calling \code{terra::values()}).}
 
 \item{max_dist}{A named numeric vector of per-class LAB distance thresholds,
 matched by name to \code{picks}. Pixels further than this from a class
@@ -24,10 +28,10 @@ that are absent from \code{prior} are added as-is.}
 
 \item{alpha}{Numeric in [0, 1]. Blend weight for the prior centroids.
 \code{alpha = 0} (default) ignores the prior entirely -- centroids are
-  derived purely from the new picks. \code{alpha = 1} returns the prior
-  unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
-  \code{alpha} progressively as you collect more new picks to gradually
-  shift calibration toward the new dataset.}
+derived purely from the new picks. \code{alpha = 1} returns the prior
+unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
+\code{alpha} progressively as you collect more new picks to gradually
+shift calibration toward the new dataset.}
 
 \item{verbose}{Logical. Print per-class summaries and inter-class distance
 matrix. Default \code{TRUE}.}

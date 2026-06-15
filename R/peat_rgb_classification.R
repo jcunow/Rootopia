@@ -5,9 +5,9 @@
 # based on fixed LAB centroids derived from manual color calibration.
 #
 # Public functions:
-# classify_peat_rgb() -- classify a SpatRaster, return map + metrics
-# build_peat_centroids() -- derive centroids from user RGB picks
-# plot_peat_classification() -- visualise output of classify_peat_rgb()
+#   classify_peat_rgb()       -- classify a SpatRaster, return map + metrics
+#   build_peat_centroids()    -- derive centroids from user RGB picks
+#   plot_peat_classification() -- visualise output of classify_peat_rgb()
 #
 # Internal helpers (not exported):
 #   .rgb_to_lab()
@@ -126,7 +126,11 @@
 #'
 #' @param picks A named list of RGB pick matrices. Each element corresponds to
 #'   one class and must be a numeric matrix with 3 columns (R, G, B), values
-#' 0-255, with one row per pick. Names become class names in the output.
+#'   0-255, with one row per pick. Names become class names in the output.
+#'   See \code{\link{classify_peat_rgb}}'s \strong{Building your own
+#'   centroids (picks)} section for a worked example of constructing these
+#'   matrices from an image (e.g. by cropping representative patches and
+#'   calling \code{terra::values()}).
 #' @param max_dist A named numeric vector of per-class LAB distance thresholds,
 #'   matched by name to \code{picks}. Pixels further than this from a class
 #'   centroid cannot be assigned to that class.
@@ -137,7 +141,7 @@
 #'   \code{picks} and \code{prior} are blended; new classes in \code{picks}
 #'   that are absent from \code{prior} are added as-is.
 #' @param alpha Numeric in [0, 1]. Blend weight for the prior centroids.
-#' \code{alpha = 0} (default) ignores the prior entirely -- centroids are
+#'   \code{alpha = 0} (default) ignores the prior entirely -- centroids are
 #'   derived purely from the new picks. \code{alpha = 1} returns the prior
 #'   unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
 #'   \code{alpha} progressively as you collect more new picks to gradually
@@ -193,7 +197,7 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
     
     lab  <- .rgb_to_lab(mat)
     lm   <- colMeans(lab)
-    lsd <- if (nrow(lab) > 1) apply(lab, 2, stats::sd) else c(0, 0, 0)
+    lsd  <- if (nrow(lab) > 1) apply(lab, 2, stats::sd) else c(0, 0, 0)
     to_c <- sqrt(rowSums(sweep(lab, 2, lm)^2))
     
     if (nrow(lab) > 1) {
@@ -282,12 +286,18 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' centroid assignment in CIE LAB colour space. Pixels beyond the per-class
 #' distance threshold are labelled "unclassified".
 #'
-#' @param img A \code{SpatRaster} with at least 3 layers interpreted as R, G, B
-#' (in that order). Values may be 0-255 or 0-1 (auto-detected).
+#' @param img An RGB image with at least 3 layers/channels interpreted as
+#'   R, G, B (in that order). Values may be 0-255 or 0-1 (auto-detected).
+#'   Converted internally via \code{load_flexible_image()}, so any of its
+#'   supported formats are accepted: file path (.jpg, .jpeg, .png, .tif,
+#'   .tiff, .bmp), \code{SpatRaster}, \code{RasterLayer}/\code{RasterBrick},
+#'   \code{cimg}, \code{magick-image}, \code{matrix}, or \code{array}.
 #' @param centroids A \code{data.frame} with columns \code{class}, \code{L},
-#'   \code{A}, \code{B}, \code{MAX_DIST}. Defaults to a set of centroids
-#' calibrated on Oulanka 2023 minirhizotron scans -- see
-#'   \code{\link{build_peat_centroids}} to derive centroids for your own data.
+#'   \code{A}, \code{B}, \code{MAX_DIST} (see \strong{Centroid table format}
+#'   below). Defaults to a set of centroids calibrated on Oulanka 2023
+#'   minirhizotron scans -- see \strong{Building your own centroids} below
+#'   and \code{\link{build_peat_centroids}} to derive centroids for your own
+#'   data.
 #' @param downsample_fact Integer spatial aggregation factor applied before
 #'   classification for speed. \code{NULL} (default) uses full resolution.
 #'   The output map is always disaggregated back to match the input resolution
@@ -315,24 +325,102 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'     was applied).}
 #' }
 #'
+#' @section Centroid table format:
+#' The \code{centroids} table has one row per material class and these
+#' columns:
+#' \describe{
+#'   \item{\code{class}}{Character. Name of the class (e.g.
+#'     \code{"dark_peat"}, \code{"root"}). Becomes the factor level in
+#'     \code{result$map} and the \code{class} column of \code{result$metrics}.}
+#'   \item{\code{L}, \code{A}, \code{B}}{Numeric. The class centroid's
+#'     coordinates in CIE LAB colour space (D65 illuminant): \code{L} is
+#'     lightness (0 = black, 100 = white), \code{A} is the green-red axis
+#'     (negative = green, positive = red), and \code{B} is the blue-yellow
+#'     axis (negative = blue, positive = yellow). These are the *mean* LAB
+#'     values of the representative pixels for that class.}
+#'   \item{\code{MAX_DIST}}{Numeric. The per-class assignment radius, in
+#'     Euclidean LAB units. A pixel is assigned to the class whose centroid
+#'     is nearest in LAB space, but only if that distance is \code{<=
+#'     MAX_DIST}; otherwise the pixel is labelled \code{"unclassified"}.
+#'     Larger values classify more pixels but risk merging visually distinct
+#'     materials; smaller values leave more pixels unclassified. Typical
+#'     values are roughly 10-30.}
+#' }
+#' Pixel RGB values are converted to LAB internally before distances are
+#' computed, so \code{L}/\code{A}/\code{B} are never raw RGB numbers.
+#'
+#' @section Building your own centroids (picks):
+#' The default \code{centroids} table was calibrated on one specific scanner
+#' and site, so for other datasets you should derive your own using
+#' \code{\link{build_peat_centroids}}.
+#'
+#' That function requires \code{picks}: a named list where each element is an
+#' \code{N x 3} numeric matrix of RGB values (0--255), with one row per
+#' manually selected pixel that is known to belong to a given material class.
+#' The more representative pixels supplied for each class, the more robust the
+#' resulting centroid will be.
+#'
+#' \preformatted{
+#' picks <- list(
+#'   dark_peat = rbind(
+#'     c(32, 28, 25),
+#'     c(35, 30, 27),
+#'     c(29, 25, 22),
+#'     c(31, 27, 24)
+#'   ),
+#'   root = rbind(
+#'     c(215, 180, 130),
+#'     c(220, 185, 135),
+#'     c(210, 175, 128),
+#'     c(218, 182, 132)
+#'   )
+#' )
+#'
+#' max_dist <- c(
+#'   dark_peat = 14,
+#'   root      = 26
+#' )
+#'
+#' cents <- build_peat_centroids(picks, max_dist)
+#'
+#' result <- classify_peat_rgb(
+#'   img,
+#'   centroids = cents
+#' )
+#' }
+#'
+#' Each row of a pick matrix represents a single RGB observation:
+#'
+#' \preformatted{
+#' #      R    G    B
+#' c(215, 180, 130)
+#' }
+#'
+#' Typically, picks are obtained by interactively sampling representative
+#' pixels from an image and grouping them by material class. The resulting
+#' centroids are calculated in CIE LAB colour space, not RGB space.
+#'
+#' \code{build_peat_centroids()} converts the supplied RGB picks to LAB,
+#' computes a centroid for each class, and reports intra-class spread and
+#' inter-class distances to help assess whether the chosen
+#' \code{MAX_DIST} values are appropriate.
+#'
 #' @seealso \code{\link{build_peat_centroids}}, \code{\link{plot_peat_classification}}
 #'
 #' @examples
 #' \dontrun{
 #' library(terra)
-#' img    <- rast("scan.tiff")
+#' img    <- seg_Oulanka2023_Session01_T067
 #' result <- classify_peat_rgb(img)
 #'
 #' # Access outputs
 #' terra::plot(result$map)
 #' result$metrics
 #'
-#' # Zonal stats with a depth-band raster
-#' zones  <- rast("depth_zones.tif")
-#' zstats <- terra::zonal(result$map, zones, fun = "freq")
 #'
-#' # Custom centroids
-#' cents  <- build_peat_centroids(my_picks, my_max_dist)
+#' # Custom centroids -- see "Building your own centroids (picks)" above for
+#' # how to construct `picks` and `max_dist`
+#' cents  <- build_peat_centroids(picks, max_dist)
 #' result <- classify_peat_rgb(img, centroids = cents)
 #' }
 #'
@@ -345,17 +433,19 @@ classify_peat_rgb <- function(img,
                               verbose         = TRUE) {
   
   msg <- function(...) if (verbose) message(...)
-  
-  # --- Validate inputs -------------------------------------------------------
-  if (!inherits(img, "SpatRaster"))
-    stop("img must be a SpatRaster")
+
+  # --- Prepare raster ---------------------------------------------------------
+  # Accepts file path, SpatRaster, RasterLayer/Brick, cimg, magick-image,
+  # matrix, or array -- see load_flexible_image() for the full list.
+  img <- load_flexible_image(img, output_format = "spatrast",
+                             normalize = FALSE, binarize = FALSE)
   if (terra::nlyr(img) < 3)
     stop("img must have at least 3 layers (R, G, B)")
-  
+
   required_cols <- c("class", "L", "A", "B", "MAX_DIST")
   if (!all(required_cols %in% names(centroids)))
     stop("centroids must have columns: ", paste(required_cols, collapse = ", "))
-  
+
   # --- Prepare raster --------------------------------------------------------
   img_work <- img[[1:3]]
   names(img_work) <- c("R", "G", "B")
@@ -524,7 +614,7 @@ classify_peat_rgb <- function(img,
 #'     \item{\code{"vibrant"}}{Saturated, high-contrast colours defined in
 #'       \code{vibrant_colors}.}
 #'     \item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
-#' colour -- useful for sanity-checking centroid values.}
+#'       colour -- useful for sanity-checking centroid values.}
 #'   }
 #' @param class_colors Named character vector of hex colours for
 #'   \code{"contrast"} mode. Names must match class names in
@@ -623,7 +713,7 @@ plot_peat_classification <- function(result,
   leg_fills  <- unname(pal[leg_ids])
   
   # Map colours for IDs present in raster
-  map_ids <- sort(unique(stats::na.omit(terra::values(class_map))))
+  map_ids  <- sort(unique(stats::na.omit(terra::values(class_map))))
   map_cols <- unname(pal[as.character(map_ids)])
   
   # Open device
