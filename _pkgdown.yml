@@ -84,6 +84,12 @@ reference:
       - render_order_overlay
       - plot_order_window
 
+  - title: "Root turnover"
+    desc: "Estimate root production, decay, and turnover from temporal image
+      comparison or RootDetector DPC images."
+    contents:
+      - root_turnover
+
   - title: "Depth mapping"
     desc: "Functions for constructing and binning depth maps from minirhizotron geometry."
     contents:
