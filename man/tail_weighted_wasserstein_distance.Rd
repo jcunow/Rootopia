@@ -2,50 +2,48 @@
 % Please edit documentation in R/compareDistributions3.R
 \name{tail_weighted_wasserstein_distance}
 \alias{tail_weighted_wasserstein_distance}
-\title{A tailweighted Version of 1 dimensional Wasserstein distance betwwen two probability vectors}
+\title{Tail-weighted Wasserstein distance (1D)}
 \usage{
 tail_weighted_wasserstein_distance(
-  Q,
   P,
-  inverse = FALSE,
+  Q,
+  index = 1:min(length(P), length(Q)),
+  index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 10),
-  method = "step",
+  weighting = "constant",
   baseline.weight = 0,
-  index = 1:min(c(length(Q), length(P))),
-  index.spacing = "equal"
+  inverse = FALSE
 )
 }
 \arguments{
-\item{Q}{probability vector 1}
+\item{P}{Numeric probability vector.}
 
-\item{P}{probability vector 2}
+\item{Q}{Numeric probability vector.}
 
-\item{inverse}{changes from right tail to left tail if TRUE}
+\item{index}{Numeric vector defining position (e.g., depth layers).}
 
-\item{parameter}{list with lambda -> shape parameter (0 = constant weighting) & x0 -> curve offset (= inflexion point )}
+\item{index.spacing}{Character. \code{"equal"} or \code{"custom"}.}
 
-\item{method}{weighting function along index. Available options are: c("constant", "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")}
+\item{parameter}{List with \code{lambda} and \code{x0}.}
 
-\item{baseline.weight}{Numeric between 0-1}
+\item{weighting}{Character. Weighting function applied before comparison.}
 
-\item{index}{a positive numeric vector containing probability spacing e.g., depth}
+\item{baseline.weight}{Numeric in [0,1]. Minimum weight.}
 
-\item{index.spacing}{whether index intervals are equally distant i.e., c(1,2,3,4....n), if "equal" than index is c(1,n)}
+\item{inverse}{Logical. Reverse weighting direction.}
 }
 \value{
-Numeric Wasserstein distance
+Numeric Wasserstein distance.
 }
 \description{
-A tailweighted Version of 1 dimensional Wasserstein distance betwwen two probability vectors
+Computes the 1D Wasserstein distance between two probability distributions
+with optional depth-dependent weighting.
 }
-\examples{
-P <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)  # Distribution P
-Q <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)**6  # Distribution Q
+\details{
+Wasserstein distance measures the minimal "transport cost" required to
+transform one distribution into another along a one-dimensional index.
 
-# Ensure the distributions are valid (non-negative and sum to 1)
-P <- P / sum(P)
-Q <- Q / sum(Q)
-
-tail_weighted_wasserstein_distance(P,Q,
-  inverse=FALSE,method="constant",parameter = list(lambda = 0.2,x0=3))
+This implementation uses \code{transport::wasserstein1d()} after applying
+optional weighting.
 }
+\keyword{internal}

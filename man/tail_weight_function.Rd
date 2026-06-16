@@ -8,31 +8,35 @@ tail_weight_function(
   index = NULL,
   parameter = list(lambda = 0.2, x0 = 5),
   index.spacing = "equal",
-  method = "sigmoid",
+  weighting = "sigmoid",
   baseline.weight = 0,
   inverse = FALSE
 )
 }
 \arguments{
-\item{index}{Numeric vector specifying the positions for weight calculation}
+\item{index}{Numeric vector specifying positions.}
 
-\item{parameter}{List containing:
-- lambda: Shape parameter (0 = constant weighting)
-- x0: Curve offset/inflection point}
+\item{parameter}{List with:
+\itemize{
+  \item \code{lambda}: shape parameter controlling steepness
+  \item \code{x0}: inflection or threshold parameter
+}}
 
-\item{index.spacing}{Character, either "equal" or "custom" for index spacing type}
+\item{index.spacing}{Character. Either \code{"equal"} or \code{"custom"}.}
 
-\item{method}{Character, weighting function type:
-"constant", "asymptotic", "linear", "exponential", "sigmoid", "gompertz", "step"}
+\item{weighting}{Character. Weighting function:
+\code{"constant"}, \code{"asymptotic"}, \code{"linear"},
+\code{"exponential"}, \code{"sigmoid"}, \code{"gompertz"}, \code{"step"}.}
 
-\item{baseline.weight}{Numeric between 0-1, minimum weight value}
+\item{baseline.weight}{Numeric in [0,1]. Minimum weight applied.}
 
-\item{inverse}{Logical, if TRUE reverses weight distribution (left vs right tail)}
+\item{inverse}{Logical. If TRUE, reverses weighting direction.}
 }
 \value{
-Normalized weight vector
+Numeric vector of normalized weights.
 }
 \description{
-Calculate weights for probability distribution comparison
+Constructs a flexible weighting vector used to emphasize or de-emphasize
+portions of a probability distribution along an index (e.g., depth).
 }
 \keyword{internal}

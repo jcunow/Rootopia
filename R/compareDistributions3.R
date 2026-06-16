@@ -1,411 +1,443 @@
+############################################
+# Tail weight function
+############################################
 
-
-#############################
-# Enhanced tail weight function with error handling
 #' Calculate weights for probability distribution comparison
 #'
-#' @param index Numeric vector specifying the positions for weight calculation
-#' @param parameter List containing:
-#'   - lambda: Shape parameter (0 = constant weighting)
-#'   - x0: Curve offset/inflection point
-#' @param index.spacing Character, either "equal" or "custom" for index spacing type
-#' @param method Character, weighting function type:
-#'   "constant", "asymptotic", "linear", "exponential", "sigmoid", "gompertz", "step"
-#' @param baseline.weight Numeric between 0-1, minimum weight value
-#' @param inverse Logical, if TRUE reverses weight distribution (left vs right tail)
-#' @return Normalized weight vector
+#' Constructs a flexible weighting vector used to emphasize or de-emphasize
+#' portions of a probability distribution along an index (e.g., depth).
 #'
+#' @param index Numeric vector specifying positions.
+#' @param parameter List with:
+#'   \itemize{
+#'     \item \code{lambda}: shape parameter controlling steepness
+#'     \item \code{x0}: inflection or threshold parameter
+#'   }
+#' @param index.spacing Character. Either \code{"equal"} or \code{"custom"}.
+#' @param weighting Character. Weighting function:
+#' \code{"constant"}, \code{"asymptotic"}, \code{"linear"},
+#' \code{"exponential"}, \code{"sigmoid"}, \code{"gompertz"}, \code{"step"}.
+#' @param baseline.weight Numeric in [0,1]. Minimum weight applied.
+#' @param inverse Logical. If TRUE, reverses weighting direction.
+#'
+#' @return Numeric vector of normalized weights.
 #' @keywords internal
-#' @export
-tail_weight_function <- function(index = NULL, parameter = list(lambda = 0.2, x0=5),
-                                 index.spacing = "equal", method = "sigmoid",
-                                 baseline.weight = 0, inverse = FALSE) {
+tail_weight_function <- function(
+    index = NULL,
+    parameter = list(lambda = 0.2, x0 = 5),
+    index.spacing = "equal",
+    weighting = "sigmoid",
+    baseline.weight = 0,
+    inverse = FALSE
+) {
   tryCatch({
-    # Validate method parameter
-    valid_methods <- c("constant", "asympotic", "exponential", "sigmoid",
-                       "linear", "gompertz", "step")
-    if (!method %in% valid_methods) {
-      stop("Invalid method. Must be one of: ",
-           paste(valid_methods, collapse = ", "))
+    
+    valid_weightings <- c(
+      "constant", "asymptotic", "linear",
+      "exponential", "sigmoid", "gompertz", "step"
+    )
+    
+    if (!weighting %in% valid_weightings) {
+      stop("Invalid weighting function")
     }
-
-    # Validate index spacing
+    
     if (!index.spacing %in% c("equal", "custom")) {
-      stop("index.spacing must be either 'equal' or 'custom'")
+      stop("index.spacing must be 'equal' or 'custom'")
     }
-
-    # Validate baseline weight
+    
     if (!is.numeric(baseline.weight) || baseline.weight < 0 || baseline.weight > 1) {
-      stop("baseline.weight must be a numeric value between 0 and 1")
+      stop("baseline.weight must be in [0,1]")
     }
-
-    # Validate parameter list
-    if (!is.list(parameter)) {
-      stop("parameter must be a list")
+    
+    if (!is.list(parameter) || is.null(parameter$lambda) || is.null(parameter$x0)) {
+      stop("parameter must contain lambda and x0")
     }
-    if (is.null(parameter$lambda) || is.null(parameter$x0)) {
-      stop("parameter list must contain 'lambda' and 'x0'")
-    }
-    if (!is.numeric(parameter$lambda) || !is.numeric(parameter$x0)) {
-      stop("parameter$lambda and parameter$x0 must be numeric")
-    }
-
-    # Process index based on spacing type
+    
     if (index.spacing == "equal") {
-      if (is.null(index)) {
-        stop("index cannot be NULL when index.spacing is 'equal'")
-      }
+      if (is.null(index)) stop("index required for equal spacing")
       n <- length(index)
       index <- 1:n
     } else {
-      if (is.null(index)) {
-        stop("index cannot be NULL when index.spacing is 'custom'")
-      }
+      if (is.null(index)) stop("index required for custom spacing")
       n <- max(index, na.rm = TRUE)
-      if (!is.finite(n)) {
-        stop("Invalid index values")
+    }
+    
+    weights <- switch(
+      weighting,
+      
+      constant = rep(1, length(index)),
+      
+      asymptotic = {
+        exp_vals <- exp(parameter$lambda / n * abs(index - n))
+        ((-exp_vals + max(exp_vals)) / max(exp_vals)) *
+          (1 - baseline.weight) + baseline.weight
+      },
+      
+      exponential = {
+        exp(-parameter$lambda / n * abs(index - n)) *
+          (1 - baseline.weight) + baseline.weight
+      },
+      
+      linear = {
+        (index / n) * (1 - baseline.weight) + baseline.weight
+      },
+      
+      sigmoid = {
+        1 / (1 + exp(-parameter$lambda * (index - parameter$x0))) *
+          (1 - baseline.weight) + baseline.weight
+      },
+      
+      gompertz = {
+        exp(-parameter$x0 * exp(-parameter$lambda * index)) *
+          (1 - baseline.weight) + baseline.weight
+      },
+      
+      step = {
+        w <- ifelse(index > parameter$x0, 1, 0)
+        w * (1 - baseline.weight) + baseline.weight
       }
-    }
-
-    # Calculate weights based on method
-    weights <- switch(method,
-                      "constant" = rep(1, length(index)),
-                      "asympotic" = {
-                        exp_vals <- exp(parameter$lambda / n * abs((index) - n))
-                        ((-exp_vals + max(exp_vals)) / max(exp_vals)) *
-                          (1-baseline.weight) + baseline.weight
-                      },
-                      "exponential" = {
-                        exp(-parameter$lambda / n * abs((index) - n)) *
-                          (1-baseline.weight) + baseline.weight
-                      },
-                      "sigmoid" = {
-                        1 / (1 + exp(-parameter$lambda * (index - parameter$x0))) *
-                          (1-baseline.weight) + baseline.weight
-                      },
-                      "linear" = {
-                        (index / n) * (1-baseline.weight) + baseline.weight
-                      },
-                      "gompertz" = {
-                        exp(-parameter$x0 * exp(-parameter$lambda * index)) *
-                          (1-baseline.weight) + baseline.weight
-                      },
-                      "step" = {
-                        w <- index
-                        w[index <= parameter$x0] <- 0
-                        w[index > parameter$x0] <- 1
-                        w * (1-baseline.weight) + baseline.weight
-                      }
     )
-
-    # Validate weights calculation
-    if (any(is.na(weights)) || any(!is.finite(weights))) {
-      stop("Invalid weights calculated. Check your parameters.")
-    }
-
-    if (inverse) {
-      weights <- rev(weights)
-    }
-
-    # Normalize weights
-    sum_weights <- sum(weights)
-    if (sum_weights == 0) {
-      stop("Sum of weights is zero")
-    }
-    out <- weights / sum_weights
-
-    return(out)
+    
+    if (inverse) weights <- rev(weights)
+    
+    weights / sum(weights)
+    
   }, error = function(e) {
-    stop("Error in tail_weight_function: ", e$message)
+    stop("tail_weight_function error: ", e$message)
   })
 }
 
-# Enhanced KL divergence function with error handling
-#' Calculate tail-weighted KL divergence for discrete distributions
+
+############################################
+# KL divergence
+############################################
+
+#' Tail-weighted Kullback-Leibler divergence
 #'
-#' @param Q probability vector 1
-#' @param P probability vector 2
-#' @param index a positive numeric vector containing probability spacing e.g., depth
-#' @param index.spacing whether index intervals are equally distant i.e., c(1,2,3,4....n), if "equal" than index is c(1,n)
-#' @param inverse changes from right tail to left tail if TRUE
-#' @param parameter list with lambda -> shape parameter (0 = constant weighting) & x0 -> curve offset (= inflexion point )
-#' @param method weighting function along index. Available options are: c("constant", "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")
-#' @param alignPQ if TRUE, index end values will be cut off in case of unequal length of P & Q so that length of P & Q is equal
-#' @param cut if FALSE, 0 will be added to the shorter vector. If TRUE, the longer vector will be shortened at the end.
+#' Computes KL divergence between two probability distributions with optional
+#' depth-dependent weighting along an index (e.g., soil depth).
+#'
+#' @param P Numeric probability vector.
+#' @param Q Numeric probability vector.
+#' @param index Numeric vector defining position (e.g., depth layers).
+#' @param index.spacing Character. \code{"equal"} or \code{"custom"}.
+#' @param parameter List with \code{lambda} and \code{x0}.
+#' @param weighting Character. Weighting function applied before comparison.
+#' @param baseline.weight Numeric in [0,1]. Minimum weight.
+#' @param inverse Logical. Reverse weighting direction.
+#' @param alignPQ Logical. If TRUE, aligns vectors of unequal length.
+#' @param cut Logical. If TRUE, truncates longer vector instead of padding.
 #'
 #' @details
-#' Kullback-Leibler Divergence
+#' KL divergence is asymmetric:
+#' \deqn{D_{KL}(P \parallel Q) = \sum P \log(P / Q)}
 #'
+#' Weighting modifies contribution of each index position prior to normalization.
 #'
-#' @return KL divergence, not symmetrical - changing the input order will change the result
-#' @export
-tail_weighted_kl_divergence <- function(P, Q, index = 1:min(c(length(Q),length(P))),
-                                        index.spacing = "equal",
-                                        parameter = list(lambda = 0.2, x0=30),
-                                        cut = FALSE, inverse = FALSE,
-                                        method = "constant", alignPQ = TRUE) {
+#' @return Numeric KL divergence value.
+#' @keywords internal
+tail_weighted_kl_divergence <- function(
+    P, Q,
+    index = 1:min(length(P), length(Q)),
+    index.spacing = "equal",
+    parameter = list(lambda = 0.2, x0 = 30),
+    weighting = "constant",
+    baseline.weight = 0,
+    inverse = FALSE,
+    alignPQ = TRUE,
+    cut = FALSE
+) {
   tryCatch({
-    # Validate inputs
-    if (!is.numeric(P) || !is.numeric(Q)) {
-      stop("P and Q must be numeric vectors")
-    }
-
-    if (any(P < 0) || any(Q < 0)) {
-      stop("P and Q must contain non-negative values")
-    }
-
-    if (sum(P) == 0 || sum(Q) == 0) {
-      stop("P and Q must not sum to zero")
-    }
-
-    # Normalize P and Q if they don't sum to 1
+    
     P <- P / sum(P)
     Q <- Q / sum(Q)
-
-    # Handle length matching
+    
     if (length(P) != length(Q)) {
-      if (!alignPQ) {
-        stop("Distributions P and Q must be of the same length when alignPQ is FALSE")
-      }
-
-      n <- min(c(length(Q), length(P)))
-      m <- max(c(length(Q), length(P)))
-
+      if (!alignPQ) stop("length mismatch")
+      
+      n <- min(length(P), length(Q))
       if (cut) {
-        P <- P[1:n]
-        Q <- Q[1:n]
+        P <- P[1:n]; Q <- Q[1:n]
       } else {
-        vl1 <- abs(length(P) - m)
-        vl2 <- abs(length(Q) - m)
-        P <- c(P[1:(m-vl1)], rep(0, vl1))
-        Q <- c(Q[1:(m-vl2)], rep(0, vl2))
+        P <- c(P, rep(0, abs(length(Q) - length(P))))
+        Q <- c(Q, rep(0, abs(length(P) - length(Q))))
       }
     }
-
-    # Validate index
-    if (!is.numeric(index) || any(index <= 0)) {
-      stop("index must be a positive numeric vector")
-    }
-    if (length(index) != length(P)) {
-      stop("index length must match distribution length")
-    }
-
-    # Calculate weights
-    weight <- tail_weight_function(
-      index = index,
-      index.spacing = index.spacing,
-      parameter = parameter,
-      method = method,
-      inverse = inverse
-    )
-
-    # Apply weights
-    P <- (P * weight) / sum(P * weight)
-    Q <- (Q * weight) / sum(Q * weight)
-
-    # Calculate divergence
-    kl_divergence <- sum(sapply(seq_along(index), function(i) {
-      p_x <- P[i]
-      q_x <- Q[i]
-      if (p_x <= 0 || q_x <= 0) return(0)
-      p_x * log(p_x / q_x)
-    }))
-
-    if (!is.finite(kl_divergence)) {
-      stop("Invalid KL divergence calculated")
-    }
-
-    return(kl_divergence)
-  }, error = function(e) {
-    stop("Error in tail_weighted_kl_divergence: ", e$message)
-  })
-}
-
-# Enhanced JS divergence function with error handling
-#' Calculate tail-weighted Jensen-Shannon divergence
-#'
-#' @param Q probability vector 1
-#' @param P probability vector 2
-#' @param index a positive numeric vector containing probability spacing e.g., depth
-#' @param index.spacing whether index intervals are equally distant i.e., c(1,2,3,4....n), if "equal" than index is c(1,n)
-#' @param inverse changes from right tail to left tail if TRUE
-#' @param parameter list with lambda -> shape parameter (0 = constant weighting) & x0 -> curve offset (= inflexion point )
-#' @param method weighting function along index. Available options are: c("constant", "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")
-#' @param alignPQ if TRUE, index end values will be cut off in case of unequal length of P & Q so that length of P & Q is equal
-#' @param cut if FALSE, 0 will be added to the shorter vector. If TRUE, the longer vector will be shortened at the end.
-#' @return Numeric JS divergence value
-#'
-#' @export
-#'
-#' @examples
-#' P <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)  # Distribution P
-#' Q <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)**6  # Distribution Q
-#'
-#' # Ensure the distributions are valid (non-negative and sum to 1)
-#' P <- P / sum(P)
-#' Q <- Q / sum(Q)
-#'
-#' tail_weighted_js_divergence(P,Q,parameter = list(lambda = 0.2,x0=30))
-tail_weighted_js_divergence <- function(P, Q, parameter = list(lambda = 0.2, x0=30),
-                                        method = "constant", inverse = FALSE,
-                                        alignPQ = TRUE, cut = FALSE,
-                                        index = 1:min(c(length(Q),length(P))),
-                                        index.spacing = "equal") {
-  tryCatch({
-    # Validate inputs
-    if (!is.numeric(P) || !is.numeric(Q)) {
-      stop("P and Q must be numeric vectors")
-    }
-
-    if (any(P < 0) || any(Q < 0)) {
-      stop("P and Q must contain non-negative values")
-    }
-
-    if (sum(P) == 0 || sum(Q) == 0) {
-      stop("P and Q must not sum to zero")
-    }
-
-    # Normalize P and Q
-    P <- P / sum(P)
-    Q <- Q / sum(Q)
-
-    # Handle length matching
-    if (length(P) != length(Q)) {
-      if (!alignPQ) {
-        stop("Distributions P and Q must be of the same length when alignPQ is FALSE")
-      }
-
-      n <- min(c(length(Q), length(P)))
-      m <- max(c(length(Q), length(P)))
-
-      if (cut) {
-        P <- P[1:n]
-        Q <- Q[1:n]
-      } else {
-        vl1 <- abs(length(P) - m)
-        vl2 <- abs(length(Q) - m)
-        P <- c(P[1:(m-vl1)], rep(0, vl1))
-        Q <- c(Q[1:(m-vl2)], rep(0, vl2))
-      }
-    }
-
-    # Compute average distribution
-    M <- (P + Q) / 2
-
-    # Compute KL divergences with error checking
-    KL_PM <- tail_weighted_kl_divergence(
-      P, M, index = index,
-      index.spacing = index.spacing,
-      parameter = parameter,
-      method = method,
-      inverse = inverse,
-      alignPQ = alignPQ
-    )
-
-    KL_QM <- tail_weighted_kl_divergence(
-      Q, M, index = index,
-      index.spacing = index.spacing,
-      parameter = parameter,
-      method = method,
-      inverse = inverse,
-      alignPQ = alignPQ
-    )
-
-    # Calculate final divergence
-    js_divergence <- (KL_PM + KL_QM) / 2
-    js_divergence <- round(js_divergence, 4)
-
-    if (!is.finite(js_divergence)) {
-      stop("Invalid JS divergence calculated")
-    }
-
-    return(js_divergence)
-  }, error = function(e) {
-    stop("Error in tail_weighted_js_divergence: ", e$message)
-  })
-}
-
-# Enhanced Wasserstein distance function with error handling
-#' A tailweighted Version of 1 dimensional Wasserstein distance betwwen two probability vectors
-#'
-#' @param Q probability vector 1
-#' @param P probability vector 2
-#' @param index a positive numeric vector containing probability spacing e.g., depth
-#' @param index.spacing whether index intervals are equally distant i.e., c(1,2,3,4....n), if "equal" than index is c(1,n)
-#' @param inverse changes from right tail to left tail if TRUE
-#' @param parameter list with lambda -> shape parameter (0 = constant weighting) & x0 -> curve offset (= inflexion point )
-#' @param method weighting function along index. Available options are: c("constant", "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")
-#' @param baseline.weight Numeric between 0-1
-#'
-#' @return Numeric Wasserstein distance
-#' @export
-#'
-#' @examples
-#' P <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)  # Distribution P
-#' Q <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)**6  # Distribution Q
-#'
-#' # Ensure the distributions are valid (non-negative and sum to 1)
-#' P <- P / sum(P)
-#' Q <- Q / sum(Q)
-#'
-#' tail_weighted_wasserstein_distance(P,Q,
-#'   inverse=FALSE,method="constant",parameter = list(lambda = 0.2,x0=3))
-tail_weighted_wasserstein_distance <- function(Q, P, inverse = FALSE,
-                                               parameter = list(lambda = 0.2, x0=10),
-                                               method = "step", baseline.weight = 0,
-                                               index = 1:min(c(length(Q),length(P))),
-                                               index.spacing = "equal") {
-  tryCatch({
-    # Validate inputs
-    if (!is.numeric(P) || !is.numeric(Q)) {
-      stop("P and Q must be numeric vectors")
-    }
-
-    if (any(P < 0) || any(Q < 0)) {
-      stop("P and Q must contain non-negative values")
-    }
-
-    if (sum(P) == 0 || sum(Q) == 0) {
-      stop("P and Q must not sum to zero")
-    }
-
-    # Validate baseline weight
-    if (!is.numeric(baseline.weight) || baseline.weight < 0 || baseline.weight > 1) {
-      stop("baseline.weight must be between 0 and 1")
-    }
-
-    # Calculate weights
-    weights <- tail_weight_function(
+    
+    w <- tail_weight_function(
       index = index,
       parameter = parameter,
       index.spacing = index.spacing,
-      method = method,
+      weighting = weighting,
       baseline.weight = baseline.weight,
       inverse = inverse
     )
-
-    # Apply weights and normalize
-    P <- (P * weights) / sum(P * weights)
-    Q <- (Q * weights) / sum(Q * weights)
-
-    # Calculate Wasserstein distance
-    distance <- tryCatch({
-      transport::wasserstein1d(a = P, b = Q)
-    }, error = function(e) {
-      stop("Error calculating Wasserstein distance: ", e$message)
-    })
-
-    if (!is.finite(distance)) {
-      stop("Invalid Wasserstein distance calculated")
-    }
-
-    return(distance)
+    
+    P <- (P * w) / sum(P * w)
+    Q <- (Q * w) / sum(Q * w)
+    
+    sum(P * log(P / Q), na.rm = TRUE)
+    
   }, error = function(e) {
-    stop("Error in tail_weighted_wasserstein_distance: ", e$message)
+    stop("KL error: ", e$message)
   })
 }
 
-# Enhanced MRD function with error handling
+
+############################################
+# JS divergence
+############################################
+
+#' Tail-weighted Jensen-Shannon divergence
+#'
+#' Computes a symmetric divergence between two distributions using a
+#' weighted KL decomposition.
+#'
+#' @inheritParams tail_weighted_kl_divergence
+#'
+#' @details
+#' Jensen-Shannon divergence is defined as:
+#' \deqn{JS(P,Q) = 1/2 KL(P || M) + 1/2 KL(Q || M)}
+#' where \eqn{M = (P + Q)/2}.
+#'
+#' Weighting is applied prior to normalization of P, Q, and M.
+#'
+#' @return Numeric JS divergence value.
+#' @keywords internal
+tail_weighted_js_divergence <- function(
+    P, Q,
+    index = 1:min(length(P), length(Q)),
+    index.spacing = "equal",
+    parameter = list(lambda = 0.2, x0 = 30),
+    weighting = "constant",
+    inverse = FALSE,
+    alignPQ = TRUE,
+    cut = FALSE
+) {
+  
+  P <- P / sum(P)
+  Q <- Q / sum(Q)
+  
+  M <- (P + Q) / 2
+  
+  KL_PM <- tail_weighted_kl_divergence(
+    P, M,
+    index = index,
+    index.spacing = index.spacing,
+    parameter = parameter,
+    weighting = weighting,
+    inverse = inverse,
+    alignPQ = alignPQ,
+    cut = cut
+  )
+  
+  KL_QM <- tail_weighted_kl_divergence(
+    Q, M,
+    index = index,
+    index.spacing = index.spacing,
+    parameter = parameter,
+    weighting = weighting,
+    inverse = inverse,
+    alignPQ = alignPQ,
+    cut = cut
+  )
+  
+  (KL_PM + KL_QM) / 2
+}
+
+
+############################################
+# Wasserstein distance
+############################################
+
+#' Tail-weighted Wasserstein distance (1D)
+#'
+#' Computes the 1D Wasserstein distance between two probability distributions
+#' with optional depth-dependent weighting.
+#'
+#' @inheritParams tail_weighted_kl_divergence
+#'
+#' @details
+#' Wasserstein distance measures the minimal "transport cost" required to
+#' transform one distribution into another along a one-dimensional index.
+#'
+#' This implementation uses \code{transport::wasserstein1d()} after applying
+#' optional weighting.
+#'
+#' @return Numeric Wasserstein distance.
+#' @keywords internal
+tail_weighted_wasserstein_distance <- function(
+    P, Q,
+    index = 1:min(length(P), length(Q)),
+    index.spacing = "equal",
+    parameter = list(lambda = 0.2, x0 = 10),
+    weighting = "constant",
+    baseline.weight = 0,
+    inverse = FALSE
+) {
+  
+  w <- tail_weight_function(
+    index = index,
+    parameter = parameter,
+    index.spacing = index.spacing,
+    weighting = weighting,
+    baseline.weight = baseline.weight,
+    inverse = inverse
+  )
+  
+  P <- (P * w) / sum(P * w)
+  Q <- (Q * w) / sum(Q * w)
+  
+  tryCatch({
+    transport::wasserstein1d(a = P, b = Q)
+  }, error = function(e) {
+    stop("Wasserstein error: ", e$message)
+  })
+}
+
+
+############################################
+# Wrapper
+############################################
+
+#' Compare depth distributions using multiple metrics
+#'
+#' Unified interface for comparing two probability distributions using
+#' Wasserstein distance, Jensen-Shannon divergence, or KL divergence,
+#' with optional depth-dependent weighting.
+#'
+#' @param P Numeric probability vector.
+#' @param Q Numeric probability vector.
+#' @param metric Character. One of \code{"wasserstein"} (default),
+#' \code{"js"}, or \code{"kl"}.
+#' @param tail_weight Logical. If TRUE, enables depth-dependent weighting.
+#' @param weighting Character. Weighting function used when
+#' \code{tail_weight = TRUE}.
+#' @param parameter List with weighting parameters \code{lambda} and \code{x0}.
+#' @param inverse Logical. Reverse weighting direction.
+#' @param index Numeric vector defining depth or ordering.
+#' @param index.spacing Character. \code{"equal"} or \code{"custom"}.
+#' @param alignPQ Logical. Aligns unequal-length vectors.
+#' @param cut Logical. If TRUE, truncates longer vector when aligning.
+#' @param baseline.weight Numeric in [0,1]. Minimum weight applied.
+#'
+#' @section Data requirements:
+#'
+#' \code{P} and \code{Q} are non-negative vectors representing discrete
+#' probability mass functions over a shared ordered index (e.g. depth bins).
+#'
+#' They are internally normalised to sum to 1 if necessary.
+#'
+#' Typical construction:
+#'
+#' \preformatted{
+#' counts_P <- c(5, 10, 20, 15)
+#' counts_Q <- c(2, 8, 25, 20)
+#'
+#' P <- counts_P / sum(counts_P)
+#' Q <- counts_Q / sum(counts_Q)
+#' }
+#'
+#' Continuous data must be discretised (e.g. binning) before use.
+#'
+#' @section Alignment:
+#'
+#' If \code{P} and \code{Q} differ in length, they are made comparable as follows:
+#'
+#' \strong{cut = TRUE:} both vectors are truncated to the shared minimum length.
+#'
+#' \strong{cut = FALSE:} the shorter vector is padded with zeros.
+#'
+#' No interpolation or re-binning is performed. Alignment only enforces
+#' equal vector length; consistent bin definitions are assumed.
+#'
+#' @section Interpretation:
+#'
+#' Elements of \code{P} and \code{Q} correspond to probability mass at
+#' positions given by \code{index}. The same index must apply to both
+#' distributions for valid comparison.
+#'
+#' @details
+#' This function wraps:
+#' \itemize{
+#'   \item \code{tail_weighted_wasserstein_distance()}
+#'   \item \code{tail_weighted_js_divergence()}
+#'   \item \code{tail_weighted_kl_divergence()}
+#' }
+#'
+#' If \code{tail_weight = FALSE}, uniform weighting is used.
+#'
+#' @return Numeric distance or divergence value.
+#'
+#' @examples
+#' compare_depth_distribution(P, Q)
+#' compare_depth_distribution(P, Q, metric = "js")
+#' compare_depth_distribution(P, Q, tail_weight = TRUE, weighting = "sigmoid")
+#'
+#' @export
+compare_depth_distribution <- function(
+    P, Q,
+    metric = "wasserstein",
+    tail_weight = FALSE,
+    weighting = "sigmoid",
+    parameter = list(lambda = 0.2, x0 = 30),
+    inverse = FALSE,
+    index = 1:min(length(P), length(Q)),
+    index.spacing = "equal",
+    alignPQ = TRUE,
+    cut = FALSE,
+    baseline.weight = 0
+) {
+  
+  metric <- match.arg(metric, c("wasserstein", "js", "kl"))
+  
+  if (!tail_weight) weighting <- "constant"
+  
+  switch(
+    metric,
+    
+    wasserstein = tail_weighted_wasserstein_distance(
+      P, Q,
+      index = index,
+      index.spacing = index.spacing,
+      parameter = parameter,
+      weighting = weighting,
+      baseline.weight = baseline.weight,
+      inverse = inverse
+    ),
+    
+    js = tail_weighted_js_divergence(
+      P, Q,
+      index = index,
+      index.spacing = index.spacing,
+      parameter = parameter,
+      weighting = weighting,
+      inverse = inverse,
+      alignPQ = alignPQ,
+      cut = cut
+    ),
+    
+    kl = tail_weighted_kl_divergence(
+      P, Q,
+      index = index,
+      index.spacing = index.spacing,
+      parameter = parameter,
+      weighting = weighting,
+      baseline.weight = baseline.weight,
+      inverse = inverse,
+      alignPQ = alignPQ,
+      cut = cut
+    )
+  )
+}
+
+
+
+
+
+
+
+
 #' Calculate Mean Rooting Depth
 #'
 #' @param w Numeric vector of weights (typically depths)

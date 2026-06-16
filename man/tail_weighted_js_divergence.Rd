@@ -2,52 +2,51 @@
 % Please edit documentation in R/compareDistributions3.R
 \name{tail_weighted_js_divergence}
 \alias{tail_weighted_js_divergence}
-\title{Calculate tail-weighted Jensen-Shannon divergence}
+\title{Tail-weighted Jensen-Shannon divergence}
 \usage{
 tail_weighted_js_divergence(
   P,
   Q,
+  index = 1:min(length(P), length(Q)),
+  index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 30),
-  method = "constant",
+  weighting = "constant",
   inverse = FALSE,
   alignPQ = TRUE,
-  cut = FALSE,
-  index = 1:min(c(length(Q), length(P))),
-  index.spacing = "equal"
+  cut = FALSE
 )
 }
 \arguments{
-\item{P}{probability vector 2}
+\item{P}{Numeric probability vector.}
 
-\item{Q}{probability vector 1}
+\item{Q}{Numeric probability vector.}
 
-\item{parameter}{list with lambda -> shape parameter (0 = constant weighting) & x0 -> curve offset (= inflexion point )}
+\item{index}{Numeric vector defining position (e.g., depth layers).}
 
-\item{method}{weighting function along index. Available options are: c("constant", "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")}
+\item{index.spacing}{Character. \code{"equal"} or \code{"custom"}.}
 
-\item{inverse}{changes from right tail to left tail if TRUE}
+\item{parameter}{List with \code{lambda} and \code{x0}.}
 
-\item{alignPQ}{if TRUE, index end values will be cut off in case of unequal length of P & Q so that length of P & Q is equal}
+\item{weighting}{Character. Weighting function applied before comparison.}
 
-\item{cut}{if FALSE, 0 will be added to the shorter vector. If TRUE, the longer vector will be shortened at the end.}
+\item{inverse}{Logical. Reverse weighting direction.}
 
-\item{index}{a positive numeric vector containing probability spacing e.g., depth}
+\item{alignPQ}{Logical. If TRUE, aligns vectors of unequal length.}
 
-\item{index.spacing}{whether index intervals are equally distant i.e., c(1,2,3,4....n), if "equal" than index is c(1,n)}
+\item{cut}{Logical. If TRUE, truncates longer vector instead of padding.}
 }
 \value{
-Numeric JS divergence value
+Numeric JS divergence value.
 }
 \description{
-Calculate tail-weighted Jensen-Shannon divergence
+Computes a symmetric divergence between two distributions using a
+weighted KL decomposition.
 }
-\examples{
-P <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)  # Distribution P
-Q <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)**6  # Distribution Q
+\details{
+Jensen-Shannon divergence is defined as:
+\deqn{JS(P,Q) = 1/2 KL(P || M) + 1/2 KL(Q || M)}
+where \eqn{M = (P + Q)/2}.
 
-# Ensure the distributions are valid (non-negative and sum to 1)
-P <- P / sum(P)
-Q <- Q / sum(Q)
-
-tail_weighted_js_divergence(P,Q,parameter = list(lambda = 0.2,x0=30))
+Weighting is applied prior to normalization of P, Q, and M.
 }
+\keyword{internal}

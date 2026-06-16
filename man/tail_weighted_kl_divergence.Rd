@@ -2,45 +2,53 @@
 % Please edit documentation in R/compareDistributions3.R
 \name{tail_weighted_kl_divergence}
 \alias{tail_weighted_kl_divergence}
-\title{Calculate tail-weighted KL divergence for discrete distributions}
+\title{Tail-weighted Kullback-Leibler divergence}
 \usage{
 tail_weighted_kl_divergence(
   P,
   Q,
-  index = 1:min(c(length(Q), length(P))),
+  index = 1:min(length(P), length(Q)),
   index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 30),
-  cut = FALSE,
+  weighting = "constant",
+  baseline.weight = 0,
   inverse = FALSE,
-  method = "constant",
-  alignPQ = TRUE
+  alignPQ = TRUE,
+  cut = FALSE
 )
 }
 \arguments{
-\item{P}{probability vector 2}
+\item{P}{Numeric probability vector.}
 
-\item{Q}{probability vector 1}
+\item{Q}{Numeric probability vector.}
 
-\item{index}{a positive numeric vector containing probability spacing e.g., depth}
+\item{index}{Numeric vector defining position (e.g., depth layers).}
 
-\item{index.spacing}{whether index intervals are equally distant i.e., c(1,2,3,4....n), if "equal" than index is c(1,n)}
+\item{index.spacing}{Character. \code{"equal"} or \code{"custom"}.}
 
-\item{parameter}{list with lambda -> shape parameter (0 = constant weighting) & x0 -> curve offset (= inflexion point )}
+\item{parameter}{List with \code{lambda} and \code{x0}.}
 
-\item{cut}{if FALSE, 0 will be added to the shorter vector. If TRUE, the longer vector will be shortened at the end.}
+\item{weighting}{Character. Weighting function applied before comparison.}
 
-\item{inverse}{changes from right tail to left tail if TRUE}
+\item{baseline.weight}{Numeric in [0,1]. Minimum weight.}
 
-\item{method}{weighting function along index. Available options are: c("constant", "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")}
+\item{inverse}{Logical. Reverse weighting direction.}
 
-\item{alignPQ}{if TRUE, index end values will be cut off in case of unequal length of P & Q so that length of P & Q is equal}
+\item{alignPQ}{Logical. If TRUE, aligns vectors of unequal length.}
+
+\item{cut}{Logical. If TRUE, truncates longer vector instead of padding.}
 }
 \value{
-KL divergence, not symmetrical - changing the input order will change the result
+Numeric KL divergence value.
 }
 \description{
-Calculate tail-weighted KL divergence for discrete distributions
+Computes KL divergence between two probability distributions with optional
+depth-dependent weighting along an index (e.g., soil depth).
 }
 \details{
-Kullback-Leibler Divergence
+KL divergence is asymmetric:
+\deqn{D_{KL}(P \parallel Q) = \sum P \log(P / Q)}
+
+Weighting modifies contribution of each index position prior to normalization.
 }
+\keyword{internal}
