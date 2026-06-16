@@ -323,7 +323,7 @@ count_pixels <- function(img) {
 #' @param layer Ignored. Provided for backward compatibility only; use
 #'   [terra::subset()] to select a layer before calling this function.
 #' @return A numeric value — the sum of all non-NA pixel values.
-#' @export
+#' @keywords internal
 px.sum <- function(img, layer = NULL) {
   .Deprecated("count_pixels",
               msg = "px.sum() is deprecated. Use count_pixels() instead. To select a layer, use terra::subset(img, layer) before calling count_pixels().")
@@ -498,61 +498,4 @@ analyze_soil_texture <- function(img.color, grays = 7, window = c(9, 9),
 }
 
 
-#' Approximate average root thickness (deprecated)
-#'
-#' @description `root_thickness()` is a naive estimator that back-calculates
-#'   an average diameter from a total root length and a total root pixel
-#'   count (`area / length`), assuming every pixel belongs to a single root of
-#'   uniform width. It ignores branching, overlapping roots, and the actual
-#'   local width distribution.
-#'
-#'   [root_diameter()] computes per-pixel diameters directly from the
-#'   distance transform of the segmented mask, and returns `mean_diameter`,
-#'   `median_diameter`, `quantiles`, `root_volume`, and `root_surface_area`
-#'   (lateral surface area, assuming cylindrical root segments). Use those
-#'   instead of `root_thickness()`.
-#'
-#' @param kimuralength Total root length in cm (e.g. from [root_length()]).
-#' @param rootpx Total number of root pixels in the image section.
-#' @param dpi Image resolution in dots per inch. Default is 300.
-#' @return A numeric value in cm representing approximate average root diameter.
-#' @export
-#'
-#' @examples
-#' root.thicc <- root_thickness(kimuralength = 300, rootpx = 9500, dpi = 300)
-root_thickness <- function(kimuralength, rootpx, dpi = 300) {
-  .Deprecated("root_diameter",
-              msg = paste("root_thickness() is a naive area/length estimator and is deprecated.",
-                          "Use root_diameter() for per-pixel diameter, root_volume, and",
-                          "root_surface_area computed from the distance transform."))
-  tryCatch({
-    if (missing(kimuralength) || missing(rootpx)) {
-      stop("Both kimuralength and rootpx are required")
-    }
 
-    if (!is.numeric(kimuralength) || !is.numeric(rootpx) || !is.numeric(dpi)) {
-      stop("All inputs must be numeric values")
-    }
-
-    if (kimuralength <= 0 || rootpx <= 0 || dpi <= 0) {
-      stop("All inputs must be positive values")
-    }
-
-    px.length <- kimuralength * (dpi / 2.54)
-    if (px.length <= 0) stop("Invalid pixel length calculation")
-
-    thiccness <- rootpx / px.length
-    if (thiccness <= 0) stop("Invalid thickness calculation")
-
-    px.thicc <- thiccness / (dpi / 2.54)
-
-    if (px.thicc <= 1e-9) {
-      warning("Calculated thickness is very small, which may indicate measurement issues")
-    }
-
-    return(px.thicc)
-
-  }, error = function(e) {
-    stop("Error in root_thickness: ", e$message)
-  })
-}

@@ -69,7 +69,7 @@ normalize_array <- function(arr, normalize, binarize) {
 #' @param select.layer Numeric, which layer to select if input has multiple layers
 #' @param normalize Logical, whether to normalize values to 0-1 range if they're in 0-255
 #' @param binarize Logical, whether the output is strictly 0 and 1. Overwrites normalize
-#' @keywords internal
+#' @export
 load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE, select.layer = NULL, binarize = FALSE) {
   validate_conversion_params(input, normalize, select.layer, binarize)
 

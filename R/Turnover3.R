@@ -17,18 +17,15 @@
 #'   - newroot%per_t2: Percentage of new roots at second timepoint
 #' @keywords internal
 #'
-#'
 #' @examples
 #'   data(skl_Oulanka2023_Session01_T067)
 #'   data(skl_Oulanka2023_Session03_T067)
 #'   time1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 #'   time2 <- terra::rast(skl_Oulanka2023_Session03_T067)
-#'   \dontrun{
 #'   turnover.values <- turnover_tc(
 #'     im.t1 = time1,
 #'     im.t2 = time2,
 #'     method = "kimura")
-#'     }
 turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select.layer = 2) {
 
   # Input validation module
@@ -135,11 +132,9 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 #' @keywords internal
 #'
 #' @examples
-#' \dontrun{
 #' data(TurnoverDPC_data)
 #' img = terra::rast(TurnoverDPC_data)
 #' DPCs = turnover_dpc(img = img, im.return = FALSE)
-#' }
 turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
                         im.return=FALSE, include.virtualroots=FALSE) {
   # Input validation module
@@ -285,30 +280,70 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
 
 #' Unified Root Turnover Analysis
 #'
-#' Performs root turnover analysis for either a single multi-layer image or two separate images
+#' Wrapper around the two root-turnover methods. \code{method} selects which
+#' one runs:
+#' \describe{
+#'   \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
+#'     (\code{img1}, \code{img2}) and reports standing roots, production, and
+#'     new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
+#'     \code{tc.method} argument chooses how root amount is measured:
+#'     \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
+#'   \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
+#'     multi-layer 'RootDetector' image into decayed, newly produced, and
+#'     unchanged (constant) root fractions. Dispatches to
+#'     \code{\link{turnover_dpc}}; \code{img2} is not used.}
+#' }
 #'
-#' @param img1 Primary SpatRaster input (either multi-layer or first timepoint image)
-#' @param img2 Optional second timepoint image (if img1 is single timepoint)
-#' @param method Analysis method: "kimura", "rootpx", or "dpc" (root decomposition)
-#' @param unit Unit of root length measurement (only for method = "kimura"). Default: "cm"
-#' @param dpi Image resolution (only for method = "kimura"). Default: 300
-#' @param select.layer Integer or NULL. When two images are provided with multiple layers,
-#'        specifies which layer to use. When img1 is multi-layer, ignored for DPC method.
-#' @param product.layer Integer indicating the production layer index for DPC method (1-3)
-#' @param decay.layer Integer indicating the decay & tape layer index for DPC method (1-3)
-#' @param blur.capture Threshold for pixel inclusion in DPC method (0-1). Default: 0.95
-#' @param im.return Logical: return images instead of values for DPC method? Default: FALSE
-#' @param include.virtualroots Logical: consider all roots present at any timepoint in DPC method? Default: FALSE
+#' @param img1 Primary SpatRaster input. For \code{method = "tc"} this is the
+#'   first timepoint image; for \code{method = "dpc"} this is the multi-layer
+#'   DPC image.
+#' @param img2 Second timepoint SpatRaster. Required for \code{method = "tc"};
+#'   ignored (with a warning) for \code{method = "dpc"}.
+#' @param method Which turnover method to run: \code{"tc"} (temporal
+#'   comparison of two images) or \code{"dpc"} (Decay/Production/Constant
+#'   decomposition of one multi-layer image). Default \code{"tc"}.
+#' @param tc.method Measurement sub-method for \code{method = "tc"}:
+#'   \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).
+#'   Ignored for \code{method = "dpc"}. Default \code{"kimura"}.
+#' @param unit Unit of root length measurement (only for
+#'   \code{tc.method = "kimura"}). Default: "cm"
+#' @param dpi Image resolution (only for \code{tc.method = "kimura"}). Default: 300
+#' @param select.layer Integer or NULL. For \code{method = "tc"} with
+#'   multi-layer images, selects which layer to compare. Ignored for
+#'   \code{method = "dpc"}.
+#' @param product.layer Integer indicating the production layer index for the
+#'   DPC method (1-3)
+#' @param decay.layer Integer indicating the decay & tape layer index for the
+#'   DPC method (1-3)
+#' @param blur.capture Threshold for pixel inclusion in the DPC method (0-1).
+#'   Default: 0.95
+#' @param im.return Logical: return images instead of values for the DPC
+#'   method? Default: FALSE
+#' @param include.virtualroots Logical: consider all roots present at any
+#'   timepoint in the DPC method? Default: FALSE
 #'
-#' @return Depends on method and parameters:
-#'   - For temporal comparison: data.frame with root production and turnover
-#'   - For DPC method: tibble with pixel sums and ratios or list of SpatRaster layers
-#'   
+#' @return Depends on the method:
+#'   - \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
+#'   - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im.return = TRUE}) a list of SpatRaster layers.
+#'
 #' @seealso \code{\link{turnover_tc}}, \code{\link{turnover_dpc}}
 #'
 #' @export
+#' @examples
+#' # DPC: single multi-layer 'RootDetector' image
+#' data(TurnoverDPC_data)
+#' img <- terra::rast(TurnoverDPC_data)
+#' root_turnover(img, method = "dpc")
+#'
+#' # TC: two timepoint images compared by root length (kimura)
+#' data(skl_Oulanka2023_Session01_T067)
+#' data(skl_Oulanka2023_Session03_T067)
+#' t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
+#' t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
+#' root_turnover(t1, t2, method = "tc", tc.method = "kimura")
 root_turnover = function(img1, img2 = NULL,
-                         method = "kimura",
+                         method = c("tc", "dpc"),
+                         tc.method = c("kimura", "rootpx"),
                          unit = "cm",
                          dpi = 300,
                          select.layer = NULL,
@@ -318,13 +353,10 @@ root_turnover = function(img1, img2 = NULL,
                          im.return = FALSE,
                          include.virtualroots = FALSE) {
 
-  # Validate method input
-  valid_methods <- c("kimura", "rootpx", "dpc")
-  if (!method %in% valid_methods) {
-    stop("Method must be one of: ", paste(valid_methods, collapse = ", "))
-  }
+  method    <- match.arg(method)
+  tc.method <- match.arg(tc.method)
 
-  # Helper function to handle layer selection
+  # Helper function to handle layer selection (TC method only)
   select_layer <- function(img, select.layer = NULL) {
     # If select.layer is NULL or img has only one layer, return the image as-is
     if (is.null(select.layer) || terra::nlyr(img) == 1) {
@@ -342,39 +374,36 @@ root_turnover = function(img1, img2 = NULL,
     return(img[[select.layer]])
   }
 
-  # Input validation and method dispatch
-  if (is.null(img2)) {
-    # Single image scenario
-    if (method == "dpc") {
-      return(turnover_dpc(
-        img = img1,
-        product.layer = product.layer,
-        decay.layer = decay.layer,
-        blur.capture = blur.capture,
-        im.return = im.return,
-        include.virtualroots = include.virtualroots
-      ))
-    } else {
-      stop("For single image input, only 'dpc' method is supported")
+  # Dispatch on method
+  if (method == "dpc") {
+    # Decay, Production, Constant -- single multi-layer image
+    if (!is.null(img2)) {
+      warning("img2 is ignored for method = 'dpc' (uses a single multi-layer image)")
     }
+    return(turnover_dpc(
+      img = img1,
+      product.layer = product.layer,
+      decay.layer = decay.layer,
+      blur.capture = blur.capture,
+      im.return = im.return,
+      include.virtualroots = include.virtualroots
+    ))
   } else {
-    # Two-image scenario (temporal comparison)
-    if (method %in% c("kimura", "rootpx")) {
-      # Apply layer selection if either image is multi-layer
-      img1 <- select_layer(img1, select.layer)
-      img2 <- select_layer(img2, select.layer)
-
-      return(turnover_tc(
-        im.t1 = img1,
-        im.t2 = img2,
-        method = method,
-        unit = unit,
-        dpi = dpi,
-        select.layer = NULL  # Removed as layer selection is now handled separately
-      ))
-    } else {
-      stop("For two-image input, only 'kimura' or 'rootpx' methods are supported")
+    # Temporal Comparison -- two timepoint images
+    if (is.null(img2)) {
+      stop("method = 'tc' (temporal comparison) requires two images: supply img2")
     }
+    img1 <- select_layer(img1, select.layer)
+    img2 <- select_layer(img2, select.layer)
+
+    return(turnover_tc(
+      im.t1 = img1,
+      im.t2 = img2,
+      method = tc.method,
+      unit = unit,
+      dpi = dpi,
+      select.layer = NULL  # layer selection already handled above
+    ))
   }
 }
 

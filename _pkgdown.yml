@@ -31,6 +31,9 @@ navbar:
           href: articles/MinirhizotronScans_vignettes.html
         - text: Rotation Bias Correction
           href: articles/Rotation_Bias_vignettes.html
+        - text: "-------"
+        - text: "Special Topics (peat colour, texture, halos, turnover)"
+          href: articles/SpecialTopics_vignette.html
     - text: News
       href: news/index.html
     - text: Function Index

@@ -146,7 +146,18 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
 #' \item{endpoints}{SpatRaster marking pixels with exactly one neighbor}
 #' \item{branching_points}{SpatRaster marking pixels with more than two neighbors}
 #'
-#' @keywords internal
+#' @export
+#' @examples
+#' # Load example binary segmentation
+#' data(seg_Oulanka2023_Session01_T067)
+#'
+#' # Ensure single-layer raster if needed
+#' img <- seg_Oulanka2023_Session01_T067
+#'
+#' # Skeletonize
+#' skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+#' skel.points <- detect_skeleton_points(skel)
+#' 
 detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE) {
 
   img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE,
