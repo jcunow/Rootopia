@@ -48,25 +48,6 @@ rhythmicity](#circumferential-zoning-and-rhythmicity) section below.
 # remotes::install_github("jcunow/RootScanR")
 
 library(RootScanR)
-```
-
-    ## Warning: replacing previous import 'dplyr::union' by 'raster::union' when
-    ## loading 'RootScanR'
-
-    ## Warning: replacing previous import 'dplyr::intersect' by 'raster::intersect'
-    ## when loading 'RootScanR'
-
-    ## Warning: replacing previous import 'dplyr::select' by 'raster::select' when
-    ## loading 'RootScanR'
-
-    ## Warning: replacing previous import 'raster::select' by 'dplyr::select' when
-    ## loading 'RootScanR'
-
-    ## Warning: replacing previous import 'raster::plot' by 'graphics::plot' when
-    ## loading 'RootScanR'
-
-``` r
-
 library(terra)
 ```
 
