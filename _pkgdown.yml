@@ -33,7 +33,7 @@ navbar:
           href: articles/Rotation_Bias_vignettes.html
     - text: News
       href: news/index.html
-    - text: Reference
+    - text: Function Index
       href: reference/index.html
     - text: Package Structure
       href: articles/pkgnetreport.html
@@ -61,13 +61,11 @@ reference:
     contents:
       - root_length
       - root_diameter
-      - root_thickness
       - detect_skeleton_points
       - count_pixels
-      - px.sum
       - deep_drive
       - root_scape_metrics
-      - root_accumulation
+
 
   - title: "Root branching order"
     desc: "Convert a root skeleton into a segment graph, assign tip/root/branch
@@ -88,7 +86,6 @@ reference:
     contents:
       - create_depthmap
       - binning
-      - slice_rotation
       - estimate_soil_surface
       - estimate_rotation_center
       - estimate_rotation_shift
@@ -96,6 +93,7 @@ reference:
   - title: "Soil and colour characterisation"
     desc: "Colour metrics, peat classification, and texture analysis."
     contents:
+      - create_root_buffer
       - tube_coloration
       - analyze_soil_texture
       - classify_peat_rgb
@@ -107,20 +105,20 @@ reference:
     contents:
       - MRD
       - RPI
-      - root_turnover
       - rhythmicity
       - modal_peaks
       - circular_mean
-      - tail_weighted_js_divergence
-      - tail_weighted_kl_divergence
-      - tail_weighted_wasserstein_distance
+      - root_accumulation
+      - compare_depth_distribution
 
   - title: "Rotation bias"
     desc: "Detect and correct for rotational artefacts in minirhizotron tube scans."
     contents:
+      - slice_rotation
       - fit_sine_curve
-      - create_root_buffer
-      - create_depthmap
+      - rhythmicity
+      
+
 
   - title: "Example data"
     desc: "Built-in example images from the Oulanka 2023 field campaign."
