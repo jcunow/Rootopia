@@ -108,11 +108,12 @@
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">time1</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">time2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span>  <span class="va">turnover.values</span> <span class="op">&lt;-</span> <span class="fu">turnover_tc</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    im.t1 <span class="op">=</span> <span class="va">time1</span>,</span></span>
 <span class="r-in"><span>    im.t2 <span class="op">=</span> <span class="va">time2</span>,</span></span>
 <span class="r-in"><span>    method <span class="op">=</span> <span class="st">"kimura"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in turnover_tc(im.t1 = time1, im.t2 = time2, method = "kimura"):</span> could not find function "turnover_tc"</span>
+<span class="r-in"><span>    <span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

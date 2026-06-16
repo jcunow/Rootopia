@@ -276,7 +276,5 @@ Built-in example images from the Oulanka 2023 field campaign.
   R](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md):
 - [Minirhizotron Scans Analysis with RootScanR in
   R](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md):
-- [RootScanR Package Report, by
-  pkgnet](https://jcunow.github.io/RootScanR/articles/pkgnetreport.md):
 - [Rotation Bias and Rhythmicity Analysis with
   RootScanR](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md):
