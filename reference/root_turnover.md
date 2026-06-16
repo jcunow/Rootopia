@@ -1,7 +1,22 @@
 # Unified Root Turnover Analysis
 
-Performs root turnover analysis for either a single multi-layer image or
-two separate images
+Wrapper around the two root-turnover methods. `method` selects which one
+runs:
+
+- `"tc"` (Temporal Comparison):
+
+  Compares two timepoint images (`img1`, `img2`) and reports standing
+  roots, production, and new-root percentages. Dispatches to
+  [`turnover_tc`](https://jcunow.github.io/RootScanR/reference/turnover_tc.md).
+  The `tc.method` argument chooses how root amount is measured:
+  `"kimura"` (root length) or `"rootpx"` (root pixel count).
+
+- `"dpc"` (Decay, Production, Constant):
+
+  Decomposes a single multi-layer 'RootDetector' image into decayed,
+  newly produced, and unchanged (constant) root fractions. Dispatches to
+  [`turnover_dpc`](https://jcunow.github.io/RootScanR/reference/turnover_dpc.md);
+  `img2` is not used.
 
 ## Usage
 
@@ -9,7 +24,8 @@ two separate images
 root_turnover(
   img1,
   img2 = NULL,
-  method = "kimura",
+  method = c("tc", "dpc"),
+  tc.method = c("kimura", "rootpx"),
   unit = "cm",
   dpi = 300,
   select.layer = NULL,
@@ -25,60 +41,95 @@ root_turnover(
 
 - img1:
 
-  Primary SpatRaster input (either multi-layer or first timepoint image)
+  Primary SpatRaster input. For `method = "tc"` this is the first
+  timepoint image; for `method = "dpc"` this is the multi-layer DPC
+  image.
 
 - img2:
 
-  Optional second timepoint image (if img1 is single timepoint)
+  Second timepoint SpatRaster. Required for `method = "tc"`; ignored
+  (with a warning) for `method = "dpc"`.
 
 - method:
 
-  Analysis method: "kimura", "rootpx", or "dpc" (root decomposition)
+  Which turnover method to run: `"tc"` (temporal comparison of two
+  images) or `"dpc"` (Decay/Production/Constant decomposition of one
+  multi-layer image). Default `"tc"`.
+
+- tc.method:
+
+  Measurement sub-method for `method = "tc"`: `"kimura"` (root length)
+  or `"rootpx"` (root pixel count). Ignored for `method = "dpc"`.
+  Default `"kimura"`.
 
 - unit:
 
-  Unit of root length measurement (only for method = "kimura"). Default:
-  "cm"
+  Unit of root length measurement (only for `tc.method = "kimura"`).
+  Default: "cm"
 
 - dpi:
 
-  Image resolution (only for method = "kimura"). Default: 300
+  Image resolution (only for `tc.method = "kimura"`). Default: 300
 
 - select.layer:
 
-  Integer or NULL. When two images are provided with multiple layers,
-  specifies which layer to use. When img1 is multi-layer, ignored for
-  DPC method.
+  Integer or NULL. For `method = "tc"` with multi-layer images, selects
+  which layer to compare. Ignored for `method = "dpc"`.
 
 - product.layer:
 
-  Integer indicating the production layer index for DPC method (1-3)
+  Integer indicating the production layer index for the DPC method (1-3)
 
 - decay.layer:
 
-  Integer indicating the decay & tape layer index for DPC method (1-3)
+  Integer indicating the decay & tape layer index for the DPC method
+  (1-3)
 
 - blur.capture:
 
-  Threshold for pixel inclusion in DPC method (0-1). Default: 0.95
+  Threshold for pixel inclusion in the DPC method (0-1). Default: 0.95
 
 - im.return:
 
-  Logical: return images instead of values for DPC method? Default:
+  Logical: return images instead of values for the DPC method? Default:
   FALSE
 
 - include.virtualroots:
 
-  Logical: consider all roots present at any timepoint in DPC method?
-  Default: FALSE
+  Logical: consider all roots present at any timepoint in the DPC
+  method? Default: FALSE
 
 ## Value
 
-Depends on method and parameters: - For temporal comparison: data.frame
-with root production and turnover - For DPC method: tibble with pixel
-sums and ratios or list of SpatRaster layers
+Depends on the method: - `"tc"`: data.frame with standing roots,
+production, and new-root percentages. - `"dpc"`: data.frame of pixel
+sums and ratios, or (if `im.return = TRUE`) a list of SpatRaster layers.
 
 ## See also
 
 [`turnover_tc`](https://jcunow.github.io/RootScanR/reference/turnover_tc.md),
 [`turnover_dpc`](https://jcunow.github.io/RootScanR/reference/turnover_dpc.md)
+
+## Examples
+
+``` r
+# DPC: single multi-layer 'RootDetector' image
+data(TurnoverDPC_data)
+img <- terra::rast(TurnoverDPC_data)
+root_turnover(img, method = "dpc")
+#>       tape constant production    decay newgrowth.ratio decay.ratio
+#> 1 3478.478 1720.318   10863.29 13159.69          0.8633      0.8844
+#>   constant.ratio
+#> 1         0.0668
+
+# TC: two timepoint images compared by root length (kimura)
+data(skl_Oulanka2023_Session01_T067)
+data(skl_Oulanka2023_Session03_T067)
+t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
+t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
+root_turnover(t1, t2, method = "tc", tc.method = "kimura")
+#> Diagonal: 457958 | Orthogonal: 459143
+#> Diagonal: 431284 | Orthogonal: 432437
+#>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2
+#> 1        8937.922        8417.615  -520.3067        -0.0582        -0.0618
+```

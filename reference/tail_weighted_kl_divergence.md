@@ -1,6 +1,7 @@
-# Calculate tail-weighted KL divergence for discrete distributions
+# Tail-weighted Kullback-Leibler divergence
 
-Calculate tail-weighted KL divergence for discrete distributions
+Computes KL divergence between two probability distributions with
+optional depth-dependent weighting along an index (e.g., soil depth).
 
 ## Usage
 
@@ -8,13 +9,14 @@ Calculate tail-weighted KL divergence for discrete distributions
 tail_weighted_kl_divergence(
   P,
   Q,
-  index = 1:min(c(length(Q), length(P))),
+  index = 1:min(length(P), length(Q)),
   index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 30),
-  cut = FALSE,
+  weighting = "constant",
+  baseline.weight = 0,
   inverse = FALSE,
-  method = "constant",
-  alignPQ = TRUE
+  alignPQ = TRUE,
+  cut = FALSE
 )
 ```
 
@@ -22,50 +24,52 @@ tail_weighted_kl_divergence(
 
 - P:
 
-  probability vector 2
+  Numeric probability vector.
 
 - Q:
 
-  probability vector 1
+  Numeric probability vector.
 
 - index:
 
-  a positive numeric vector containing probability spacing e.g., depth
+  Numeric vector defining position (e.g., depth layers).
 
 - index.spacing:
 
-  whether index intervals are equally distant i.e., c(1,2,3,4....n), if
-  "equal" than index is c(1,n)
+  Character. `"equal"` or `"custom"`.
 
 - parameter:
 
-  list with lambda -\> shape parameter (0 = constant weighting) & x0 -\>
-  curve offset (= inflexion point )
+  List with `lambda` and `x0`.
 
-- cut:
+- weighting:
 
-  if FALSE, 0 will be added to the shorter vector. If TRUE, the longer
-  vector will be shortened at the end.
+  Character. Weighting function applied before comparison.
+
+- baseline.weight:
+
+  Numeric in \[0,1\]. Minimum weight.
 
 - inverse:
 
-  changes from right tail to left tail if TRUE
-
-- method:
-
-  weighting function along index. Available options are: c("constant",
-  "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")
+  Logical. Reverse weighting direction.
 
 - alignPQ:
 
-  if TRUE, index end values will be cut off in case of unequal length of
-  P & Q so that length of P & Q is equal
+  Logical. If TRUE, aligns vectors of unequal length.
+
+- cut:
+
+  Logical. If TRUE, truncates longer vector instead of padding.
 
 ## Value
 
-KL divergence, not symmetrical - changing the input order will change
-the result
+Numeric KL divergence value.
 
 ## Details
 
-Kullback-Leibler Divergence
+KL divergence is asymmetric: \$\$D\_{KL}(P \parallel Q) = \sum P \log(P
+/ Q)\$\$
+
+Weighting modifies contribution of each index position prior to
+normalization.

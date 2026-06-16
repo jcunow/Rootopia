@@ -22,9 +22,11 @@
     <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (peat colour, texture, halos, turnover)</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
-<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Function Index</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/pkgnetreport.html">Package Structure</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -139,13 +141,6 @@
 
         <dt>
 
-          <code><a href="root_thickness.html">root_thickness()</a></code>
-
-        </dt>
-        <dd>Approximate average root thickness (deprecated)</dd>
-
-        <dt>
-
           <code><a href="detect_skeleton_points.html">detect_skeleton_points()</a></code>
 
         </dt>
@@ -160,13 +155,6 @@
 
         <dt>
 
-          <code><a href="px.sum.html">px.sum()</a></code>
-
-        </dt>
-        <dd>Count pixels (deprecated alias for count_pixels)</dd>
-
-        <dt>
-
           <code><a href="deep_drive.html">deep_drive()</a></code>
 
         </dt>
@@ -178,13 +166,6 @@
 
         </dt>
         <dd>RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features akin to landscape analysis.</dd>
-
-        <dt>
-
-          <code><a href="root_accumulation.html">root_accumulation()</a></code>
-
-        </dt>
-        <dd>Calculate root accumulation</dd>
       </dl></div><div class="section level2">
       <h2 id="root-branching-order">Root branching order<a class="anchor" aria-label="anchor" href="#root-branching-order"></a></h2>
 
@@ -258,6 +239,22 @@
         </dt>
         <dd>Native-resolution validation of a sub-window</dd>
       </dl></div><div class="section level2">
+      <h2 id="root-turnover">Root turnover<a class="anchor" aria-label="anchor" href="#root-turnover"></a></h2>
+
+      <div class="section-desc"><p>Estimate root production, decay, and turnover from temporal image comparison or RootDetector DPC images.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="root_turnover.html">root_turnover()</a></code>
+
+        </dt>
+        <dd>Unified Root Turnover Analysis</dd>
+      </dl></div><div class="section level2">
       <h2 id="depth-mapping">Depth mapping<a class="anchor" aria-label="anchor" href="#depth-mapping"></a></h2>
 
       <div class="section-desc"><p>Functions for constructing and binning depth maps from minirhizotron geometry.</p></div>
@@ -280,13 +277,6 @@
 
         </dt>
         <dd>Bin continuous depth values into discrete intervals</dd>
-
-        <dt>
-
-          <code><a href="slice_rotation.html">slice_rotation()</a></code>
-
-        </dt>
-        <dd>Slice a scan along the rotation (circumferential) axis</dd>
 
         <dt>
 
@@ -319,6 +309,13 @@
 
 
       <dl><dt>
+
+          <code><a href="create_root_buffer.html">create_root_buffer()</a></code>
+
+        </dt>
+        <dd>Create a buffer halo) around non-zero pixels</dd>
+
+        <dt>
 
           <code><a href="tube_coloration.html">tube_coloration()</a></code>
 
@@ -378,13 +375,6 @@
 
         <dt>
 
-          <code><a href="root_turnover.html">root_turnover()</a></code>
-
-        </dt>
-        <dd>Unified Root Turnover Analysis</dd>
-
-        <dt>
-
           <code><a href="rhythmicity.html">rhythmicity()</a></code>
 
         </dt>
@@ -406,24 +396,17 @@
 
         <dt>
 
-          <code><a href="tail_weighted_js_divergence.html">tail_weighted_js_divergence()</a></code>
+          <code><a href="root_accumulation.html">root_accumulation()</a></code>
 
         </dt>
-        <dd>Calculate tail-weighted Jensen-Shannon divergence</dd>
+        <dd>Calculate root accumulation</dd>
 
         <dt>
 
-          <code><a href="tail_weighted_kl_divergence.html">tail_weighted_kl_divergence()</a></code>
+          <code><a href="compare_depth_distribution.html">compare_depth_distribution()</a></code>
 
         </dt>
-        <dd>Calculate tail-weighted KL divergence for discrete distributions</dd>
-
-        <dt>
-
-          <code><a href="tail_weighted_wasserstein_distance.html">tail_weighted_wasserstein_distance()</a></code>
-
-        </dt>
-        <dd>A tailweighted Version of 1 dimensional Wasserstein distance betwwen two probability vectors</dd>
+        <dd>Compare depth distributions using multiple metrics</dd>
       </dl></div><div class="section level2">
       <h2 id="rotation-bias">Rotation bias<a class="anchor" aria-label="anchor" href="#rotation-bias"></a></h2>
 
@@ -436,6 +419,13 @@
 
       <dl><dt>
 
+          <code><a href="slice_rotation.html">slice_rotation()</a></code>
+
+        </dt>
+        <dd>Slice a scan along the rotation (circumferential) axis</dd>
+
+        <dt>
+
           <code><a href="fit_sine_curve.html">fit_sine_curve()</a></code>
 
         </dt>
@@ -443,17 +433,10 @@
 
         <dt>
 
-          <code><a href="create_root_buffer.html">create_root_buffer()</a></code>
+          <code><a href="rhythmicity.html">rhythmicity()</a></code>
 
         </dt>
-        <dd>Create a buffer halo) around non-zero pixels</dd>
-
-        <dt>
-
-          <code><a href="create_depthmap.html">create_depthmap()</a></code>
-
-        </dt>
-        <dd>Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map</dd>
+        <dd>Assess rhythmicity via sine curve fitting and model comparison</dd>
       </dl></div><div class="section level2">
       <h2 id="example-data">Example data<a class="anchor" aria-label="anchor" href="#example-data"></a></h2>
 

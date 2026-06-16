@@ -1,75 +1,66 @@
-# A tailweighted Version of 1 dimensional Wasserstein distance betwwen two probability vectors
+# Tail-weighted Wasserstein distance (1D)
 
-A tailweighted Version of 1 dimensional Wasserstein distance betwwen two
-probability vectors
+Computes the 1D Wasserstein distance between two probability
+distributions with optional depth-dependent weighting.
 
 ## Usage
 
 ``` r
 tail_weighted_wasserstein_distance(
-  Q,
   P,
-  inverse = FALSE,
+  Q,
+  index = 1:min(length(P), length(Q)),
+  index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 10),
-  method = "step",
+  weighting = "constant",
   baseline.weight = 0,
-  index = 1:min(c(length(Q), length(P))),
-  index.spacing = "equal"
+  inverse = FALSE
 )
 ```
 
 ## Arguments
 
-- Q:
-
-  probability vector 1
-
 - P:
 
-  probability vector 2
+  Numeric probability vector.
 
-- inverse:
+- Q:
 
-  changes from right tail to left tail if TRUE
-
-- parameter:
-
-  list with lambda -\> shape parameter (0 = constant weighting) & x0 -\>
-  curve offset (= inflexion point )
-
-- method:
-
-  weighting function along index. Available options are: c("constant",
-  "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")
-
-- baseline.weight:
-
-  Numeric between 0-1
+  Numeric probability vector.
 
 - index:
 
-  a positive numeric vector containing probability spacing e.g., depth
+  Numeric vector defining position (e.g., depth layers).
 
 - index.spacing:
 
-  whether index intervals are equally distant i.e., c(1,2,3,4....n), if
-  "equal" than index is c(1,n)
+  Character. `"equal"` or `"custom"`.
+
+- parameter:
+
+  List with `lambda` and `x0`.
+
+- weighting:
+
+  Character. Weighting function applied before comparison.
+
+- baseline.weight:
+
+  Numeric in \[0,1\]. Minimum weight.
+
+- inverse:
+
+  Logical. Reverse weighting direction.
 
 ## Value
 
-Numeric Wasserstein distance
+Numeric Wasserstein distance.
 
-## Examples
+## Details
 
-``` r
-P <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)  # Distribution P
-Q <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)**6  # Distribution Q
+Wasserstein distance measures the minimal "transport cost" required to
+transform one distribution into another along a one-dimensional index.
 
-# Ensure the distributions are valid (non-negative and sum to 1)
-P <- P / sum(P)
-Q <- Q / sum(Q)
-
-tail_weighted_wasserstein_distance(P,Q,
-  inverse=FALSE,method="constant",parameter = list(lambda = 0.2,x0=3))
-#> [1] 0.1008476
-```
+This implementation uses
+[`transport::wasserstein1d()`](https://rdrr.io/pkg/transport/man/wasserstein1d.html)
+after applying optional weighting.

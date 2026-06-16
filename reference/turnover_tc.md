@@ -57,10 +57,9 @@ production: Root production between timepoints - newroot - newroot
   data(skl_Oulanka2023_Session03_T067)
   time1 <- terra::rast(skl_Oulanka2023_Session01_T067)
   time2 <- terra::rast(skl_Oulanka2023_Session03_T067)
-  if (FALSE) { # \dontrun{
   turnover.values <- turnover_tc(
     im.t1 = time1,
     im.t2 = time2,
     method = "kimura")
-    } # }
+#> Error in turnover_tc(im.t1 = time1, im.t2 = time2, method = "kimura"): could not find function "turnover_tc"
 ```

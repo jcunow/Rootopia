@@ -115,57 +115,58 @@ computed, so `L`/`A`/`B` are never raw RGB numbers.
 ## Building your own centroids (picks)
 
 The default `centroids` table was calibrated on one specific scanner and
-site, so for other datasets you should derive your own using
+site, so for other data you should derive your own via
 [`build_peat_centroids`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md).
 
-That function requires `picks`: a named list where each element is an
-`N x 3` numeric matrix of RGB values (0–255), with one row per manually
-selected pixel that is known to belong to a given material class. The
-more representative pixels supplied for each class, the more robust the
-resulting centroid will be.
+[`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
+takes `picks`: a named list with one element per material class. Each
+element is a numeric matrix with exactly 3 columns (R, G, B in 0-255),
+where every row is one colour sample believed to belong to that class.
+Classes may have different numbers of rows. The function converts each
+matrix to LAB, averages it to a single centroid, and returns a
+`data.frame` in the same format as `.default_peat_centroids()` – ready
+to pass straight back into `classify_peat_rgb(centroids = ...)`.
+
+The simplest approach is to read representative RGB values off your scan
+(e.g. using an image viewer's colour picker) and enter them directly:
 
 
     picks <- list(
-      dark_peat = rbind(
-        c(32, 28, 25),
-        c(35, 30, 27),
-        c(29, 25, 22),
-        c(31, 27, 24)
-      ),
-      root = rbind(
-        c(215, 180, 130),
-        c(220, 185, 135),
-        c(210, 175, 128),
-        c(218, 182, 132)
-      )
+      dark_peat = matrix(c( 28,  22,  18,
+                             32,  26,  21,
+                             25,  19,  15), ncol = 3, byrow = TRUE),
+      red_peat  = matrix(c( 80,  45,  35,
+                             75,  42,  31), ncol = 3, byrow = TRUE),
+      root      = matrix(c(180, 160, 130,
+                           175, 155, 125,
+                           185, 165, 135,
+                           178, 158, 128), ncol = 3, byrow = TRUE),
+      tape      = matrix(c(200, 205, 210,
+                           195, 200, 205), ncol = 3, byrow = TRUE),
+      debris    = matrix(c(100,  70,  45,
+                            95,  65,  40), ncol = 3, byrow = TRUE)
     )
 
-    max_dist <- c(
-      dark_peat = 14,
-      root      = 26
-    )
+    max_dist <- c(dark_peat = 14, red_peat = 14, root = 26,
+                  tape = 28, debris = 11)
 
-    cents <- build_peat_centroids(picks, max_dist)
+    cents  <- build_peat_centroids(picks, max_dist)   # prints diagnostics
+    result <- classify_peat_rgb(img, centroids = cents)
 
-    result <- classify_peat_rgb(
-      img,
-      centroids = cents
-    )
-
-Each row of a pick matrix represents a single RGB observation:
-
-
-    #      R    G    B
-    c(215, 180, 130)
-
-Typically, picks are obtained by interactively sampling representative
-pixels from an image and grouping them by material class. The resulting
-centroids are calculated in CIE LAB colour space, not RGB space.
+Alternatively, picks can be extracted from known representative patches
+of your image. **Important:**
+[`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
+always treats pick values as 0-255 (no auto-scaling). If your raster
+stores values in 0-1, multiply by 255 before building picks so that the
+centroids and the pixels seen inside `classify_peat_rgb()` are on the
+same scale.
 
 [`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
-converts the supplied RGB picks to LAB, computes a centroid for each
-class, and reports intra-class spread and inter-class distances to help
-assess whether the chosen `MAX_DIST` values are appropriate.
+prints diagnostics (intra-class spread, inter-class distances,
+`MAX_DIST` coverage) to help you sanity-check your choices. Provide a
+class for *every* material present in your scans: because classification
+is nearest-centroid, any material without its own class is snapped into
+whichever defined class is closest.
 
 ## See also
 
@@ -177,13 +178,16 @@ assess whether the chosen `MAX_DIST` values are appropriate.
 ``` r
 if (FALSE) { # \dontrun{
 library(terra)
-img    <- seg_Oulanka2023_Session01_T067
+img    <- rast("scan.tiff")
 result <- classify_peat_rgb(img)
 
 # Access outputs
 terra::plot(result$map)
 result$metrics
 
+# Zonal stats with a depth-band raster
+zones  <- rast("depth_zones.tif")
+zstats <- terra::zonal(result$map, zones, fun = "freq")
 
 # Custom centroids -- see "Building your own centroids (picks)" above for
 # how to construct `picks` and `max_dist`

@@ -10,3 +10,5 @@
   R](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md):
 - [Rotation Bias and Rhythmicity Analysis with
   RootScanR](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md):
+- [Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and
+  Turnover](https://jcunow.github.io/RootScanR/articles/SpecialTopics_vignette.md):

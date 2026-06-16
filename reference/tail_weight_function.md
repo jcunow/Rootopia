@@ -1,6 +1,7 @@
 # Calculate weights for probability distribution comparison
 
-Calculate weights for probability distribution comparison
+Constructs a flexible weighting vector used to emphasize or de-emphasize
+portions of a probability distribution along an index (e.g., depth).
 
 ## Usage
 
@@ -9,7 +10,7 @@ tail_weight_function(
   index = NULL,
   parameter = list(lambda = 0.2, x0 = 5),
   index.spacing = "equal",
-  method = "sigmoid",
+  weighting = "sigmoid",
   baseline.weight = 0,
   inverse = FALSE
 )
@@ -19,30 +20,33 @@ tail_weight_function(
 
 - index:
 
-  Numeric vector specifying the positions for weight calculation
+  Numeric vector specifying positions.
 
 - parameter:
 
-  List containing: - lambda: Shape parameter (0 = constant weighting) -
-  x0: Curve offset/inflection point
+  List with:
+
+  - `lambda`: shape parameter controlling steepness
+
+  - `x0`: inflection or threshold parameter
 
 - index.spacing:
 
-  Character, either "equal" or "custom" for index spacing type
+  Character. Either `"equal"` or `"custom"`.
 
-- method:
+- weighting:
 
-  Character, weighting function type: "constant", "asymptotic",
-  "linear", "exponential", "sigmoid", "gompertz", "step"
+  Character. Weighting function: `"constant"`, `"asymptotic"`,
+  `"linear"`, `"exponential"`, `"sigmoid"`, `"gompertz"`, `"step"`.
 
 - baseline.weight:
 
-  Numeric between 0-1, minimum weight value
+  Numeric in \[0,1\]. Minimum weight applied.
 
 - inverse:
 
-  Logical, if TRUE reverses weight distribution (left vs right tail)
+  Logical. If TRUE, reverses weighting direction.
 
 ## Value
 
-Normalized weight vector
+Numeric vector of normalized weights.

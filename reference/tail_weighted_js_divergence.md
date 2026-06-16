@@ -1,6 +1,7 @@
-# Calculate tail-weighted Jensen-Shannon divergence
+# Tail-weighted Jensen-Shannon divergence
 
-Calculate tail-weighted Jensen-Shannon divergence
+Computes a symmetric divergence between two distributions using a
+weighted KL decomposition.
 
 ## Usage
 
@@ -8,13 +9,13 @@ Calculate tail-weighted Jensen-Shannon divergence
 tail_weighted_js_divergence(
   P,
   Q,
+  index = 1:min(length(P), length(Q)),
+  index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 30),
-  method = "constant",
+  weighting = "constant",
   inverse = FALSE,
   alignPQ = TRUE,
-  cut = FALSE,
-  index = 1:min(c(length(Q), length(P))),
-  index.spacing = "equal"
+  cut = FALSE
 )
 ```
 
@@ -22,59 +23,47 @@ tail_weighted_js_divergence(
 
 - P:
 
-  probability vector 2
+  Numeric probability vector.
 
 - Q:
 
-  probability vector 1
-
-- parameter:
-
-  list with lambda -\> shape parameter (0 = constant weighting) & x0 -\>
-  curve offset (= inflexion point )
-
-- method:
-
-  weighting function along index. Available options are: c("constant",
-  "asymptotic", "linear, "exponential", "sigmoid", "gompertz","step")
-
-- inverse:
-
-  changes from right tail to left tail if TRUE
-
-- alignPQ:
-
-  if TRUE, index end values will be cut off in case of unequal length of
-  P & Q so that length of P & Q is equal
-
-- cut:
-
-  if FALSE, 0 will be added to the shorter vector. If TRUE, the longer
-  vector will be shortened at the end.
+  Numeric probability vector.
 
 - index:
 
-  a positive numeric vector containing probability spacing e.g., depth
+  Numeric vector defining position (e.g., depth layers).
 
 - index.spacing:
 
-  whether index intervals are equally distant i.e., c(1,2,3,4....n), if
-  "equal" than index is c(1,n)
+  Character. `"equal"` or `"custom"`.
+
+- parameter:
+
+  List with `lambda` and `x0`.
+
+- weighting:
+
+  Character. Weighting function applied before comparison.
+
+- inverse:
+
+  Logical. Reverse weighting direction.
+
+- alignPQ:
+
+  Logical. If TRUE, aligns vectors of unequal length.
+
+- cut:
+
+  Logical. If TRUE, truncates longer vector instead of padding.
 
 ## Value
 
-Numeric JS divergence value
+Numeric JS divergence value.
 
-## Examples
+## Details
 
-``` r
-P <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)  # Distribution P
-Q <- c(0.025,0.05,0.1,0.15, 0.2, 0.3,0.4, 0.5,0.3,0.1)**6  # Distribution Q
+Jensen-Shannon divergence is defined as: \$\$JS(P,Q) = 1/2 KL(P \|\|
+M) + 1/2 KL(Q \|\| M)\$\$ where \\M = (P + Q)/2\\.
 
-# Ensure the distributions are valid (non-negative and sum to 1)
-P <- P / sum(P)
-Q <- Q / sum(Q)
-
-tail_weighted_js_divergence(P,Q,parameter = list(lambda = 0.2,x0=30))
-#> [1] 0.197
-```
+Weighting is applied prior to normalization of P, Q, and M.

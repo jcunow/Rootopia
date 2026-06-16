@@ -54,3 +54,17 @@ Classification rules: - Endpoint: pixel == 1 AND neighbor count == 1 -
 Branch point: pixel == 1 AND neighbor count \> 2
 
 Outputs are converted back into SpatRaster objects.
+
+## Examples
+
+``` r
+# Load example binary segmentation
+data(seg_Oulanka2023_Session01_T067)
+
+# Ensure single-layer raster if needed
+img <- seg_Oulanka2023_Session01_T067
+
+# Skeletonize
+skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+skel.points <- detect_skeleton_points(skel)
+```

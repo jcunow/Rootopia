@@ -37,21 +37,15 @@ metrics.
   : Root length estimation from skeleton images
 - [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
   : Estimate Root Diameters
-- [`root_thickness()`](https://jcunow.github.io/RootScanR/reference/root_thickness.md)
-  : Approximate average root thickness (deprecated)
 - [`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
   : Detect endpoints and branching points in a skeleton image
 - [`count_pixels()`](https://jcunow.github.io/RootScanR/reference/count_pixels.md)
   : Count all pixels in a segmented image
-- [`px.sum()`](https://jcunow.github.io/RootScanR/reference/px.sum.md) :
-  Count pixels (deprecated alias for count_pixels)
 - [`deep_drive()`](https://jcunow.github.io/RootScanR/reference/deep_drive.md)
   : Assess Root Growth Direction Relative to Depth Gradient
 - [`root_scape_metrics()`](https://jcunow.github.io/RootScanR/reference/root_scape_metrics.md)
   : RootScapeMetric relies on Landscapemetrics to extract 'Root Scape'
   Features akin to landscape analysis.
-- [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
-  : Calculate root accumulation
 
 ## Root branching order
 
@@ -77,6 +71,14 @@ order, and summarise root architecture by order class.
 - [`plot_order_window()`](https://jcunow.github.io/RootScanR/reference/plot_order_window.md)
   : Native-resolution validation of a sub-window
 
+## Root turnover
+
+Estimate root production, decay, and turnover from temporal image
+comparison or RootDetector DPC images.
+
+- [`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
+  : Unified Root Turnover Analysis
+
 ## Depth mapping
 
 Functions for constructing and binning depth maps from minirhizotron
@@ -86,8 +88,6 @@ geometry.
   : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
 - [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
   : Bin continuous depth values into discrete intervals
-- [`slice_rotation()`](https://jcunow.github.io/RootScanR/reference/slice_rotation.md)
-  : Slice a scan along the rotation (circumferential) axis
 - [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
   : Estimate soil surface position using tape markers
 - [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
@@ -99,6 +99,8 @@ geometry.
 
 Colour metrics, peat classification, and texture analysis.
 
+- [`create_root_buffer()`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
+  : Create a buffer halo) around non-zero pixels
 - [`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
   : Calculate Image Coloration Metrics
 - [`analyze_soil_texture()`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md)
@@ -118,8 +120,6 @@ Statistical indices summarising root distribution with depth.
   Calculate Mean Rooting Depth
 - [`RPI()`](https://jcunow.github.io/RootScanR/reference/RPI.md) :
   Calculate Root Penetration Index
-- [`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
-  : Unified Root Turnover Analysis
 - [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
   : Assess rhythmicity via sine curve fitting and model comparison
 - [`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md)
@@ -127,24 +127,21 @@ Statistical indices summarising root distribution with depth.
   Mclust
 - [`circular_mean()`](https://jcunow.github.io/RootScanR/reference/circular_mean.md)
   : Calculate a circular mean to determine average Directionality
-- [`tail_weighted_js_divergence()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_js_divergence.md)
-  : Calculate tail-weighted Jensen-Shannon divergence
-- [`tail_weighted_kl_divergence()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_kl_divergence.md)
-  : Calculate tail-weighted KL divergence for discrete distributions
-- [`tail_weighted_wasserstein_distance()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_wasserstein_distance.md)
-  : A tailweighted Version of 1 dimensional Wasserstein distance betwwen
-  two probability vectors
+- [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
+  : Calculate root accumulation
+- [`compare_depth_distribution()`](https://jcunow.github.io/RootScanR/reference/compare_depth_distribution.md)
+  : Compare depth distributions using multiple metrics
 
 ## Rotation bias
 
 Detect and correct for rotational artefacts in minirhizotron tube scans.
 
+- [`slice_rotation()`](https://jcunow.github.io/RootScanR/reference/slice_rotation.md)
+  : Slice a scan along the rotation (circumferential) axis
 - [`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
   : Fit a sine curve to data with optional fixed period
-- [`create_root_buffer()`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
-  : Create a buffer halo) around non-zero pixels
-- [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
-  : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
+- [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+  : Assess rhythmicity via sine curve fitting and model comparison
 
 ## Example data
 
