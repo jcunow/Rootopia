@@ -112,13 +112,9 @@ reference:
       - modal_peaks
       - circular_mean
       - root_accumulation
-<<<<<<< HEAD
       - compare_depth_distribution
-=======
-      - tail_weighted_js_divergence
-      - tail_weighted_kl_divergence
-      - tail_weighted_wasserstein_distance
->>>>>>> 2acf8032970dfcd0378698b1de26c7bf2d84c468
+
+
 
   - title: "Rotation bias"
     desc: "Detect and correct for rotational artefacts in minirhizotron tube scans."
