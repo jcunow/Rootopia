@@ -18,33 +18,33 @@ URL: https://github.com/jcunow/RootScanR, https://jcunow.github.io/RootScanR/
 BugReports: https://github.com/jcunow/RootScanR/issues
 Depends: 
     R(>= 3.6)
-Imports: 
+Imports:
     dplyr,
     glcm,
     grDevices,
     graphics,
     imagefx,
     imager,
-    landscapemetrics,
     mclust,
     minpack.lm,
-    pkgnet,
     raster,
-    RStoolbox,
     stats,
+    stringr,
     terra(>= 1.8),
     tidyr,
-    stringr,
     transport,
     utils
 Suggests:
     knitr,
-    rmarkdown,
+    landscapemetrics,
     nloptr,
+    pkgnet,
     png,
+    rmarkdown,
+    RStoolbox,
+    testthat (>= 3.0.0),
     tidyverse,
-    tiff,
-    testthat (>= 3.0.0)
+    tiff
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3

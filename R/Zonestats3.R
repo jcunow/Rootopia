@@ -210,7 +210,6 @@ root_length <- function(img,
 #'   from `landscapemetrics::list_lsm()`.
 #' @param select.layer Integer. Specifies which layer to use if the input is a
 #'   multi-band image. Default is `NULL` (single-layer expected).
-#' @import dplyr
 #' @return A data frame of metric values with columns: metric, value, object,
 #'   depth.
 #' @export
@@ -225,6 +224,9 @@ root_scape_metrics <- function(img, indexD = NA, select.layer = NULL,
                                             "lsm_c_np", "lsm_c_pland",
                                             "lsm_c_area_mn", "lsm_c_area_cv",
                                             "lsm_c_enn_mn", "lsm_c_enn_cv")) {
+  if (!requireNamespace("landscapemetrics", quietly = TRUE))
+    stop("Package 'landscapemetrics' is required for root_scape_metrics(). ",
+         "Install it with: install.packages(\"landscapemetrics\")")
   tryCatch({
     if (missing(img)) stop("Image input is required")
 
@@ -431,7 +433,6 @@ tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
 #'   "dissimilarity", "entropy", "second_moment", "correlation".
 #' @return A RasterLayer (or RasterBrick for multiple metrics) with texture
 #'   values.
-#' @import raster
 #' @export
 #'
 #' @examples

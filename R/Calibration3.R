@@ -19,6 +19,9 @@
 #' r0 = estimate_rotation_center(img)
 estimate_rotation_center = function(img, tape.brightness=0.66, extra.rows=100, search.area=0.45,
                                     tape.quantile=0.98, nclasses=3, select.layer=NULL) {
+  if (!requireNamespace("RStoolbox", quietly = TRUE))
+    stop("Package 'RStoolbox' is required for estimate_rotation_center(). ",
+         "Install it with: install.packages(\"RStoolbox\")")
   tryCatch({
     if (is.null(img)) stop("Input image is required")
     if (!is.numeric(tape.brightness) || tape.brightness < 0 || tape.brightness > 1)
@@ -360,7 +363,9 @@ rotation_censor <- function(img, center.offset = 0, cut.buffer = 0.02,
 estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150, nclasses=3,
                      inverse=FALSE, tape.overlap=0.5, tape.brightness=0.6,
                      extra.rows=100, tape.quantile=0.98, select.layer=NULL) {
-
+  if (!requireNamespace("RStoolbox", quietly = TRUE))
+    stop("Package 'RStoolbox' is required for estimate_soil_surface(). ",
+         "Install it with: install.packages(\"RStoolbox\")")
   # Validation module
   tryCatch({
     # Check required input
