@@ -42,4 +42,15 @@ Classification rules:
 
 Outputs are converted back into SpatRaster objects.
 }
-\keyword{internal}
+\examples{
+# Load example binary segmentation
+data(seg_Oulanka2023_Session01_T067)
+
+# Ensure single-layer raster if needed
+img <- seg_Oulanka2023_Session01_T067
+
+# Skeletonize
+skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+skel.points <- detect_skeleton_points(skel)
+
+}

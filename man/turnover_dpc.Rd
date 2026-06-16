@@ -34,10 +34,8 @@ If im.return = FALSE: tibble with pixel sums and ratios
 Extract Root Decay, New Root Production, and No-Change Roots (only 'RootDetector' images)
 }
 \examples{
-\dontrun{
 data(TurnoverDPC_data)
 img = terra::rast(TurnoverDPC_data)
 DPCs = turnover_dpc(img = img, im.return = FALSE)
-}
 }
 \keyword{internal}

@@ -7,7 +7,8 @@
 root_turnover(
   img1,
   img2 = NULL,
-  method = "kimura",
+  method = c("tc", "dpc"),
+  tc.method = c("kimura", "rootpx"),
   unit = "cm",
   dpi = 300,
   select.layer = NULL,
@@ -19,36 +20,77 @@ root_turnover(
 )
 }
 \arguments{
-\item{img1}{Primary SpatRaster input (either multi-layer or first timepoint image)}
+\item{img1}{Primary SpatRaster input. For \code{method = "tc"} this is the
+first timepoint image; for \code{method = "dpc"} this is the multi-layer
+DPC image.}
 
-\item{img2}{Optional second timepoint image (if img1 is single timepoint)}
+\item{img2}{Second timepoint SpatRaster. Required for \code{method = "tc"};
+ignored (with a warning) for \code{method = "dpc"}.}
 
-\item{method}{Analysis method: "kimura", "rootpx", or "dpc" (root decomposition)}
+\item{method}{Which turnover method to run: \code{"tc"} (temporal
+comparison of two images) or \code{"dpc"} (Decay/Production/Constant
+decomposition of one multi-layer image). Default \code{"tc"}.}
 
-\item{unit}{Unit of root length measurement (only for method = "kimura"). Default: "cm"}
+\item{tc.method}{Measurement sub-method for \code{method = "tc"}:
+\code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).
+Ignored for \code{method = "dpc"}. Default \code{"kimura"}.}
 
-\item{dpi}{Image resolution (only for method = "kimura"). Default: 300}
+\item{unit}{Unit of root length measurement (only for
+\code{tc.method = "kimura"}). Default: "cm"}
 
-\item{select.layer}{Integer or NULL. When two images are provided with multiple layers,
-specifies which layer to use. When img1 is multi-layer, ignored for DPC method.}
+\item{dpi}{Image resolution (only for \code{tc.method = "kimura"}). Default: 300}
 
-\item{product.layer}{Integer indicating the production layer index for DPC method (1-3)}
+\item{select.layer}{Integer or NULL. For \code{method = "tc"} with
+multi-layer images, selects which layer to compare. Ignored for
+\code{method = "dpc"}.}
 
-\item{decay.layer}{Integer indicating the decay & tape layer index for DPC method (1-3)}
+\item{product.layer}{Integer indicating the production layer index for the
+DPC method (1-3)}
 
-\item{blur.capture}{Threshold for pixel inclusion in DPC method (0-1). Default: 0.95}
+\item{decay.layer}{Integer indicating the decay & tape layer index for the
+DPC method (1-3)}
 
-\item{im.return}{Logical: return images instead of values for DPC method? Default: FALSE}
+\item{blur.capture}{Threshold for pixel inclusion in the DPC method (0-1).
+Default: 0.95}
 
-\item{include.virtualroots}{Logical: consider all roots present at any timepoint in DPC method? Default: FALSE}
+\item{im.return}{Logical: return images instead of values for the DPC
+method? Default: FALSE}
+
+\item{include.virtualroots}{Logical: consider all roots present at any
+timepoint in the DPC method? Default: FALSE}
 }
 \value{
-Depends on method and parameters:
-  - For temporal comparison: data.frame with root production and turnover
-  - For DPC method: tibble with pixel sums and ratios or list of SpatRaster layers
+Depends on the method:
+  - \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
+  - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im.return = TRUE}) a list of SpatRaster layers.
 }
 \description{
-Performs root turnover analysis for either a single multi-layer image or two separate images
+Wrapper around the two root-turnover methods. \code{method} selects which
+one runs:
+\describe{
+  \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
+    (\code{img1}, \code{img2}) and reports standing roots, production, and
+    new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
+    \code{tc.method} argument chooses how root amount is measured:
+    \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
+  \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
+    multi-layer 'RootDetector' image into decayed, newly produced, and
+    unchanged (constant) root fractions. Dispatches to
+    \code{\link{turnover_dpc}}; \code{img2} is not used.}
+}
+}
+\examples{
+# DPC: single multi-layer 'RootDetector' image
+data(TurnoverDPC_data)
+img <- terra::rast(TurnoverDPC_data)
+root_turnover(img, method = "dpc")
+
+# TC: two timepoint images compared by root length (kimura)
+data(skl_Oulanka2023_Session01_T067)
+data(skl_Oulanka2023_Session03_T067)
+t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
+t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
+root_turnover(t1, t2, method = "tc", tc.method = "kimura")
 }
 \seealso{
 \code{\link{turnover_tc}}, \code{\link{turnover_dpc}}

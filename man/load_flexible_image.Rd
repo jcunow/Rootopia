@@ -26,4 +26,3 @@ load_flexible_image(
 \description{
 Load an image flexibly from file or convert from memory
 }
-\keyword{internal}

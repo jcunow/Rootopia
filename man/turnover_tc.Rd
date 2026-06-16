@@ -42,11 +42,9 @@ Calculate global root production and root turnover from temporal comparison
   data(skl_Oulanka2023_Session03_T067)
   time1 <- terra::rast(skl_Oulanka2023_Session01_T067)
   time2 <- terra::rast(skl_Oulanka2023_Session03_T067)
-  \dontrun{
   turnover.values <- turnover_tc(
     im.t1 = time1,
     im.t2 = time2,
     method = "kimura")
-    }
 }
 \keyword{internal}
