@@ -49,6 +49,12 @@ reference:
     contents:
       - root_depth_metrics
 
+  - title: "Stitching scans from the same Tube together"
+    desc: "High-level wrapper that enables to combine multiple depths from a tube into a single large mosaic iamge"
+    contents:
+      - stitch_root_scans
+
+      
   - title: "Image loading and preprocessing"
     desc: "Functions for loading, cleaning, thresholding, and transforming root images."
     contents:

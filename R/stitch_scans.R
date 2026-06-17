@@ -38,7 +38,7 @@
 #'   \code{stitch_root_scans(tubes = ...)}), \code{tube} (group id) and
 #'   \code{n_frames}.
 #' @seealso \code{\link{stitch_root_scans}}, \code{\link{list_scan_files}}
-#' @export
+#' @keywords internal
 #' @examples
 #' d <- file.path(tempdir(), "tubes_demo")
 #' dir.create(d, showWarnings = FALSE)
@@ -76,7 +76,7 @@ list_tubes <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #' @return A data frame with columns \code{index} (1-based position), \code{file}
 #'   (full path) and \code{group} (matched id, or \code{NA}).
 #' @seealso \code{\link{list_tubes}}, \code{\link{stitch_root_scans}}
-#' @export
+#' @keywords internal
 #' @examples
 #' d <- file.path(tempdir(), "scans_demo")
 #' dir.create(d, showWarnings = FALSE)
