@@ -84,28 +84,28 @@ directly:
 
 ``` r
 
+# each row is one pixel with r,g,b values
 picks <- list(
-  dark_peat = matrix(c( 28,  22,  18,
+  region1 = matrix(c( 28,  22,  18,
                          32,  26,  21,
                          25,  19,  15), ncol = 3, byrow = TRUE),
-  red_peat  = matrix(c( 80,  45,  35,
-                         75,  42,  31), ncol = 3, byrow = TRUE),
-  root      = matrix(c(180, 160, 130,
+  region2  = matrix(c( 80,  45,  35,
+                         65,  32,  31), ncol = 3, byrow = TRUE),
+  region3      = matrix(c(180, 160, 130,
                        175, 155, 125,
                        185, 165, 135,
                        178, 158, 128), ncol = 3, byrow = TRUE),
-  tape      = matrix(c(200, 205, 210,
-                       195, 200, 205), ncol = 3, byrow = TRUE),
-  debris    = matrix(c(100,  70,  45,
-                        95,  65,  40), ncol = 3, byrow = TRUE)
+  region4      = matrix(c(201, 205, 210,
+                       198, 200, 205), ncol = 3, byrow = TRUE)
 )
 
 # One MAX_DIST (LAB units, ~10-30) per class -- larger admits more pixels
-max_dist <- c(dark_peat = 14, red_peat = 14, root = 26,
-              tape = 28, debris = 11)
+max_dist <- c(region1 = 14, region2 = 14, region3 = 26,
+              region4 = 12)
 
 cents  <- build_peat_centroids(picks, max_dist)   # prints diagnostics
 result <- classify_peat_rgb(img, centroids = cents)
+terra::plot(result$map)
 ```
 
 Note: provide a class for **every** material in your scans. Because
@@ -131,9 +131,9 @@ from roots.
 
 tex <- analyze_soil_texture(
   img,
-  grays   = 7,
-  window  = c(9, 9),
-  metrics = c("variance", "second_moment")
+  grays   = 12,
+  window  = c(5, 5),
+  metrics = c("variance", "second_moment","correlation","entropy")
 )
 terra::plot(tex)
 ```
@@ -163,12 +163,29 @@ returns only the ring around the roots (excluding the roots themselves).
 
 ``` r
 
-seg  <- terra::rast(seg_Oulanka2023_Session03_T067)
+seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select.layer = 2)
 halo <- create_root_buffer(seg, width = 3, halo.only = TRUE, kernel = "circle")
 terra::plot(halo)
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/root-buffer-1.png)
+
+``` r
+
+
+halo10 <- create_root_buffer(seg, width = 10, halo.only = TRUE, kernel = "circle")
+terra::plot(halo10)
+```
+
+![](SpecialTopics_vignette_files/figure-html/root-buffer-2.png)
+
+``` r
+
+halo10 <- create_root_buffer(seg, width = 10, halo.only = FALSE, kernel = "circle")
+terra::plot(halo10)
+```
+
+![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)
 
 The `kernel` argument switches between a `"circle"` (8-neighbour) and a
 `"diamond"` (4-neighbour) growth shape, and `width` controls how many
@@ -194,10 +211,8 @@ The bundled `TurnoverDPC_data` is a DPC-style image:
 
 dpc <- terra::rast(TurnoverDPC_data)
 root_turnover(dpc, method = "dpc")
-#>       tape constant production    decay newgrowth.ratio decay.ratio
-#> 1 3478.478 1720.318   10863.29 13159.69          0.8633      0.8844
-#>   constant.ratio
-#> 1         0.0668
+#>     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio
+#> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
 ```
 
 For the two-timepoint comparison you would instead pass both sessions:
@@ -206,7 +221,7 @@ For the two-timepoint comparison you would instead pass both sessions:
 
 s1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 s3 <- terra::rast(skl_Oulanka2023_Session03_T067)
-root_turnover(s1, s3, method = "tc", tc.method = "kimura", unit = "cm", dpi = 300)
+root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 300, select.layer = 2)
 ```
 
 ## See also

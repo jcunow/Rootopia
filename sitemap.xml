@@ -14,6 +14,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/RPI.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/TurnoverDPC_data.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/abind2.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/align_phase_correlation.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/binning.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/branch_order_map.html</loc></url>
@@ -36,6 +37,8 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/fit_sine_curve.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/image_threshold.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/index.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/list_scan_files.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/list_tubes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/load_flexible_image.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/lut_thin_fast.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/modal_peaks.html</loc></url>
@@ -66,6 +69,19 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/skl_Oulanka2023_Session03_T067.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/slice_rotation.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/smooth_root_edges.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_blend_overlap.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_compose_pair.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_discover_files.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_group_of.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_image_pair.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_luma.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_match_channels.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_preprocess.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_prompt_tubes.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_root_scans.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_to_hwc.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/stitch_write_png.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/summarize_orders.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/supported_formats_string.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/tail_weight_function.html</loc></url>

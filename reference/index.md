@@ -9,6 +9,14 @@ directory of images.
   : Compute root traits over a depth profile from segmented
   (mini)rhizotron images
 
+## Stitching scans from the same Tube together
+
+High-level wrapper that enables to combine multiple depths from a tube
+into a single large mosaic iamge
+
+- [`stitch_root_scans()`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+  : Batch-stitch grouped scan sequences (tubes) into mosaics
+
 ## Image loading and preprocessing
 
 Functions for loading, cleaning, thresholding, and transforming root

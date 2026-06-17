@@ -117,10 +117,8 @@ sums and ratios, or (if `im.return = TRUE`) a list of SpatRaster layers.
 data(TurnoverDPC_data)
 img <- terra::rast(TurnoverDPC_data)
 root_turnover(img, method = "dpc")
-#>       tape constant production    decay newgrowth.ratio decay.ratio
-#> 1 3478.478 1720.318   10863.29 13159.69          0.8633      0.8844
-#>   constant.ratio
-#> 1         0.0668
+#>     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio
+#> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
 
 # TC: two timepoint images compared by root length (kimura)
 data(skl_Oulanka2023_Session01_T067)
