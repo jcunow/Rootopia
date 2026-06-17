@@ -295,7 +295,7 @@ count_pixels <- function(img) {
   tryCatch({
     if (missing(img)) stop("Image input is required")
 
-    img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE)
+    img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE, binarize = TRUE)
 
     if (is.null(img) || terra::nlyr(img) < 1) {
       stop("Invalid or empty image after loading")
@@ -304,7 +304,7 @@ count_pixels <- function(img) {
     srpx <- terra::global(img, "sum", na.rm = TRUE)
 
     if (is.null(srpx) || length(srpx) == 0) stop("Error calculating pixel sum")
-    if (srpx[[1]] < 0) {
+    if (any(srpx[[1]] < 0)) {
       warning("Negative pixel sum calculated, which may indicate an issue with the input image")
     }
 
