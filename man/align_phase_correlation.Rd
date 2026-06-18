@@ -17,25 +17,21 @@ align_phase_correlation(
 \item{img1, img2}{Image inputs accepted by \code{\link{load_flexible_image}}.}
 
 \item{edge_width}{Width in pixels of the edge band used for alignment
-(clamped to image width).}
+(clamped to the image width).}
 
 \item{vertical_region}{Height in pixels of the vertical band used for
-alignment. The actual sampled region is clipped to image bounds if needed.}
+alignment.}
 
-\item{vertical_offset}{Starting row (from the top) of the vertical band.
-Used as a reference position for selecting the vertical window.}
+\item{vertical_offset}{Starting row (from the top) of the vertical band.}
 
-\item{preprocess}{Preprocessing applied to edge bands before FFT. One of:
-\code{"none"}, \code{"center"}, \code{"norm"}, \code{"center_norm"},
-\code{"hann"}, \code{"grad"}, or \code{"grad_norm"}.}
+\item{preprocess}{Preprocessing of the edge bands: one of \code{"none"},
+\code{"center"}, \code{"norm"}, \code{"center_norm"}, \code{"hann"},
+\code{"grad"} or \code{"grad_norm"}.}
 }
 \value{
-Named numeric vector \code{c(dx, dy, peak)}:
-\itemize{
-  \item \code{dx}: horizontal placement shift (\code{overlap = edge_width - dx})
-  \item \code{dy}: vertical shift (pixels, applied to \code{img2})
-  \item \code{peak}: normalized correlation peak height
-}
+Named numeric vector \code{c(dx, dy, peak)}: \code{dx} horizontal
+  placement shift (\code{overlap = edge_width - dx}), \code{dy} vertical shift
+  (pixels) and \code{peak} the normalised correlation peak height.
 }
 \description{
 Estimates the relative pixel shift between the right edge of \code{img1} and
@@ -43,19 +39,14 @@ the left edge of \code{img2} using FFT phase correlation - the alignment step
 behind \code{\link{stitch_image_pair}}.
 }
 \details{
-A vertical band of the edge region is used for alignment. The band is defined
-by a requested starting position (\code{vertical_offset}) and height
-(\code{vertical_region}). If the requested region exceeds image bounds, it is
-automatically truncated to fit within the image. Only the outermost
-\code{edge_width} columns are used.
-
-The cross-power spectrum is
-\eqn{F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)} and the shift is obtained from
-the correlation peak (with wrap-around past half the transform dimensions).
-
-The returned \code{dx} is the placement shift:
-\code{overlap = edge_width - dx}. \code{dy} is the vertical shift applied to
-\code{img2}.
+Only a vertical band of the edges is used (rows
+\code{vertical_offset} .. \code{vertical_offset + vertical_region}, clamped to
+the image) and only the outermost \code{edge_width} columns, optionally
+\code{preprocess}ed. The cross-power spectrum is
+\eqn{F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)} and the shift is read from the
+correlation peak (with wrap-around past the half dimension). The returned
+\code{dx} is the placement shift: \code{overlap = edge_width - dx}. \code{dy}
+is the vertical shift to apply to \code{img2}.
 }
 \seealso{
 \code{\link{stitch_image_pair}}, \code{\link{estimate_rotation_shift}}

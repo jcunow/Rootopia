@@ -94,309 +94,171 @@ list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 }
 
 
-# =============================================================================
-# Batch-stitch grouped scan sequences (tubes) into mosaics
-# =============================================================================
 #' Batch-stitch grouped scan sequences (tubes) into mosaics
 #'
-#' Stitches sets of related scan images into continuous mosaics. Input files are
-#' optionally filtered, grouped by an identifier extracted from filenames, and
-#' stitched sequentially within each group. By default, files are stitched in
-#' lexicographic filename order, but custom within-group ordering can be
-#' specified.
+#' High-level driver ported from the Python \code{ImageStitcher} \code{main} /
+#' \code{process_subset}. Files are discovered, optionally subset, grouped by an
+#' id pattern (one group per tube), sorted within each group, and stitched into
+#' one mosaic per group. Single-frame groups are passed through unchanged.
+#' Mosaics are returned and, optionally, written to disk as PNGs.
 #'
-#' Each group (tube) produces one stitched image. Groups containing a single
-#' frame are returned unchanged.
+#' Call \code{\link{list_tubes}} first to see the tube names, then pass a range
+#' to \code{tubes} (e.g. \code{tubes = 1:36}) to stitch just those tubes.
 #'
 #' @param input Either a directory (searched recursively) or a character vector
 #'   of image file paths.
-#'
-#' @param pattern Optional filter applied to filenames (e.g. \code{".tiff"}).
-#'   If \code{NULL}, all files are used.
-#'
-#' @param group_regex Regular expression used to define grouping keys (e.g. tube
-#'   identifiers such as \code{T067}). If \code{NULL}, all files are treated as
-#'   a single group.
-#'
-#' @param select Optional integer index vector selecting a subset of input files
-#'   prior to grouping.
-#'
-#' @param tubes Optional selection of groups to process. Can be integer indices
-#'   into the sorted group list, character group names, or \code{"ask"} for
-#'   interactive selection. If \code{NULL}, all groups are processed.
-#'
-#' @param order_by Optional regular expression used to extract an ordering key
-#'   from filenames within each group. If \code{NULL} (default), files are
-#'   stitched in lexicographic filename order. When a match is found, numeric
-#'   components are ordered numerically; otherwise ordering is lexicographic.
-#'
-#' @param decreasing Logical. If \code{TRUE}, reverses the within-group order.
-#'   Useful when acquisition order is reversed (e.g. bottom-to-top scans or
-#'   deepest-to-shallowest sequences).
-#'
-#' @param out_dir Optional output directory for writing mosaics as PNG files.
-#'   If \code{NULL}, results are returned only.
-#'
-#' @param out_prefix Filename prefix for exported mosaics.
-#'
+#' @param pattern Optional substring used to keep only matching file names
+#'   (e.g. \code{".tiff"}). \code{NULL} keeps all files.
+#' @param group_regex Regular expression identifying the group id within each
+#'   path. Default \code{"T0\\d{2}"} matches tube labels such as \code{T067}.
+#'   Use \code{NULL} to stitch every file into a single mosaic.
+#' @param select Optional integer vector of indices into the (sorted) \emph{file}
+#'   list, e.g. \code{1:36}. See \code{\link{list_scan_files}}. \code{NULL} uses
+#'   all files. Applied before grouping.
+#' @param tubes Optional \emph{tube} selection: integer indices into the sorted
+#'   tube list (e.g. \code{1:36}, see \code{\link{list_tubes}}), a character
+#'   vector of tube names (e.g. \code{c("T037", "T040")}), or the string
+#'   \code{"ask"} to print the tubes and choose a range interactively in one
+#'   call (interactive sessions only). \code{NULL} keeps all tubes.
+#' @param out_dir Optional directory to write one mosaic per tube to (named
+#'   \code{<out_prefix><tube>.<ext>}). Created if needed. \code{NULL} (default)
+#'   returns mosaics only.
+#' @param out_prefix Filename prefix for written mosaics.
+#' @param out_format Output image format when \code{out_dir} is set: \code{"png"}
+#'   (default) or \code{"tiff"}. Requires the corresponding package
+#'   (\pkg{png} or \pkg{tiff}).
 #' @inheritParams stitch_image_pair
-#'
-#' @param report Logical. If \code{TRUE}, returns additional alignment diagnostics
-#'   per stitching step.
-#'
-#' @param verbose Logical; enables progress output during processing.
-#'
-#' @return If \code{report = FALSE}, a named list of mosaics (one array per group).
-#' If \code{report = TRUE}, a list:
-#' \describe{
-#'   \item{mosaics}{Named list of stitched images.}
-#'   \item{report}{Data frame with per-step diagnostics:
-#'     \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak},
-#'     \code{overlap}.}
-#' }
-#'
+#' @param report Logical. If \code{TRUE}, return a list with both the mosaics
+#'   and a per-step performance table instead of just the mosaics (see Value).
+#' @param verbose Logical; print per-tube progress and a mean/min alignment peak.
+#' @return If \code{report = FALSE} (default), invisibly a named list of mosaics
+#'   (one numeric \code{(H, W, C)} array per tube). If \code{report = TRUE}, a
+#'   list \code{list(mosaics, report)} where \code{report} is a data frame with
+#'   columns \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak}
+#'   (confidence; higher is better) and \code{overlap} (\code{= edge_width - dx}).
 #' @seealso \code{\link{list_tubes}}, \code{\link{list_scan_files}},
 #'   \code{\link{stitch_image_sequence}}
-#'   
 #' @export
-#' 
 #' @examples
 #' \dontrun{
-#' # Default: lexicographic filename order within each tube
-#' res <- stitch_root_scans(
-#'   "path/to/scans",
-#'   pattern = ".tiff"
-#' )
+#' # 1) See the tubes (names + frame counts)
+#' list_tubes("path/to/scans", pattern = ".tiff")
 #'
-#' # Order by scan depth code (e.g. L001, L002, ...)
-#' res <- stitch_root_scans(
-#'   "path/to/scans",
-#'   pattern = ".tiff",
-#'   order_by = "L\\d{3}"
-#' )
+#' # 2) Stitch the first 36 tubes, with a performance report and a preprocess
+#' res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
+#'                          tubes = 1:36, preprocess = "grad", report = TRUE)
+#' res$report
+#' aggregate(peak ~ tube, res$report, mean)
 #'
-#' # Reverse acquisition order (e.g. bottom-to-top scans)
-#' res <- stitch_root_scans(
-#'   "path/to/scans",
-#'   pattern = ".tiff",
-#'   order_by = "L\\d{3}",
-#'   decreasing = TRUE
-#' )
-#'
-#' # Order by date-stamped filenames (YYYYMMDD)
-#' res <- stitch_root_scans(
-#'   "path/to/scans",
-#'   pattern = ".tiff",
-#'   order_by = "\\d{8}"
-#' )
+#' # 3) A named subset, written straight to PNG
+#' stitch_root_scans("path/to/scans", pattern = ".tiff",
+#'                   tubes = c("T037", "T040"), out_dir = "path/to/output")
 #' }
 stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
-                              select = NULL, tubes = NULL,
-                              order_by = NULL, decreasing = FALSE,
-                              out_dir = NULL, out_prefix = "",
-                              method = "phase",
+                              select = NULL, tubes = NULL, out_dir = NULL,
+                              out_prefix = "", out_format = "png", method = "phase",
                               edge_width = 250, vertical_region = 1000,
-                              vertical_offset = 300,
-                              direction = "horizontal",
-                              preprocess = "none",
-                              blend = "overlay_first",
-                              blend_width = NULL,
-                              report = FALSE,
-                              verbose = TRUE) {
-  
-  # ---------------------------
-  # internal ordering helper
-  # ---------------------------
-  order_scan_files <- function(files, order_by = NULL, decreasing = FALSE) {
-    
-    files <- sort(files)
-    
-    if (is.null(order_by))
-      return(sort(files, decreasing = decreasing))
-    
-    nm <- basename(files)
-    key <- regmatches(nm, regexpr(order_by, nm))
-    
-    if (all(key == "")) {
-      warning("No ordering keys matched '", order_by,
-              "'; falling back to filename order.")
-      return(sort(files, decreasing = decreasing))
-    }
-    
-    nums <- suppressWarnings(as.numeric(gsub("[^0-9.-]", "", key)))
-    
-    if (!all(is.na(nums))) {
-      ord <- order(nums, decreasing = decreasing)
-    } else {
-      ord <- order(key, decreasing = decreasing)
-    }
-    
-    files[ord]
-  }
-  
+                              vertical_offset = 300, direction = "horizontal",
+                              preprocess = "none", blend = "linear", blend_width = NULL,
+                              report = FALSE, verbose = TRUE) {
   tryCatch({
-    
+    out_format <- match.arg(out_format, c("png", "tiff"))
+    out_ext <- if (out_format == "tiff") "tif" else "png"
     files <- stitch_discover_files(input, pattern)
-    if (length(files) == 0)
-      stop("No input files found")
-    
+    if (length(files) == 0) stop("No input files found")
+
     if (!is.null(select)) {
-      if (!is.numeric(select))
-        stop("'select' must be numeric indices, e.g. 1:36")
-      
+      if (!is.numeric(select)) stop("'select' must be numeric indices, e.g. 1:36")
       select <- as.integer(select)
-      
       if (any(is.na(select)) || any(select < 1L) || any(select > length(files)))
         stop("'select' out of range: there are ", length(files),
              " files. Use list_scan_files() to see valid indices.")
-      
       files <- files[select]
     }
-    
+
     groups <- stitch_group_of(files, group_regex)
-    
     keep <- !is.na(groups)
     if (any(!keep) && verbose)
-      message("Skipping ", sum(!keep),
-              " file(s) without a group id matching '", group_regex, "'")
-    
-    files <- files[keep]
-    groups <- groups[keep]
-    
-    if (length(files) == 0)
-      stop("No files matched group_regex '", group_regex, "'")
-    
+      message("Skipping ", sum(!keep), " file(s) without a group id matching ",
+              "'", group_regex, "'")
+    files <- files[keep]; groups <- groups[keep]
+    if (length(files) == 0) stop("No files matched group_regex '", group_regex, "'")
+
     unique_groups <- sort(unique(groups))
-    
-    # ---------------------------
-    # tube selection
-    # ---------------------------
+
     if (is.character(tubes) && length(tubes) == 1L && tubes == "ask") {
       if (!interactive())
         stop("tubes = 'ask' requires an interactive session; ",
-             "pass tube indices or names instead.")
+             "pass tube indices (e.g. 1:36) or names instead.")
       tubes <- stitch_prompt_tubes(unique_groups, groups)
     }
-    
+
     if (!is.null(tubes)) {
       if (is.numeric(tubes)) {
         ti <- as.integer(tubes)
         if (any(is.na(ti)) || any(ti < 1L) || any(ti > length(unique_groups)))
-          stop("'tubes' index out of range")
+          stop("'tubes' index out of range: ", length(unique_groups),
+               " tube(s) available. Use list_tubes() to see them.")
         unique_groups <- unique_groups[ti]
-        
       } else if (is.character(tubes)) {
         miss <- setdiff(tubes, unique_groups)
-        if (length(miss))
-          stop("Unknown tube(s): ", paste(miss, collapse = ", "))
-        
+        if (length(miss)) stop("Unknown tube(s): ", paste(miss, collapse = ", "))
         unique_groups <- unique_groups[unique_groups %in% tubes]
-        
-      } else stop("'tubes' must be numeric indices or names")
+      } else stop("'tubes' must be numeric indices (e.g. 1:36) or tube names")
     }
-    
+
     if (!is.null(out_dir) && !dir.exists(out_dir))
       dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-    
-    if (verbose)
-      message("Stitching ", length(unique_groups),
-              " tube(s): ", paste(unique_groups, collapse = ", "))
-    
+
+    if (verbose) message("Stitching ", length(unique_groups), " tube(s): ",
+                         paste(unique_groups, collapse = ", "))
+
     results <- vector("list", length(unique_groups))
     names(results) <- unique_groups
     report_rows <- list()
-    
-    # ---------------------------
-    # main loop
-    # ---------------------------
+
     for (gi in seq_along(unique_groups)) {
-      
       g <- unique_groups[gi]
-      
-      members <- files[groups == g]
-      
-      # ---------------------------
-      # ORDERING APPLIED HERE
-      # ---------------------------
-      members <- order_scan_files(
-        members,
-        order_by = order_by,
-        decreasing = decreasing
-      )
-      
-      if (verbose)
-        message("[", gi, "/", length(unique_groups), "] ",
-                g, " - ", length(members), " frame(s)")
-      
+      members <- sort(files[groups == g])
+      if (verbose) message("[", gi, "/", length(unique_groups), "] ", g,
+                           " - ", length(members), " frame(s)")
+
       if (length(members) == 1) {
-        
         results[[gi]] <- stitch_to_hwc(members[[1]])
-        
       } else {
-        
-        sr <- stitch_image_sequence(
-          members,
-          method = method,
-          edge_width = edge_width,
-          vertical_region = vertical_region,
-          vertical_offset = vertical_offset,
-          direction = direction,
-          preprocess = preprocess,
-          blend = blend,
-          blend_width = blend_width,
-          return_offsets = TRUE
-        )
-        
+        sr <- stitch_image_sequence(members, method = method,
+                                    edge_width = edge_width, vertical_region = vertical_region,
+                                    vertical_offset = vertical_offset, direction = direction,
+                                    preprocess = preprocess, blend = blend,
+                                    blend_width = blend_width, return_offsets = TRUE)
         results[[gi]] <- sr$mosaic
-        
         if (nrow(sr$offsets)) {
           report_rows[[length(report_rows) + 1L]] <-
             data.frame(tube = g, sr$offsets, stringsAsFactors = FALSE)
-          
           if (verbose)
-            message("      alignment peak: mean=",
-                    round(mean(sr$offsets$peak), 4),
+            message("      alignment peak: mean=", round(mean(sr$offsets$peak), 4),
                     " min=", round(min(sr$offsets$peak), 4))
         }
       }
-      
-      if (!is.null(out_dir)) {
-        stitch_write_png(
-          results[[gi]],
-          file.path(out_dir, paste0(out_prefix, g, ".png"))
-        )
-      }
+
+      if (!is.null(out_dir))
+        stitch_write_image(results[[gi]],
+                           file.path(out_dir, paste0(out_prefix, g, ".", out_ext)))
     }
-    
-    # ---------------------------
-    # reporting
-    # ---------------------------
+
     if (report) {
-      
       rep_df <- if (length(report_rows)) {
-        do.call(rbind, report_rows)[, c(
-          "tube", "step", "dx", "dy", "peak", "overlap"
-        )]
+        do.call(rbind, report_rows)[, c("tube", "step", "dx", "dy", "peak", "overlap")]
       } else {
-        data.frame(
-          tube = character(0),
-          step = integer(0),
-          dx = numeric(0),
-          dy = numeric(0),
-          peak = numeric(0),
-          overlap = numeric(0)
-        )
+        data.frame(tube = character(0), step = integer(0), dx = numeric(0),
+                   dy = numeric(0), peak = numeric(0), overlap = numeric(0))
       }
-      
       return(invisible(list(mosaics = results, report = rep_df)))
     }
-    
     invisible(results)
-    
-  }, error = function(e) {
-    stop("stitch_root_scans failed: ", e$message, call. = FALSE)
-  })
+  }, error = function(e) stop("stitch_root_scans failed: ", e$message, call. = FALSE))
 }
+
 
 #' Sequentially stitch a sequence of scans into one mosaic
 #'
@@ -497,7 +359,7 @@ stitch_image_sequence <- function(images, method = "phase",
 #'   changes phase correlation (it is already scale-invariant). On well-textured
 #'   scans \code{"none"} is usually fine.
 #' @param blend How the overlap band is combined: \code{"linear"} (default,
-#'   alpha ramp 1 -> 0, good for colour scans), \code{"overlay_second"} (img2 hides
+#'   alpha ramp 1 -> 0, good for colour scans), \code{"overlay"} (img2 hides
 #'   img1), \code{"overlay_first"} (img1 hides img2), \code{"max"} (lighten /
 #'   union - recommended for segmented/binary masks, where averaging would make
 #'   fractional values and ghost thin roots) or \code{"min"} (darken).
@@ -539,7 +401,6 @@ stitch_image_pair <- function(img1, img2, method = "phase",
 }
 
 
-
 # =============================================================================
 # Internal: alignment engine
 # =============================================================================
@@ -550,148 +411,75 @@ stitch_image_pair <- function(img1, img2, method = "phase",
 #' the left edge of \code{img2} using FFT phase correlation - the alignment step
 #' behind \code{\link{stitch_image_pair}}.
 #'
-#' A vertical band of the edge region is used for alignment. The band is defined
-#' by a requested starting position (\code{vertical_offset}) and height
-#' (\code{vertical_region}). If the requested region exceeds image bounds, it is
-#' automatically truncated to fit within the image. Only the outermost
-#' \code{edge_width} columns are used.
-#'
-#' The cross-power spectrum is
-#' \eqn{F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)} and the shift is obtained from
-#' the correlation peak (with wrap-around past half the transform dimensions).
-#'
-#' The returned \code{dx} is the placement shift:
-#' \code{overlap = edge_width - dx}. \code{dy} is the vertical shift applied to
-#' \code{img2}.
+#' Only a vertical band of the edges is used (rows
+#' \code{vertical_offset} .. \code{vertical_offset + vertical_region}, clamped to
+#' the image) and only the outermost \code{edge_width} columns, optionally
+#' \code{preprocess}ed. The cross-power spectrum is
+#' \eqn{F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)} and the shift is read from the
+#' correlation peak (with wrap-around past the half dimension). The returned
+#' \code{dx} is the placement shift: \code{overlap = edge_width - dx}. \code{dy}
+#' is the vertical shift to apply to \code{img2}.
 #'
 #' @param img1,img2 Image inputs accepted by \code{\link{load_flexible_image}}.
-#'
 #' @param edge_width Width in pixels of the edge band used for alignment
-#'   (clamped to image width).
-#'
+#'   (clamped to the image width).
 #' @param vertical_region Height in pixels of the vertical band used for
-#'   alignment. The actual sampled region is clipped to image bounds if needed.
-#'
+#'   alignment.
 #' @param vertical_offset Starting row (from the top) of the vertical band.
-#' Used as a reference position for selecting the vertical window.
-#'
-#' @param preprocess Preprocessing applied to edge bands before FFT. One of:
-#'   \code{"none"}, \code{"center"}, \code{"norm"}, \code{"center_norm"},
-#'   \code{"hann"}, \code{"grad"}, or \code{"grad_norm"}.
-#'
-#' @return Named numeric vector \code{c(dx, dy, peak)}:
-#' \itemize{
-#'   \item \code{dx}: horizontal placement shift (\code{overlap = edge_width - dx})
-#'   \item \code{dy}: vertical shift (pixels, applied to \code{img2})
-#'   \item \code{peak}: normalized correlation peak height
-#' }
-#'
+#' @param preprocess Preprocessing of the edge bands: one of \code{"none"},
+#'   \code{"center"}, \code{"norm"}, \code{"center_norm"}, \code{"hann"},
+#'   \code{"grad"} or \code{"grad_norm"}.
+#' @return Named numeric vector \code{c(dx, dy, peak)}: \code{dx} horizontal
+#'   placement shift (\code{overlap = edge_width - dx}), \code{dy} vertical shift
+#'   (pixels) and \code{peak} the normalised correlation peak height.
 #' @seealso \code{\link{stitch_image_pair}}, \code{\link{estimate_rotation_shift}}
 #' @keywords internal
-align_phase_correlation <- function(img1, img2,
-                                    edge_width = 250,
-                                    vertical_region = 1000,
-                                    vertical_offset = 300,
+align_phase_correlation <- function(img1, img2, edge_width = 250,
+                                    vertical_region = 1000, vertical_offset = 300,
                                     preprocess = "none") {
   tryCatch({
-    
-    if (is.null(img1) || is.null(img2))
-      stop("Both input images are required")
-    
+    if (is.null(img1) || is.null(img2)) stop("Both input images are required")
     preprocess <- match.arg(preprocess,
                             c("none", "center", "norm", "center_norm",
-                              "hann", "grad", "grad_norm")
-    )
-    
-    a1 <- stitch_to_hwc(img1)
-    a2 <- stitch_to_hwc(img2)
-    
-    g1 <- stitch_luma(a1)
-    g2 <- stitch_luma(a2)
-    
+                              "hann", "grad", "grad_norm"))
+    a1 <- stitch_to_hwc(img1); a2 <- stitch_to_hwc(img2)
+    g1 <- stitch_luma(a1);     g2 <- stitch_luma(a2)
+
     h1 <- nrow(g1); w1 <- ncol(g1)
     h2 <- nrow(g2); w2 <- ncol(g2)
-    
-    ew <- min(edge_width, w1, w2)
-    if (ew < 2) stop("edge_width too small after clamping")
-    
-    # =========================================================
-    # SYMMETRIC WINDOWING (FIX)
-    # =========================================================
-    
-    # treat vertical_offset as CENTER (not top anchor)
-    y0_1 <- vertical_offset
-    y0_2 <- vertical_offset
-    
-    half <- floor(vertical_region / 2)
-    
-    # desired symmetric windows
-    ys1 <- y0_1 - half
-    ye1 <- y0_1 + ceiling(vertical_region / 2)
-    
-    ys2 <- y0_2 - half
-    ye2 <- y0_2 + ceiling(vertical_region / 2)
-    
-    # symmetric boundary correction (IMPORTANT PART)
-    shift1 <- 0
-    if (ys1 < 1) {
-      shift1 <- 1 - ys1
-      ys1 <- 1
-      ye1 <- min(h1, ye1 + shift1)
-    }
-    if (ye1 > h1) {
-      shift1 <- ye1 - h1
-      ye1 <- h1
-      ys1 <- max(1, ys1 - shift1)
-    }
-    
-    shift2 <- 0
-    if (ys2 < 1) {
-      shift2 <- 1 - ys2
-      ys2 <- 1
-      ye2 <- min(h2, ye2 + shift2)
-    }
-    if (ye2 > h2) {
-      shift2 <- ye2 - h2
-      ye2 <- h2
-      ys2 <- max(1, ys2 - shift2)
-    }
-    
-    # edge extraction
-    e1 <- g1[ys1:ye1, (w1 - ew + 1):w1, drop = FALSE]
-    e2 <- g2[ys2:ye2, 1:ew, drop = FALSE]
-    
-    # equalize height
+
+    # vertical band (0-based, end-exclusive), clamped to each image
+    ys1 <- min(vertical_offset, max(0, h1 - vertical_region))
+    ys2 <- min(vertical_offset, max(0, h2 - vertical_region))
+    ye1 <- ys1 + min(vertical_region, h1 - ys1)
+    ye2 <- ys2 + min(vertical_region, h2 - ys2)
+    ew  <- min(edge_width, w1, w2)
+    if (ew < 2) stop("edge_width too small after clamping to image width")
+
+    e1 <- g1[(ys1 + 1):ye1, (w1 - ew + 1):w1, drop = FALSE]   # right edge of img1
+    e2 <- g2[(ys2 + 1):ye2, 1:ew, drop = FALSE]               # left  edge of img2
+
+    # phase correlation needs identical dims; crop to the common band height
     nr <- min(nrow(e1), nrow(e2))
     e1 <- stitch_preprocess(e1[1:nr, , drop = FALSE], preprocess)
     e2 <- stitch_preprocess(e2[1:nr, , drop = FALSE], preprocess)
-    
     nc <- ncol(e1)
-    
-    # FFT phase correlation
+
     f1  <- stats::fft(e1)
     f2  <- stats::fft(e2)
-    
     cps <- (f1 * Conj(f2)) / (Mod(f1) * Mod(f2) + 1e-10)
     corr <- Mod(stats::fft(cps, inverse = TRUE))
-    
-    lin <- which.max(corr) - 1L
-    
-    dy_raw <- lin %% nr
-    dx_raw <- lin %/% nr
-    
+
+    lin    <- which.max(corr) - 1L          # column-major linear index, 0-based
+    dy_raw <- lin %% nr                      # row    (Y) peak position
+    dx_raw <- lin %/% nr                     # column (X) peak position
     if (dy_raw > nr %/% 2) dy_raw <- dy_raw - nr
     if (dx_raw > nc %/% 2) dx_raw <- dx_raw - nc
-    
-    c(
-      dx = dx_raw,
-      dy = dy_raw,
-      peak = max(corr) / sum(corr)
-    )
-    
-  }, error = function(e) {
-    stop("align_phase_correlation failed: ", e$message, call. = FALSE)
-  })
+
+    # Placement-ready shifts: img2 at (w1 - edge_width + dx, dy). The horizontal
+    # peak is negated, the vertical is not - this reproduces the validated stitch.
+    c(dx = -dx_raw, dy = dy_raw, peak = max(corr) / sum(corr))
+  }, error = function(e) stop("align_phase_correlation failed: ", e$message, call. = FALSE))
 }
 
 
@@ -710,7 +498,7 @@ stitch_compose_pair <- function(a1, a2, method, edge_width,
                                 direction = "horizontal", preprocess = "none",
                                 blend = "linear", blend_width = NULL) {
   direction <- match.arg(direction, c("horizontal", "vertical"))
-  blend <- match.arg(blend, c("linear", "overlay_second", "overlay_first", "max", "min"))
+  blend <- match.arg(blend, c("linear", "overlay", "overlay_first", "max", "min"))
   if (direction == "vertical") {           # transpose, stitch horizontally, transpose back
     a1 <- aperm(a1, c(2, 1, 3)); a2 <- aperm(a2, c(2, 1, 3))
   }
@@ -721,7 +509,8 @@ stitch_compose_pair <- function(a1, a2, method, edge_width,
   if (identical(method, "feature")) {
     stop("method = 'feature' (SIFT/ORB keypoint matching) needs OpenCV and has ",
          "no CRAN-compatible R backend. Use method = 'phase'. If you require ",
-         "feature matching, run a Python ImageStitcher (e.g., github.com/jcunow/ImageStitcher)", call. = FALSE)
+         "feature matching, run the original Python ImageStitcher, or bind ",
+         "OpenCV via the (non-CRAN) 'Rvision' package.", call. = FALSE)
   }
   if (!identical(method, "phase")) stop("method must be 'phase' or 'feature'")
 
@@ -810,17 +599,10 @@ stitch_preprocess <- function(m, method = "none") {
   if (identical(method, "none")) return(m)
   nr <- nrow(m); nc <- ncol(m)
   grad_mag <- function(x) {
-    gx <- matrix(0, nr, nc)
-    gy <- matrix(0, nr, nc)
-    
-    if (nc >= 3)
-      gx[, 2:(nc - 1)] <- (x[, 3:nc] - x[, 1:(nc - 2)]) / 2
-    
-    if (nr >= 3)
-      gy[2:(nr - 1), ] <- (x[3:nr, ] - x[1:(nr - 2), ]) / 2
-    
-    # keep orientation influence instead of collapsing it
-    abs(gx) + 0.25 * abs(gy)
+    gx <- matrix(0, nr, nc); gy <- matrix(0, nr, nc)
+    if (nc >= 3) gx[, 2:(nc - 1)] <- (x[, 3:nc] - x[, 1:(nc - 2)]) / 2
+    if (nr >= 3) gy[2:(nr - 1), ] <- (x[3:nr, ] - x[1:(nr - 2), ]) / 2
+    sqrt(gx^2 + gy^2)
   }
   if (method %in% c("grad", "grad_norm")) m <- grad_mag(m)
   if (method %in% c("center", "center_norm")) m <- m - mean(m)
@@ -837,7 +619,7 @@ stitch_preprocess <- function(m, method = "none") {
 #'
 #' @param reg1,reg2 Numeric \code{(h, w, c)} arrays - the aligned overlap of
 #'   img1 (left) and img2 (right).
-#' @param blend One of \code{"linear"} (alpha ramp 1 -> 0), \code{"overlay_second"}
+#' @param blend One of \code{"linear"} (alpha ramp 1 -> 0), \code{"overlay"}
 #'   (img2 on top), \code{"overlay_first"} (img1 on top), \code{"max"}
 #'   (lighten / union) or \code{"min"} (darken).
 #' @param blend_width Optional ramp width (px) for \code{"linear"}, centred in
@@ -846,7 +628,7 @@ stitch_preprocess <- function(m, method = "none") {
 #' @keywords internal
 stitch_blend_overlap <- function(reg1, reg2, blend = "linear", blend_width = NULL) {
   d <- dim(reg1); mh <- d[1]; mw <- d[2]; ct <- d[3]
-  if (blend == "overlay_second")       return(reg2)        # img2 hides img1
+  if (blend == "overlay")       return(reg2)        # img2 hides img1
   if (blend == "overlay_first") return(reg1)        # img1 hides img2
   if (blend == "max") { o <- pmax(reg1, reg2); dim(o) <- d; return(o) }
   if (blend == "min") { o <- pmin(reg1, reg2); dim(o) <- d; return(o) }
@@ -973,18 +755,29 @@ stitch_group_of <- function(x, group_regex) {
   out
 }
 
-#' Write an (H, W, C) 0-255 array to a PNG file
+#' Write an (H, W, C) 0-255 array to PNG or TIFF (chosen by file extension)
 #'
 #' @param a A numeric \code{(H, W, C)} array (0-255).
-#' @param path Output PNG path.
+#' @param path Output path; the extension (\code{.png}, \code{.tif}/\code{.tiff})
+#'   selects the format.
 #' @return The path, invisibly.
 #' @keywords internal
-stitch_write_png <- function(a, path) {
-  if (!requireNamespace("png", quietly = TRUE))
-    stop("Package 'png' is required to write PNG output. ",
-         "Install it with install.packages(\"png\").")
+stitch_write_image <- function(a, path) {
   img <- a / 255
   img[img < 0] <- 0; img[img > 1] <- 1
-  png::writePNG(img, target = path)
+  ext <- tolower(tools::file_ext(path))
+  if (ext == "png") {
+    if (!requireNamespace("png", quietly = TRUE))
+      stop("Package 'png' is required to write PNG output. ",
+           "Install it with install.packages(\"png\").")
+    png::writePNG(img, target = path)
+  } else if (ext %in% c("tif", "tiff")) {
+    if (!requireNamespace("tiff", quietly = TRUE))
+      stop("Package 'tiff' is required to write TIFF output. ",
+           "Install it with install.packages(\"tiff\").")
+    tiff::writeTIFF(img, where = path)
+  } else {
+    stop("Unsupported output extension '", ext, "'; use 'png' or 'tiff'.")
+  }
   invisible(path)
 }

@@ -52,7 +52,7 @@ changes phase correlation (it is already scale-invariant). On well-textured
 scans \code{"none"} is usually fine.}
 
 \item{blend}{How the overlap band is combined: \code{"linear"} (default,
-alpha ramp 1 -> 0, good for colour scans), \code{"overlay_second"} (img2 hides
+alpha ramp 1 -> 0, good for colour scans), \code{"overlay"} (img2 hides
 img1), \code{"overlay_first"} (img1 hides img2), \code{"max"} (lighten /
 union - recommended for segmented/binary masks, where averaging would make
 fractional values and ghost thin roots) or \code{"min"} (darken).}

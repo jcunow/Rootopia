@@ -10,17 +10,16 @@ stitch_root_scans(
   group_regex = "T0\\\\d{2}",
   select = NULL,
   tubes = NULL,
-  order_by = NULL,
-  decreasing = FALSE,
   out_dir = NULL,
   out_prefix = "",
+  out_format = "png",
   method = "phase",
   edge_width = 250,
   vertical_region = 1000,
   vertical_offset = 300,
   direction = "horizontal",
   preprocess = "none",
-  blend = "overlay_first",
+  blend = "linear",
   blend_width = NULL,
   report = FALSE,
   verbose = TRUE
@@ -30,33 +29,32 @@ stitch_root_scans(
 \item{input}{Either a directory (searched recursively) or a character vector
 of image file paths.}
 
-\item{pattern}{Optional filter applied to filenames (e.g. \code{".tiff"}).
-If \code{NULL}, all files are used.}
+\item{pattern}{Optional substring used to keep only matching file names
+(e.g. \code{".tiff"}). \code{NULL} keeps all files.}
 
-\item{group_regex}{Regular expression used to define grouping keys (e.g. tube
-identifiers such as \code{T067}). If \code{NULL}, all files are treated as
-a single group.}
+\item{group_regex}{Regular expression identifying the group id within each
+path. Default \code{"T0\\d{2}"} matches tube labels such as \code{T067}.
+Use \code{NULL} to stitch every file into a single mosaic.}
 
-\item{select}{Optional integer index vector selecting a subset of input files
-prior to grouping.}
+\item{select}{Optional integer vector of indices into the (sorted) \emph{file}
+list, e.g. \code{1:36}. See \code{\link{list_scan_files}}. \code{NULL} uses
+all files. Applied before grouping.}
 
-\item{tubes}{Optional selection of groups to process. Can be integer indices
-into the sorted group list, character group names, or \code{"ask"} for
-interactive selection. If \code{NULL}, all groups are processed.}
+\item{tubes}{Optional \emph{tube} selection: integer indices into the sorted
+tube list (e.g. \code{1:36}, see \code{\link{list_tubes}}), a character
+vector of tube names (e.g. \code{c("T037", "T040")}), or the string
+\code{"ask"} to print the tubes and choose a range interactively in one
+call (interactive sessions only). \code{NULL} keeps all tubes.}
 
-\item{order_by}{Optional regular expression used to extract an ordering key
-from filenames within each group. If \code{NULL} (default), files are
-stitched in lexicographic filename order. When a match is found, numeric
-components are ordered numerically; otherwise ordering is lexicographic.}
+\item{out_dir}{Optional directory to write one mosaic per tube to (named
+\code{<out_prefix><tube>.<ext>}). Created if needed. \code{NULL} (default)
+returns mosaics only.}
 
-\item{decreasing}{Logical. If \code{TRUE}, reverses the within-group order.
-Useful when acquisition order is reversed (e.g. bottom-to-top scans or
-deepest-to-shallowest sequences).}
+\item{out_prefix}{Filename prefix for written mosaics.}
 
-\item{out_dir}{Optional output directory for writing mosaics as PNG files.
-If \code{NULL}, results are returned only.}
-
-\item{out_prefix}{Filename prefix for exported mosaics.}
+\item{out_format}{Output image format when \code{out_dir} is set: \code{"png"}
+(default) or \code{"tiff"}. Requires the corresponding package
+(\pkg{png} or \pkg{tiff}).}
 
 \item{method}{Alignment method. Currently only \code{"phase"} (FFT phase
 correlation) is supported. \code{"feature"} (SIFT/ORB keypoint matching in
@@ -88,7 +86,7 @@ changes phase correlation (it is already scale-invariant). On well-textured
 scans \code{"none"} is usually fine.}
 
 \item{blend}{How the overlap band is combined: \code{"linear"} (default,
-alpha ramp 1 -> 0, good for colour scans), \code{"overlay_second"} (img2 hides
+alpha ramp 1 -> 0, good for colour scans), \code{"overlay"} (img2 hides
 img1), \code{"overlay_first"} (img1 hides img2), \code{"max"} (lighten /
 union - recommended for segmented/binary masks, where averaging would make
 fractional values and ghost thin roots) or \code{"min"} (darken).}
@@ -98,61 +96,43 @@ overlap (hard img1 to its left, hard img2 to its right); \code{NULL}
 (default) ramps across the whole overlap. A smaller value reduces root
 ghosting on colour scans. Ignored unless \code{blend = "linear"}.}
 
-\item{report}{Logical. If \code{TRUE}, returns additional alignment diagnostics
-per stitching step.}
+\item{report}{Logical. If \code{TRUE}, return a list with both the mosaics
+and a per-step performance table instead of just the mosaics (see Value).}
 
-\item{verbose}{Logical; enables progress output during processing.}
+\item{verbose}{Logical; print per-tube progress and a mean/min alignment peak.}
 }
 \value{
-If \code{report = FALSE}, a named list of mosaics (one array per group).
-If \code{report = TRUE}, a list:
-\describe{
-  \item{mosaics}{Named list of stitched images.}
-  \item{report}{Data frame with per-step diagnostics:
-    \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak},
-    \code{overlap}.}
-}
+If \code{report = FALSE} (default), invisibly a named list of mosaics
+  (one numeric \code{(H, W, C)} array per tube). If \code{report = TRUE}, a
+  list \code{list(mosaics, report)} where \code{report} is a data frame with
+  columns \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak}
+  (confidence; higher is better) and \code{overlap} (\code{= edge_width - dx}).
 }
 \description{
-Stitches sets of related scan images into continuous mosaics. Input files are
-optionally filtered, grouped by an identifier extracted from filenames, and
-stitched sequentially within each group. By default, files are stitched in
-lexicographic filename order, but custom within-group ordering can be
-specified.
+High-level driver ported from the Python \code{ImageStitcher} \code{main} /
+\code{process_subset}. Files are discovered, optionally subset, grouped by an
+id pattern (one group per tube), sorted within each group, and stitched into
+one mosaic per group. Single-frame groups are passed through unchanged.
+Mosaics are returned and, optionally, written to disk as PNGs.
 }
 \details{
-Each group (tube) produces one stitched image. Groups containing a single
-frame are returned unchanged.
+Call \code{\link{list_tubes}} first to see the tube names, then pass a range
+to \code{tubes} (e.g. \code{tubes = 1:36}) to stitch just those tubes.
 }
 \examples{
 \dontrun{
-# Default: lexicographic filename order within each tube
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff"
-)
+# 1) See the tubes (names + frame counts)
+list_tubes("path/to/scans", pattern = ".tiff")
 
-# Order by scan depth code (e.g. L001, L002, ...)
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff",
-  order_by = "L\\\\d{3}"
-)
+# 2) Stitch the first 36 tubes, with a performance report and a preprocess
+res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
+                         tubes = 1:36, preprocess = "grad", report = TRUE)
+res$report
+aggregate(peak ~ tube, res$report, mean)
 
-# Reverse acquisition order (e.g. bottom-to-top scans)
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff",
-  order_by = "L\\\\d{3}",
-  decreasing = TRUE
-)
-
-# Order by date-stamped filenames (YYYYMMDD)
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff",
-  order_by = "\\\\d{8}"
-)
+# 3) A named subset, written straight to PNG
+stitch_root_scans("path/to/scans", pattern = ".tiff",
+                  tubes = c("T037", "T040"), out_dir = "path/to/output")
 }
 }
 \seealso{

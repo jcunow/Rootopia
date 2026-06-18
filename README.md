@@ -22,6 +22,7 @@ Welcome to **RootScanR**, an R package designed to extract quantitative belowgro
 - 🕸️ Analyze root architecture: branching points, root tips, branch/root order
   (main axis vs. laterals), and root angle distribution
 - 🥕 Spatial indices (root distribution with depth, rotation bias)
+- 🧵 Stitch overlapping scan sequences into one mosaic per tube
 ---
 
 ## 📘 Tutorials
@@ -35,6 +36,7 @@ when you need full control over an individual processing stage.
 * 📄 [Minirhizotron Workflow (step-by-step)](articles/MinirhizotronScans_vignettes.html)
 * 📄 [Flatbed Scan Workflow (step-by-step)](articles/FlatBedScans_vignettes.html)
 * 📄 [Rotation Bias Correction](articles/Rotation_Bias_vignettes.html)
+* 🧵 [Stitching Scan Sequences into Mosaics](articles/Stitching_vignette.html)
 
 Each tutorial includes code, images, overlays, and tips for interpretation.
 

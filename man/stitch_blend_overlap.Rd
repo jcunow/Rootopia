@@ -10,7 +10,7 @@ stitch_blend_overlap(reg1, reg2, blend = "linear", blend_width = NULL)
 \item{reg1, reg2}{Numeric \code{(h, w, c)} arrays - the aligned overlap of
 img1 (left) and img2 (right).}
 
-\item{blend}{One of \code{"linear"} (alpha ramp 1 -> 0), \code{"overlay_second"}
+\item{blend}{One of \code{"linear"} (alpha ramp 1 -> 0), \code{"overlay"}
 (img2 on top), \code{"overlay_first"} (img1 on top), \code{"max"}
 (lighten / union) or \code{"min"} (darken).}
 
