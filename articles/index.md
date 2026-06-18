@@ -12,3 +12,5 @@
   RootScanR](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md):
 - [Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and
   Turnover](https://jcunow.github.io/RootScanR/articles/SpecialTopics_vignette.md):
+- [Stitching Scan Sequences into Mosaics with
+  RootScanR](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md):

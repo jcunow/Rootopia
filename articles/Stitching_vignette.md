@@ -1,0 +1,262 @@
+# Stitching Scan Sequences into Mosaics with RootScanR
+
+## Stitching Scan Sequences into Mosaics
+
+Minirhizotron cameras often capture a tube (or a long sample) as a
+**sequence of overlapping frames**. One function turns a folder of those
+frames into one mosaic per tube:
+
+``` r
+
+stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output")
+```
+
+It discovers the files, groups them into one sequence per tube, sorts
+each group, aligns and blends the frames, and (optionally) writes one
+PNG per tube. That is the only function you need to call. (The per-pair
+and per-sequence engines it uses are documented at
+[`?stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md)
+and
+[`?stitch_image_sequence`](https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.md)
+for continue ;
+[`?list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
+and
+[`?list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
+preview a folder.)
+
+``` r
+
+# install.packages("remotes")
+# remotes::install_github("jcunow/RootScanR")
+library(RootScanR)
+```
+
+------------------------------------------------------------------------
+
+### Any input format
+
+Frames are loaded through
+[`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md),
+so the **same call works whatever your format**: file paths (`.png`,
+`.jpg/.jpeg`, `.tif/.tiff`, `.bmp`), a `terra` `SpatRaster`, a `raster`
+`RasterLayer`/`RasterBrick`, an `imager` `cimg`, a `magick-image`, or a
+plain `matrix` (grayscale) / `array` (`height x width x channel`).
+Colour and grayscale both work — colour is reduced to luma for the
+alignment step only.
+
+------------------------------------------------------------------------
+
+### What happens under the hood
+
+For each consecutive pair of frames A (left) and B (right) within a
+tube, the wrapper:
+
+1.  **Edge band** — takes a vertical band (rows `vertical_offset` to
+    `vertical_offset + vertical_region`) of A’s **right** `edge_width`
+    columns and B’s **left** `edge_width` columns.
+2.  **Reduce & preprocess** — converts the band to luma and applies
+    `preprocess` if set.
+3.  **Align** — computes the **FFT phase correlation** of the two bands;
+    the peak gives the shift `(dx, dy)` and a confidence `peak`.
+4.  **Place** — puts B at column `wA - edge_width + dx`, so
+    **`overlap = edge_width - dx`**, and offsets it vertically by `dy`;
+    the canvas grows to fit.
+5.  **Composite** — combines the overlap with `blend`.
+
+These five steps repeat along the sequence, each frame onto the growing
+mosaic. Understanding them is enough to understand every setting below.
+
+------------------------------------------------------------------------
+
+### Demo: slice a real scan and stitch it back
+
+`rgb_Oulanka2023_Session03_T067` is a real RGB tube scan. We cut it into
+overlapping pieces, save them as a little “tube” folder, and let
+[`stitch_root_scans()`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+reassemble it — exactly the path your own scans take.
+
+``` r
+
+data("rgb_Oulanka2023_Session03_T067")
+
+# load to an (H, W, C) array; downsampled here only to keep the vignette light
+img <- load_flexible_image(terra::rast(rgb_Oulanka2023_Session03_T067),
+                           output_format = "array", normalize = FALSE)
+img <- img[seq(1, nrow(img), 3), seq(1, ncol(img), 3), , drop = FALSE]
+dim(img)                                   # rows (rotation) x cols (length) x RGB
+#> [1]  387 1633    3
+```
+
+``` r
+
+W       <- ncol(img)
+piece_w <- W %/% 3L                        # each piece ~1/3 of the length
+ov      <- piece_w %/% 4L                  # overlap = 25% of a piece
+step    <- piece_w - ov
+starts  <- (0:((W - piece_w) %/% step)) * step
+pieces  <- lapply(starts, function(s) img[, (s + 1):(s + piece_w), , drop = FALSE])
+length(pieces)                             # number of overlapping frames
+#> [1] 3
+```
+
+``` r
+
+# save the pieces as one tube ("T067") in a temp folder, as if freshly scanned
+d  <- file.path(tempdir(), "stitch_demo")
+dir.create(d, showWarnings = FALSE)
+sc <- if (max(img, na.rm = TRUE) > 1) 255 else 1
+for (i in seq_along(pieces)) {
+  png::writePNG(pmin(pmax(pieces[[i]] / sc, 0), 1),
+                file.path(d, sprintf("Oulanka_T067_%02d.png", i)))
+}
+list.files(d)
+#> [1] "Oulanka_T067_01.png" "Oulanka_T067_02.png" "Oulanka_T067_03.png"
+```
+
+``` r
+
+res <- stitch_root_scans(d, pattern = ".png", edge_width = ov,
+                         vertical_region = nrow(img), vertical_offset = 0,
+                         report = TRUE, verbose = FALSE)
+mosaic <- res$mosaics[["T067"]]
+dim(mosaic)            # reconstructed length
+#> [1]  387 1360    3
+res$report             # per-join dx, dy, peak (confidence), overlap
+#>   tube step dx dy peak overlap
+#> 1 T067    1  0  0    1     136
+#> 2 T067    2  0  0    1     136
+```
+
+``` r
+
+norm01 <- function(a) a / max(a, na.rm = TRUE)         # display only
+span   <- ncol(mosaic)
+
+op <- graphics::par(mfrow = c(2, 1), mar = c(0, 0, 1.4, 0))
+plot(grDevices::as.raster(norm01(img[, seq_len(span), , drop = FALSE])))
+graphics::title("original scan (cropped to the stitched span)")
+plot(grDevices::as.raster(norm01(mosaic)))
+graphics::title("re-stitched by stitch_root_scans()")
+```
+
+![](Stitching_vignette_files/figure-html/show-real-1.png)
+
+``` r
+
+graphics::par(op)
+```
+
+The recovered `dx` is ~0 (we sliced with identical edges) and `peak` is
+high — a clean alignment — and the two panels are indistinguishable.
+(This chunk needs the suggested `png` package to write the demo files.)
+
+------------------------------------------------------------------------
+
+### Choosing settings
+
+Each setting maps onto a step above.
+
+**`edge_width`** — the band width used to align. Because
+`overlap = edge_width - dx`, set it to roughly **2x your true overlap**
+(the overlap should be between about half and all of `edge_width`). Too
+small misses matching content; too large dilutes the peak.
+
+**`vertical_region` / `vertical_offset`** — which rows are matched.
+Raise `vertical_offset` to skip a header, label, or tape strips, or
+other artefacts at the edges (some scanners produce white edge lines).
+
+**`direction`** — `"horizontal"` (default, frames side-by-side) or
+`"vertical"` (frames stacked top-to-bottom, e.g. strips acquired *down*
+a tube).
+
+**`method`** — `"phase"` (FFT phase correlation) is supported. The
+Python tool’s `"feature"` (SIFT/ORB) needs OpenCV and has no CRAN
+backend, so it errors with a message rather than guessing. If you insist
+on feature matching, see the GitHub repository:
+[ImageStitching](https://github.com/jcunow/ImageStitching)
+
+**`preprocess`** — applied to the edge bands before correlation:
+
+| value | effect | use when (not fully tested yet) |
+|----|----|----|
+| `"none"` | raw luma | well-textured colour scans |
+| `"center"` | subtract mean | mild offset differences |
+| `"hann"` | demean + Hann window | suppress FFT edge/wrap artefacts |
+| `"grad"` / `"grad_norm"` | gradient magnitude | uneven lighting / vignetting, sparse texture |
+| `"norm"` / `"center_norm"` | scale by SD | little effect on phase correlation alone |
+
+**`blend` / `blend_width`** — how the overlap is combined:
+
+| value | effect | use when |
+|----|----|----|
+| `"linear"` | feather (alpha 1-\>0) | colour scans; hides exposure seams, can blur |
+| `"overlay_second"` | second frame on top | hard seam, no averaging no blur |
+| `"overlay_first"` | first frame on top | hard seam, no averaging no blur |
+| `"max"` | per-pixel brighter / union | **segmented / binary masks** |
+| `"min"` | per-pixel darker | dark-feature masks |
+
+For **segmented masks** (root = 1, background = 0) prefer `"max"`:
+feathering *averages*, turning a root pixel into a fractional value
+(e.g. 0.5) and **ghosting thin roots** where alignment is off by a
+pixel. `"max"` keeps any root from either frame and never invents
+in-between values. `blend_width` narrows the linear ramp to a centred
+band to reduce ghosting on colour scans.
+
+#### Cheat-sheet by image type
+
+| Your data | Suggested call |
+|----|----|
+| Colour flatbed / RGB tube frames | `preprocess = "center_norm"`, `blend = "overlay_first"` |
+| Uneven lighting / vignetting | `preprocess = "grad"` (or `"hann"` or `"center norm"`) |
+| Segmented / binary masks | `blend = "max"`, `preprocess = "none"` |
+| Image orientation rotated | `direction = "vertical"` |
+| Low, fixed overlap | `edge_width` ~ 1-2x that overlap |
+
+Only how you *supply* frames changes with format; the settings behave
+the same.
+
+------------------------------------------------------------------------
+
+### Working with a real folder
+
+``` r
+
+# preview first
+list_tubes("path/to/scans", pattern = ".tiff")        # index | tube | n_frames
+
+# stitch every tube, one PNG each
+stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output")
+
+# stitch a subset, pick a blend for segmented masks, and get a quality report
+res <- stitch_root_scans(
+  "path/to/scans", pattern = ".tiff",
+  tubes  = 1:36,           # or tubes = c("T037","T040"), or tubes = "ask"
+  blend  = "max",
+  report = TRUE
+)
+res$mosaics                                  # named list, one array per tube
+res$report                                   # tube | step | dx | dy | peak | overlap
+```
+
+Frames are stitched in **sorted filename order**, so name them
+accordingly.
+[`stitch_root_scans()`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+also accepts a plain character vector of paths.
+
+------------------------------------------------------------------------
+
+### Quality control
+
+Use the report’s `peak` to spot weak joins before trusting a mosaic:
+
+``` r
+
+res <- stitch_root_scans("path/to/scans", pattern = ".tiff", report = TRUE)
+res$report[order(res$report$peak), ][1:10, ]   # least-confident joins first
+```
+
+If a tube aligns poorly: bring `edge_width` closer to the real overlap,
+raise `vertical_offset` past a header/tape strip, try different
+preprocessing options e.g., `preprocess = "grad"` for uneven lighting,
+or confirm the frames are in the intended (filename) order. Check if the
+order

@@ -7,7 +7,8 @@ articles:
   MinirhizotronScans_vignettes: MinirhizotronScans_vignettes.html
   Rotation_Bias_vignettes: Rotation_Bias_vignettes.html
   SpecialTopics_vignette: SpecialTopics_vignette.html
-last_built: 2026-06-17T15:13Z
+  Stitching_vignette: Stitching_vignette.html
+last_built: 2026-06-18T17:07Z
 urls:
   reference: https://jcunow.github.io/RootScanR/reference
   article: https://jcunow.github.io/RootScanR/articles
