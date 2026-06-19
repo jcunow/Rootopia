@@ -2,9 +2,9 @@
 
 ## Stitching Scan Sequences into Mosaics
 
-Minirhizotron cameras often capture a tube (or a long sample) as a
-**sequence of overlapping frames**. One function turns a folder of those
-frames into one mosaic per tube:
+Minirhizotron cameras and flatbed scanners often capture a tube (or a
+long sample) as a **sequence of overlapping frames**. One function turns
+a folder of those frames into one mosaic per tube:
 
 ``` r
 
@@ -18,7 +18,7 @@ and per-sequence engines it uses are documented at
 [`?stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md)
 and
 [`?stitch_image_sequence`](https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.md)
-for continue ;
+for advanced use;
 [`?list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
 and
 [`?list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
@@ -157,13 +157,14 @@ high — a clean alignment — and the two panels are indistinguishable.
 Each setting maps onto a step above.
 
 **`edge_width`** — the band width used to align. Because
-`overlap = edge_width - dx`, set it to roughly **2x your true overlap**
-(the overlap should be between about half and all of `edge_width`). Too
-small misses matching content; too large dilutes the peak.
+`overlap = edge_width - dx`, set it to roughly **1-2x your true
+overlap** (the overlap should be between about half and all of
+`edge_width`). Too small misses matching content; too large dilutes the
+peak.
 
 **`vertical_region` / `vertical_offset`** — which rows are matched.
-Raise `vertical_offset` to skip a header, label, or tape strips, or
-other artefacts at the edges (some scanners produce white edge lines).
+Raise `vertical_offset` to skip a header, label, or tape strip at the
+top.
 
 **`direction`** — `"horizontal"` (default, frames side-by-side) or
 `"vertical"` (frames stacked top-to-bottom, e.g. strips acquired *down*
@@ -171,13 +172,11 @@ a tube).
 
 **`method`** — `"phase"` (FFT phase correlation) is supported. The
 Python tool’s `"feature"` (SIFT/ORB) needs OpenCV and has no CRAN
-backend, so it errors with a message rather than guessing. If you insist
-on feature matching, see the GitHub repository:
-[ImageStitching](https://github.com/jcunow/ImageStitching)
+backend, so it errors with a message rather than guessing.
 
 **`preprocess`** — applied to the edge bands before correlation:
 
-| value | effect | use when (not fully tested yet) |
+| value | effect | use when |
 |----|----|----|
 | `"none"` | raw luma | well-textured colour scans |
 | `"center"` | subtract mean | mild offset differences |
@@ -189,9 +188,9 @@ on feature matching, see the GitHub repository:
 
 | value | effect | use when |
 |----|----|----|
-| `"linear"` | feather (alpha 1-\>0) | colour scans; hides exposure seams, can blur |
-| `"overlay_second"` | second frame on top | hard seam, no averaging no blur |
-| `"overlay_first"` | first frame on top | hard seam, no averaging no blur |
+| `"linear"` | feather (alpha 1-\>0) | colour scans; hides exposure seams |
+| `"overlay"` | second frame on top | hard seam, no averaging |
+| `"overlay_first"` | first frame on top | hard seam, keep frame 1 |
 | `"max"` | per-pixel brighter / union | **segmented / binary masks** |
 | `"min"` | per-pixel darker | dark-feature masks |
 
@@ -206,10 +205,10 @@ band to reduce ghosting on colour scans.
 
 | Your data | Suggested call |
 |----|----|
-| Colour flatbed / RGB tube frames | `preprocess = "center_norm"`, `blend = "overlay_first"` |
-| Uneven lighting / vignetting | `preprocess = "grad"` (or `"hann"` or `"center norm"`) |
+| Colour flatbed / RGB tube frames | `preprocess = "none"`, `blend = "linear"` |
+| Uneven lighting / vignetting | `preprocess = "grad"` (or `"hann"`) |
 | Segmented / binary masks | `blend = "max"`, `preprocess = "none"` |
-| Image orientation rotated | `direction = "vertical"` |
+| Strips acquired down the tube | `direction = "vertical"` |
 | Low, fixed overlap | `edge_width` ~ 1-2x that overlap |
 
 Only how you *supply* frames changes with format; the settings behave
@@ -236,12 +235,78 @@ res <- stitch_root_scans(
 )
 res$mosaics                                  # named list, one array per tube
 res$report                                   # tube | step | dx | dy | peak | overlap
+aggregate(peak ~ tube, res$report, mean)     # mean confidence per tube
 ```
 
-Frames are stitched in **sorted filename order**, so name them
-accordingly.
+By default frames are stitched in **sorted file-name order** (see
+*Naming, selection & ordering* below to change it).
 [`stitch_root_scans()`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
 also accepts a plain character vector of paths.
+
+------------------------------------------------------------------------
+
+### Naming, selection & ordering
+
+**Grouping — `group_regex`.** A regular expression that pulls a tube id
+out of each path; files sharing that id form one sequence. The default
+`"T0\\d{2}"` (the `\\` is R string-escaping for the regex `T0\d{2}`)
+matches `T0` plus two digits, e.g. `T067`. Adapt it to your names, or
+use `NULL` to put every file in a single mosaic:
+
+``` r
+
+group_regex = "T\\d+"          # T1, T67, T123
+group_regex = "tube[-_]?\\d+"  # tube12 / tube_12 / tube-12
+group_regex = NULL             # no grouping -> one mosaic
+```
+
+**Selecting — `select` vs `tubes`.** `select` indexes the sorted *file*
+list *before* grouping; `tubes` selects whole *tubes* by index, name, or
+interactively. Use
+[`list_scan_files()`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
+/
+[`list_tubes()`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
+to see the indices.
+
+``` r
+
+stitch_root_scans("scans", pattern = ".tiff", select = 1:36)              # first 36 files
+stitch_root_scans("scans", pattern = ".tiff", tubes  = 1:36)              # first 36 tubes
+stitch_root_scans("scans", pattern = ".tiff", tubes  = c("T037", "T040")) # named tubes
+stitch_root_scans("scans", pattern = ".tiff", tubes  = "ask")             # interactive
+```
+
+Normally you want `tubes`; `select` is for raw file ranges.
+
+**Ordering — `order_by` / `decreasing`.** Frames within a tube are
+stitched in order. The default key is the **file name**, which sorts
+*lexicographically* — so unpadded numbers come out wrong (`_10` before
+`_2`). Use `order_by` to sort by the frame number instead, and
+`decreasing = TRUE` to reverse it (e.g. frames numbered from the bottom
+of the tube upward):
+
+``` r
+
+# order by the number just before the extension, e.g. ..._02.tiff, ..._10.tiff
+stitch_root_scans("scans", pattern = ".tiff", order_by = "\\d+(?=\\.)")
+stitch_root_scans("scans", pattern = ".tiff", order_by = "\\d+(?=\\.)", decreasing = TRUE)
+```
+
+(Equivalently, zero-pad your frame numbers — `_02`, `_10` — so the
+default name sort is already correct.)
+
+**Output names — `out_prefix` / `out_format`.** When `out_dir` is set,
+each mosaic is written to `<out_dir>/<out_prefix><tube>.<ext>`.
+`out_prefix` tags a session/site so separate runs don’t collide;
+`out_format` picks `"png"` (default) or `"tiff"`:
+
+``` r
+
+stitch_root_scans("scans/Oulanka2020_November", pattern = ".tiff",
+                  out_dir = "mosaics", out_prefix = "Oulanka2020_Session03_",
+                  out_format = "tiff")
+# -> mosaics/Oulanka2020_Session03_T067.tif, ...T068.tif, ...
+```
 
 ------------------------------------------------------------------------
 
@@ -256,7 +321,6 @@ res$report[order(res$report$peak), ][1:10, ]   # least-confident joins first
 ```
 
 If a tube aligns poorly: bring `edge_width` closer to the real overlap,
-raise `vertical_offset` past a header/tape strip, try different
-preprocessing options e.g., `preprocess = "grad"` for uneven lighting,
-or confirm the frames are in the intended (filename) order. Check if the
-order
+raise `vertical_offset` past a header/tape strip, try
+`preprocess = "grad"` for uneven lighting, or confirm the frames are in
+the intended (filename) order.

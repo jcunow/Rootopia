@@ -27,49 +27,38 @@ align_phase_correlation(
 
 - edge_width:
 
-  Width in pixels of the edge band used for alignment (clamped to image
-  width).
+  Width in pixels of the edge band used for alignment (clamped to the
+  image width).
 
 - vertical_region:
 
-  Height in pixels of the vertical band used for alignment. The actual
-  sampled region is clipped to image bounds if needed.
+  Height in pixels of the vertical band used for alignment.
 
 - vertical_offset:
 
-  Starting row (from the top) of the vertical band. Used as a reference
-  position for selecting the vertical window.
+  Starting row (from the top) of the vertical band.
 
 - preprocess:
 
-  Preprocessing applied to edge bands before FFT. One of: `"none"`,
-  `"center"`, `"norm"`, `"center_norm"`, `"hann"`, `"grad"`, or
-  `"grad_norm"`.
+  Preprocessing of the edge bands: one of `"none"`, `"center"`,
+  `"norm"`, `"center_norm"`, `"hann"`, `"grad"` or `"grad_norm"`.
 
 ## Value
 
-Named numeric vector `c(dx, dy, peak)`:
-
-- `dx`: horizontal placement shift (`overlap = edge_width - dx`)
-
-- `dy`: vertical shift (pixels, applied to `img2`)
-
-- `peak`: normalized correlation peak height
+Named numeric vector `c(dx, dy, peak)`: `dx` horizontal placement shift
+(`overlap = edge_width - dx`), `dy` vertical shift (pixels) and `peak`
+the normalised correlation peak height.
 
 ## Details
 
-A vertical band of the edge region is used for alignment. The band is
-defined by a requested starting position (`vertical_offset`) and height
-(`vertical_region`). If the requested region exceeds image bounds, it is
-automatically truncated to fit within the image. Only the outermost
-`edge_width` columns are used.
-
-The cross-power spectrum is \\F_1 \bar{F_2} / (\|F_1\|\|F_2\| +
-\epsilon)\\ and the shift is obtained from the correlation peak (with
-wrap-around past half the transform dimensions).
-
-The returned `dx` is the placement shift: `overlap = edge_width - dx`.
-`dy` is the vertical shift applied to `img2`.
+Only a vertical band of the edges is used (rows `vertical_offset` ..
+`vertical_offset + vertical_region`, clamped to the image) and only the
+outermost `edge_width` columns, optionally `preprocess`ed. The
+cross-power spectrum is \\F_1 \bar{F_2} / (\|F_1\|\|F_2\| + \epsilon)\\
+and the shift is read from the correlation peak (with wrap-around past
+the half dimension). The returned `dx` is the placement shift:
+`overlap = edge_width - dx`. `dy` is the vertical shift to apply to
+`img2`.
 
 ## See also
 

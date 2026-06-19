@@ -25,7 +25,9 @@ like root length & diameter, depth mapping, and distribution tools.
 - 🕸️ Analyze root architecture: branching points, root tips, branch/root
   order (main axis vs. laterals), and root angle distribution
 
-- ## 🥕 Spatial indices (root distribution with depth, rotation bias)
+- 🥕 Spatial indices (root distribution with depth, rotation bias)
+
+- ## 🧵 Stitch overlapping scan sequences into one mosaic per tube
 
 ## 📘 Tutorials
 
@@ -42,6 +44,8 @@ are for when you need full control over an individual processing stage.
   (step-by-step)](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
 - 📄 [Rotation Bias
   Correction](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
+- 🧵 [Stitching Scan Sequences into
+  Mosaics](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
 
 Each tutorial includes code, images, overlays, and tips for
 interpretation.

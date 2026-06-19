@@ -1,10 +1,11 @@
 # Batch-stitch grouped scan sequences (tubes) into mosaics
 
-Stitches sets of related scan images into continuous mosaics. Input
-files are optionally filtered, grouped by an identifier extracted from
-filenames, and stitched sequentially within each group. By default,
-files are stitched in lexicographic filename order, but custom
-within-group ordering can be specified.
+High-level driver ported from the Python `ImageStitcher` `main` /
+`process_subset`. Files are discovered, optionally subset, grouped by an
+id pattern (one group per tube), sorted within each group, and stitched
+into one mosaic per group. Single-frame groups are passed through
+unchanged. Mosaics are returned and, optionally, written to disk as
+PNGs.
 
 ## Usage
 
@@ -15,17 +16,16 @@ stitch_root_scans(
   group_regex = "T0\\d{2}",
   select = NULL,
   tubes = NULL,
-  order_by = NULL,
-  decreasing = FALSE,
   out_dir = NULL,
   out_prefix = "",
+  out_format = "png",
   method = "phase",
   edge_width = 250,
   vertical_region = 1000,
   vertical_offset = 300,
   direction = "horizontal",
   preprocess = "none",
-  blend = "overlay_first",
+  blend = "linear",
   blend_width = NULL,
   report = FALSE,
   verbose = TRUE
@@ -41,47 +41,45 @@ stitch_root_scans(
 
 - pattern:
 
-  Optional filter applied to filenames (e.g. `".tiff"`). If `NULL`, all
-  files are used.
+  Optional substring used to keep only matching file names (e.g.
+  `".tiff"`). `NULL` keeps all files.
 
 - group_regex:
 
-  Regular expression used to define grouping keys (e.g. tube identifiers
-  such as `T067`). If `NULL`, all files are treated as a single group.
+  Regular expression identifying the group id within each path. Default
+  `"T0\d{2}"` matches tube labels such as `T067`. Use `NULL` to stitch
+  every file into a single mosaic.
 
 - select:
 
-  Optional integer index vector selecting a subset of input files prior
-  to grouping.
+  Optional integer vector of indices into the (sorted) *file* list, e.g.
+  `1:36`. See
+  [`list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md).
+  `NULL` uses all files. Applied before grouping.
 
 - tubes:
 
-  Optional selection of groups to process. Can be integer indices into
-  the sorted group list, character group names, or `"ask"` for
-  interactive selection. If `NULL`, all groups are processed.
-
-- order_by:
-
-  Optional regular expression used to extract an ordering key from
-  filenames within each group. If `NULL` (default), files are stitched
-  in lexicographic filename order. When a match is found, numeric
-  components are ordered numerically; otherwise ordering is
-  lexicographic.
-
-- decreasing:
-
-  Logical. If `TRUE`, reverses the within-group order. Useful when
-  acquisition order is reversed (e.g. bottom-to-top scans or
-  deepest-to-shallowest sequences).
+  Optional *tube* selection: integer indices into the sorted tube list
+  (e.g. `1:36`, see
+  [`list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)),
+  a character vector of tube names (e.g. `c("T037", "T040")`), or the
+  string `"ask"` to print the tubes and choose a range interactively in
+  one call (interactive sessions only). `NULL` keeps all tubes.
 
 - out_dir:
 
-  Optional output directory for writing mosaics as PNG files. If `NULL`,
-  results are returned only.
+  Optional directory to write one mosaic per tube to (named
+  `<out_prefix><tube>.<ext>`). Created if needed. `NULL` (default)
+  returns mosaics only.
 
 - out_prefix:
 
-  Filename prefix for exported mosaics.
+  Filename prefix for written mosaics.
+
+- out_format:
+
+  Output image format when `out_dir` is set: `"png"` (default) or
+  `"tiff"`. Requires the corresponding package (png or tiff).
 
 - method:
 
@@ -125,7 +123,7 @@ stitch_root_scans(
 - blend:
 
   How the overlap band is combined: `"linear"` (default, alpha ramp 1
-  -\> 0, good for colour scans), `"overlay_second"` (img2 hides img1),
+  -\> 0, good for colour scans), `"overlay"` (img2 hides img1),
   `"overlay_first"` (img1 hides img2), `"max"` (lighten / union -
   recommended for segmented/binary masks, where averaging would make
   fractional values and ghost thin roots) or `"min"` (darken).
@@ -139,31 +137,27 @@ stitch_root_scans(
 
 - report:
 
-  Logical. If `TRUE`, returns additional alignment diagnostics per
-  stitching step.
+  Logical. If `TRUE`, return a list with both the mosaics and a per-step
+  performance table instead of just the mosaics (see Value).
 
 - verbose:
 
-  Logical; enables progress output during processing.
+  Logical; print per-tube progress and a mean/min alignment peak.
 
 ## Value
 
-If `report = FALSE`, a named list of mosaics (one array per group). If
-`report = TRUE`, a list:
-
-- mosaics:
-
-  Named list of stitched images.
-
-- report:
-
-  Data frame with per-step diagnostics: `tube`, `step`, `dx`, `dy`,
-  `peak`, `overlap`.
+If `report = FALSE` (default), invisibly a named list of mosaics (one
+numeric `(H, W, C)` array per tube). If `report = TRUE`, a list
+`list(mosaics, report)` where `report` is a data frame with columns
+`tube`, `step`, `dx`, `dy`, `peak` (confidence; higher is better) and
+`overlap` (`= edge_width - dx`).
 
 ## Details
 
-Each group (tube) produces one stitched image. Groups containing a
-single frame are returned unchanged.
+Call
+[`list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
+first to see the tube names, then pass a range to `tubes` (e.g.
+`tubes = 1:36`) to stitch just those tubes.
 
 ## See also
 
@@ -175,32 +169,17 @@ single frame are returned unchanged.
 
 ``` r
 if (FALSE) { # \dontrun{
-# Default: lexicographic filename order within each tube
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff"
-)
+# 1) See the tubes (names + frame counts)
+list_tubes("path/to/scans", pattern = ".tiff")
 
-# Order by scan depth code (e.g. L001, L002, ...)
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff",
-  order_by = "L\\d{3}"
-)
+# 2) Stitch the first 36 tubes, with a performance report and a preprocess
+res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
+                         tubes = 1:36, preprocess = "grad", report = TRUE)
+res$report
+aggregate(peak ~ tube, res$report, mean)
 
-# Reverse acquisition order (e.g. bottom-to-top scans)
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff",
-  order_by = "L\\d{3}",
-  decreasing = TRUE
-)
-
-# Order by date-stamped filenames (YYYYMMDD)
-res <- stitch_root_scans(
-  "path/to/scans",
-  pattern = ".tiff",
-  order_by = "\\d{8}"
-)
+# 3) A named subset, written straight to PNG
+stitch_root_scans("path/to/scans", pattern = ".tiff",
+                  tubes = c("T037", "T040"), out_dir = "path/to/output")
 } # }
 ```

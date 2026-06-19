@@ -88,9 +88,9 @@ Cunow</h4>
 <div class="section level2">
 <h2 id="stitching-scan-sequences-into-mosaics">Stitching Scan Sequences into Mosaics<a class="anchor" aria-label="anchor" href="#stitching-scan-sequences-into-mosaics"></a>
 </h2>
-<p>Minirhizotron cameras often capture a tube (or a long sample) as a
-<strong>sequence of overlapping frames</strong>. One function turns a
-folder of those frames into one mosaic per tube:</p>
+<p>Minirhizotron cameras and flatbed scanners often capture a tube (or a
+long sample) as a <strong>sequence of overlapping frames</strong>. One
+function turns a folder of those frames into one mosaic per tube:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"path/to/scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, out_dir <span class="op">=</span> <span class="st">"path/to/output"</span><span class="op">)</span></span></code></pre></div>
 <p>It discovers the files, groups them into one sequence per tube, sorts
@@ -98,7 +98,7 @@ each group, aligns and blends the frames, and (optionally) writes one
 PNG per tube. That is the only function you need to call. (The per-pair
 and per-sequence engines it uses are documented at
 <code><a href="../reference/stitch_image_pair.html">?stitch_image_pair</a></code> and <code><a href="../reference/stitch_image_sequence.html">?stitch_image_sequence</a></code>
-for continue ; <code><a href="../reference/list_tubes.html">?list_tubes</a></code> and
+for advanced use; <code><a href="../reference/list_tubes.html">?list_tubes</a></code> and
 <code><a href="../reference/list_scan_files.html">?list_scan_files</a></code> preview a folder.)</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
@@ -223,22 +223,20 @@ package to write the demo files.)</p>
 <p>Each setting maps onto a step above.</p>
 <p><strong><code>edge_width</code></strong> — the band width used to
 align. Because <code>overlap = edge_width - dx</code>, set it to roughly
-<strong>2x your true overlap</strong> (the overlap should be between
+<strong>1-2x your true overlap</strong> (the overlap should be between
 about half and all of <code>edge_width</code>). Too small misses
 matching content; too large dilutes the peak.</p>
 <p><strong><code>vertical_region</code> /
 <code>vertical_offset</code></strong> — which rows are matched. Raise
-<code>vertical_offset</code> to skip a header, label, or tape strips, or
-other artefacts at the edges (some scanners produce white edge
-lines).</p>
+<code>vertical_offset</code> to skip a header, label, or tape strip at
+the top.</p>
 <p><strong><code>direction</code></strong> — <code>"horizontal"</code>
 (default, frames side-by-side) or <code>"vertical"</code> (frames
 stacked top-to-bottom, e.g. strips acquired <em>down</em> a tube).</p>
 <p><strong><code>method</code></strong> — <code>"phase"</code> (FFT
 phase correlation) is supported. The Python tool’s
 <code>"feature"</code> (SIFT/ORB) needs OpenCV and has no CRAN backend,
-so it errors with a message rather than guessing. If you insist on
-feature matching, see the GitHub repository: <a href="https://github.com/jcunow/ImageStitching" class="external-link">ImageStitching</a></p>
+so it errors with a message rather than guessing.</p>
 <p><strong><code>preprocess</code></strong> — applied to the edge bands
 before correlation:</p>
 <table class="table">
@@ -250,7 +248,7 @@ before correlation:</p>
 <thead><tr class="header">
 <th>value</th>
 <th>effect</th>
-<th>use when (not fully tested yet)</th>
+<th>use when</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -301,17 +299,17 @@ the overlap is combined:</p>
 <tr class="odd">
 <td><code>"linear"</code></td>
 <td>feather (alpha 1-&gt;0)</td>
-<td>colour scans; hides exposure seams, can blur</td>
+<td>colour scans; hides exposure seams</td>
 </tr>
 <tr class="even">
-<td><code>"overlay_second"</code></td>
+<td><code>"overlay"</code></td>
 <td>second frame on top</td>
-<td>hard seam, no averaging no blur</td>
+<td>hard seam, no averaging</td>
 </tr>
 <tr class="odd">
 <td><code>"overlay_first"</code></td>
 <td>first frame on top</td>
-<td>hard seam, no averaging no blur</td>
+<td>hard seam, keep frame 1</td>
 </tr>
 <tr class="even">
 <td><code>"max"</code></td>
@@ -348,15 +346,13 @@ reduce ghosting on colour scans.</p>
 <tr class="odd">
 <td>Colour flatbed / RGB tube frames</td>
 <td>
-<code>preprocess = "center_norm"</code>,
-<code>blend = "overlay_first"</code>
+<code>preprocess = "none"</code>, <code>blend = "linear"</code>
 </td>
 </tr>
 <tr class="even">
 <td>Uneven lighting / vignetting</td>
 <td>
-<code>preprocess = "grad"</code> (or <code>"hann"</code> or
-<code>"center norm"</code>)</td>
+<code>preprocess = "grad"</code> (or <code>"hann"</code>)</td>
 </tr>
 <tr class="odd">
 <td>Segmented / binary masks</td>
@@ -365,7 +361,7 @@ reduce ghosting on colour scans.</p>
 </td>
 </tr>
 <tr class="even">
-<td>Image orientation rotated</td>
+<td>Strips acquired down the tube</td>
 <td><code>direction = "vertical"</code></td>
 </tr>
 <tr class="odd">
@@ -398,10 +394,67 @@ behave the same.</p>
 <span>  report <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">mosaics</span>                                  <span class="co"># named list, one array per tube</span></span>
-<span><span class="va">res</span><span class="op">$</span><span class="va">report</span>                                   <span class="co"># tube | step | dx | dy | peak | overlap</span></span></code></pre></div>
-<p>Frames are stitched in <strong>sorted filename order</strong>, so
-name them accordingly. <code><a href="../reference/stitch_root_scans.html">stitch_root_scans()</a></code> also accepts a
-plain character vector of paths.</p>
+<span><span class="va">res</span><span class="op">$</span><span class="va">report</span>                                   <span class="co"># tube | step | dx | dy | peak | overlap</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">peak</span> <span class="op">~</span> <span class="va">tube</span>, <span class="va">res</span><span class="op">$</span><span class="va">report</span>, <span class="va">mean</span><span class="op">)</span>     <span class="co"># mean confidence per tube</span></span></code></pre></div>
+<p>By default frames are stitched in <strong>sorted file-name
+order</strong> (see <em>Naming, selection &amp; ordering</em> below to
+change it). <code><a href="../reference/stitch_root_scans.html">stitch_root_scans()</a></code> also accepts a plain
+character vector of paths.</p>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="naming-selection-ordering">Naming, selection &amp; ordering<a class="anchor" aria-label="anchor" href="#naming-selection-ordering"></a>
+</h3>
+<p><strong>Grouping — <code>group_regex</code>.</strong> A regular
+expression that pulls a tube id out of each path; files sharing that id
+form one sequence. The default <code>"T0\\d{2}"</code> (the
+<code>\\</code> is R string-escaping for the regex <code>T0\d{2}</code>)
+matches <code>T0</code> plus two digits, e.g. <code>T067</code>. Adapt
+it to your names, or use <code>NULL</code> to put every file in a single
+mosaic:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">group_regex</span> <span class="op">=</span> <span class="st">"T\\d+"</span>          <span class="co"># T1, T67, T123</span></span>
+<span><span class="va">group_regex</span> <span class="op">=</span> <span class="st">"tube[-_]?\\d+"</span>  <span class="co"># tube12 / tube_12 / tube-12</span></span>
+<span><span class="va">group_regex</span> <span class="op">=</span> <span class="cn">NULL</span>             <span class="co"># no grouping -&gt; one mosaic</span></span></code></pre></div>
+<p><strong>Selecting — <code>select</code> vs
+<code>tubes</code>.</strong> <code>select</code> indexes the sorted
+<em>file</em> list <em>before</em> grouping; <code>tubes</code> selects
+whole <em>tubes</em> by index, name, or interactively. Use
+<code><a href="../reference/list_scan_files.html">list_scan_files()</a></code> / <code><a href="../reference/list_tubes.html">list_tubes()</a></code> to see the
+indices.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, select <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">36</span><span class="op">)</span>              <span class="co"># first 36 files</span></span>
+<span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, tubes  <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">36</span><span class="op">)</span>              <span class="co"># first 36 tubes</span></span>
+<span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, tubes  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"T037"</span>, <span class="st">"T040"</span><span class="op">)</span><span class="op">)</span> <span class="co"># named tubes</span></span>
+<span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, tubes  <span class="op">=</span> <span class="st">"ask"</span><span class="op">)</span>             <span class="co"># interactive</span></span></code></pre></div>
+<p>Normally you want <code>tubes</code>; <code>select</code> is for raw
+file ranges.</p>
+<p><strong>Ordering — <code>order_by</code> /
+<code>decreasing</code>.</strong> Frames within a tube are stitched in
+order. The default key is the <strong>file name</strong>, which sorts
+<em>lexicographically</em> — so unpadded numbers come out wrong
+(<code>_10</code> before <code>_2</code>). Use <code>order_by</code> to
+sort by the frame number instead, and <code>decreasing = TRUE</code> to
+reverse it (e.g. frames numbered from the bottom of the tube
+upward):</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># order by the number just before the extension, e.g. ..._02.tiff, ..._10.tiff</span></span>
+<span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, order_by <span class="op">=</span> <span class="st">"\\d+(?=\\.)"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, order_by <span class="op">=</span> <span class="st">"\\d+(?=\\.)"</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>(Equivalently, zero-pad your frame numbers — <code>_02</code>,
+<code>_10</code> — so the default name sort is already correct.)</p>
+<p><strong>Output names — <code>out_prefix</code> /
+<code>out_format</code>.</strong> When <code>out_dir</code> is set, each
+mosaic is written to
+<code>&lt;out_dir&gt;/&lt;out_prefix&gt;&lt;tube&gt;.&lt;ext&gt;</code>.
+<code>out_prefix</code> tags a session/site so separate runs don’t
+collide; <code>out_format</code> picks <code>"png"</code> (default) or
+<code>"tiff"</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"scans/Oulanka2020_November"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>,</span>
+<span>                  out_dir <span class="op">=</span> <span class="st">"mosaics"</span>, out_prefix <span class="op">=</span> <span class="st">"Oulanka2020_Session03_"</span>,</span>
+<span>                  out_format <span class="op">=</span> <span class="st">"tiff"</span><span class="op">)</span></span>
+<span><span class="co"># -&gt; mosaics/Oulanka2020_Session03_T067.tif, ...T068.tif, ...</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
@@ -409,14 +462,13 @@ plain character vector of paths.</p>
 </h3>
 <p>Use the report’s <code>peak</code> to spot weak joins before trusting
 a mosaic:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"path/to/scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, report <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">report</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">report</span><span class="op">$</span><span class="va">peak</span><span class="op">)</span>, <span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span>   <span class="co"># least-confident joins first</span></span></code></pre></div>
 <p>If a tube aligns poorly: bring <code>edge_width</code> closer to the
 real overlap, raise <code>vertical_offset</code> past a header/tape
-strip, try different preprocessing options e.g.,
-<code>preprocess = "grad"</code> for uneven lighting, or confirm the
-frames are in the intended (filename) order. Check if the order</p>
+strip, try <code>preprocess = "grad"</code> for uneven lighting, or
+confirm the frames are in the intended (filename) order.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

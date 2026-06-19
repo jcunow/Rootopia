@@ -82,44 +82,40 @@ behind <code><a href="stitch_image_pair.html">stitch_image_pair</a></code>.</p>
 
 <dt id="arg-edge-width">edge_width<a class="anchor" aria-label="anchor" href="#arg-edge-width"></a></dt>
 <dd><p>Width in pixels of the edge band used for alignment
-(clamped to image width).</p></dd>
+(clamped to the image width).</p></dd>
 
 
 <dt id="arg-vertical-region">vertical_region<a class="anchor" aria-label="anchor" href="#arg-vertical-region"></a></dt>
 <dd><p>Height in pixels of the vertical band used for
-alignment. The actual sampled region is clipped to image bounds if needed.</p></dd>
+alignment.</p></dd>
 
 
 <dt id="arg-vertical-offset">vertical_offset<a class="anchor" aria-label="anchor" href="#arg-vertical-offset"></a></dt>
-<dd><p>Starting row (from the top) of the vertical band.
-Used as a reference position for selecting the vertical window.</p></dd>
+<dd><p>Starting row (from the top) of the vertical band.</p></dd>
 
 
 <dt id="arg-preprocess">preprocess<a class="anchor" aria-label="anchor" href="#arg-preprocess"></a></dt>
-<dd><p>Preprocessing applied to edge bands before FFT. One of:
-<code>"none"</code>, <code>"center"</code>, <code>"norm"</code>, <code>"center_norm"</code>,
-<code>"hann"</code>, <code>"grad"</code>, or <code>"grad_norm"</code>.</p></dd>
+<dd><p>Preprocessing of the edge bands: one of <code>"none"</code>,
+<code>"center"</code>, <code>"norm"</code>, <code>"center_norm"</code>, <code>"hann"</code>,
+<code>"grad"</code> or <code>"grad_norm"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Named numeric vector <code>c(dx, dy, peak)</code>:</p><ul><li><p><code>dx</code>: horizontal placement shift (<code>overlap = edge_width - dx</code>)</p></li>
-<li><p><code>dy</code>: vertical shift (pixels, applied to <code>img2</code>)</p></li>
-<li><p><code>peak</code>: normalized correlation peak height</p></li>
-</ul></div>
+    <p>Named numeric vector <code>c(dx, dy, peak)</code>: <code>dx</code> horizontal
+  placement shift (<code>overlap = edge_width - dx</code>), <code>dy</code> vertical shift
+  (pixels) and <code>peak</code> the normalised correlation peak height.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>A vertical band of the edge region is used for alignment. The band is defined
-by a requested starting position (<code>vertical_offset</code>) and height
-(<code>vertical_region</code>). If the requested region exceeds image bounds, it is
-automatically truncated to fit within the image. Only the outermost
-<code>edge_width</code> columns are used.</p>
-<p>The cross-power spectrum is
-\(F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)\) and the shift is obtained from
-the correlation peak (with wrap-around past half the transform dimensions).</p>
-<p>The returned <code>dx</code> is the placement shift:
-<code>overlap = edge_width - dx</code>. <code>dy</code> is the vertical shift applied to
-<code>img2</code>.</p>
+    <p>Only a vertical band of the edges is used (rows
+<code>vertical_offset</code> .. <code>vertical_offset + vertical_region</code>, clamped to
+the image) and only the outermost <code>edge_width</code> columns, optionally
+<code>preprocess</code>ed. The cross-power spectrum is
+\(F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)\) and the shift is read from the
+correlation peak (with wrap-around past the half dimension). The returned
+<code>dx</code> is the placement shift: <code>overlap = edge_width - dx</code>. <code>dy</code>
+is the vertical shift to apply to <code>img2</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
