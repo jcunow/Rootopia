@@ -32,6 +32,7 @@ root_depth_metrics(
   calc_advanced_metrics = TRUE,
   diameter_thresholds = c(0.2, 0.5, 1),
   diameter_threshold_unit = "mm",
+  diameter_quantiles = c(0.9, 0.95, 0.99),
   output_path = NULL,
   verbose = TRUE
 )
@@ -113,9 +114,9 @@ Required for length density and angle metrics.  Default \code{TRUE}.}
 variance of root diameter (cm) using the distance-transform approach in
 \code{root_diameter()}.  Default \code{TRUE}.}
 
-\item{calc_diameter_quantiles}{Logical. Compute the 90th, 95th, and 99th
-percentile of the diameter distribution per bin, conditional means above
-each quantile, threshold-based root lengths (see
+\item{calc_diameter_quantiles}{Logical. Compute the diameter distribution
+percentiles set by \code{diameter_quantiles} per bin, conditional means
+above each quantile, threshold-based root lengths (see
 \code{diameter_thresholds}), and modal diameter peaks via
 \code{modal_peaks()}.  Default \code{FALSE}.}
 
@@ -172,6 +173,13 @@ Units are set by \code{diameter_threshold_unit}.  Default \code{c(0.2, 0.5, 1)}.
 
 \item{diameter_threshold_unit}{Character. Unit of \code{diameter_thresholds}:
 \code{"mm"} (default), \code{"cm"}, or \code{"px"}.}
+
+\item{diameter_quantiles}{Numeric vector of probabilities (each strictly
+between 0 and 1) for the per-bin diameter percentiles computed when
+\code{calc_diameter_quantiles = TRUE}.  Default \code{c(0.90, 0.95, 0.99)}.
+Output columns are named from the probabilities: e.g. \code{0.90} gives
+\code{rootdiameter.90} (the 90th percentile) and
+\code{avg.diameter.top10pct} (mean diameter above it).}
 
 \item{output_path}{Character or \code{NULL}. If provided, the result is saved
 as an \code{.RData} file at this path.  The exported object is named

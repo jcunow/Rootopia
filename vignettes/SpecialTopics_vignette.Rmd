@@ -1,9 +1,13 @@
 ---
 title: "Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover"
 output:
-    html_document:
+    rmarkdown::html_vignette:
         toc: true
         toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
@@ -178,7 +182,7 @@ For the two-timepoint comparison you would instead pass both sessions:
 ```{r turnover-two, eval = FALSE}
 s1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 s3 <- terra::rast(skl_Oulanka2023_Session03_T067)
-root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 300, select.layer = 2)
+root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 150, select.layer = 2)
 ```
 
 # See also

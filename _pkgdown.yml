@@ -39,7 +39,7 @@ navbar:
     - text: Function Index
       href: reference/index.html
     - text: Package Structure
-      href: articles/pkgnetreport.html
+      href: articles/pkgnet-report.html
   structure:
     right: [search, github, lightswitch]
 
@@ -101,6 +101,7 @@ reference:
     contents:
       - create_depthmap
       - binning
+      - zoning
       - estimate_soil_surface
       - estimate_rotation_center
       - estimate_rotation_shift
@@ -123,7 +124,6 @@ reference:
       - rhythmicity
       - modal_peaks
       - circular_mean
-      - zoning
       - root_accumulation
       - compare_depth_distribution
 

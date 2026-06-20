@@ -101,9 +101,9 @@
 #'   \code{root_diameter()}.  Default \code{TRUE}.
 #'
 # --- Extended metrics (off by default) ---
-#' @param calc_diameter_quantiles Logical. Compute the 90th, 95th, and 99th
-#'   percentile of the diameter distribution per bin, conditional means above
-#'   each quantile, threshold-based root lengths (see
+#' @param calc_diameter_quantiles Logical. Compute the diameter distribution
+#'   percentiles set by \code{diameter_quantiles} per bin, conditional means
+#'   above each quantile, threshold-based root lengths (see
 #'   \code{diameter_thresholds}), and modal diameter peaks via
 #'   \code{modal_peaks()}.  Default \code{FALSE}.
 #' @param calc_landscape_metrics Logical. Compute patch-level landscape metrics
@@ -155,6 +155,12 @@
 #'   Units are set by \code{diameter_threshold_unit}.  Default \code{c(0.2, 0.5, 1)}.
 #' @param diameter_threshold_unit Character. Unit of \code{diameter_thresholds}:
 #'   \code{"mm"} (default), \code{"cm"}, or \code{"px"}.
+#' @param diameter_quantiles Numeric vector of probabilities (each strictly
+#'   between 0 and 1) for the per-bin diameter percentiles computed when
+#'   \code{calc_diameter_quantiles = TRUE}.  Default \code{c(0.90, 0.95, 0.99)}.
+#'   Output columns are named from the probabilities: e.g. \code{0.90} gives
+#'   \code{rootdiameter.90} (the 90th percentile) and
+#'   \code{avg.diameter.top10pct} (mean diameter above it).
 #'
 # --- Output ---
 #' @param output_path Character or \code{NULL}. If provided, the result is saved
@@ -274,6 +280,7 @@ root_depth_metrics <- function(
   # ---------- diameter threshold settings ------------------------------------
   diameter_thresholds      = c(0.2, 0.5, 1),
   diameter_threshold_unit  = "mm",
+  diameter_quantiles       = c(0.90, 0.95, 0.99),
   
   # ---------- output ---------------------------------------------------------
   output_path             = NULL,
@@ -402,7 +409,21 @@ root_depth_metrics <- function(
                    stop("'diameter_threshold_unit' must be 'mm', 'cm', or 'px'.", call. = FALSE)
   )
   thr_names <- paste0(diameter_thresholds, diameter_threshold_unit)
-  
+
+  # Diameter quantile column names, derived from `diameter_quantiles` so the
+  # output stays in step when the probabilities are customised. Defaults
+  # c(0.90, 0.95, 0.99) reproduce the historical
+  # rootdiameter.{90,95,99} / avg.diameter.top{10,5,1}pct columns.
+  if (!is.numeric(diameter_quantiles) || length(diameter_quantiles) == 0 ||
+      any(is.na(diameter_quantiles)) ||
+      any(diameter_quantiles <= 0 | diameter_quantiles >= 1)) {
+    stop("'diameter_quantiles' must be numeric probabilities strictly between 0 and 1.",
+         call. = FALSE)
+  }
+  .fmt_pct   <- function(x) format(round(x, 6), trim = TRUE, scientific = FALSE)
+  q_diam_names <- paste0("rootdiameter.", .fmt_pct(diameter_quantiles * 100))
+  q_top_names  <- paste0("avg.diameter.top", .fmt_pct((1 - diameter_quantiles) * 100), "pct")
+
   # ===========================================================================
   # 3.  Main image loop
   # ===========================================================================
@@ -820,19 +841,13 @@ root_depth_metrics <- function(
             sl_rd  <- rd.map; sl_rd[bm != d] <- NA; sl_rd <- terra::trim(sl_rd)
             rd_v   <- terra::values(sl_rd, na.rm = FALSE)
             
-            q90 <- stats::quantile(rd_v, 0.90, na.rm = TRUE)
-            q95 <- stats::quantile(rd_v, 0.95, na.rm = TRUE)
-            q99 <- stats::quantile(rd_v, 0.99, na.rm = TRUE)
-            
-            res <- data.frame(
-              depth = d,
-              rootdiameter.90       = as.vector(q90),
-              rootdiameter.95       = as.vector(q95),
-              rootdiameter.99       = as.vector(q99),
-              avg.diameter.top10pct = mean(rd_v[rd_v > q90], na.rm = TRUE),
-              avg.diameter.top5pct  = mean(rd_v[rd_v > q95], na.rm = TRUE),
-              avg.diameter.top1pct  = mean(rd_v[rd_v > q99], na.rm = TRUE)
-            )
+            qv <- quantile(rd_v, diameter_quantiles, na.rm = TRUE)
+
+            res <- data.frame(depth = d)
+            for (qi in seq_along(diameter_quantiles)) {
+              res[[q_diam_names[qi]]] <- as.vector(qv[qi])
+              res[[q_top_names[qi]]]  <- mean(rd_v[rd_v > qv[qi]], na.rm = TRUE)
+            }
             
             sl_rl <- root.length.map; sl_rl[bm != d] <- NA
             for (ti in seq_along(thr_cm)) {
