@@ -1,6 +1,6 @@
 # Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover
 
-This article collects a few less-obvious capabilities of **RootScanR**
+This article collects a few less-obvious capabilities of **Rootopia**
 that do not fit the main step-by-step tutorials but are useful for
 specific questions: classifying soil/soil material by colour,
 quantifying soil surface texture, building a rhizosphere “halo” zone
@@ -11,7 +11,7 @@ run them as-is.
 
 ## 1. Soil and material colour classification
 
-[`classify_soil_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)
+[`classify_soil_rgb()`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md)
 assigns every pixel of an RGB scan to a class (e.g., dark soil, red
 soil, root, silver tape, coarse debris, …) by nearest-centroid matching
 in CIE LAB colour space. Pixels too far from any centroid are left
@@ -54,7 +54,7 @@ result$metrics
 
 ### Visualising the classification
 
-[`plot_soil_classification()`](https://jcunow.github.io/RootScanR/reference/plot_soil_classification.md)
+[`plot_soil_classification()`](https://jcunow.github.io/Rootopia/reference/plot_soil_classification.md)
 renders the class map with a legend and the actual mean colours of each
 class:
 
@@ -69,14 +69,14 @@ plot_soil_classification(result)
 
 The default centroids were calibrated on one scanner and site. For other
 data, build your own with
-[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md).
+[`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md).
 You supply `picks`: a named list with one element per material class,
 where each element is a matrix with 3 columns (R, G, B in 0-255). Each
 row is one colour sample for that class — different classes can have
 different numbers of rows. The function averages each class’s samples
 into a single LAB centroid and returns a table in the same format as the
 built-in defaults, ready to pass back into
-[`classify_soil_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md).
+[`classify_soil_rgb()`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md).
 
 The simplest approach is to read representative RGB values off your scan
 with a colour picker (e.g. in an image viewer or QGIS) and enter them
@@ -111,18 +111,18 @@ terra::plot(result$map)
 Note: provide a class for **every** material in your scans. Because
 classification is nearest-centroid, any material without its own class
 is snapped into whichever defined class sits closest.
-[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
+[`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
 prints intra-class spread and inter-class distances to help you tune
 `MAX_DIST` before running the full classification.
 
 See
-[`?classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)
+[`?classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md)
 for the full description of the centroid table format and the
 `prior`/`alpha` blending workflow for iterative refinement.
 
 ## 2. Soil surface texture and color
 
-[`analyze_soil_texture()`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md)
+[`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md)
 computes grey-level co-occurrence matrix (GLCM) texture metrics from a
 colour image, which can be informative on the spatial heterogeneity
 within a scan.
@@ -142,7 +142,7 @@ terra::plot(tex)
 
 A simple summary of overall tube colour (mean RGB and a single luminance
 value) is available via
-[`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md):
+[`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md):
 
 ``` r
 
@@ -156,7 +156,7 @@ tube_coloration(img)
 
 ## 3. Rhizosphere halo (root buffer zone)
 
-[`create_root_buffer()`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
+[`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
 grows a buffer of a chosen width around every root pixel – a simple
 proxy for the rhizosphere / diffusion zone. With `halo.only = TRUE` it
 returns only the ring around the roots (excluding the roots themselves).
@@ -194,7 +194,7 @@ roots plus their buffer as a single filled mask.
 
 ## 4. Root turnover between time points
 
-[`root_turnover()`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
+[`root_turnover()`](https://jcunow.github.io/Rootopia/reference/root_turnover.md)
 quantifies how much root material was produced, lost, or retained.
 `method` selects one of two approaches:
 
@@ -226,12 +226,12 @@ root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 15
 
 ## See also
 
-- [`vignette("BatchProcessing_vignette")`](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+- [`vignette("BatchProcessing_vignette")`](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
   – end-to-end depth profiling.
-- [`?classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md),
-  [`?build_soil_centroids`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md),
-  [`?plot_soil_classification`](https://jcunow.github.io/RootScanR/reference/plot_soil_classification.md)
-- [`?analyze_soil_texture`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md),
-  [`?tube_coloration`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
-- [`?create_root_buffer`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
-- [`?root_turnover`](https://jcunow.github.io/RootScanR/reference/root_turnover.md)
+- [`?classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md),
+  [`?build_soil_centroids`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md),
+  [`?plot_soil_classification`](https://jcunow.github.io/Rootopia/reference/plot_soil_classification.md)
+- [`?analyze_soil_texture`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md),
+  [`?tube_coloration`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
+- [`?create_root_buffer`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
+- [`?root_turnover`](https://jcunow.github.io/Rootopia/reference/root_turnover.md)

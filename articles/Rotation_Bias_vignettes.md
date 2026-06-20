@@ -1,27 +1,27 @@
-# Rotation Bias and Rhythmicity Analysis with RootScanR
+# Rotation Bias and Rhythmicity Analysis with Rootopia
 
 ## Rotation Bias Analysis
 
 ### Introduction
 
 This vignette demonstrates how to detect and correct for rotational bias
-in minirhizotron setups using the **RootScanR** package. In
-minirhizotron studies, the scanner tube is inserted at an angle into the
-soil and can rotate slightly between sessions. Because the CI-600 and
-similar scanners do not cover a full 360° arc, sequential images from
-the same tube may not perfectly overlap. Left uncorrected, this rotation
+in minirhizotron setups using the **Rootopia** package. In minirhizotron
+studies, the scanner tube is inserted at an angle into the soil and can
+rotate slightly between sessions. Because the CI-600 and similar
+scanners do not cover a full 360° arc, sequential images from the same
+tube may not perfectly overlap. Left uncorrected, this rotation
 introduces a systematic spatial bias — roots near the scan edges are
 observed in some sessions but not others.
 
-RootScanR addresses this through four functions:
+Rootopia addresses this through four functions:
 
-- [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
+- [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
   — locates the rotational zero point from tape coverage in a single
   image
-- [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+- [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
   — quantifies the pixel offset between two sessions using image
   correlation
-- [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+- [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
   — crops images to the shared, overlap region
 - `zoning(mode = "rotation")` — splits the tube surface into slices
   along the rotation axis (circumference), so that root traits can be
@@ -29,9 +29,9 @@ RootScanR addresses this through four functions:
 
 The last point matters beyond rotation correction itself: once the tube
 circumference is split into slices, the
-[`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+[`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
 /
-[`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
+[`fit_sine_curve()`](https://jcunow.github.io/Rootopia/reference/fit_sine_curve.md)
 family — normally introduced for time-series data — can be applied to
 the sequence of per-slice root traits to test whether roots are
 distributed **evenly around the tube circumference**, or whether there
@@ -45,9 +45,9 @@ rhythmicity](#circumferential-zoning-and-rhythmicity) section below.
 ``` r
 
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
+# remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(terra)
 ```
 
@@ -59,7 +59,7 @@ library(terra)
 
 #### 1. Estimate the rotational center from a single image
 
-[`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
+[`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
 detects the white adhesive tape attached to the upper side of the tube.
 Because more tape is visible on one side, the function infers where the
 top of the tube (rotational zero) lies. It returns a pixel row index.
@@ -91,7 +91,7 @@ Key parameters:
 
 When the same tube is scanned in two different sessions, the scanner may
 have rotated.
-[`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+[`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
 uses either cross-correlation (`"ccf"`) or phase correlation (`"phase"`)
 on a shared depth window to find the pixel offset. Phase correlation is
 generally more robust to brightness differences between sessions.
@@ -135,9 +135,9 @@ and vertical (rotation axis) pixel shifts. A large vertical shift means
 the tube rotated substantially between sessions.
 
 > **Planned**: a single helper that estimates
-> [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+> [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
 > between two sessions and then applies
-> [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+> [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
 > using that shift directly, so that aligning session coverage becomes a
 > one-step operation. Until then, use the two functions as shown in
 > steps 2 and 3.
@@ -146,7 +146,7 @@ the tube rotated substantially between sessions.
 
 #### 3. Censor image edges to the shared overlap region
 
-[`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+[`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
 crops each image so that only the rows present in every session are
 retained. This eliminates the non-overlapping margins and makes root
 counts directly comparable across sessions.
@@ -183,7 +183,7 @@ censored <- rotation_censor(
 > **Note on tube geometry.** The inner and outer tube diameters differ,
 > so the observed root length slightly underestimates the true root
 > length in the soil. A resize coefficient may be applied separately;
-> [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+> [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
 > does not handle this correction.
 
 ------------------------------------------------------------------------
@@ -199,9 +199,9 @@ into `rotation_total_slices` equal slices, and
 
 Looping over slices gives a sequence of root-trait values indexed by
 circumferential position. The
-[`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+[`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
 /
-[`fit_sine_curve()`](https://jcunow.github.io/RootScanR/reference/fit_sine_curve.md)
+[`fit_sine_curve()`](https://jcunow.github.io/Rootopia/reference/fit_sine_curve.md)
 functions — which fit
 $`y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c`$ and test
 whether $`A \neq 0`$ — are agnostic to what `x` represents. Applied to
@@ -325,7 +325,7 @@ ggplot(slice_traits, aes(slice, rld + inner)) +
 > `slice_rotation(mode = "both")` to additionally split each
 > circumferential slice by depth bin, producing a slice x depth grid.
 > Fitting
-> [`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md)
+> [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
 > separately within each depth bin (x = slice, y = trait per slice)
 > tests whether the circumferential pattern is consistent with depth or
 > changes from shallow to deep — i.e. a genuine *top-down amplitude*
@@ -339,16 +339,16 @@ Two extensions are planned and not yet implemented:
 
 1.  **Combined rotation-shift + censor helper** (mentioned in step 2):
     estimate
-    [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+    [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
     between two sessions and automatically apply
-    [`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+    [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
     with that shift, so aligning session coverage is a single call.
 2.  **Estimating the rotation center from the amplitude peak**: if the
     circumferential analysis above reveals a strong, consistent
     sinusoidal pattern, the fitted phase (`res$phase` / `res$peakTime`)
     marks the circumferential position of peak root density. This could
     be used as a data-driven alternative or complement to
-    [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md),
+    [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md),
     which currently relies only on tape coverage. Though, field
     calibrations are absolutely the preferred option.
 
@@ -357,11 +357,11 @@ Two extensions are planned and not yet implemented:
 ### Further reading
 
 - [Batch
-  Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
   — the recommended starting point for processing multiple images
 - [Minirhizotron
-  Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+  Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
   — step-by-step depth analysis workflow
 - [Function
-  reference](https://jcunow.github.io/RootScanR/reference/index.md)
-- Source and issues: <https://github.com/jcunow/RootScanR>
+  reference](https://jcunow.github.io/Rootopia/reference/index.md)
+- Source and issues: <https://github.com/jcunow/Rootopia>

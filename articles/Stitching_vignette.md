@@ -1,4 +1,4 @@
-# Stitching Scan Sequences into Mosaics with RootScanR
+# Stitching Scan Sequences into Mosaics with Rootopia
 
 ## Stitching Scan Sequences into Mosaics
 
@@ -15,20 +15,20 @@ It discovers the files, groups them into one sequence per tube, sorts
 each group, aligns and blends the frames, and (optionally) writes one
 PNG per tube. That is the only function you need to call. (The per-pair
 and per-sequence engines it uses are documented at
-[`?stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md)
+[`?stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md)
 and
-[`?stitch_image_sequence`](https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.md)
+[`?stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md)
 for advanced use;
-[`?list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
+[`?list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)
 and
-[`?list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
+[`?list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md)
 preview a folder.)
 
 ``` r
 
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
-library(RootScanR)
+# remotes::install_github("jcunow/Rootopia")
+library(Rootopia)
 ```
 
 ------------------------------------------------------------------------
@@ -36,7 +36,7 @@ library(RootScanR)
 ### Any input format
 
 Frames are loaded through
-[`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md),
+[`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md),
 so the **same call works whatever your format**: file paths (`.png`,
 `.jpg/.jpeg`, `.tif/.tiff`, `.bmp`), a `terra` `SpatRaster`, a `raster`
 `RasterLayer`/`RasterBrick`, an `imager` `cimg`, a `magick-image`, or a
@@ -72,7 +72,7 @@ mosaic. Understanding them is enough to understand every setting below.
 
 `rgb_Oulanka2023_Session03_T067` is a real RGB tube scan. We cut it into
 overlapping pieces, save them as a little “tube” folder, and let
-[`stitch_root_scans()`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+[`stitch_root_scans()`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 reassemble it — exactly the path your own scans take.
 
 ``` r
@@ -242,7 +242,7 @@ aggregate(peak ~ tube, res$report, mean)     # mean confidence per tube
 
 By default frames are stitched in **sorted file-name order** (see
 *Naming, selection & ordering* below to change it).
-[`stitch_root_scans()`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+[`stitch_root_scans()`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 also accepts a plain character vector of paths.
 
 ------------------------------------------------------------------------
@@ -265,9 +265,9 @@ group_regex = NULL             # no grouping -> one mosaic
 **Selecting — `select` vs `tubes`.** `select` indexes the sorted *file*
 list *before* grouping; `tubes` selects whole *tubes* by index, name, or
 interactively. Use
-[`list_scan_files()`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
+[`list_scan_files()`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md)
 /
-[`list_tubes()`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
+[`list_tubes()`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)
 to see the indices.
 
 ``` r

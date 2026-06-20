@@ -16,7 +16,7 @@ stitch_to_hwc(input)
 - input:
 
   An image in any format accepted by
-  [`load_flexible_image`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md).
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
 
 ## Value
 

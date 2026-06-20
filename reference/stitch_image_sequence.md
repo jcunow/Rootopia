@@ -27,7 +27,7 @@ stitch_image_sequence(
 
   A character vector of image file paths, or a list of image objects
   accepted by
-  [`load_flexible_image`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md).
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
   Stitched in the order given, so sort beforehand if needed.
 
 - method:
@@ -97,8 +97,8 @@ A numeric `(height, width, channel)` array (0-255); or, when
 
 ## See also
 
-[`stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md),
-[`stitch_root_scans`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+[`stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md),
+[`stitch_root_scans`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 
 ## Examples
 

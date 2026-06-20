@@ -81,11 +81,11 @@ Numeric distance or divergence value.
 
 This function wraps:
 
-- [`tail_weighted_wasserstein_distance()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_wasserstein_distance.md)
+- [`tail_weighted_wasserstein_distance()`](https://jcunow.github.io/Rootopia/reference/tail_weighted_wasserstein_distance.md)
 
-- [`tail_weighted_js_divergence()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_js_divergence.md)
+- [`tail_weighted_js_divergence()`](https://jcunow.github.io/Rootopia/reference/tail_weighted_js_divergence.md)
 
-- [`tail_weighted_kl_divergence()`](https://jcunow.github.io/RootScanR/reference/tail_weighted_kl_divergence.md)
+- [`tail_weighted_kl_divergence()`](https://jcunow.github.io/Rootopia/reference/tail_weighted_kl_divergence.md)
 
 If `tail_weight = FALSE`, uniform weighting is used.
 

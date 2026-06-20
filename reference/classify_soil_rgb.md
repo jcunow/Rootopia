@@ -1,9 +1,9 @@
 # Classify soil material classes from a minirhizotron RGB raster
 
-Assigns each pixel of an RGB `SpatRaster` to a soil material class (e.g.
-dark soil, red soil, root, silver tape, coarse debris) by nearest-
-centroid assignment in CIE LAB colour space. Pixels beyond the per-class
-distance threshold are labelled "unclassified".
+Assigns each pixel of an RGB `SpatRaster` to a class (e.g. dark soil,
+red soil, root, silver tape, coarse debris) by nearest- centroid
+assignment in CIE LAB colour space. Pixels beyond the per-class distance
+threshold are labelled "unclassified".
 
 ## Usage
 
@@ -24,7 +24,7 @@ classify_soil_rgb(
   An RGB image with at least 3 layers/channels interpreted as R, G, B
   (in that order). Values may be 0-255 or 0-1 (auto-detected). Converted
   internally via
-  [`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md),
+  [`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md),
   so any of its supported formats are accepted: file path (.jpg, .jpeg,
   .png, .tif, .tiff, .bmp), `SpatRaster`, `RasterLayer`/`RasterBrick`,
   `cimg`, `magick-image`, `matrix`, or `array`.
@@ -35,7 +35,7 @@ classify_soil_rgb(
   **Centroid table format** below). Defaults to a set of centroids
   calibrated on Oulanka 2023 minirhizotron scans – see **Building your
   own centroids** below and
-  [`build_soil_centroids`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
+  [`build_soil_centroids`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
   to derive centroids for your own data.
 
 - downsample_fact:
@@ -116,9 +116,9 @@ computed, so `L`/`A`/`B` are never raw RGB numbers.
 
 The default `centroids` table was calibrated on one specific scanner and
 site, so for other data you should derive your own via
-[`build_soil_centroids`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md).
+[`build_soil_centroids`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md).
 
-[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
+[`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
 takes `picks`: a named list with one element per material class. Each
 element is a numeric matrix with exactly 3 columns (R, G, B in 0-255),
 where every row is one colour sample believed to belong to that class.
@@ -155,13 +155,13 @@ The simplest approach is to read representative RGB values off your scan
 
 Alternatively, picks can be extracted from known representative patches
 of your image. **Important:**
-[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
+[`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
 always treats pick values as 0-255 (no auto-scaling). If your raster
 stores values in 0-1, multiply by 255 before building picks so that the
 centroids and the pixels seen inside `classify_soil_rgb()` are on the
 same scale.
 
-[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
+[`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
 prints diagnostics (intra-class spread, inter-class distances,
 `MAX_DIST` coverage) to help you sanity-check your choices. Provide a
 class for *every* material present in your scans: because classification
@@ -170,8 +170,8 @@ whichever defined class is closest.
 
 ## See also
 
-[`build_soil_centroids`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md),
-[`plot_soil_classification`](https://jcunow.github.io/RootScanR/reference/plot_soil_classification.md)
+[`build_soil_centroids`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md),
+[`plot_soil_classification`](https://jcunow.github.io/Rootopia/reference/plot_soil_classification.md)
 
 ## Examples
 

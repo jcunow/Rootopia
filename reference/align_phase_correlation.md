@@ -3,7 +3,7 @@
 Estimates the relative pixel shift between the right edge of `img1` and
 the left edge of `img2` using FFT phase correlation - the alignment step
 behind
-[`stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md).
+[`stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md).
 
 ## Usage
 
@@ -23,7 +23,7 @@ align_phase_correlation(
 - img1, img2:
 
   Image inputs accepted by
-  [`load_flexible_image`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md).
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
 
 - edge_width:
 
@@ -62,5 +62,5 @@ the half dimension). The returned `dx` is the placement shift:
 
 ## See also
 
-[`stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md),
-[`estimate_rotation_shift`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)
+[`stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md),
+[`estimate_rotation_shift`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)

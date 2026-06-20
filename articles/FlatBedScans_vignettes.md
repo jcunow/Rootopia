@@ -1,4 +1,4 @@
-# Analyzing Root Traits from Flatbed Scans with RootScanR in R
+# Analyzing Root Traits from Flatbed Scans with Rootopia in R
 
 ## Analyzing Root Systems from Flatbed Scans
 
@@ -12,11 +12,11 @@ and traits are computed globally rather than per depth bin.
 This vignette covers the individual-function workflow for flatbed
 images. If you are working with minirhizotron tubes and want a
 single-call batch approach, see the [Batch
-Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
 vignette instead.
 
-> **Prerequisite**: RootScanR works with already-segmented images (root
-> = 1, background = 0). Segmentation must be done beforehand using
+> **Prerequisite**: Rootopia works with already-segmented images (root =
+> 1, background = 0). Segmentation must be done beforehand using
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
 
@@ -25,9 +25,9 @@ vignette instead.
 ``` r
 
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
+# remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(terra)
 library(tidyverse)
 ```
@@ -38,7 +38,7 @@ library(tidyverse)
 
 #### 1. Load images
 
-[`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md)
+[`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
 accepts rasters, arrays, file paths, and most common image formats. The
 `scale` argument controls value rescaling: `"binary"` forces 0/1,
 `"to_01"` maps 0-255 down to 0-1, `"to_255"` maps 0-1 up to 0-255, and
@@ -80,7 +80,7 @@ terra::plot(seg, main = "Segmented flatbed scan")
 
 #### 2. Skeletonize
 
-[`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+[`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 reduces roots to single-pixel-wide centrelines. This is required for
 root length (Kimura method) and diameter estimation.
 
@@ -94,7 +94,7 @@ terra::plot(skl, main = "Skeleton")
 
 ![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)
 
-[`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+[`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
 mask to one-pixel-wide centrelines.
 
@@ -102,7 +102,7 @@ mask to one-pixel-wide centrelines.
 
 #### 3. Root length
 
-[`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
+[`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
 uses Kimura’s formula, which weights orthogonal and diagonal skeleton
 segments differently to approximate true path length.
 
@@ -118,7 +118,7 @@ cat("Total root length:", round(rl, 2), "cm\n")
 
 #### 4. Root diameter
 
-[`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md)
+[`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
 estimates local root width from the distance transform. It returns a
 diameter raster and the raw diameter values.
 
@@ -151,7 +151,7 @@ hist(diam_vals,
 ![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
 
 For fine/coarse root separation,
-[`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md)
+[`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
 can find diameter modes in the distribution:
 
 ``` r
@@ -189,7 +189,7 @@ cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
 
 #### 6. Branching structure
 
-[`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md)
+[`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md)
 classifies skeleton pixels into endpoints (root tips) and branching
 points (forks).
 
@@ -215,9 +215,9 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 #### 6b. Branch order (main axis vs. laterals)
 
-[`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+[`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 goes one step further than
-[`detect_skeleton_points()`](https://jcunow.github.io/RootScanR/reference/detect_skeleton_points.md):
+[`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md):
 it builds a full segment graph from the skeleton and classifies every
 segment by **branch order** — the thickest, most central root is order 1
 (the main axis), its laterals are order 2, their laterals order 3, and
@@ -241,7 +241,7 @@ order_res$summary
 plot(order_res$class_map, main = "Branch order")
 ```
 
-[`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+[`order_metrics()`](https://jcunow.github.io/Rootopia/reference/order_metrics.md)
 can split the architecture into the main root(s) versus all laterals
 (selected by diameter, so it works regardless of how many order classes
 were found):
@@ -255,7 +255,7 @@ print(main_vs_lateral)
 lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
 ```
 
-[`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+[`order_metrics()`](https://jcunow.github.io/Rootopia/reference/order_metrics.md)
 also accepts a numeric `focal` to split one specific order class off
 from the rest:
 
@@ -293,15 +293,15 @@ plot_order_window(
 
 > **For more control** over crossing resolution, pruning of weak tips,
 > and the continuation rule used to group segments into roots, see
-> [`?root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
+> [`?root_graph_pipeline`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md)
 > (the engine behind
-> [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)).
+> [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)).
 
 ------------------------------------------------------------------------
 
 #### 7. Root-level landscape metrics
 
-[`root_scape_metrics()`](https://jcunow.github.io/RootScanR/reference/root_scape_metrics.md)
+[`root_scape_metrics()`](https://jcunow.github.io/Rootopia/reference/root_scape_metrics.md)
 applies landscape ecology metrics to the binary root image, treating
 roots as “patches”. Useful for characterising spatial complexity and
 connectivity.
@@ -321,7 +321,7 @@ print(lsm)
 
 #### 8. Colour analysis
 
-[`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
+[`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
 extracts mean chromatic coordinates and HSV values from an RGB image. On
 flatbed scans this characterises overall root pigmentation.
 
@@ -368,12 +368,12 @@ write.csv(results, "flatbed_results.csv", row.names = FALSE)
 ### What to read next
 
 - [Minirhizotron
-  Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+  Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
   — adds depth mapping and per-bin analysis to the individual-function
   workflow
 - [Batch
-  Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
   — wraps depth-resolved analysis into a single function call
 - [Function
-  reference](https://jcunow.github.io/RootScanR/reference/index.md) —
+  reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function

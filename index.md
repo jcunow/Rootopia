@@ -1,10 +1,10 @@
 ------------------------------------------------------------------------
 
-## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images
+## Rootopia: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images
 
-[![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/RootScanR/)
+[![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/Rootopia/)
 
-Welcome to **RootScanR**, an R package designed to extract quantitative
+Welcome to **Rootopia**, an R package designed to extract quantitative
 belowground traits from **flatbed root scans** and **minirhizotron image
 sequences**. It provides flexible image preprocessing, trait estimation
 like root length & diameter, depth mapping, and distribution tools.
@@ -13,7 +13,7 @@ like root length & diameter, depth mapping, and distribution tools.
   playground and we love bugs here. Just call them out if their
   behaviour is undesirable.
 
-## 💡 What can RootScanR do?
+## 💡 What can Rootopia do?
 
 - 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed
   scanners
@@ -28,21 +28,21 @@ like root length & diameter, depth mapping, and distribution tools.
 
 ## 📘 Tutorials
 
-New to RootScanR? Start with the batch-processing tutorial — it runs the
+New to Rootopia? Start with the batch-processing tutorial — it runs the
 whole pipeline (loading, depth mapping, trait extraction) over a folder
 of images with a single function call. The step-by-step tutorials below
 are for when you need full control over an individual processing stage.
 
 - 🚀 [Start here: Batch
-  Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
 - 📄 [Minirhizotron Workflow
-  (step-by-step)](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+  (step-by-step)](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
 - 📄 [Flatbed Scan Workflow
-  (step-by-step)](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
+  (step-by-step)](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
 - 📄 [Rotation Bias
-  Correction](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
+  Correction](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
 - 🧵 [Stitching Scan Sequences into
-  Mosaics](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
+  Mosaics](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
 
 Each tutorial includes code, images, overlays, and tips for
 interpretation.
@@ -56,7 +56,7 @@ interpretation.
 ``` r
 
 # Load example flatbed scan
-library(RootScanR)
+library(Rootopia)
 library(terra)
 data("seg_Oulanka2023_Session01_T067")
 img <- seg_Oulanka2023_Session01_T067
@@ -90,14 +90,14 @@ terra::plot(skel)
 ## 🔍 Documentation
 
 - [Function
-  reference](https://jcunow.github.io/RootScanR/reference/index.md)
-- [Vignettes](https://jcunow.github.io/RootScanR/articles/index.md)
-- [Source code on GitHub](https://github.com/jcunow/RootScanR)
+  reference](https://jcunow.github.io/Rootopia/reference/index.md)
+- [Vignettes](https://jcunow.github.io/Rootopia/articles/index.md)
+- [Source code on GitHub](https://github.com/jcunow/Rootopia)
 
 ------------------------------------------------------------------------
 
 ### 🙌 Contributions & Issues
 
 Found a bug or have a feature request? Please [open an
-issue](https://github.com/jcunow/RootScanR/issues) or submit a pull
+issue](https://github.com/jcunow/Rootopia/issues) or submit a pull
 request.

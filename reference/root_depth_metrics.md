@@ -60,7 +60,7 @@ root_depth_metrics(
   (one-pixel-wide centrelines of roots), used for length, diameter,
   angle, and branching-order metrics. If `NULL` or a file is missing,
   the skeleton is computed internally via
-  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
   Default `NULL`.
 
 - path.rgb:
@@ -88,7 +88,7 @@ root_depth_metrics(
   Numeric. Insertion angle of the tube or window from vertical, in
   **degrees**. `0` = perfectly vertical, `30` = tilted 30 degrees from
   vertical (a common minirhizotron angle). Used by
-  [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
   to correct the depth scale. Default `0`.
 
 - soil_starts:
@@ -118,17 +118,17 @@ root_depth_metrics(
 
   Numeric. Inner diameter of the minirhizotron tube in **centimetres**.
   Passed to
-  [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
   as `tube.thicc`. Its role in flat-window geometry
   (`flat_geometry = TRUE`) is uncertain; it likely has a default inside
-  [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
   and may be ignored – leave at the default unless you know it matters
   for your setup. Default `7`.
 
 - depth_interval_cm:
 
   Numeric. Size of each depth bin in **centimetres**. Passed as `nn` to
-  [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md).
+  [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md).
   Default `5`.
 
 - flat_geometry:
@@ -136,7 +136,7 @@ root_depth_metrics(
   Logical. If `FALSE` (default), images are treated as cylindrical
   minirhizotron tubes and a sinusoidal depth correction is applied
   (`sinoid = TRUE` in
-  [`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)).
+  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)).
   Set to `TRUE` for flat rhizotron windows (e.g. glass-fronted boxes)
   where no sinusoidal correction is needed (`sinoid = FALSE`). Default
   `FALSE`.
@@ -157,7 +157,7 @@ root_depth_metrics(
 
   Logical. Compute per-bin mean, maximum, and variance of root
   diameter (cm) using the distance-transform approach in
-  [`root_diameter()`](https://jcunow.github.io/RootScanR/reference/root_diameter.md).
+  [`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md).
   Default `TRUE`.
 
 - calc_diameter_quantiles:
@@ -166,13 +166,13 @@ root_depth_metrics(
   `diameter_quantiles` per bin, conditional means above each quantile,
   threshold-based root lengths (see `diameter_thresholds`), and modal
   diameter peaks via
-  [`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md).
+  [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md).
   Default `FALSE`.
 
 - calc_landscape_metrics:
 
   Logical. Compute patch-level landscape metrics per depth bin via
-  [`root_scape_metrics()`](https://jcunow.github.io/RootScanR/reference/root_scape_metrics.md):
+  [`root_scape_metrics()`](https://jcunow.github.io/Rootopia/reference/root_scape_metrics.md):
   nearest-neighbour distance (`enn_mn`), joint entropy (`joinent`),
   relative mutual information (`relmutinf`), number of patches (`np`),
   and contagion (`contag`). **Slow**: one call per depth bin per image.
@@ -183,7 +183,7 @@ root_depth_metrics(
   Logical. Compute mean chromatic coordinates (rcc, gcc, bcc), hue,
   saturation, luminosity, and raw RGB channel means separately for root
   pixels and background pixels via
-  [`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md).
+  [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md).
   Requires `path.rgb`. Default `FALSE`.
 
 - calc_root_angles:
@@ -192,13 +192,13 @@ root_depth_metrics(
   flow direction matches the locally optimal downward direction) and
   `mean.steepness.angle` / `sd.steepness.angle` (degrees, 0 =
   horizontal, 90 = vertical). Uses
-  [`deep_drive()`](https://jcunow.github.io/RootScanR/reference/deep_drive.md).
+  [`deep_drive()`](https://jcunow.github.io/Rootopia/reference/deep_drive.md).
   Default `FALSE`.
 
 - calc_root_order_metrics:
 
   Logical. Build a per-image branching-order graph via
-  [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+  [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
   and summarise it both per depth bin and per tube. Adds
   `mean.branch_order`, `max.branch_order`, `mean.root_order`, and
   `lateral_root_fraction` per depth bin, plus tube-level `main_root.*` /
@@ -285,7 +285,7 @@ r_i\\ over all skeleton pixels in the depth bin, in units of cm\\^{-1}\\
 roots have a larger ratio.
 
 **Fault tolerance.** Every metric block is wrapped in `tryCatch`.
-Failures produce a `[RootScanR] SKIPPED` message and `NA` values; they
+Failures produce a `[Rootopia] SKIPPED` message and `NA` values; they
 never abort the run.
 
 **Dependency resolution.** Enabling a higher-level metric silently
@@ -314,7 +314,7 @@ those directories if necessary.
   `calc_root_order_metrics` when supplied. If `path.skl` is `NULL` or a
   skeleton file is missing for an image, the skeleton is computed
   internally from the segmented image via
-  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
 
 - `path.rgb`:
 

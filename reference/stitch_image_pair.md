@@ -30,7 +30,7 @@ stitch_image_pair(
 
   Image inputs (file path, `SpatRaster`, `Raster*`, `cimg`,
   `magick-image`, matrix, or array). See
-  [`load_flexible_image`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md)
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
   for supported formats.
 
 - method:
@@ -99,8 +99,8 @@ plotting with e.g.
 
 ## See also
 
-[`stitch_image_sequence`](https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.md),
-[`stitch_root_scans`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+[`stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md),
+[`stitch_root_scans`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 
 ## Examples
 

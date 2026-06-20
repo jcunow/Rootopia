@@ -3,7 +3,7 @@
 Crops the rotation axis (rows) of a root scan. In fixed mode it returns
 a fixed-width window centred on a given row (e.g. the rotation centre
 from
-[`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md));
+[`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md));
 in variable mode it trims a band sized by a measured offset. Optionally
 previews what is kept versus cut.
 
@@ -32,9 +32,9 @@ rotation_censor(
 
   Numeric. Meaning depends on `fixed.rotation`: when `TRUE`, the row to
   centre the kept window on (an absolute row, e.g. from
-  [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md));
+  [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md));
   when `FALSE`, the rotation shift in rows to trim (e.g. from
-  [`estimate_rotation_shift()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_shift.md)).
+  [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)).
 
 - cut.buffer:
 

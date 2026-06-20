@@ -1,7 +1,7 @@
 # List the tubes (groups) found in a scan folder
 
 Summarises the unique groups (tubes) that
-[`stitch_root_scans`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
+[`stitch_root_scans`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 would build, so you can see the tube names and pick a range to stitch
 (e.g. `tubes = 1:36`).
 
@@ -35,5 +35,5 @@ A data frame with columns `index` (1-based, the value to pass to
 
 ## See also
 
-[`stitch_root_scans`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md),
-[`list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
+[`stitch_root_scans`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md),
+[`list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md)

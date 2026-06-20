@@ -20,7 +20,7 @@ convert_root_units(
 - et:
 
   Edge table in pixels (from
-  [`root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)).
+  [`root_graph_pipeline`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md)).
 
 - unit:
 

@@ -24,7 +24,7 @@ detect_skeleton_points(img, select.layer = NULL, skeletonize = FALSE)
 
   Logical. If `TRUE`, `img` is treated as a segmented mask and reduced
   to a skeleton internally via
-  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
   before detecting points. Default `FALSE` (assumes `img` is already a
   skeleton).
 

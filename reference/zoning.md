@@ -33,7 +33,7 @@ zoning(
   A
   [`terra::SpatRaster`](https://rspatial.github.io/terra/reference/SpatRaster-class.html)
   of binned depth values (see
-  [`binning`](https://jcunow.github.io/RootScanR/reference/binning.md)),
+  [`binning`](https://jcunow.github.io/Rootopia/reference/binning.md)),
   aligned to `img`. Required for `mode = "depth"` or `"both"`.
 
 - depth:
@@ -82,7 +82,7 @@ The zone is defined by one or both of:
 - **rotation** (`mode = "rotation"`): crop to a contiguous band of
   circumferential slices. For simply splitting a tube into `n` equal
   slices, prefer
-  [`slice_rotation`](https://jcunow.github.io/RootScanR/reference/slice_rotation.md);
+  [`slice_rotation`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md);
   use the rotation mode here only when you need to combine a rotation
   band with depth masking in one call (`mode = "both"`).
 
@@ -92,8 +92,8 @@ band.
 
 ## See also
 
-[`binning`](https://jcunow.github.io/RootScanR/reference/binning.md),
-[`slice_rotation`](https://jcunow.github.io/RootScanR/reference/slice_rotation.md)
+[`binning`](https://jcunow.github.io/Rootopia/reference/binning.md),
+[`slice_rotation`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md)
 
 ## Examples
 

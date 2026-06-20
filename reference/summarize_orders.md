@@ -13,9 +13,9 @@ summarize_orders(et, order_col = "branch_order")
 - et:
 
   An `edges` table (ideally already in real units via
-  [`convert_root_units`](https://jcunow.github.io/RootScanR/reference/convert_root_units.md)
+  [`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md)
   or
-  [`branch_order_map`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)).
+  [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)).
 
 - order_col:
 

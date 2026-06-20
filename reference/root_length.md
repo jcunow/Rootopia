@@ -50,7 +50,7 @@ root_length(
 
   Logical. If `TRUE`, `img` is treated as a segmented mask and reduced
   to a skeleton internally via
-  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
   before computing length. Default `FALSE` (assumes `img` is already a
   skeleton).
 

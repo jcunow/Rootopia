@@ -7,7 +7,7 @@
 If you have a folder of segmented minirhizotron images and want
 depth-resolved root traits for all of them in one call — without writing
 loops yourself —
-[`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md)
+[`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
 is the right starting point.
 
 It handles file loading, depth-map construction, per-bin zonal
@@ -17,10 +17,10 @@ of.
 
 For a line-by-line explanation of the underlying steps, see the
 [Minirhizotron
-Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
 vignette. If multiple images come from the same tube, consider stitching
 them beforehand [Image
-Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
+Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
 
 ------------------------------------------------------------------------
 
@@ -29,10 +29,10 @@ Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
 | What you need | Where it comes from |
 |----|----|
 | Segmented images (binary, root = 1) | [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or [RootPainter](https://github.com/Abe404/root_painter) |
-| Skeletonised images (one-pixel centrelines) — *optional* | RootDetector (channel 2), or omit `path.skl` and [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
+| Skeletonised images (one-pixel centrelines) — *optional* | RootDetector (channel 2), or omit `path.skl` and [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
 | RGB images aligned to segmented images | Original scan — needed for colour metrics only |
 | Tube insertion angle per image | Field metadata |
-| Soil-surface pixel row per image — *optional*, defaults to `0` | Field metadata or [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md); only needed if you want depths reported relative to the true soil surface rather than the top of the image |
+| Soil-surface pixel row per image — *optional*, defaults to `0` | Field metadata or [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md); only needed if you want depths reported relative to the true soil surface rather than the top of the image |
 
 Images in the three directories must be in the **same alphabetical
 order** as each other; each position corresponds to the same physical
@@ -45,9 +45,9 @@ tube/window.
 ``` r
 
 # install.packages("remotes")
-remotes::install_github("jcunow/RootScanR")
+remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(tidyverse)   # for downstream plotting
 ```
 
@@ -59,7 +59,7 @@ This is the fastest way to get going. Only `path.seg` is required;
 everything else has sensible defaults. `path.skl` is optional — if
 omitted, skeletons needed for length, diameter, and angle metrics are
 computed internally via
-[`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
+[`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
 
 ``` r
 
@@ -185,12 +185,12 @@ result <- root_depth_metrics(
 
 `calc_root_order_metrics = TRUE` builds a segment graph from the
 skeleton of each image (via
-[`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md))
+[`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md))
 and classifies every root segment by its **branch order** — the
 thickest, most central root in each connected component is order 1 (the
 “main” axis), its laterals are order 2, their laterals order 3, and so
 on. See the [Minirhizotron
-Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.html#6-root-branching-order)
+Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.html#6-root-branching-order)
 vignette for a worked example of the underlying pipeline.
 
 ``` r
@@ -313,10 +313,10 @@ By default (`verbose = TRUE`) the function prints a progress line after
 each image showing per-image time, cumulative elapsed time, estimated
 remaining time, and predicted clock-time of completion:
 
-    [RootScanR] [3/48] T042 | img: 12s | elapsed: 38s | remaining: ~546s | done ~14:22
+    [Rootopia] [3/48] T042 | img: 12s | elapsed: 38s | remaining: ~546s | done ~14:22
 
 If a metric block fails for a single image (e.g. a corrupted skeleton
-file), it is skipped with a `[RootScanR] SKIPPED` message and the
+file), it is skipped with a `[Rootopia] SKIPPED` message and the
 corresponding columns are filled with `NA`. Processing always continues.
 Images that cannot be loaded at all are skipped entirely and listed in a
 warning at the end.
@@ -435,14 +435,14 @@ result <- root_depth_metrics(
 ### What to read next
 
 - [Minirhizotron
-  Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
+  Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
   — step-by-step explanation of each underlying function
 - [Flatbed
-  Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
+  Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
   — trait extraction from flatbed scanner images (no depth dimension)
 - [Rotation
-  Bias](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
+  Bias](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
   — correcting for tube rotation artefacts before analysis
 - [Function
-  reference](https://jcunow.github.io/RootScanR/reference/index.md) —
+  reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function

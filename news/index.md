@@ -1,5 +1,5 @@
 # Changelog
 
-## RootScanR 1.0.0
+## Rootopia 1.0.0
 
 - Initial CRAN submission.

@@ -23,7 +23,7 @@ plot_soil_classification(
 - result:
 
   A list returned by
-  [`classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md).
+  [`classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md).
 
 - color_mode:
 
@@ -69,4 +69,4 @@ Invisibly `NULL`. Called for its side effect (plot).
 
 ## See also
 
-[`classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)
+[`classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md)

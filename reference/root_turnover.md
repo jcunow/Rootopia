@@ -7,7 +7,7 @@ runs:
 
   Compares two timepoint images (`img1`, `img2`) and reports standing
   roots, production, and new-root percentages. Dispatches to
-  [`turnover_tc`](https://jcunow.github.io/RootScanR/reference/turnover_tc.md).
+  [`turnover_tc`](https://jcunow.github.io/Rootopia/reference/turnover_tc.md).
   The `tc.method` argument chooses how root amount is measured:
   `"kimura"` (root length) or `"rootpx"` (root pixel count).
 
@@ -15,7 +15,7 @@ runs:
 
   Decomposes a single multi-layer 'RootDetector' image into decayed,
   newly produced, and unchanged (constant) root fractions. Dispatches to
-  [`turnover_dpc`](https://jcunow.github.io/RootScanR/reference/turnover_dpc.md);
+  [`turnover_dpc`](https://jcunow.github.io/Rootopia/reference/turnover_dpc.md);
   `img2` is not used.
 
 ## Usage
@@ -107,8 +107,8 @@ sums and ratios, or (if `im.return = TRUE`) a list of SpatRaster layers.
 
 ## See also
 
-[`turnover_tc`](https://jcunow.github.io/RootScanR/reference/turnover_tc.md),
-[`turnover_dpc`](https://jcunow.github.io/RootScanR/reference/turnover_dpc.md)
+[`turnover_tc`](https://jcunow.github.io/Rootopia/reference/turnover_tc.md),
+[`turnover_dpc`](https://jcunow.github.io/Rootopia/reference/turnover_dpc.md)
 
 ## Examples
 

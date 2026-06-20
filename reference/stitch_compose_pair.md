@@ -1,9 +1,9 @@
 # Compose two already-loaded (H, W, C) arrays into a mosaic
 
 The compositing core shared by
-[`stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md)
+[`stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md)
 and
-[`stitch_image_sequence`](https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.md).
+[`stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md).
 
 ## Usage
 
@@ -32,7 +32,7 @@ stitch_compose_pair(
   preprocess, blend, blend_width:
 
   As described for
-  [`stitch_image_pair`](https://jcunow.github.io/RootScanR/reference/stitch_image_pair.md).
+  [`stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md).
 
 ## Value
 

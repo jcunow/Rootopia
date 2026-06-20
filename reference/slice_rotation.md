@@ -4,7 +4,7 @@ Splits a minirhizotron strip into `n` equal, contiguous, non-overlapping
 slices along the rotation axis (image rows; depth runs along the
 columns). Slice 1 is the top row band. Use to measure a trait per
 circumferential position, e.g. as input to
-[`rhythmicity()`](https://jcunow.github.io/RootScanR/reference/rhythmicity.md).
+[`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md).
 
 ## Usage
 

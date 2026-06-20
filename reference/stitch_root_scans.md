@@ -54,14 +54,14 @@ stitch_root_scans(
 
   Optional integer vector of indices into the (sorted) *file* list, e.g.
   `1:36`. See
-  [`list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md).
+  [`list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md).
   `NULL` uses all files. Applied before grouping.
 
 - tubes:
 
   Optional *tube* selection: integer indices into the sorted tube list
   (e.g. `1:36`, see
-  [`list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)),
+  [`list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)),
   a character vector of tube names (e.g. `c("T037", "T040")`), or the
   string `"ask"` to print the tubes and choose a range interactively in
   one call (interactive sessions only). `NULL` keeps all tubes.
@@ -155,15 +155,15 @@ numeric `(H, W, C)` array per tube). If `report = TRUE`, a list
 ## Details
 
 Call
-[`list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md)
+[`list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)
 first to see the tube names, then pass a range to `tubes` (e.g.
 `tubes = 1:36`) to stitch just those tubes.
 
 ## See also
 
-[`list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md),
-[`list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md),
-[`stitch_image_sequence`](https://jcunow.github.io/RootScanR/reference/stitch_image_sequence.md)
+[`list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md),
+[`list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md),
+[`stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md)
 
 ## Examples
 

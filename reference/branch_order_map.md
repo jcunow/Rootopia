@@ -30,7 +30,7 @@ branch_order_map(
   Pass the raster directly; do not pre-convert with
   [`as.matrix()`](https://rspatial.github.io/terra/reference/coerce.html).
   If `NULL`, it is computed from `mask` via
-  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
 
 - mask:
 
@@ -72,7 +72,7 @@ branch_order_map(
 - ...:
 
   Passed to
-  [`root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
+  [`root_graph_pipeline`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md)
   (e.g. `dt_backend`, `crossing_straight`, `prune_iter`, and
   `diam_weight` — the diameter-vs-angle weight for the continuation
   rule, \>= 0).
@@ -117,10 +117,10 @@ The odd arm out is a lateral. `tip_order` does not use this rule.
 
 ## See also
 
-[`root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md),
-[`order_classification_map`](https://jcunow.github.io/RootScanR/reference/order_classification_map.md),
-[`summarize_orders`](https://jcunow.github.io/RootScanR/reference/summarize_orders.md),
-[`convert_root_units`](https://jcunow.github.io/RootScanR/reference/convert_root_units.md)
+[`root_graph_pipeline`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md),
+[`order_classification_map`](https://jcunow.github.io/Rootopia/reference/order_classification_map.md),
+[`summarize_orders`](https://jcunow.github.io/Rootopia/reference/summarize_orders.md),
+[`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md)
 
 ## Examples
 

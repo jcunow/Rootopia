@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Analyzing Root Traits from Flatbed Scans with RootScanR in R • RootScanR</title>
+<title>Analyzing Root Traits from Flatbed Scans with Rootopia in R • Rootopia</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Roboto-0.4.10/font.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 <link href="../deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Analyzing Root Traits from Flatbed Scans with RootScanR in R">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Analyzing Root Traits from Flatbed Scans with Rootopia in R">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -21,7 +21,7 @@
 
     <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="../index.html">RootScanR</a>
+    <a class="navbar-brand me-2" href="../index.html">Rootopia</a>
 
     <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
@@ -52,7 +52,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/RootScanR/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/jcunow/Rootopia/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
@@ -74,12 +74,12 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Analyzing Root Traits from Flatbed Scans with RootScanR in R</h1>
+      <h1>Analyzing Root Traits from Flatbed Scans with Rootopia in R</h1>
                         <h4 data-toc-skip class="author">Johannes
 Cunow</h4>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/jcunow/RootScanR/blob/main/vignettes/FlatBedScans_vignettes.Rmd" class="external-link"><code>vignettes/FlatBedScans_vignettes.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/jcunow/Rootopia/blob/main/vignettes/FlatBedScans_vignettes.Rmd" class="external-link"><code>vignettes/FlatBedScans_vignettes.Rmd</code></a></small>
       <div class="d-none name"><code>FlatBedScans_vignettes.Rmd</code></div>
     </div>
 
@@ -100,7 +100,7 @@ images. If you are working with minirhizotron tubes and want a
 single-call batch approach, see the <a href="BatchProcessing_vignette.html">Batch Processing</a> vignette
 instead.</p>
 <blockquote>
-<p><strong>Prerequisite</strong>: RootScanR works with already-segmented
+<p><strong>Prerequisite</strong>: Rootopia works with already-segmented
 images (root = 1, background = 0). Segmentation must be done beforehand
 using <a href="https://github.com/ExPlEcoGreifswald/RootDetector" class="external-link">RootDetector</a>
 or <a href="https://github.com/Abe404/root_painter" class="external-link">RootPainter</a>.</p>
@@ -111,9 +111,9 @@ or <a href="https://github.com/Abe404/root_painter" class="external-link">RootPa
 </h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="co"># remotes::install_github("jcunow/RootScanR")</span></span>
+<span><span class="co"># remotes::install_github("jcunow/Rootopia")</span></span>
 <span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/RootScanR" class="external-link">RootScanR</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/Rootopia" class="external-link">Rootopia</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span></code></pre></div>
 <hr>

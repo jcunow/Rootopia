@@ -4,7 +4,7 @@ Core engine: crops to the foreground, computes the distance transform,
 traces segments with junction contraction, resolves crossings,
 optionally prunes weak tips, and assigns all three order schemes.
 Returns a per-segment edge table in *pixels*; use
-[`branch_order_map`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+[`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 for a unit-aware wrapper.
 
 ## Usage
@@ -37,7 +37,7 @@ root_graph_pipeline(
   Do not pre-convert a raster with
   [`as.matrix()`](https://rspatial.github.io/terra/reference/coerce.html).
   If `NULL`, it is computed from `mask` via
-  [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md).
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
 
 - mask:
 
@@ -88,7 +88,7 @@ root_graph_pipeline(
 - prune_min_length, prune_min_diameter, prune_iter:
 
   Optional terminal-segment pruning (off when `prune_iter = 0`); see
-  [`prune_terminal_segments`](https://jcunow.github.io/RootScanR/reference/prune_terminal_segments.md).
+  [`prune_terminal_segments`](https://jcunow.github.io/Rootopia/reference/prune_terminal_segments.md).
 
 ## Value
 
@@ -99,7 +99,7 @@ pixels, carrying `attr`s `crop_offset`, `dims`, and (if requested)
 ## Details
 
 Three order columns are produced (see
-[`branch_order_map`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+[`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 for the full rules): `tip_order` (per-segment leaf-peeling),
 `root_order` (per-root max tip_order), `branch_order` (per-root
 centrifugal generation from the thickest root). `color_by` selects which
@@ -107,4 +107,4 @@ one the overlay uses.
 
 ## See also
 
-[`branch_order_map`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
+[`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)

@@ -1,6 +1,6 @@
-# Minirhizotron Scans Analysis with RootScanR in R
+# Minirhizotron Scans Analysis with Rootopia in R
 
-## Minirhizotron Scans Analysis with RootScanR
+## Minirhizotron Scans Analysis with Rootopia
 
 ### Introduction
 
@@ -10,30 +10,30 @@ and extracting root traits step by step. It is aimed at users who want
 full control over each processing stage or who are working on a specific
 subset of functions.
 
-> **New to RootScanR?** If you want to process a whole set of images in
+> **New to Rootopia?** If you want to process a whole set of images in
 > one go, the [Batch
-> Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+> Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
 > vignette wraps this entire workflow into a single
-> [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md)
+> [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
 > call. Start there.
 
-> **Prerequisite**: RootScanR works with already-segmented images.
+> **Prerequisite**: Rootopia works with already-segmented images.
 > Segmentation must be done beforehand using
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
 
 > If a tube constitues of multiple overlapping images, consider
 > stitching [Image
-> Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
+> Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
 
 ### Installation
 
 ``` r
 
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
+# remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(terra)
 library(tidyverse)
 ```
@@ -43,7 +43,7 @@ library(tidyverse)
 ### Workflow overview
 
 0.  (Image Stitching & Segmentation, see: [Image
-    Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md))
+    Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md))
 1.  Load images
 2.  (Optional) Rotation censor — align field of view across sessions
 3.  Create depth map
@@ -61,7 +61,7 @@ library(tidyverse)
 >   — fast, for traits that reduce to a per-zone sum or mean (pixel
 >   counts, mean diameter).
 > - **One slice at a time** with
->   [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
+>   [`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md)
 >   — for traits whose function needs a whole image (root length,
 >   landscape metrics, colour). You compute the trait for a single
 >   depth, then wrap that in a loop to cover the full profile.
@@ -73,7 +73,7 @@ library(tidyverse)
 
 #### 1. Load images
 
-[`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md)
+[`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
 accepts SpatRasters, arrays, matrices, and file paths. This is how you
 load your own files:
 
@@ -125,10 +125,10 @@ terra::plot(root_layer, main = "Root layer (binary)")
 
 When the same tube is scanned across sessions, the scanner may have
 rotated slightly. Use
-[`rotation_censor()`](https://jcunow.github.io/RootScanR/reference/rotation_censor.md)
+[`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
 to crop each image to the rows that are present in every session, so
 root counts are directly comparable. See the [Rotation
-Bias](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
+Bias](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
 vignette for how to estimate the rotation shift between sessions.
 
 ``` r
@@ -157,7 +157,7 @@ seg_censored <- rotation_censor(
 
 #### 3. Create the depth map
 
-[`create_depthmap()`](https://jcunow.github.io/RootScanR/reference/create_depthmap.md)
+[`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
 assigns a soil depth value (cm) to every pixel based on tube geometry
 (diameter, tilt angle, DPI) and a sinusoidal correction for the
 curvature of cylindrical tubes.
@@ -212,7 +212,7 @@ terra::plot(depth_map, main = "Depth map (cm)")
 
 #### 4. Bin depths
 
-[`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
+[`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md)
 rounds continuous depth values to discrete intervals. The bin width
 (`nn`) should match your analysis scale — 5 cm is a common choice.
 
@@ -265,10 +265,10 @@ head(depth_data)
 
 Root length (Kimura method) is computed from a skeleton image, so it
 needs a whole raster rather than a per-pixel reduction.
-[`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
+[`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md)
 masks the skeleton to one depth bin (everything outside the bin becomes
 `NA`, the grid is kept), and
-[`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
+[`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
 then measures just that slice.
 
 ``` r
@@ -354,8 +354,8 @@ head(depth_data)
 #### 6. Landscape and colour metrics
 
 Both of these are computed **per depth slice** with the same
-[`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
-loop introduced in 5c.
+[`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md) loop
+introduced in 5c.
 
 ##### Landscape metrics (spatial structure)
 
@@ -381,9 +381,9 @@ lsm_df <- do.call(rbind, lsm_list)
 
 ##### Colour metrics
 
-[`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
+[`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
 is the colour extractor here — exactly as in the [Flatbed
-Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
+Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
 vignette. The only extra step for minirhizotron data is grid alignment:
 the RGB scan and the segmentation often come off the scanner on slightly
 different grids, and per-pixel masking (`rgb[seg == 0] <- NA`) requires
@@ -419,7 +419,7 @@ colour_df <- do.call(rbind, colour_list)   # NULLs from empty bins are dropped
 
 > Looking for **root branching order** (main axis vs. laterals)? That
 > analysis has no depth dimension, so it lives in the [Flatbed
-> Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.html#6b-branch-order-main-axis-vs-laterals)
+> Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html#6b-branch-order-main-axis-vs-laterals)
 > vignette. You can still run it on a minirhizotron skeleton — just
 > compute it once for the whole image rather than per depth bin.
 
@@ -445,7 +445,7 @@ cat(sprintf("MRD: %.2f  RPI: %.3f  Total length density: %.4f\n",
 #> MRD: 19.47  RPI: 0.899  Total length density: 43.6782
 ```
 
-[`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
+[`root_accumulation()`](https://jcunow.github.io/Rootopia/reference/root_accumulation.md)
 complements these by returning the cumulative profile itself — useful
 for plotting how root mass/length accumulates with depth, or for
 comparing the *shape* of accumulation curves between tubes/plots.
@@ -523,17 +523,17 @@ ggplot(depth_data, aes(x = depth, y = rootlength.density)) +
 ### What to read next
 
 - [Batch
-  Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
+  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
   — the same workflow in a single
-  [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md)
+  [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
   call, with fault tolerance and ETA logging
 - [Flatbed
-  Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
+  Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
   — trait extraction without a depth dimension, including root branching
   order
 - [Rotation
-  Bias](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
+  Bias](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
   — correcting for tube rotation between sessions
 - [Function
-  reference](https://jcunow.github.io/RootScanR/reference/index.md) —
+  reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function

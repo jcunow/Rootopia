@@ -2,7 +2,7 @@
 
 Converts raw RGB pixel picks (collected e.g. in QGIS, FIJI, or ImageJ)
 to CIE LAB centroids and returns a centroid table ready to pass to
-[`classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md).
+[`classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md).
 Also prints diagnostic summaries including intra-class spread, per-class
 coverage, and inter-class distance warnings.
 
@@ -20,7 +20,7 @@ build_soil_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
   class and must be a numeric matrix with 3 columns (R, G, B), values
   0-255, with one row per pick. Names become class names in the output.
   See
-  [`classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)'s
+  [`classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md)'s
   **Building your own centroids (picks)** section for a worked example
   of constructing these matrices from an image (e.g. by cropping
   representative patches and calling
