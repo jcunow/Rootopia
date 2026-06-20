@@ -12,7 +12,7 @@ run them as-is.
 ## 1. Peat and material colour classification
 
 [`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
-assigns every pixel of an RGB scan to a material class (dark peat, red
+assigns every pixel of an RGB scan to a class (e.g., dark peat, red
 peat, root, silver tape, coarse debris, …) by nearest-centroid matching
 in CIE LAB colour space. Pixels too far from any centroid are left
 “unclassified”.
@@ -120,12 +120,12 @@ See
 for the full description of the centroid table format and the
 `prior`/`alpha` blending workflow for iterative refinement.
 
-## 2. Soil surface texture
+## 2. Soil surface texture and color
 
 [`analyze_soil_texture()`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md)
 computes grey-level co-occurrence matrix (GLCM) texture metrics from a
-colour image, which can help separate soil structure, biofilm, or debris
-from roots.
+colour image, which can be informative on the spatial heterogeneity
+within a scan.
 
 ``` r
 
@@ -140,8 +140,8 @@ terra::plot(tex)
 
 ![](SpecialTopics_vignette_files/figure-html/soil-texture-1.png)
 
-A simpler, faster summary of overall tube colour (mean RGB and a single
-luminance value) is available via
+A simple summary of overall tube colour (mean RGB and a single luminance
+value) is available via
 [`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md):
 
 ``` r

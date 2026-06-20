@@ -95,9 +95,9 @@ run them as-is.</p>
 <h2 id="peat-and-material-colour-classification">1. Peat and material colour classification<a class="anchor" aria-label="anchor" href="#peat-and-material-colour-classification"></a>
 </h2>
 <p><code><a href="../reference/classify_peat_rgb.html">classify_peat_rgb()</a></code> assigns every pixel of an RGB scan
-to a material class (dark peat, red peat, root, silver tape, coarse
-debris, …) by nearest-centroid matching in CIE LAB colour space. Pixels
-too far from any centroid are left “unclassified”.</p>
+to a class (e.g., dark peat, red peat, root, silver tape, coarse debris,
+…) by nearest-centroid matching in CIE LAB colour space. Pixels too far
+from any centroid are left “unclassified”.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span></span>
@@ -185,11 +185,11 @@ blending workflow for iterative refinement.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="soil-surface-texture">2. Soil surface texture<a class="anchor" aria-label="anchor" href="#soil-surface-texture"></a>
+<h2 id="soil-surface-texture-and-color">2. Soil surface texture and color<a class="anchor" aria-label="anchor" href="#soil-surface-texture-and-color"></a>
 </h2>
 <p><code><a href="../reference/analyze_soil_texture.html">analyze_soil_texture()</a></code> computes grey-level co-occurrence
-matrix (GLCM) texture metrics from a colour image, which can help
-separate soil structure, biofilm, or debris from roots.</p>
+matrix (GLCM) texture metrics from a colour image, which can be
+informative on the spatial heterogeneity within a scan.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_soil_texture.html">analyze_soil_texture</a></span><span class="op">(</span></span>
 <span>  <span class="va">img</span>,</span>
@@ -199,9 +199,8 @@ separate soil structure, biofilm, or debris from roots.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tex</span><span class="op">)</span></span></code></pre></div>
 <p><img src="SpecialTopics_vignette_files/figure-html/soil-texture-1.png" class="r-plt" alt="" width="100%"></p>
-<p>A simpler, faster summary of overall tube colour (mean RGB and a
-single luminance value) is available via
-<code><a href="../reference/tube_coloration.html">tube_coloration()</a></code>:</p>
+<p>A simple summary of overall tube colour (mean RGB and a single
+luminance value) is available via <code><a href="../reference/tube_coloration.html">tube_coloration()</a></code>:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Some pixels have zero intensity, which may affect colour calculations</span></span>
