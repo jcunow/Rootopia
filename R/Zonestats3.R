@@ -40,6 +40,7 @@
 #'   \code{skeletonize_image()} before computing length. Default
 #'   \code{FALSE} (assumes \code{img} is already a skeleton).
 #' @return Root length in pixels or converted units
+#' @export
 root_length <- function(img,
                         unit = "cm",
                         dpi = 300,

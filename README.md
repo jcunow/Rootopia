@@ -23,6 +23,7 @@ Welcome to **RootScanR**, an R package designed to extract quantitative belowgro
   (main axis vs. laterals), and root angle distribution
 - 🥕 Spatial indices (root distribution with depth, rotation bias)
 - 🧵 Stitch overlapping scan sequences into one mosaic per tube
+
 ---
 
 ## 📘 Tutorials
