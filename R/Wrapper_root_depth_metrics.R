@@ -438,7 +438,7 @@ root_depth_metrics <- function(
     im <- .safe(sprintf("load segmented [%s]", seg_file), {
       img <- load_flexible_image(paste0(path.seg, seg_file),
                                  output_format = "spatrast",
-                                 normalize = FALSE, binarize = TRUE)
+                                 scale = "binary")
       if (dim(img)[3] > 3) img <- img[[1:3]]
       img
     })
@@ -456,7 +456,7 @@ root_depth_metrics <- function(
         im.skeleton <- .safe(sprintf("load skeleton [%s]", im.ls.skl[l]), {
           sk <- load_flexible_image(paste0(path.skl, im.ls.skl[l]),
                                     output_format = "spatrast",
-                                    binarize = TRUE, select.layer = 2)
+                                    scale = "binary", select.layer = 2)
           if (dim(sk)[3] > 3) sk <- sk[[1:3]]
           sk
         })

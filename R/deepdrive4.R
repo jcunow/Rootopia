@@ -89,7 +89,7 @@ deep_drive <- function(DepthMap,
     
     # Load and validate DepthMap
     DepthMap <- load_flexible_image(DepthMap, select.layer=select.layerDM,
-                                    output_format="spatrast", normalize=FALSE, binarize = FALSE)
+                                    output_format="spatrast", scale = "none")
     if (is.null(DepthMap)) {
       stop("Failed to load DepthMap")
     }
@@ -107,7 +107,7 @@ deep_drive <- function(DepthMap,
   tryCatch({
     if(is.null(AngleMap)){
       RootMap <- load_flexible_image(RootMap, select.layer=select.layerRM,
-                                     output_format="spatrast", normalize=T, binarize = T)
+                                     output_format="spatrast", scale = "binary")
       if (is.null(RootMap)) {
         stop("Failed to load RootMap")
       }
@@ -128,7 +128,7 @@ deep_drive <- function(DepthMap,
                               to=c(NA,90,135,180,225,270,315,0,45))
     } else {
       AngleMap <- load_flexible_image(AngleMap, select.layer=select.layerAM,
-                                      output_format="spatrast", normalize=FALSE)
+                                      output_format="spatrast", scale = "none")
       if (is.null(AngleMap)) {
         stop("Failed to load AngleMap")
       }

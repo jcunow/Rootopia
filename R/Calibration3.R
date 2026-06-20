@@ -36,7 +36,7 @@ estimate_rotation_center = function(img, tape.brightness=0.66, extra.rows=100, s
       stop("select.layer must be NULL or a positive integer")
     
     im <- load_flexible_image(img, select.layer=select.layer,
-                              output_format="array", normalize=TRUE)
+                              output_format="array", scale = "to_01")
     if (is.null(im)) stop("Failed to load image")
     if (length(dim(im)) != 3) stop("Input image must be 3-dimensional array (RGB)")
     
@@ -135,9 +135,9 @@ estimate_rotation_shift <- function(
     if (!cor.type %in% c("phase", "ccf")) stop("cor.type must be 'phase' or 'ccf'")
     
     im1 <- load_flexible_image(img1, select.layer = select.layer,
-                               output_format = "array", normalize = FALSE)
+                               output_format = "array", scale = "none")
     im2 <- load_flexible_image(img2, select.layer = select.layer,
-                               output_format = "array", normalize = FALSE)
+                               output_format = "array", scale = "none")
     if (length(dim(im1)) != 3 || length(dim(im2)) != 3)
       stop("Inputs must be 3D RGB arrays")
     
@@ -277,7 +277,7 @@ rotation_censor <- function(img, center.offset = 0, cut.buffer = 0.02,
     
     img.c <- load_flexible_image(img, select.layer = select.layer,
                                  output_format = "spatrast",
-                                 normalize = FALSE, binarize = FALSE)
+                                 scale = "none")
     if (is.null(img.c)) stop("Failed to load image")
     
     nr <- dim(img.c)[1]; nc <- dim(img.c)[2]    # rows = rotation axis
@@ -407,7 +407,7 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
 
     # Load and validate image
     im <- load_flexible_image(img, select.layer=select.layer,
-                              output_format="array", normalize=FALSE)
+                              output_format="array", scale = "none")
     if (is.null(im)) {
       stop("Failed to load image")
     }

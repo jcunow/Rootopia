@@ -420,7 +420,7 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
 
 # ---- example ---------------------------------------------------------------
 # skel_rast <- skeletonize_image(img)
-# mask_rast <- load_flexible_image(img, output_format = "spatrast", binarize = TRUE)
+# mask_rast <- load_flexible_image(img, output_format = "spatrast", scale = "binary")
 # edge_tbl  <- root_graph_pipeline(skel_rast, mask_rast,
 #                                  dt_backend  = "imager",
 #                                  overlay_png = "order_validation.png")

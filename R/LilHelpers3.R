@@ -676,7 +676,7 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
 #' gray.raster = rgb2gray(img)
 rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 
-  img <- load_flexible_image(img,normalize = FALSE, output_format = "spatrast", select.layer = NULL)
+  img <- load_flexible_image(img, scale = "none", output_format = "spatrast", select.layer = NULL)
   tryCatch({
     # Input validation
     if (missing(img)) {

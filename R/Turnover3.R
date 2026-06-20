@@ -81,8 +81,8 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 
   # Main execution with error handling
   tryCatch({
-    im.t1 <- load_flexible_image(im.t1,select.layer = select.layer, normalize = TRUE, output_format = "spatrast")
-    im.t2 <- load_flexible_image(im.t2,select.layer = select.layer, normalize = TRUE, output_format = "spatrast")
+    im.t1 <- load_flexible_image(im.t1,select.layer = select.layer, scale = "to_01", output_format = "spatrast")
+    im.t2 <- load_flexible_image(im.t2,select.layer = select.layer, scale = "to_01", output_format = "spatrast")
     im.t1 = ceiling(im.t1)
     im.t2 = ceiling(im.t2)
     validate_inputs(im.t1,im.t2)
@@ -184,7 +184,7 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
     validate_inputs(img)
 
     # Load and validate image
-    img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE, select.layer = NULL)
+    img <- load_flexible_image(img, output_format = "spatrast", scale = "to_01", select.layer = NULL)
     if (is.null(handle_edge_cases(img))) return(NULL)
 
     # Calculate indices and layers

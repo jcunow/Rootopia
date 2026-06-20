@@ -65,7 +65,7 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # Try loading the image with error handling
     img <- tryCatch({
       load_flexible_image(img, select.layer = select.layer,
-                          output_format = "spatrast", normalize = FALSE)
+                          output_format = "spatrast", scale = "none")
     }, error = function(e) {
       stop(paste("Failed to load image:", e$message))
     })

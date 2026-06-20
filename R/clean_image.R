@@ -157,7 +157,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' report_image_components(img)
 #' }
 report_image_components <- function(img) {
-  img <- load_flexible_image(img, output_format = "cimg", binarize = TRUE)
+  img <- load_flexible_image(img, output_format = "cimg", scale = "binary")
 
   cat("=== HOLES (black regions enclosed by white) ===\n")
   lbl_h   <- imager::label(1 - img)
@@ -219,7 +219,7 @@ smooth_root_edges <- function(img,
                                kernel_shape = "disk",
                                kernel_size  = 3,
                                iterations   = 1) {
-  img <- load_flexible_image(img, output_format = "cimg", binarize = TRUE)
+  img <- load_flexible_image(img, output_format = "cimg", scale = "binary")
 
   if (imager::spectrum(img) > 1)
     img <- imager::grayscale(img)
@@ -345,8 +345,7 @@ clean_image <- function(img,
     img <- load_flexible_image(img,
                                 output_format = "spatrast",
                                 select.layer  = select.layer,
-                                normalize     = FALSE,
-                                binarize      = FALSE)
+                                scale         = "none")
     img <- image_threshold(img,
                             threshold   = pre_threshold,
                             method      = pre_threshold_method,
@@ -361,7 +360,7 @@ clean_image <- function(img,
   img_cimg <- load_flexible_image(img,
                                    output_format = "cimg",
                                    select.layer  = select.layer,
-                                   binarize      = TRUE)
+                                   scale         = "binary")
 
   if (report) report_image_components(img_cimg)
 
@@ -379,8 +378,7 @@ clean_image <- function(img,
     spatrast = {
       r <- load_flexible_image(img_out,
                                 output_format = "spatrast",
-                                normalize     = FALSE,
-                                binarize      = FALSE)
+                                scale         = "none")
       # Ensure RGB metadata is set so terra::plotRGB() works on multi-layer results.
       # For a single-layer binary image, use terra::plot() rather than plotRGB().
       if (terra::nlyr(r) >= 3L) terra::RGB(r) <- 1:3

@@ -36,7 +36,7 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
     
     # Load and validate image
     im <- tryCatch({
-      load_flexible_image(img, output_format="SpatRaster", normalize=TRUE, binarize = TRUE)
+      load_flexible_image(img, output_format="SpatRaster", scale = "binary")
     }, error = function(e) {
       stop("Failed to load image: ", e$message)
     })
@@ -124,7 +124,7 @@ binning = function(depthmap, nn, round.option="rounding") {
     
     # Load and validate image
     img <- tryCatch({
-      load_flexible_image(depthmap, output_format="spatrast", normalize=FALSE)
+      load_flexible_image(depthmap, output_format="spatrast", scale = "none")
     }, error = function(e) {
       stop("Failed to load depthmap: ", e$message)
     })

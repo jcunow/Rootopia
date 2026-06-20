@@ -160,8 +160,8 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
 #' 
 detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE) {
 
-  img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE,
-                             binarize = TRUE, select.layer = select.layer)
+  img <- load_flexible_image(img, output_format = "spatrast", scale = "binary",
+                             select.layer = select.layer)
   if (terra::nlyr(img) > 1) img <- img[[1]]
   if (skeletonize) img <- skeletonize_image(img, verbose = FALSE)
 
@@ -244,8 +244,7 @@ skeletonize_image <- function(img,
   img_rast <- load_flexible_image(
     img,
     output_format = "spatrast",
-    normalize = TRUE,
-    binarize = TRUE,
+    scale = "binary",
     select.layer = select.layer
   )[[1]]
   

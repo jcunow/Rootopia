@@ -91,7 +91,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
       img <- load_flexible_image(img,
                                         select.layer = select.layer,
                                         output_format = "cimg",
-                                        normalize = TRUE, binarize = TRUE)
+                                        scale = "binary")
 
       # Check if image is empty or all NA
       if (all(is.na(img)) || length(img) == 0) {
@@ -130,7 +130,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
 
     # Convert to SpatRast with validation
     Ds <- tryCatch({
-      load_flexible_image(diameters, output_format = "SpatRaster", normalize = FALSE, binarize = FALSE, select.layer = NULL)
+      load_flexible_image(diameters, output_format = "SpatRaster", scale = "none", select.layer = NULL)
 
 
     }, error = function(e) {
@@ -138,7 +138,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
     })
 
     IM <- tryCatch({
-      load_flexible_image(img, output_format = "SpatRaster",normalize = FALSE, binarize = FALSE, select.layer = NULL)
+      load_flexible_image(img, output_format = "SpatRaster", scale = "none", select.layer = NULL)
     }, error = function(e) {
       stop(sprintf("Failed to convert image to SpatRaster: %s", e$message))
     })
@@ -150,12 +150,12 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
         if (all(terra::values( skeleton) == 0)) {
           warning("Skeletonization produced empty result - check input image")
         }
-        load_flexible_image(skeleton, output_format = "SpatRaster",  normalize = FALSE, binarize = FALSE, select.layer = NULL)
+        load_flexible_image(skeleton, output_format = "SpatRaster",  scale = "none", select.layer = NULL)
       }, error = function(e) {
         stop(sprintf("Skeletonization failed: %s", e$message))
       })      
     }else {
-      IMS = load_flexible_image(skeleton.img, output_format = "SpatRaster",  normalize = FALSE, binarize = TRUE, select.layer = NULL)
+      IMS = load_flexible_image(skeleton.img, output_format = "SpatRaster",  scale = "binary", select.layer = NULL)
     }
 
     

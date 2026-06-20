@@ -690,7 +690,7 @@ stitch_discover_files <- function(input, pattern = NULL) {
 #' @return A numeric \code{(H, W, C)} array scaled to 0-255.
 #' @keywords internal
 stitch_to_hwc <- function(input) {
-  a <- load_flexible_image(input, output_format = "array", normalize = FALSE)
+  a <- load_flexible_image(input, output_format = "array", scale = "none")
   d <- dim(a)
   if (length(d) == 4) {
     # imager path returns (width, height, depth = 1, channels)

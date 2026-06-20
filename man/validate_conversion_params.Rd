@@ -4,7 +4,7 @@
 \alias{validate_conversion_params}
 \title{Validate conversion parameters}
 \usage{
-validate_conversion_params(input, normalize, select.layer, binarize)
+validate_conversion_params(input, scale, select.layer)
 }
 \description{
 Validate conversion parameters

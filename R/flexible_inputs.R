@@ -32,12 +32,46 @@ supported_formats_string <- function(type = "Input") {
   }
 }
 
+# The set of accepted `scale` values, defined once so the signature default,
+# match.arg(), and the deprecation shim all stay in sync.
+.scale_choices <- c("to_01", "to_255", "binary", "none")
+
+#' Resolve the single `scale` argument, mapping the deprecated logical flags
+#'
+#' `normalize`, `binarize`, and `denormalize` are kept only for backward
+#' compatibility. Exactly one source of truth is allowed: either `scale` or the
+#' old flags, never both.
+#' @keywords internal
+resolve_scale <- function(scale, normalize, binarize, denormalize, scale_given) {
+  flags_given <- !is.null(normalize) || !is.null(binarize) || !is.null(denormalize)
+  if (flags_given) {
+    if (scale_given) {
+      stop("Specify either `scale` or the deprecated normalize/binarize/denormalize flags, not both.")
+    }
+    warning("`normalize`, `binarize`, and `denormalize` are deprecated; use ",
+            "`scale` (\"to_01\", \"to_255\", \"binary\", \"none\") instead.",
+            call. = FALSE)
+    normalize   <- isTRUE(normalize)
+    binarize    <- isTRUE(binarize)
+    denormalize <- isTRUE(denormalize)
+    if (normalize && denormalize) {
+      stop("normalize and denormalize are opposite transforms; set at most one to TRUE.")
+    }
+    return(if (binarize) "binary"
+           else if (denormalize) "to_255"
+           else if (normalize) "to_01"
+           else "none")
+  }
+  match.arg(scale, .scale_choices)
+}
+
 #' Validate conversion parameters
 #' @keywords internal
-validate_conversion_params <- function(input, normalize, select.layer, binarize) {
+validate_conversion_params <- function(input, scale, select.layer) {
   if (missing(input)) stop("Input is required")
-  if (!is.logical(normalize)) stop("normalize must be TRUE or FALSE")
-  if (!is.logical(binarize)) stop("binarize must be TRUE or FALSE")
+  if (!is.character(scale) || length(scale) != 1 || !scale %in% .scale_choices) {
+    stop("scale must be one of: ", paste(.scale_choices, collapse = ", "))
+  }
 
   # Validate file path if input is a string
   if (is.character(input)) {
@@ -51,27 +85,54 @@ validate_conversion_params <- function(input, normalize, select.layer, binarize)
   }
 }
 
-#' Normalize or binarize the array or raster
+#' Rescale the array according to `scale`
+#'
+#' All conversions use fixed factors (255), never a per-image max, and are
+#' guarded so a conversion is a no-op when the data is already in the target
+#' range:
+#' \itemize{
+#'   \item `"none"`   leave values untouched
+#'   \item `"to_01"`  0-255 -> 0-1 (divide by 255; skipped if already <= 1)
+#'   \item `"to_255"` 0-1 -> 0-255 (multiply by 255; skipped if already > 1)
+#'   \item `"binary"` strictly 0/1 via ceiling(arr / max)
+#' }
 #' @keywords internal
-normalize_array <- function(arr, normalize, binarize) {
-  if (normalize | binarize) {
-    max_val <- max(as.vector(arr), na.rm = TRUE)
-    if (is.na(max_val)) warning("Cannot normalize: all values are NA")
-    if (max_val > 255) warning("Maximum value exceeds 255, normalization might be incorrect")
-    if (binarize) arr <- ceiling(arr / max_val) else arr <- arr / 255
+normalize_array <- function(arr, scale = "none") {
+  if (identical(scale, "none")) return(arr)
+  max_val <- max(as.vector(arr), na.rm = TRUE)
+  if (is.na(max_val)) {
+    warning("Cannot rescale: all values are NA")
+    return(arr)
   }
-  return(arr)
+  if (max_val > 255) warning("Maximum value exceeds 255, rescaling might be incorrect")
+  switch(scale,
+    binary = ceiling(arr / max_val),
+    to_01  = if (max_val > 1)  arr / 255 else arr,
+    to_255 = if (max_val <= 1) arr * 255 else arr,
+    arr)
 }
 
 #' Load an image flexibly from file or convert from memory
 #' @param input File path or image object
 #' @param output_format Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.
+#' @param scale Character, the value rescaling to apply. One of
+#'   `"to_01"` (0-255 -> 0-1, the default), `"to_255"` (0-1 -> 0-255),
+#'   `"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
+#'   conversion is a no-op if the data is already in the target range.
 #' @param select.layer Numeric, which layer to select if input has multiple layers
-#' @param normalize Logical, whether to normalize values to 0-1 range if they're in 0-255
-#' @param binarize Logical, whether the output is strictly 0 and 1. Overwrites normalize
+#' @param normalize,binarize,denormalize Deprecated logical flags kept for
+#'   backward compatibility; use `scale` instead. `normalize = TRUE` maps to
+#'   `scale = "to_01"`, `denormalize = TRUE` to `"to_255"`, and
+#'   `binarize = TRUE` to `"binary"`. Supplying these together with `scale`, or
+#'   setting both `normalize` and `denormalize`, is an error.
 #' @export
-load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE, select.layer = NULL, binarize = FALSE) {
-  validate_conversion_params(input, normalize, select.layer, binarize)
+load_flexible_image <- function(input, output_format = "cimg",
+                                scale = c("to_01", "to_255", "binary", "none"),
+                                select.layer = NULL,
+                                normalize = NULL, binarize = NULL, denormalize = NULL) {
+  scale <- resolve_scale(scale, normalize, binarize, denormalize,
+                         scale_given = !missing(scale))
+  validate_conversion_params(input, scale, select.layer)
 
 
   if (inherits(input, output_format) && is.null(select.layer)) {
@@ -132,8 +193,8 @@ load_flexible_image <- function(input, output_format = "cimg", normalize = TRUE,
     arr <- arr[,,select.layer]  # Select layer
   }
 
-  # Normalize or binarize the data
-  arr <- normalize_array(arr, normalize, binarize)
+  # Apply the requested value rescaling
+  arr <- normalize_array(arr, scale)
 
 
 

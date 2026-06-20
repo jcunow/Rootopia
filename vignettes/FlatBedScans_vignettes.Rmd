@@ -55,16 +55,16 @@ library(tidyverse)
 ### 1. Load images
 
 `load_flexible_image()` accepts rasters, arrays, file paths, and most common
-image formats. Set `binarize = TRUE` to force the image to 0/1 values. This is
-how you load your own files:
+image formats. The `scale` argument controls value rescaling: `"binary"` forces
+0/1, `"to_01"` maps 0-255 down to 0-1, `"to_255"` maps 0-1 up to 0-255, and
+`"none"` leaves values untouched. This is how you load your own files:
 
 ```{r, eval=FALSE}
 # Segmented image (binary: root = 1, background = 0)
 seg <- load_flexible_image(
   "path/to/segmented_scan.tif",
   output_format = "spatrast",
-  normalize     = TRUE,
-  binarize      = TRUE,
+  scale         = "binary",
   select.layer  = 2        # RootDetector: layer 2 is the root channel
 )
 
@@ -72,7 +72,7 @@ seg <- load_flexible_image(
 rgb <- load_flexible_image(
   "path/to/rgb_scan.tif",
   output_format = "spatrast",
-  normalize     = FALSE
+  scale         = "none"
 )
 ```
 

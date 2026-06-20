@@ -436,7 +436,7 @@ classify_peat_rgb <- function(img,
   # Accepts file path, SpatRaster, RasterLayer/Brick, cimg, magick-image,
   # matrix, or array -- see load_flexible_image() for the full list.
   img <- load_flexible_image(img, output_format = "spatrast",
-                             normalize = FALSE, binarize = FALSE)
+                             scale = "none")
   if (terra::nlyr(img) < 3)
     stop("img must have at least 3 layers (R, G, B)")
 

@@ -80,8 +80,7 @@ root_length <- function(img,
       img,
       select.layer = select.layer,
       output_format = "spatrast",
-      normalize = TRUE,
-      binarize = TRUE
+      scale = "binary"
     )
     
     if (is.null(img) || terra::nlyr(img) < 1) {
@@ -248,7 +247,7 @@ root_scape_metrics <- function(img, indexD = NA, select.layer = NULL,
     }
 
     img <- load_flexible_image(img, select.layer = select.layer,
-                               output_format = "spatrast", normalize = FALSE)
+                               output_format = "spatrast", scale = "none")
 
     if (is.null(img) || terra::nlyr(img) < 1) {
       stop("Invalid or empty image after loading")
@@ -296,7 +295,7 @@ count_pixels <- function(img) {
   tryCatch({
     if (missing(img)) stop("Image input is required")
 
-    img <- load_flexible_image(img, output_format = "spatrast", normalize = TRUE, binarize = TRUE)
+    img <- load_flexible_image(img, output_format = "spatrast", scale = "binary")
 
     if (is.null(img) || terra::nlyr(img) < 1) {
       stop("Invalid or empty image after loading")
@@ -342,7 +341,7 @@ tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
     }
 
     img <- load_flexible_image(img, output_format = "spatrast",
-                               normalize = FALSE, binarize = FALSE,
+                               scale = "none",
                                select.layer = NULL)
 
     if (is.null(img) || terra::nlyr(img) != 3) {
