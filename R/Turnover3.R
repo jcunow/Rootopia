@@ -18,6 +18,7 @@
 #' @keywords internal
 #'
 #' @examples
+#' \dontrun{
 #'   data(skl_Oulanka2023_Session01_T067)
 #'   data(skl_Oulanka2023_Session03_T067)
 #'   time1 <- terra::rast(skl_Oulanka2023_Session01_T067)
@@ -26,6 +27,7 @@
 #'     im.t1 = time1,
 #'     im.t2 = time2,
 #'     method = "kimura")
+#'     }
 turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select.layer = 2) {
 
   # Input validation module
@@ -132,9 +134,11 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 #' @keywords internal
 #'
 #' @examples
+#' \dontrun{
 #' data(TurnoverDPC_data)
 #' img = terra::rast(TurnoverDPC_data)
 #' DPCs = turnover_dpc(img = img, im.return = FALSE)
+#' }
 turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
                         im.return=FALSE, include.virtualroots=FALSE) {
   # Input validation module

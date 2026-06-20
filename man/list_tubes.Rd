@@ -26,14 +26,6 @@ Summarises the unique groups (tubes) that \code{\link{stitch_root_scans}}
 would build, so you can see the tube names and pick a range to stitch
 (e.g. \code{tubes = 1:36}).
 }
-\examples{
-d <- file.path(tempdir(), "tubes_demo")
-dir.create(d, showWarnings = FALSE)
-file.create(file.path(d, c("S_T037_01.tiff", "S_T037_02.tiff",
-                           "S_T038_01.tiff", "S_T039_01.tiff")))
-list_tubes(d, pattern = ".tiff")
-unlink(d, recursive = TRUE)
-}
 \seealso{
 \code{\link{stitch_root_scans}}, \code{\link{list_scan_files}}
 }

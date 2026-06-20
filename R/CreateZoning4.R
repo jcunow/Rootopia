@@ -251,8 +251,9 @@ slice_rotation <- function(img, n) {
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
 #' mask <- img[[1]] - img[[2]]; mask[mask == 255] <- NA
-#' depth_map  <- create_depthmap(img, mask, start.soil = 2.9)
+#' depth_map  <- create_depthmap(img, mask, start.soil = 2.9, dpi = 150 )
 #' depth_bins <- binning(depth_map, nn = 5)
+#' depth_bins <- terra::flip(terra::t(depth_bins))
 #' # Keep only the root layer pixels that fall in the 10 cm depth bin
 #' slice_10cm <- zoning(img[[2]], mode = "depth",
 #'                      depth_map = depth_bins, depth = 10)

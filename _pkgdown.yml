@@ -123,6 +123,7 @@ reference:
       - rhythmicity
       - modal_peaks
       - circular_mean
+      - zoning
       - root_accumulation
       - compare_depth_distribution
 
@@ -146,3 +147,4 @@ reference:
       - skl_Oulanka2023_Session03_T067
       - rgb_Oulanka2023_Session03_T067
       - TurnoverDPC_data
+      - flatbed_scan_example

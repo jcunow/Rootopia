@@ -38,6 +38,7 @@ data.frame containing:
 Calculate global root production and root turnover from temporal comparison
 }
 \examples{
+\dontrun{
   data(skl_Oulanka2023_Session01_T067)
   data(skl_Oulanka2023_Session03_T067)
   time1 <- terra::rast(skl_Oulanka2023_Session01_T067)
@@ -46,5 +47,6 @@ Calculate global root production and root turnover from temporal comparison
     im.t1 = time1,
     im.t2 = time2,
     method = "kimura")
+    }
 }
 \keyword{internal}

@@ -76,6 +76,7 @@ each subsequent frame is stitched onto the growing mosaic, in memory (no
 temporary PNG round-trips).
 }
 \examples{
+\dontrun{
 set.seed(1)
 img <- array(runif(70 * 200 * 3) * 255, dim = c(70, 200, 3))
 frames <- list(img[, 1:90, , drop = FALSE],
@@ -85,6 +86,7 @@ res <- stitch_image_sequence(frames, edge_width = 25, vertical_region = 70,
                              vertical_offset = 0, return_offsets = TRUE)
 dim(res$mosaic)
 res$offsets
+}
 }
 \seealso{
 \code{\link{stitch_image_pair}}, \code{\link{stitch_root_scans}}

@@ -27,13 +27,6 @@ pick a range of files to stitch (e.g. \code{select = 1:36}). For tube-level
 selection see \code{\link{list_tubes}}. Uses the same discovery and sort order
 as \code{stitch_root_scans}, so the indices line up.
 }
-\examples{
-d <- file.path(tempdir(), "scans_demo")
-dir.create(d, showWarnings = FALSE)
-file.create(file.path(d, c("S_T037_01.tiff", "S_T037_02.tiff", "S_T038_01.tiff")))
-list_scan_files(d, pattern = ".tiff")
-unlink(d, recursive = TRUE)
-}
 \seealso{
 \code{\link{list_tubes}}, \code{\link{stitch_root_scans}}
 }

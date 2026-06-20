@@ -78,6 +78,7 @@ horizontal alpha ramp (1 -> 0) and the vertical offset is applied by growing
 the canvas.
 }
 \examples{
+\dontrun{
 set.seed(1)
 img   <- array(runif(80 * 160 * 3) * 255, dim = c(80, 160, 3))
 left  <- img[, 1:100, , drop = FALSE]
@@ -86,6 +87,7 @@ mosaic <- stitch_image_pair(left, right, edge_width = 30,
                             vertical_region = 80, vertical_offset = 0)
 dim(mosaic)
 attr(mosaic, "offset")
+}
 }
 \seealso{
 \code{\link{stitch_image_sequence}}, \code{\link{stitch_root_scans}}

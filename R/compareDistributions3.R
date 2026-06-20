@@ -370,6 +370,11 @@ tail_weighted_wasserstein_distance <- function(
 #' @return Numeric distance or divergence value.
 #'
 #' @examples
+#' counts_P <- c(5, 10, 20, 15)
+#' counts_Q <- c(2, 8, 25, 20)
+#'
+#' P <- counts_P / sum(counts_P)
+#' Q <- counts_Q / sum(counts_Q) 
 #' compare_depth_distribution(P, Q)
 #' compare_depth_distribution(P, Q, metric = "js")
 #' compare_depth_distribution(P, Q, tail_weight = TRUE, weighting = "sigmoid")

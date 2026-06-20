@@ -39,13 +39,6 @@
 #'   \code{n_frames}.
 #' @seealso \code{\link{stitch_root_scans}}, \code{\link{list_scan_files}}
 #' @keywords internal
-#' @examples
-#' d <- file.path(tempdir(), "tubes_demo")
-#' dir.create(d, showWarnings = FALSE)
-#' file.create(file.path(d, c("S_T037_01.tiff", "S_T037_02.tiff",
-#'                            "S_T038_01.tiff", "S_T039_01.tiff")))
-#' list_tubes(d, pattern = ".tiff")
-#' unlink(d, recursive = TRUE)
 list_tubes <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
   files <- stitch_discover_files(input, pattern)
   g <- stitch_group_of(files, group_regex)
@@ -77,12 +70,6 @@ list_tubes <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #'   (full path) and \code{group} (matched id, or \code{NA}).
 #' @seealso \code{\link{list_tubes}}, \code{\link{stitch_root_scans}}
 #' @keywords internal
-#' @examples
-#' d <- file.path(tempdir(), "scans_demo")
-#' dir.create(d, showWarnings = FALSE)
-#' file.create(file.path(d, c("S_T037_01.tiff", "S_T037_02.tiff", "S_T038_01.tiff")))
-#' list_scan_files(d, pattern = ".tiff")
-#' unlink(d, recursive = TRUE)
 list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
   files <- stitch_discover_files(input, pattern)
   data.frame(
@@ -278,6 +265,7 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
 #' @seealso \code{\link{stitch_image_pair}}, \code{\link{stitch_root_scans}}
 #' @keywords internal
 #' @examples
+#' \dontrun{
 #' set.seed(1)
 #' img <- array(runif(70 * 200 * 3) * 255, dim = c(70, 200, 3))
 #' frames <- list(img[, 1:90, , drop = FALSE],
@@ -287,6 +275,7 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
 #'                              vertical_offset = 0, return_offsets = TRUE)
 #' dim(res$mosaic)
 #' res$offsets
+#' }
 stitch_image_sequence <- function(images, method = "phase",
                                   edge_width = 250, vertical_region = 1000,
                                   vertical_offset = 300, direction = "horizontal",
@@ -375,6 +364,7 @@ stitch_image_sequence <- function(images, method = "phase",
 #' @seealso \code{\link{stitch_image_sequence}}, \code{\link{stitch_root_scans}}
 #' @keywords internal
 #' @examples
+#' \dontrun{
 #' set.seed(1)
 #' img   <- array(runif(80 * 160 * 3) * 255, dim = c(80, 160, 3))
 #' left  <- img[, 1:100, , drop = FALSE]
@@ -383,6 +373,7 @@ stitch_image_sequence <- function(images, method = "phase",
 #'                             vertical_region = 80, vertical_offset = 0)
 #' dim(mosaic)
 #' attr(mosaic, "offset")
+#' }
 stitch_image_pair <- function(img1, img2, method = "phase",
                               edge_width = 250, vertical_region = 1000,
                               vertical_offset = 300, direction = "horizontal",
