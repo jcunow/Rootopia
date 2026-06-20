@@ -32,8 +32,8 @@ them as-is.
 
 # 1. Peat and material colour classification
 
-`classify_peat_rgb()` assigns every pixel of an RGB scan to a material
-class (dark peat, red peat, root, silver tape, coarse debris, ...) by
+`classify_peat_rgb()` assigns every pixel of an RGB scan to a
+class (e.g., dark peat, red peat, root, silver tape, coarse debris, ...) by
 nearest-centroid matching in CIE LAB colour space. Pixels too far from any
 centroid are left "unclassified".
 
@@ -112,11 +112,10 @@ prints intra-class spread and inter-class distances to help you tune
 See `?classify_peat_rgb` for the full description of the centroid table
 format and the `prior`/`alpha` blending workflow for iterative refinement.
 
-# 2. Soil surface texture
+# 2. Soil surface texture and color
 
 `analyze_soil_texture()` computes grey-level co-occurrence matrix (GLCM)
-texture metrics from a colour image, which can help separate soil
-structure, biofilm, or debris from roots.
+texture metrics from a colour image, which can be informative on the spatial heterogeneity within a scan.
 
 ```{r soil-texture, eval = requireNamespace("glcm", quietly = TRUE)}
 tex <- analyze_soil_texture(
@@ -128,12 +127,15 @@ tex <- analyze_soil_texture(
 terra::plot(tex)
 ```
 
-A simpler, faster summary of overall tube colour (mean RGB and a single
+A simple summary of overall tube colour (mean RGB and a single
 luminance value) is available via `tube_coloration()`:
 
 ```{r tube-coloration}
 tube_coloration(img)
 ```
+
+
+
 
 # 3. Rhizosphere halo (root buffer zone)
 

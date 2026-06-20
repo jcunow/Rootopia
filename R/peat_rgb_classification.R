@@ -281,10 +281,10 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 
 #' Classify peat material classes from a minirhizotron RGB raster
 #'
-#' Assigns each pixel of an RGB \code{SpatRaster} to a peat material class
+#' Assigns each pixel of an RGB \code{SpatRaster} to a class
 #' (e.g. dark peat, red peat, root, silver tape, coarse debris) by nearest-
 #' centroid assignment in CIE LAB colour space. Pixels beyond the per-class
-#' distance threshold are labelled "unclassified".
+#' distance threshold are labelled "unclassified". 
 #'
 #' @param img An RGB image with at least 3 layers/channels interpreted as
 #'   R, G, B (in that order). Values may be 0-255 or 0-1 (auto-detected).
