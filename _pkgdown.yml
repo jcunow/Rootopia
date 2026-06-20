@@ -32,7 +32,7 @@ navbar:
         - text: Rotation Bias Correction
           href: articles/Rotation_Bias_vignettes.html
         - text: "-------"
-        - text: "Special Topics (peat colour, texture, halos, turnover)"
+        - text: "Special Topics (soil colour, texture, halos, turnover)"
           href: articles/SpecialTopics_vignette.html
     - text: News
       href: news/index.html
@@ -107,14 +107,14 @@ reference:
       - estimate_rotation_shift
 
   - title: "Soil and colour characterisation"
-    desc: "Colour metrics, peat classification, and texture analysis."
+    desc: "Colour metrics, soil classification, and texture analysis."
     contents:
       - create_root_buffer
       - tube_coloration
       - analyze_soil_texture
-      - classify_peat_rgb
-      - build_peat_centroids
-      - plot_peat_classification
+      - classify_soil_rgb
+      - build_soil_centroids
+      - plot_soil_classification
 
   - title: "Distribution analysis"
     desc: "Statistical indices summarising root distribution with depth."

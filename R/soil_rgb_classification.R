@@ -1,19 +1,19 @@
 # =============================================================================
-# peat_rgb_classification.R
+# soil_rgb_classification.R
 #
-# Functions for classifying minirhizotron RGB images into peat material classes
+# Functions for classifying minirhizotron RGB images into soil material classes
 # based on fixed LAB centroids derived from manual color calibration.
 #
 # Public functions:
-#   classify_peat_rgb()       -- classify a SpatRaster, return map + metrics
-#   build_peat_centroids()    -- derive centroids from user RGB picks
-#   plot_peat_classification() -- visualise output of classify_peat_rgb()
+#   classify_soil_rgb()       -- classify a SpatRaster, return map + metrics
+#   build_soil_centroids()    -- derive centroids from user RGB picks
+#   plot_soil_classification() -- visualise output of classify_soil_rgb()
 #
 # Internal helpers (not exported):
 #   .rgb_to_lab()
 #   .lab_to_rgb_hex()
 #   .assign_nearest_centroid()
-#   .default_peat_centroids()
+#   .default_soil_centroids()
 # =============================================================================
 
 
@@ -90,7 +90,7 @@
 
 
 #' @keywords internal
-.default_peat_centroids <- function() {
+.default_soil_centroids <- function() {
   # Default centroids calibrated from manual RGB picks on Oulanka 2023
   # minirhizotron images (Blended scans, Session 03).
   #
@@ -98,12 +98,12 @@
   # pixels beyond this from all centroids are labelled "unclassified".
   #
   # Close pairs to be aware of:
-  #   dark_peat <-> red_peat  dist ~10 LAB units  (monitor unclassified %)
+  #   dark_soil <-> red_soil  dist ~10 LAB units  (monitor unclassified %)
   #
   # These values are specific to this scanner / site / protocol.
-  # Use build_peat_centroids() to derive centroids for your own data.
+  # Use build_soil_centroids() to derive centroids for your own data.
   data.frame(
-    class    = c("dark_peat", "red_peat", "root",  "silver_tape", "coarse_debris"),
+    class    = c("dark_soil", "red_soil", "root",  "silver_tape", "coarse_debris"),
     L        = c( 8.2,         14.3,       35.2,    66.7,           23.1         ),
     A        = c(-2.3,          5.4,        2.1,    -3.0,           11.0         ),
     B        = c( 0.8,          5.9,        7.5,    -2.4,           13.1         ),
@@ -114,20 +114,20 @@
 
 
 # =============================================================================
-# build_peat_centroids()
+# build_soil_centroids()
 # =============================================================================
 
-#' Build peat class centroids from manual RGB colour picks
+#' Build soil class centroids from manual RGB colour picks
 #'
 #' Converts raw RGB pixel picks (collected e.g. in QGIS, FIJI, or ImageJ) to
 #' CIE LAB centroids and returns a centroid table ready to pass to
-#' \code{\link{classify_peat_rgb}}. Also prints diagnostic summaries including
+#' \code{\link{classify_soil_rgb}}. Also prints diagnostic summaries including
 #' intra-class spread, per-class coverage, and inter-class distance warnings.
 #'
 #' @param picks A named list of RGB pick matrices. Each element corresponds to
 #'   one class and must be a numeric matrix with 3 columns (R, G, B), values
 #'   0-255, with one row per pick. Names become class names in the output.
-#'   See \code{\link{classify_peat_rgb}}'s \strong{Building your own
+#'   See \code{\link{classify_soil_rgb}}'s \strong{Building your own
 #'   centroids (picks)} section for a worked example of constructing these
 #'   matrices from an image (e.g. by cropping representative patches and
 #'   calling \code{terra::values()}).
@@ -135,7 +135,7 @@
 #'   matched by name to \code{picks}. Pixels further than this from a class
 #'   centroid cannot be assigned to that class.
 #' @param prior Optional \code{data.frame} of existing centroids (same format
-#'   as the output of this function, or \code{.default_peat_centroids()}).
+#'   as the output of this function, or \code{.default_soil_centroids()}).
 #'   When supplied, the new centroids derived from \code{picks} are blended
 #'   with the prior centroids using \code{alpha}. Only classes present in both
 #'   \code{picks} and \code{prior} are blended; new classes in \code{picks}
@@ -155,24 +155,24 @@
 #' @examples
 #' \dontrun{
 #' # Clean break -- new picks only
-#' cents <- build_peat_centroids(new_picks, max_dist)
+#' cents <- build_soil_centroids(new_picks, max_dist)
 #'
 #' # Blend: 30% old calibration, 70% new picks
-#' cents <- build_peat_centroids(new_picks, max_dist,
-#'                               prior = .default_peat_centroids(),
+#' cents <- build_soil_centroids(new_picks, max_dist,
+#'                               prior = .default_soil_centroids(),
 #'                               alpha = 0.3)
 #'
 #' # Iterative refinement across sessions:
 #' # session 1
-#' cents <- build_peat_centroids(picks_s1, max_dist)
+#' cents <- build_soil_centroids(picks_s1, max_dist)
 #' # session 2 -- downweight session 1 to 20%
-#' cents <- build_peat_centroids(picks_s2, max_dist, prior = cents, alpha = 0.2)
+#' cents <- build_soil_centroids(picks_s2, max_dist, prior = cents, alpha = 0.2)
 #' # session 3 -- downweight accumulated prior to 10%
-#' cents <- build_peat_centroids(picks_s3, max_dist, prior = cents, alpha = 0.1)
+#' cents <- build_soil_centroids(picks_s3, max_dist, prior = cents, alpha = 0.1)
 #' }
 #'
 #' @export
-build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
+build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
                                  verbose = TRUE) {
   
   if (!is.list(picks) || is.null(names(picks)))
@@ -276,13 +276,13 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 
 
 # =============================================================================
-# classify_peat_rgb()
+# classify_soil_rgb()
 # =============================================================================
 
-#' Classify peat material classes from a minirhizotron RGB raster
+#' Classify soil material classes from a minirhizotron RGB raster
 #'
 #' Assigns each pixel of an RGB \code{SpatRaster} to a class
-#' (e.g. dark peat, red peat, root, silver tape, coarse debris) by nearest-
+#' (e.g. dark soil, red soil, root, silver tape, coarse debris) by nearest-
 #' centroid assignment in CIE LAB colour space. Pixels beyond the per-class
 #' distance threshold are labelled "unclassified". 
 #'
@@ -296,7 +296,7 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'   \code{A}, \code{B}, \code{MAX_DIST} (see \strong{Centroid table format}
 #'   below). Defaults to a set of centroids calibrated on Oulanka 2023
 #'   minirhizotron scans -- see \strong{Building your own centroids} below
-#'   and \code{\link{build_peat_centroids}} to derive centroids for your own
+#'   and \code{\link{build_soil_centroids}} to derive centroids for your own
 #'   data.
 #' @param downsample_fact Integer spatial aggregation factor applied before
 #'   classification for speed. \code{NULL} (default) uses full resolution.
@@ -330,7 +330,7 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' columns:
 #' \describe{
 #'   \item{\code{class}}{Character. Name of the class (e.g.
-#'     \code{"dark_peat"}, \code{"root"}). Becomes the factor level in
+#'     \code{"dark_soil"}, \code{"root"}). Becomes the factor level in
 #'     \code{result$map} and the \code{class} column of \code{result$metrics}.}
 #'   \item{\code{L}, \code{A}, \code{B}}{Numeric. The class centroid's
 #'     coordinates in CIE LAB colour space (D65 illuminant): \code{L} is
@@ -352,25 +352,25 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' @section Building your own centroids (picks):
 #' The default \code{centroids} table was calibrated on one specific scanner
 #' and site, so for other data you should derive your own via
-#' \code{\link{build_peat_centroids}}.
+#' \code{\link{build_soil_centroids}}.
 #'
-#' \code{build_peat_centroids()} takes \code{picks}: a named list with one
+#' \code{build_soil_centroids()} takes \code{picks}: a named list with one
 #' element per material class. Each element is a numeric matrix with exactly
 #' 3 columns (R, G, B in 0-255), where every row is one colour sample
 #' believed to belong to that class. Classes may have different numbers of
 #' rows. The function converts each matrix to LAB, averages it to a single
 #' centroid, and returns a \code{data.frame} in the same format as
-#' \code{.default_peat_centroids()} -- ready to pass straight back into
-#' \code{classify_peat_rgb(centroids = ...)}.
+#' \code{.default_soil_centroids()} -- ready to pass straight back into
+#' \code{classify_soil_rgb(centroids = ...)}.
 #'
 #' The simplest approach is to read representative RGB values off your scan
 #' (e.g. using an image viewer's colour picker) and enter them directly:
 #' \preformatted{
 #' picks <- list(
-#'   dark_peat = matrix(c( 28,  22,  18,
+#'   dark_soil = matrix(c( 28,  22,  18,
 #'                          32,  26,  21,
 #'                          25,  19,  15), ncol = 3, byrow = TRUE),
-#'   red_peat  = matrix(c( 80,  45,  35,
+#'   red_soil  = matrix(c( 80,  45,  35,
 #'                          75,  42,  31), ncol = 3, byrow = TRUE),
 #'   root      = matrix(c(180, 160, 130,
 #'                        175, 155, 125,
@@ -382,31 +382,31 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'                         95,  65,  40), ncol = 3, byrow = TRUE)
 #' )
 #'
-#' max_dist <- c(dark_peat = 14, red_peat = 14, root = 26,
+#' max_dist <- c(dark_soil = 14, red_soil = 14, root = 26,
 #'               tape = 28, debris = 11)
 #'
-#' cents  <- build_peat_centroids(picks, max_dist)   # prints diagnostics
-#' result <- classify_peat_rgb(img, centroids = cents)
+#' cents  <- build_soil_centroids(picks, max_dist)   # prints diagnostics
+#' result <- classify_soil_rgb(img, centroids = cents)
 #' }
 #' Alternatively, picks can be extracted from known representative patches of
-#' your image. \strong{Important:} \code{build_peat_centroids()} always treats
+#' your image. \strong{Important:} \code{build_soil_centroids()} always treats
 #' pick values as 0-255 (no auto-scaling). If your raster stores values in
 #' 0-1, multiply by 255 before building picks so that the centroids and the
-#' pixels seen inside \code{classify_peat_rgb()} are on the same scale.
+#' pixels seen inside \code{classify_soil_rgb()} are on the same scale.
 #'
-#' \code{build_peat_centroids()} prints diagnostics (intra-class spread,
+#' \code{build_soil_centroids()} prints diagnostics (intra-class spread,
 #' inter-class distances, \code{MAX_DIST} coverage) to help you sanity-check
 #' your choices. Provide a class for \emph{every} material present in your
 #' scans: because classification is nearest-centroid, any material without its
 #' own class is snapped into whichever defined class is closest.
 #'
-#' @seealso \code{\link{build_peat_centroids}}, \code{\link{plot_peat_classification}}
+#' @seealso \code{\link{build_soil_centroids}}, \code{\link{plot_soil_classification}}
 #'
 #' @examples
 #' \dontrun{
 #' library(terra)
 #' img    <- rast("scan.tiff")
-#' result <- classify_peat_rgb(img)
+#' result <- classify_soil_rgb(img)
 #'
 #' # Access outputs
 #' terra::plot(result$map)
@@ -418,14 +418,14 @@ build_peat_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'
 #' # Custom centroids -- see "Building your own centroids (picks)" above for
 #' # how to construct `picks` and `max_dist`
-#' cents  <- build_peat_centroids(picks, max_dist)
-#' result <- classify_peat_rgb(img, centroids = cents)
+#' cents  <- build_soil_centroids(picks, max_dist)
+#' result <- classify_soil_rgb(img, centroids = cents)
 #' }
 #'
 #' @importFrom terra nlyr values aggregate disagg resample
 #' @export
-classify_peat_rgb <- function(img,
-                              centroids       = .default_peat_centroids(),
+classify_soil_rgb <- function(img,
+                              centroids       = .default_soil_centroids(),
                               downsample_fact = NULL,
                               compute_metrics = TRUE,
                               verbose         = TRUE) {
@@ -594,16 +594,16 @@ classify_peat_rgb <- function(img,
 
 
 # =============================================================================
-# plot_peat_classification()
+# plot_soil_classification()
 # =============================================================================
 
-#' Plot the output of classify_peat_rgb
+#' Plot the output of classify_soil_rgb
 #'
 #' Produces a three-panel figure: the classified raster map, a legend showing
 #' class names with area fractions and mean distances to centroids, and a
 #' dendrogram of inter-class LAB distances.
 #'
-#' @param result A list returned by \code{\link{classify_peat_rgb}}.
+#' @param result A list returned by \code{\link{classify_soil_rgb}}.
 #' @param color_mode Character. One of \code{"contrast"} (default),
 #'   \code{"vibrant"}, or \code{"centroid"}.
 #'   \describe{
@@ -627,14 +627,14 @@ classify_peat_rgb <- function(img,
 #'
 #' @return Invisibly \code{NULL}. Called for its side effect (plot).
 #'
-#' @seealso \code{\link{classify_peat_rgb}}
+#' @seealso \code{\link{classify_soil_rgb}}
 #'
 #' @importFrom terra values
 #' @importFrom stats dist hclust as.dendrogram
 #' @importFrom graphics par layout plot legend axis abline mtext
 #' @importFrom grDevices png dev.off
 #' @export
-plot_peat_classification <- function(result,
+plot_soil_classification <- function(result,
                                      color_mode    = "contrast",
                                      class_colors  = NULL,
                                      vibrant_colors = NULL,
@@ -649,16 +649,16 @@ plot_peat_classification <- function(result,
   
   # Default palettes
   default_contrast <- c(
-    dark_peat     = "#1A1A1A",
-    red_peat      = "#8B3A2A",
+    dark_soil     = "#1A1A1A",
+    red_soil      = "#8B3A2A",
     root          = "#D4B483",
     silver_tape   = "#A8B8BA",
     coarse_debris = "#C47A35",
     unclassified  = "#FF69B4"
   )
   default_vibrant <- c(
-    dark_peat     = "#3D00FF",
-    red_peat      = "#FF2200",
+    dark_soil     = "#3D00FF",
+    red_soil      = "#FF2200",
     root          = "#FFD700",
     silver_tape   = "#00E5FF",
     coarse_debris = "#FF6600",

@@ -1,11 +1,11 @@
 ---
-title: "Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover"
+title: "Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover"
 output:
     rmarkdown::html_vignette:
         toc: true
         toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover}
+  %\VignetteIndexEntry{Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -23,25 +23,25 @@ library(RootScanR)
 
 This article collects a few less-obvious capabilities of **RootScanR** that
 do not fit the main step-by-step tutorials but are useful for specific
-questions: classifying peat/soil material by colour, quantifying soil
+questions: classifying soil/soil material by colour, quantifying soil
 surface texture, building a rhizosphere "halo" zone around roots, and
 measuring root turnover between time points.
 
 All examples use the bundled Oulanka 2023 example rasters, so you can run
 them as-is.
 
-# 1. Peat and material colour classification
+# 1. Soil and material colour classification
 
-`classify_peat_rgb()` assigns every pixel of an RGB scan to a
-class (e.g., dark peat, red peat, root, silver tape, coarse debris, ...) by
+`classify_soil_rgb()` assigns every pixel of an RGB scan to a
+class (e.g., dark soil, red soil, root, silver tape, coarse debris, ...) by
 nearest-centroid matching in CIE LAB colour space. Pixels too far from any
 centroid are left "unclassified".
 
-```{r peat-classify}
+```{r soil-classify}
 img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 
 # downsample_fact speeds up the demo; drop it for full resolution
-result <- classify_peat_rgb(img, downsample_fact = 4, verbose = FALSE)
+result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
 terra::plot(result$map)
@@ -50,35 +50,35 @@ terra::plot(result$map)
 The returned list also carries per-class statistics -- pixel counts, area
 fractions, mean LAB/RGB colours, and the mean distance to the centroid:
 
-```{r peat-metrics}
+```{r soil-metrics}
 result$metrics
 ```
 
 ## Visualising the classification
 
-`plot_peat_classification()` renders the class map with a legend and the
+`plot_soil_classification()` renders the class map with a legend and the
 actual mean colours of each class:
 
-```{r peat-plot}
-plot_peat_classification(result)
+```{r soil-plot}
+plot_soil_classification(result)
 ```
 
 ## Calibrating your own centroids
 
 The default centroids were calibrated on one scanner and site. For other
-data, build your own with `build_peat_centroids()`. You supply `picks`: a
+data, build your own with `build_soil_centroids()`. You supply `picks`: a
 named list with one element per material class, where each element is a
 matrix with 3 columns (R, G, B in 0-255). Each row is one colour sample for
 that class — different classes can have different numbers of rows. The
 function averages each class's samples into a single LAB centroid and returns
 a table in the same format as the built-in defaults, ready to pass back into
-`classify_peat_rgb()`.
+`classify_soil_rgb()`.
 
 The simplest approach is to read representative RGB values off your scan
 with a colour picker (e.g. in an image viewer or QGIS) and enter them
 directly:
 
-```{r peat-centroids, eval = FALSE}
+```{r soil-centroids, eval = FALSE}
 # each row is one pixel with r,g,b values
 picks <- list(
   region1 = matrix(c( 28,  22,  18,
@@ -98,18 +98,18 @@ picks <- list(
 max_dist <- c(region1 = 14, region2 = 14, region3 = 26,
               region4 = 12)
 
-cents  <- build_peat_centroids(picks, max_dist)   # prints diagnostics
-result <- classify_peat_rgb(img, centroids = cents)
+cents  <- build_soil_centroids(picks, max_dist)   # prints diagnostics
+result <- classify_soil_rgb(img, centroids = cents)
 terra::plot(result$map)
 ```
 
 Note: provide a class for **every** material in your scans. Because
 classification is nearest-centroid, any material without its own class is
-snapped into whichever defined class sits closest. `build_peat_centroids()`
+snapped into whichever defined class sits closest. `build_soil_centroids()`
 prints intra-class spread and inter-class distances to help you tune
 `MAX_DIST` before running the full classification.
 
-See `?classify_peat_rgb` for the full description of the centroid table
+See `?classify_soil_rgb` for the full description of the centroid table
 format and the `prior`/`alpha` blending workflow for iterative refinement.
 
 # 2. Soil surface texture and color
@@ -190,7 +190,7 @@ root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 15
 # See also
 
 - `vignette("BatchProcessing_vignette")` -- end-to-end depth profiling.
-- `?classify_peat_rgb`, `?build_peat_centroids`, `?plot_peat_classification`
+- `?classify_soil_rgb`, `?build_soil_centroids`, `?plot_soil_classification`
 - `?analyze_soil_texture`, `?tube_coloration`
 - `?create_root_buffer`
 - `?root_turnover`
