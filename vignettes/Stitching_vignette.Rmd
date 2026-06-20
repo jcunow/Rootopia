@@ -1,9 +1,9 @@
 ---
-title: "Stitching Scan Sequences into Mosaics with RootScanR"
+title: "Stitching Scan Sequences into Mosaics with Rootopia"
 author: "Johannes Cunow"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Stitching Scan Sequences into Mosaics with RootScanR}
+  %\VignetteIndexEntry{Stitching Scan Sequences into Mosaics with Rootopia}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -37,12 +37,12 @@ preview a folder.)
 
 ```{r lib, eval = FALSE}
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
-library(RootScanR)
+# remotes::install_github("jcunow/Rootopia")
+library(Rootopia)
 ```
 
 ```{r lib-real, include = FALSE}
-library(RootScanR)
+library(Rootopia)
 ```
 
 ---

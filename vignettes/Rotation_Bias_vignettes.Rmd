@@ -1,9 +1,9 @@
 ---
-title: "Rotation Bias and Rhythmicity Analysis with RootScanR"
+title: "Rotation Bias and Rhythmicity Analysis with Rootopia"
 author: "Johannes Cunow"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Rotation Bias and Rhythmicity Analysis with RootScanR}
+  %\VignetteIndexEntry{Rotation Bias and Rhythmicity Analysis with Rootopia}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,14 +13,14 @@ vignette: >
 ## Introduction
 
 This vignette demonstrates how to detect and correct for rotational bias in
-minirhizotron setups using the **RootScanR** package. In minirhizotron studies,
+minirhizotron setups using the **Rootopia** package. In minirhizotron studies,
 the scanner tube is inserted at an angle into the soil and can rotate slightly
 between sessions. Because the CI-600 and similar scanners do not cover a full
 360° arc, sequential images from the same tube may not perfectly overlap.
 Left uncorrected, this rotation introduces a systematic spatial bias — roots
 near the scan edges are observed in some sessions but not others.
 
-RootScanR addresses this through four functions:
+Rootopia addresses this through four functions:
 
 - `estimate_rotation_center()` — locates the rotational zero point from tape
   coverage in a single image
@@ -45,9 +45,9 @@ section below.
 
 ```{r, eval=TRUE}
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
+# remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(terra)
 ```
 
@@ -321,4 +321,4 @@ Two extensions are planned and not yet implemented:
 - [Minirhizotron Scans](MinirhizotronScans_vignettes.html) — step-by-step
   depth analysis workflow
 - [Function reference](../reference/index.html)
-- Source and issues: <https://github.com/jcunow/RootScanR>
+- Source and issues: <https://github.com/jcunow/Rootopia>

@@ -2,19 +2,19 @@
 
 ---
 
-## RootScanR: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images
+## Rootopia: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images
 
 
-[![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/RootScanR/)
+[![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/Rootopia/)
 
 
 
-Welcome to **RootScanR**, an R package designed to extract quantitative belowground traits from **flatbed root scans** and **minirhizotron image sequences**. It provides flexible image preprocessing, trait estimation like root length & diameter, depth mapping, and distribution tools. 
+Welcome to **Rootopia**, an R package designed to extract quantitative belowground traits from **flatbed root scans** and **minirhizotron image sequences**. It provides flexible image preprocessing, trait estimation like root length & diameter, depth mapping, and distribution tools. 
 
  - some features are still experimental. This package is an insect's playground and we love bugs here. Just call them out if their behaviour is undesirable.
 
 
-## 💡 What can RootScanR do?
+## 💡 What can Rootopia do?
 
 - 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed scanners
 - 🌱 Estimate root length, depth profiles, and turnover between sessions
@@ -28,7 +28,7 @@ Welcome to **RootScanR**, an R package designed to extract quantitative belowgro
 
 ## 📘 Tutorials
 
-New to RootScanR? Start with the batch-processing tutorial — it runs the
+New to Rootopia? Start with the batch-processing tutorial — it runs the
 whole pipeline (loading, depth mapping, trait extraction) over a folder of
 images with a single function call. The step-by-step tutorials below are for
 when you need full control over an individual processing stage.
@@ -49,7 +49,7 @@ Each tutorial includes code, images, overlays, and tips for interpretation.
 
 ```r
 # Load example flatbed scan
-library(RootScanR)
+library(Rootopia)
 library(terra)
 data("seg_Oulanka2023_Session01_T067")
 img <- seg_Oulanka2023_Session01_T067
@@ -88,11 +88,11 @@ terra::plot(skel)
 
 * [Function reference](reference/index.html)
 * [Vignettes](articles/index.html)
-* [Source code on GitHub](https://github.com/jcunow/RootScanR)
+* [Source code on GitHub](https://github.com/jcunow/Rootopia)
 
 ---
 
 ### 🙌 Contributions & Issues
 
-Found a bug or have a feature request? Please [open an issue](https://github.com/jcunow/RootScanR/issues) or submit a pull request.
+Found a bug or have a feature request? Please [open an issue](https://github.com/jcunow/Rootopia/issues) or submit a pull request.
 

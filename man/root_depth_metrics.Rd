@@ -220,7 +220,7 @@ cm\eqn{^{-1}} (cm^2 surface per cm^3 volume).  Thicker roots have a smaller
 ratio; fine roots have a larger ratio.
 
 \strong{Fault tolerance.}  Every metric block is wrapped in
-\code{tryCatch}.  Failures produce a \code{[RootScanR] SKIPPED} message and
+\code{tryCatch}.  Failures produce a \code{[Rootopia] SKIPPED} message and
 \code{NA} values; they never abort the run.
 
 \strong{Dependency resolution.}  Enabling a higher-level metric silently

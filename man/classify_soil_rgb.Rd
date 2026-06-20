@@ -58,7 +58,7 @@ A named list with elements:
 }
 }
 \description{
-Assigns each pixel of an RGB \code{SpatRaster} to a soil material class
+Assigns each pixel of an RGB \code{SpatRaster} to a class
 (e.g. dark soil, red soil, root, silver tape, coarse debris) by nearest-
 centroid assignment in CIE LAB colour space. Pixels beyond the per-class
 distance threshold are labelled "unclassified".

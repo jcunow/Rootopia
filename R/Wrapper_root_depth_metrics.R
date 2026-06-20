@@ -189,7 +189,7 @@
 #' ratio; fine roots have a larger ratio.
 #'
 #' \strong{Fault tolerance.}  Every metric block is wrapped in
-#' \code{tryCatch}.  Failures produce a \code{[RootScanR] SKIPPED} message and
+#' \code{tryCatch}.  Failures produce a \code{[Rootopia] SKIPPED} message and
 #' \code{NA} values; they never abort the run.
 #'
 #' \strong{Dependency resolution.}  Enabling a higher-level metric silently
@@ -298,7 +298,7 @@ root_depth_metrics <- function(
   .safe <- function(label, expr, fallback = NULL) {
     tryCatch(expr,
              error = function(e) {
-               message(sprintf("[RootScanR] SKIPPED '%s': %s", label, conditionMessage(e)))
+               message(sprintf("[Rootopia] SKIPPED '%s': %s", label, conditionMessage(e)))
                fallback
              }
     )
@@ -346,42 +346,42 @@ root_depth_metrics <- function(
   # 2.  Global dependency resolution
   # ===========================================================================
   if (calc_root_angles && !calc_root_length) {
-    message("[RootScanR] Auto-enabling calc_root_length (required for calc_root_angles).")
+    message("[Rootopia] Auto-enabling calc_root_length (required for calc_root_angles).")
     calc_root_length <- TRUE
   }
   if (calc_diameter_quantiles && !calc_root_length) {
-    message("[RootScanR] Auto-enabling calc_root_length (required for calc_diameter_quantiles).")
+    message("[Rootopia] Auto-enabling calc_root_length (required for calc_diameter_quantiles).")
     calc_root_length <- TRUE
   }
   if (calc_root_order_metrics && !calc_root_length) {
-    message("[RootScanR] Auto-enabling calc_root_length (required for calc_root_order_metrics).")
+    message("[Rootopia] Auto-enabling calc_root_length (required for calc_root_order_metrics).")
     calc_root_length <- TRUE
   }
   if (calc_density_metrics) {
     if (!calc_root_pixels) {
-      message("[RootScanR] Auto-enabling calc_root_pixels (required for calc_density_metrics).")
+      message("[Rootopia] Auto-enabling calc_root_pixels (required for calc_density_metrics).")
       calc_root_pixels <- TRUE
     }
     if (!calc_root_length) {
-      message("[RootScanR] Auto-enabling calc_root_length (required for calc_density_metrics).")
+      message("[Rootopia] Auto-enabling calc_root_length (required for calc_density_metrics).")
       calc_root_length <- TRUE
     }
   }
   if (calc_distribution_indices && !calc_density_metrics) {
-    message("[RootScanR] Auto-enabling calc_density_metrics (required for calc_distribution_indices).")
+    message("[Rootopia] Auto-enabling calc_density_metrics (required for calc_distribution_indices).")
     calc_density_metrics <- TRUE
   }
   if (calc_advanced_metrics) {
     if (!calc_density_metrics) {
-      message("[RootScanR] Auto-enabling calc_density_metrics (required for calc_advanced_metrics).")
+      message("[Rootopia] Auto-enabling calc_density_metrics (required for calc_advanced_metrics).")
       calc_density_metrics <- TRUE
     }
     if (!calc_distribution_indices) {
-      message("[RootScanR] Auto-enabling calc_distribution_indices (required for calc_advanced_metrics).")
+      message("[Rootopia] Auto-enabling calc_distribution_indices (required for calc_advanced_metrics).")
       calc_distribution_indices <- TRUE
     }
     if (!calc_diameter_stats) {
-      message("[RootScanR] Auto-enabling calc_diameter_stats (required for rootsurface_rootvolume_ratio).")
+      message("[Rootopia] Auto-enabling calc_diameter_stats (required for rootsurface_rootvolume_ratio).")
       calc_diameter_stats <- TRUE
     }
   }
@@ -391,7 +391,7 @@ root_depth_metrics <- function(
     calc_root_angles || calc_root_order_metrics
   if (needs_skl && is.null(im.ls.skl)) {
     message(paste(
-      "[RootScanR] Skeleton directory (path.skl) not found or not supplied.",
+      "[Rootopia] Skeleton directory (path.skl) not found or not supplied.",
       "Skeletons will be computed internally per image via skeletonize_image()."
     ))
   }
@@ -464,7 +464,7 @@ root_depth_metrics <- function(
       img
     })
     if (is.null(im)) {
-      message(sprintf("[RootScanR] [%d/%d] %s: could not load segmented image -- skipping.",
+      message(sprintf("[Rootopia] [%d/%d] %s: could not load segmented image -- skipping.",
                       l, n_images, tube))
       failed_imgs <- c(failed_imgs, seg_file)
       img_times   <- c(img_times, proc.time()[["elapsed"]] - t_img)
@@ -488,7 +488,7 @@ root_depth_metrics <- function(
         })
       }
       if (is.null(im.skeleton)) {
-        message(sprintf("[RootScanR] %s: skeleton unavailable -- disabling length/diameter/angle/order metrics.", tube))
+        message(sprintf("[Rootopia] %s: skeleton unavailable -- disabling length/diameter/angle/order metrics.", tube))
         do_length <- do_diam_st <- do_diam_q <- do_angles <- do_order <- FALSE
       }
     }
@@ -500,7 +500,7 @@ root_depth_metrics <- function(
                         terra::rast(paste0(path.rgb, im.ls.rgb[l])))
       }
       if (is.null(im.rgb)) {
-        message(sprintf("[RootScanR] %s: RGB image unavailable -- disabling calc_color_metrics.", tube))
+        message(sprintf("[Rootopia] %s: RGB image unavailable -- disabling calc_color_metrics.", tube))
         do_color <- FALSE
       }
     }
@@ -547,7 +547,7 @@ root_depth_metrics <- function(
       dm
     })
     if (is.null(DepthMap)) {
-      message(sprintf("[RootScanR] [%d/%d] %s: create_depthmap failed -- skipping.", l, n_images, tube))
+      message(sprintf("[Rootopia] [%d/%d] %s: create_depthmap failed -- skipping.", l, n_images, tube))
       failed_imgs <- c(failed_imgs, seg_file)
       img_times   <- c(img_times, proc.time()[["elapsed"]] - t_img)
       next
@@ -645,7 +645,7 @@ root_depth_metrics <- function(
         dm
       })
       if (is.null(rd.map)) {
-        message(sprintf("[RootScanR] %s: diameter map failed -- disabling diameter metrics.", tube))
+        message(sprintf("[Rootopia] %s: diameter map failed -- disabling diameter metrics.", tube))
         do_diam_st <- do_diam_q <- FALSE
       }
     }
@@ -767,7 +767,7 @@ root_depth_metrics <- function(
         dd <- .safe("deep_drive (full image)", {
           adm <- terra::t(terra::flip(DepthMap))
           terra::ext(adm) <- terra::ext(angles_map)
-          RootScanR::deep_drive(DepthMap = adm, AngleMap = angles_map, return = "all")
+          Rootopia::deep_drive(DepthMap = adm, AngleMap = angles_map, return = "all")
         })
         gg.full <- if (!is.null(dd)) dd$optimal_angle_map else NULL
         
@@ -777,7 +777,7 @@ root_depth_metrics <- function(
             if (all(dim(gg.full) == dim(bm))) {
               terra::ext(gg.full) <- terra::ext(bm)
             } else {
-              message(sprintf("[RootScanR] %s: gg.full/bm dimension mismatch -- disabling calc_root_angles.", tube))
+              message(sprintf("[Rootopia] %s: gg.full/bm dimension mismatch -- disabling calc_root_angles.", tube))
               gg.full   <- NULL
               do_angles <- FALSE
             }
@@ -824,8 +824,8 @@ root_depth_metrics <- function(
             sl  <- im.rgb.crop; sl[bm != d] <- NA; sl <- terra::trim(sl)
             ri  <- sl; ri[im.sl == 0] <- NA   # root pixels only
             pi_ <- sl; pi_[im.sl == 1] <- NA  # background pixels only
-            rc_ <- tryCatch(RootScanR::tube_coloration(ri),  error = function(e) empty_col)
-            pc_ <- tryCatch(RootScanR::tube_coloration(pi_), error = function(e) empty_col)
+            rc_ <- tryCatch(Rootopia::tube_coloration(ri),  error = function(e) empty_col)
+            pc_ <- tryCatch(Rootopia::tube_coloration(pi_), error = function(e) empty_col)
             list(
               rc = dplyr::rename_with(rc_, ~ paste0(.x, "_root")),
               pc = dplyr::rename_with(pc_, ~ paste0(.x, "_bg"))
@@ -860,7 +860,7 @@ root_depth_metrics <- function(
             
             rd_clean <- rd_v[!is.na(rd_v) & rd_v > 0]
             pk <- tryCatch({
-              mp <- RootScanR::modal_peaks(rd_clean, display_type = "none",
+              mp <- Rootopia::modal_peaks(rd_clean, display_type = "none",
                                            prominence_threshold = length(rd_clean) / sqrt(length(rd_clean)),
                                            mclust = FALSE)
               np <- length(mp$peak_x)
@@ -942,7 +942,7 @@ root_depth_metrics <- function(
       eta_secs <- avg_secs * n_left
       finish   <- Sys.time() + eta_secs
       message(sprintf(
-        "[RootScanR] [%d/%d] %s | img: %.0fs | elapsed: %.0fs | remaining: ~%.0fs | done ~%s",
+        "[Rootopia] [%d/%d] %s | img: %.0fs | elapsed: %.0fs | remaining: ~%.0fs | done ~%s",
         l, n_images, tube,
         img_times[n_done],
         cum_secs,
@@ -959,13 +959,13 @@ root_depth_metrics <- function(
   valid <- Filter(Negate(is.null), root.list)
   
   if (length(failed_imgs) > 0)
-    warning(sprintf("[RootScanR] %d image(s) skipped entirely: %s",
+    warning(sprintf("[Rootopia] %d image(s) skipped entirely: %s",
                     length(failed_imgs),
                     paste(failed_imgs, collapse = ", ")),
             call. = FALSE)
   
   if (length(valid) == 0L) {
-    warning("[RootScanR] No images were processed successfully.", call. = FALSE)
+    warning("[Rootopia] No images were processed successfully.", call. = FALSE)
     return(invisible(NULL))
   }
   
@@ -990,8 +990,8 @@ root_depth_metrics <- function(
         dplyr::group_by(dplyr::.data$Tube) |>
         dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
         dplyr::summarise(
-          mrd   = RootScanR::MRD(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
-          rpi   = RootScanR::RPI(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
+          mrd   = Rootopia::MRD(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
+          rpi   = Rootopia::RPI(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
           # total.length.density: sum of (length density x bin size) across all bins
           # units: cm root per cm^2 (integrated over the full depth profile)
           total.length.density = sum(dplyr::.data$rootlength.density * depth_interval_cm, na.rm = TRUE),
@@ -1066,7 +1066,7 @@ root_depth_metrics <- function(
       out_dir <- dirname(output_path)
       if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
       save(root.depth.metrics, file = output_path)
-      .msg("[RootScanR] Results saved to: %s", output_path)
+      .msg("[Rootopia] Results saved to: %s", output_path)
     })
   }
   
@@ -1074,7 +1074,7 @@ root_depth_metrics <- function(
     total_min <- round(sum(img_times) / 60, 1)
     n_ok      <- n_images - length(failed_imgs)
     message(sprintf(
-      "[RootScanR] Done. %d/%d images processed in %.1f min.",
+      "[Rootopia] Done. %d/%d images processed in %.1f min.",
       n_ok, n_images, total_min
     ))
   }

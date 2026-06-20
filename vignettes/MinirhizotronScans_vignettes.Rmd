@@ -1,10 +1,10 @@
 ---
-title: "Minirhizotron Scans Analysis with RootScanR in R"
+title: "Minirhizotron Scans Analysis with Rootopia in R"
 author: "Johannes Cunow"
 output:
   rmarkdown::html_vignette: default
 vignette: >
-  %\VignetteIndexEntry{Minirhizotron Scans Analysis with RootScanR in R}
+  %\VignetteIndexEntry{Minirhizotron Scans Analysis with Rootopia in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,16 +12,16 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
-# RootScanR + terra are hard dependencies, so the workflow below can run at
+# Rootopia + terra are hard dependencies, so the workflow below can run at
 # build time against the bundled example data. The displayed
 # `load_flexible_image("path/to/...")` chunks stay eval=FALSE — that is how a
 # user supplies their own files — while the chunks that operate on the example
 # objects are eval=TRUE so the code is actually exercised.
-library(RootScanR)
+library(Rootopia)
 library(terra)
 ```
 
-# Minirhizotron Scans Analysis with RootScanR
+# Minirhizotron Scans Analysis with Rootopia
 
 ## Introduction
 
@@ -30,11 +30,11 @@ minirhizotron images — loading, calibrating, depth-mapping, and extracting
 root traits step by step. It is aimed at users who want full control over each
 processing stage or who are working on a specific subset of functions.
 
-> **New to RootScanR?** If you want to process a whole set of images in one
+> **New to Rootopia?** If you want to process a whole set of images in one
 > go, the [Batch Processing](BatchProcessing_vignette.html) vignette wraps
 > this entire workflow into a single `root_depth_metrics()` call. Start there.
 
-> **Prerequisite**: RootScanR works with already-segmented images.
+> **Prerequisite**: Rootopia works with already-segmented images.
 > Segmentation must be done beforehand using
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
@@ -46,9 +46,9 @@ processing stage or who are working on a specific subset of functions.
 
 ```{r, eval=FALSE}
 # install.packages("remotes")
-# remotes::install_github("jcunow/RootScanR")
+# remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(terra)
 library(tidyverse)
 ```

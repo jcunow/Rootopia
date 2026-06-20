@@ -1,4 +1,4 @@
-url: https://jcunow.github.io/RootScanR/
+url: https://jcunow.github.io/Rootopia/
 
 template:
   bootstrap: 5
@@ -15,7 +15,7 @@ template:
 search: true
 
 home:
-  title: "RootScanR: Extract Root Traits from Images"
+  title: "Rootopia: Extract Root Traits from Images"
   description: "R tools for extracting root traits from flatbed and minirhizotron images"
 
 navbar:

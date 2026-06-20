@@ -51,9 +51,9 @@ each other; each position corresponds to the same physical tube/window.
 
 ```{r install}
 # install.packages("remotes")
-remotes::install_github("jcunow/RootScanR")
+remotes::install_github("jcunow/Rootopia")
 
-library(RootScanR)
+library(Rootopia)
 library(tidyverse)   # for downstream plotting
 ```
 
@@ -306,11 +306,11 @@ image showing per-image time, cumulative elapsed time, estimated remaining
 time, and predicted clock-time of completion:
 
 ```
-[RootScanR] [3/48] T042 | img: 12s | elapsed: 38s | remaining: ~546s | done ~14:22
+[Rootopia] [3/48] T042 | img: 12s | elapsed: 38s | remaining: ~546s | done ~14:22
 ```
 
 If a metric block fails for a single image (e.g. a corrupted skeleton file),
-it is skipped with a `[RootScanR] SKIPPED` message and the corresponding
+it is skipped with a `[Rootopia] SKIPPED` message and the corresponding
 columns are filled with `NA`. Processing always continues. Images that cannot
 be loaded at all are skipped entirely and listed in a warning at the end.
 

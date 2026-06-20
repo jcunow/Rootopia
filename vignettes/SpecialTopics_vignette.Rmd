@@ -18,10 +18,10 @@ knitr::opts_chunk$set(
   fig.height = 4,
   out.width = "100%"
 )
-library(RootScanR)
+library(Rootopia)
 ```
 
-This article collects a few less-obvious capabilities of **RootScanR** that
+This article collects a few less-obvious capabilities of **Rootopia** that
 do not fit the main step-by-step tutorials but are useful for specific
 questions: classifying soil/soil material by colour, quantifying soil
 surface texture, building a rhizosphere "halo" zone around roots, and

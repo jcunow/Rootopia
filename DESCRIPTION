@@ -1,5 +1,5 @@
 Type: Package
-Package: RootScanR
+Package: Rootopia
 Title: Depth-Resolved Root Analysis and Trait Extraction from Minirhizotrons and Flatbed Scanner
 Version: 1.1.0
 Authors@R: c(person(given = "Johannes",
@@ -8,14 +8,14 @@ Authors@R: c(person(given = "Johannes",
              email = "johannes.cunow@gmail.com",
              comment = c(ORCID = "0009-0006-4830-1162")))
 Maintainer: Johannes Cunow <johannes.cunow@gmail.com>
-Description: RootScanR enables depth-resolved analysis of minirhizotron images and trait extraction from flatbed root scans. 
+Description: Rootopia enables depth-resolved analysis of minirhizotron images and trait extraction from flatbed root scans. 
     Designed for studying root dynamics and morphology, it provides tools for root density, skeletonization, 
     depth profiling, and trait quantification. Track roots in depth. Extract traits in detail. 
     Rotational biases of minirhizotron tubes can also be assessed. 
     Minirhizotron scans will need to be segmented beforehand (e.g., 'RootDetector', 'RootPainter').
 License: GPL (>= 3)
-URL: https://github.com/jcunow/RootScanR, https://jcunow.github.io/RootScanR/
-BugReports: https://github.com/jcunow/RootScanR/issues
+URL: https://github.com/jcunow/Rootopia, https://jcunow.github.io/Rootopia/
+BugReports: https://github.com/jcunow/Rootopia/issues
 Depends: 
     R(>= 3.6)
 Imports:
