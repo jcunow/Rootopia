@@ -86,10 +86,20 @@ a measured offset. Optionally previews what is kept versus cut.</p>
 
 
 <dt id="arg-center-offset">center.offset<a class="anchor" aria-label="anchor" href="#arg-center-offset"></a></dt>
-<dd><p>Numeric. Meaning depends on <code>fixed.rotation</code>:
-when <code>TRUE</code>, the row to centre the kept window on (an absolute row,
-e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>); when <code>FALSE</code>, the
-rotation shift in rows to trim (e.g. from <code><a href="estimate_rotation_shift.html">estimate_rotation_shift()</a></code>).</p></dd>
+<dd><p>Numeric or character. Where to centre the kept window
+(in fixed mode), given in one of three forms:</p><ul><li><p><strong>Absolute row</strong> - a number <code>&gt; 1</code>: the exact row to
+    centre on (e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>). Original
+    behaviour, unchanged.</p></li>
+<li><p><strong>Fraction</strong> - a number in <code>[0, 1]</code>: a fraction of the
+    image height. <code>0</code> = top, <code>0.25</code> = a quarter down,
+    <code>0.5</code> = middle, <code>1</code> = bottom (so the centre row is
+    <code>center.offset * nrow</code>).</p></li>
+<li><p><strong>Keyword</strong> - <code>"top"</code> (= 0), <code>"middle"</code> /
+    <code>"center"</code> / <code>"centre"</code> (= 0.5), or <code>"bottom"</code> (= 1).</p></li>
+</ul><p>The default <code>0</code> centres on the top row, matching previous behaviour.
+When <code>fixed.rotation = FALSE</code> the resolved value is used as the
+rotation shift in rows to trim (e.g. from
+<code><a href="estimate_rotation_shift.html">estimate_rotation_shift()</a></code>); pass an absolute number there.</p></dd>
 
 
 <dt id="arg-cut-buffer">cut.buffer<a class="anchor" aria-label="anchor" href="#arg-cut-buffer"></a></dt>
@@ -133,6 +143,40 @@ Default <code>FALSE</code>.</p></dd>
 <span class="r-in"><span><span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>, center.offset <span class="op">=</span> <span class="va">r0</span>, fixed.width <span class="op">=</span> <span class="fl">800</span>,</span></span>
 <span class="r-in"><span>                fixed.rotation <span class="op">=</span> <span class="cn">TRUE</span>, overlay <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="rotation_censor-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Same window centred on the middle of the image, via a fraction or keyword</span></span></span>
+<span class="r-in"><span><span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>, center.offset <span class="op">=</span> <span class="fl">0.5</span>,      fixed.width <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class       : SpatRaster</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> size        : 800, 4900, 3  (nrow, ncol, nlyr)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> resolution  : 1, 1  (x, y)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> extent      : 0, 4900, 0, 800  (xmin, xmax, ymin, ymax)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> coord. ref. : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> source(s)   : memory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> names       : lyr.1, lyr.2, lyr.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> min values  :     0,     0,     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> max values  :   255,   255,   255</span>
+<span class="r-in"><span><span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>, center.offset <span class="op">=</span> <span class="st">"middle"</span>, fixed.width <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class       : SpatRaster</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> size        : 800, 4900, 3  (nrow, ncol, nlyr)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> resolution  : 1, 1  (x, y)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> extent      : 0, 4900, 0, 800  (xmin, xmax, ymin, ymax)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> coord. ref. : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> source(s)   : memory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> names       : lyr.1, lyr.2, lyr.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> min values  :     0,     0,     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> max values  :   255,   255,   255</span>
+<span class="r-in"><span><span class="co"># Top of the tube a quarter of the way down</span></span></span>
+<span class="r-in"><span><span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>, center.offset <span class="op">=</span> <span class="fl">0.25</span>, fixed.width <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> fixed.width = 800 cannot be centred symmetrically on row 286 (image is 1144 rows). Max symmetric width here is 570 px; clamping to image bounds.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> class       : SpatRaster</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> size        : 685, 4900, 3  (nrow, ncol, nlyr)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> resolution  : 1, 1  (x, y)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> extent      : 0, 4900, 0, 685  (xmin, xmax, ymin, ymax)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> coord. ref. : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> source(s)   : memory</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> names       : lyr.1, lyr.2, lyr.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> min values  :     0,     0,     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> max values  :   255,   255,   255</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
