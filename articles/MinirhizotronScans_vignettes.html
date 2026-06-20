@@ -107,6 +107,10 @@ Processing</a> vignette wraps this entire workflow into a single
 images. Segmentation must be done beforehand using <a href="https://github.com/ExPlEcoGreifswald/RootDetector" class="external-link">RootDetector</a>
 or <a href="https://github.com/Abe404/root_painter" class="external-link">RootPainter</a>.</p>
 </blockquote>
+<blockquote>
+<p>If a tube constitues of multiple overlapping images, consider
+stitching <a href="Stitching_vignette.html">Image Stitching</a></p>
+</blockquote>
 </div>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -123,13 +127,14 @@ or <a href="https://github.com/Abe404/root_painter" class="external-link">RootPa
 <div class="section level3">
 <h3 id="workflow-overview">Workflow overview<a class="anchor" aria-label="anchor" href="#workflow-overview"></a>
 </h3>
-<ol style="list-style-type: decimal">
+<ol start="0" style="list-style-type: decimal">
+<li>(Image Stitching &amp; Segmentation, see: <a href="Stitching_vignette.html">Image Stitching</a>)</li>
 <li>Load images</li>
 <li>(Optional) Rotation censor — align field of view across
 sessions</li>
 <li>Create depth map</li>
 <li>Bin depths</li>
-<li>Extract root traits per depth bin</li>
+<li>Extract root traits per depth bin (length, diameter)</li>
 <li>(Optional) Root branching order — classify segments as main axis
 vs. laterals</li>
 <li>Compute landscape and colour metrics</li>
@@ -147,14 +152,16 @@ matrices, and file paths.</p>
 <span>  <span class="st">"path/to/segmented_image.tif"</span>,</span>
 <span>  output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
 <span>  normalize     <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  binarize      <span class="op">=</span> <span class="cn">FALSE</span>,   <span class="co"># keep original values; binarize later per layer</span></span>
+<span>  binarize      <span class="op">=</span> <span class="cn">TRUE</span>,   </span>
 <span>  select.layer  <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># RGB scan for colour analysis</span></span>
 <span><span class="va">rgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span></span>
 <span>  <span class="st">"path/to/rgb_image.tif"</span>,</span>
-<span>  output_format <span class="op">=</span> <span class="st">"spatrast"</span></span>
+<span>  output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
+<span>  normalize <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  binarize <span class="op">=</span> <span class="cn">F</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Package example data</span></span>
@@ -173,7 +180,8 @@ directly comparable. See the <a href="Rotation_Bias_vignettes.html">Rotation Bia
 to estimate the rotation shift between sessions.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Crop to a 1800-pixel-wide window centred on the estimated rotation centre.</span></span>
-<span><span class="co"># Here we use half the image width as a simple default.</span></span>
+<span><span class="co"># Here we use half the image width as a simple default. If you have multiple sessions, consider estimating the rotation shift between sessions `estimate_rotation_shift()` and adjust the center offset accordingly.</span></span>
+<span></span>
 <span><span class="va">r0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">seg</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">/</span> <span class="fl">2</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">seg_censored</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rotation_censor.html">rotation_censor</a></span><span class="op">(</span></span>
@@ -233,7 +241,7 @@ centred.</td>
 </table>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use layer 1 as spatial template; actual root layer is separate</span></span>
-<span><span class="va">seg_template</span> <span class="op">&lt;-</span> <span class="va">seg</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">seg_template</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">img</span>, select.layer <span class="op">=</span> <span class="fl">1</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, normalize <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">depth_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_depthmap.html">create_depthmap</a></span><span class="op">(</span></span>
 <span>  img           <span class="op">=</span> <span class="va">seg_template</span>,</span>
@@ -249,7 +257,7 @@ centred.</td>
 <span><span class="va">depth_map</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/flip.html" class="external-link">flip</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/transpose.html" class="external-link">t</a></span><span class="op">(</span><span class="va">depth_map</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">depth_map</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">seg_template</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_map</span>, main <span class="op">=</span> <span class="st">"Depth map (cm)"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_map</span>, main <span class="op">=</span> <span class="st">"Depth map (cm)"</span><span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>On <code>start.soil</code></strong>: accurate depth
 attribution requires knowing where the soil surface is in the image.
@@ -276,24 +284,22 @@ scale — 5 cm is a common choice.</p>
 <div class="section level5">
 <h5 id="a--root-pixels-and-void-pixels">5a. Root pixels and void pixels<a class="anchor" aria-label="anchor" href="#a--root-pixels-and-void-pixels"></a>
 </h5>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Select the root channel (layer 2 in RootDetector output)</span></span>
-<span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">seg</span>, <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">root_layer</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span>, binarize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                  output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Root pixels per depth bin</span></span>
-<span><span class="va">root_px_by_depth</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal</a></span><span class="op">(</span><span class="va">root_layer</span>, <span class="va">depth_bins</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">root_px_by_depth</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"depth"</span>, <span class="st">"rootpx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Void pixels</span></span>
-<span><span class="va">void_layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">root_layer</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">void_px_by_depth</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal</a></span><span class="op">(</span><span class="va">void_layer</span>, <span class="va">depth_bins</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">void_px_by_depth</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"depth"</span>, <span class="st">"voidpx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">depth_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">root_px_by_depth</span>, <span class="va">void_px_by_depth</span>, by <span class="op">=</span> <span class="st">"depth"</span><span class="op">)</span></span>
-<span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx.density</span> <span class="op">&lt;-</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx</span> <span class="op">/</span></span>
-<span>                              <span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx</span> <span class="op">+</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">voidpx</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Select the root channel (layer 2 or 3 in RootDetector output)</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>root_layer <span class="ot">&lt;-</span> <span class="fu">load_flexible_image</span>(root_layer, <span class="at">binarize =</span> <span class="cn">TRUE</span>, <span class="at">select.layer =</span> <span class="fl">2.</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>                                  <span class="at">output_format =</span> <span class="st">"spatrast"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co"># Root pixels per depth bin</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>root_px_by_depth <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">zonal</span>(root_layer, depth_bins, <span class="st">"sum"</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">colnames</span>(root_px_by_depth) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"depth"</span>, <span class="st">"rootpx"</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co"># Void pixels</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>void_layer <span class="ot">&lt;-</span> <span class="fu">abs</span>(root_layer <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>void_px_by_depth <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">zonal</span>(void_layer, depth_bins, <span class="st">"sum"</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">colnames</span>(void_px_by_depth) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"depth"</span>, <span class="st">"voidpx"</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>depth_data <span class="ot">&lt;-</span> <span class="fu">merge</span>(root_px_by_depth, void_px_by_depth, <span class="at">by =</span> <span class="st">"depth"</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>depth_data<span class="sc">$</span>rootpx.density <span class="ot">&lt;-</span> depth_data<span class="sc">$</span>rootpx <span class="sc">/</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>                              (depth_data<span class="sc">$</span>rootpx <span class="sc">+</span> depth_data<span class="sc">$</span>voidpx) <span class="sc">*</span> <span class="dv">100</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="b--root-length-kimura-method">5b. Root length (Kimura method)<a class="anchor" aria-label="anchor" href="#b--root-length-kimura-method"></a>
@@ -302,10 +308,8 @@ scale — 5 cm is a common choice.</p>
 <code class="sourceCode R"><span><span class="co"># Skeletonize first</span></span>
 <span><span class="va">skl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">root_layer</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Root length per depth bin (cm)</span></span>
-<span><span class="va">rl_by_depth</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal</a></span><span class="op">(</span><span class="va">skl</span>, <span class="va">depth_bins</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">rl_by_depth</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">rl_by_depth</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">/</span> <span class="op">(</span><span class="fl">300</span> <span class="op">/</span> <span class="fl">2.54</span><span class="op">)</span>   <span class="co"># pixels → cm</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rl_by_depth</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"depth"</span>, <span class="st">"rootlength"</span><span class="op">)</span></span>
+<span><span class="co"># Root length per depth bin (cm) - not yet finished</span></span>
+<span><span class="va">rl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skl</span>, units <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">depth_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="va">rl_by_depth</span>, by <span class="op">=</span> <span class="st">"depth"</span><span class="op">)</span></span>
 <span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span> <span class="op">&lt;-</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength</span> <span class="op">/</span></span>

@@ -22,6 +22,10 @@ subset of functions.
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
 
+> If a tube constitues of multiple overlapping images, consider
+> stitching [Image
+> Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
+
 ### Installation
 
 ``` r
@@ -38,11 +42,13 @@ library(tidyverse)
 
 ### Workflow overview
 
+0.  (Image Stitching & Segmentation, see: [Image
+    Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md))
 1.  Load images
 2.  (Optional) Rotation censor — align field of view across sessions
 3.  Create depth map
 4.  Bin depths
-5.  Extract root traits per depth bin
+5.  Extract root traits per depth bin (length, diameter)
 6.  (Optional) Root branching order — classify segments as main axis
     vs. laterals
 7.  Compute landscape and colour metrics
@@ -62,14 +68,16 @@ seg <- load_flexible_image(
   "path/to/segmented_image.tif",
   output_format = "spatrast",
   normalize     = FALSE,
-  binarize      = FALSE,   # keep original values; binarize later per layer
+  binarize      = TRUE,   
   select.layer  = NULL
 )
 
 # RGB scan for colour analysis
 rgb <- load_flexible_image(
   "path/to/rgb_image.tif",
-  output_format = "spatrast"
+  output_format = "spatrast",
+  normalize = F,
+  binarize = F
 )
 
 # Package example data
@@ -92,7 +100,8 @@ vignette for how to estimate the rotation shift between sessions.
 ``` r
 
 # Crop to a 1800-pixel-wide window centred on the estimated rotation centre.
-# Here we use half the image width as a simple default.
+# Here we use half the image width as a simple default. If you have multiple sessions, consider estimating the rotation shift between sessions `estimate_rotation_shift()` and adjust the center offset accordingly.
+
 r0 <- round(dim(seg)[1] / 2, 0)
 
 seg_censored <- rotation_censor(
@@ -126,7 +135,7 @@ curvature of cylindrical tubes.
 ``` r
 
 # Use layer 1 as spatial template; actual root layer is separate
-seg_template <- seg[[1]]
+seg_template <- load_flexible_image(img, select.layer = 1, output_format = "spatrast", normalize = F)
 
 depth_map <- create_depthmap(
   img           = seg_template,
@@ -142,7 +151,7 @@ depth_map <- create_depthmap(
 depth_map <- terra::flip(terra::t(depth_map))
 terra::ext(depth_map) <- terra::ext(seg_template)
 
-plot(depth_map, main = "Depth map (cm)")
+terra::plot(depth_map, main = "Depth map (cm)")
 ```
 
 > **On `start.soil`**: accurate depth attribution requires knowing where
@@ -171,10 +180,8 @@ depth_bins <- binning(depthmap = depth_map, nn = 5, round.option = "rounding")
 ##### 5a. Root pixels and void pixels
 
 ``` r
-
-# Select the root channel (layer 2 in RootDetector output)
-root_layer <- terra::subset(seg, 2)
-root_layer <- load_flexible_image(root_layer, normalize = TRUE, binarize = TRUE,
+# Select the root channel (layer 2 or 3 in RootDetector output)
+root_layer <- load_flexible_image(root_layer, binarize = TRUE, select.layer = 2.
                                   output_format = "spatrast")
 
 # Root pixels per depth bin
@@ -198,10 +205,8 @@ depth_data$rootpx.density <- depth_data$rootpx /
 # Skeletonize first
 skl <- skeletonize_image(root_layer, verbose = FALSE)
 
-# Root length per depth bin (cm)
-rl_by_depth <- terra::zonal(skl, depth_bins, "sum", na.rm = TRUE)
-rl_by_depth[[2]] <- rl_by_depth[[2]] / (300 / 2.54)   # pixels → cm
-colnames(rl_by_depth) <- c("depth", "rootlength")
+# Root length per depth bin (cm) - not yet finished
+rl <- root_length(skl, units = "cm", dpi = 300)
 
 depth_data <- merge(depth_data, rl_by_depth, by = "depth")
 depth_data$rootlength.density <- depth_data$rootlength /

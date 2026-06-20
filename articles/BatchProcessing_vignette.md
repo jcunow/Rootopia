@@ -18,7 +18,9 @@ of.
 For a line-by-line explanation of the underlying steps, see the
 [Minirhizotron
 Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md)
-vignette.
+vignette. If multiple images come from the same tube, consider stitching
+them beforehand [Image
+Stitching](https://jcunow.github.io/RootScanR/articles/Stitching_vignette.md)
 
 ------------------------------------------------------------------------
 

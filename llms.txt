@@ -17,17 +17,14 @@ like root length & diameter, depth mapping, and distribution tools.
 
 - 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed
   scanners
-
 - 🌱 Estimate root length, depth profiles, and turnover between sessions
-
 - 📏 Measure root diameters and diameter distributions
-
 - 🕸️ Analyze root architecture: branching points, root tips, branch/root
   order (main axis vs. laterals), and root angle distribution
-
 - 🥕 Spatial indices (root distribution with depth, rotation bias)
+- 🧵 Stitch overlapping scan sequences into one mosaic per tube
 
-- ## 🧵 Stitch overlapping scan sequences into one mosaic per tube
+------------------------------------------------------------------------
 
 ## 📘 Tutorials
 
