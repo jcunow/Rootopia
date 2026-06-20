@@ -218,7 +218,7 @@ artefact).
 
 data(seg_Oulanka2023_Session01_T067)
 
-root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, normalize = TRUE, binarize = TRUE, select.layer = 2,
+root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binary", select.layer = 2,
                                   output_format = "spatrast")
 
 
@@ -238,7 +238,7 @@ n_soil <- function(s) { v <- terra::values(s, mat = FALSE); sum(v == 0, na.rm = 
 
 slice_traits <- data.frame(
   slice   = seq_len(n_slices),
-  rootlen = sapply(slices, root_length, unit = "cm", dpi = 300),  # cm
+  rootlen = sapply(slices, root_length, unit = "cm", dpi = 150),  # cm
   rootpx  = sapply(slices, n_root),
   soilpx  = sapply(slices, n_soil)
 )

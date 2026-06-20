@@ -36,6 +36,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/fill_holes.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/fit_sine_curve.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/flatbed_scan_example.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/image_threshold.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/index.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/list_scan_files.html</loc></url>
@@ -52,6 +53,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/remove_small_objects.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/render_order_overlay.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/report_image_components.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/resolve_scale.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb2gray.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rgb_Oulanka2023_Session03_T067.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/rhythmicity.html</loc></url>
@@ -93,5 +95,6 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/turnover_dpc.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/turnover_tc.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/validate_conversion_params.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/zoning.html</loc></url>
 </urlset>
 

@@ -59,9 +59,11 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">load_flexible_image</span><span class="op">(</span></span>
 <span>  <span class="va">input</span>,</span>
 <span>  output_format <span class="op">=</span> <span class="st">"cimg"</span>,</span>
-<span>  normalize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"to_01"</span>, <span class="st">"to_255"</span>, <span class="st">"binary"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  select.layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  binarize <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  normalize <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  binarize <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  denormalize <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -77,16 +79,23 @@
 <dd><p>Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.</p></dd>
 
 
-<dt id="arg-normalize">normalize<a class="anchor" aria-label="anchor" href="#arg-normalize"></a></dt>
-<dd><p>Logical, whether to normalize values to 0-1 range if they're in 0-255</p></dd>
+<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
+<dd><p>Character, the value rescaling to apply. One of
+`"to_01"` (0-255 -&gt; 0-1, the default), `"to_255"` (0-1 -&gt; 0-255),
+`"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
+conversion is a no-op if the data is already in the target range.</p></dd>
 
 
 <dt id="arg-select-layer">select.layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
 <dd><p>Numeric, which layer to select if input has multiple layers</p></dd>
 
 
-<dt id="arg-binarize">binarize<a class="anchor" aria-label="anchor" href="#arg-binarize"></a></dt>
-<dd><p>Logical, whether the output is strictly 0 and 1. Overwrites normalize</p></dd>
+<dt id="arg-normalize-binarize-denormalize">normalize, binarize, denormalize<a class="anchor" aria-label="anchor" href="#arg-normalize-binarize-denormalize"></a></dt>
+<dd><p>Deprecated logical flags kept for
+backward compatibility; use `scale` instead. `normalize = TRUE` maps to
+`scale = "to_01"`, `denormalize = TRUE` to `"to_255"`, and
+`binarize = TRUE` to `"binary"`. Supplying these together with `scale`, or
+setting both `normalize` and `denormalize`, is an error.</p></dd>
 
 </dl></div>
 

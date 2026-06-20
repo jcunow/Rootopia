@@ -303,7 +303,7 @@ or an installation-angle artefact).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span>, binarize <span class="op">=</span> <span class="cn">TRUE</span>, select.layer <span class="op">=</span> <span class="fl">2</span>,</span>
+<span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>, scale <span class="op">=</span> <span class="st">"binary"</span>, select.layer <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>                                  output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span></span>
 <span></span>
@@ -323,7 +323,7 @@ or an installation-angle artefact).</p>
 <span></span>
 <span><span class="va">slice_traits</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  slice   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_slices</span><span class="op">)</span>,</span>
-<span>  rootlen <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">root_length</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span>,  <span class="co"># cm</span></span>
+<span>  rootlen <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">root_length</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span>,  <span class="co"># cm</span></span>
 <span>  rootpx  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">n_root</span><span class="op">)</span>,</span>
 <span>  soilpx  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">n_soil</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>

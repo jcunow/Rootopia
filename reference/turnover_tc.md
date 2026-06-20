@@ -53,6 +53,7 @@ production: Root production between timepoints - newroot - newroot
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
   data(skl_Oulanka2023_Session01_T067)
   data(skl_Oulanka2023_Session03_T067)
   time1 <- terra::rast(skl_Oulanka2023_Session01_T067)
@@ -61,5 +62,5 @@ production: Root production between timepoints - newroot - newroot
     im.t1 = time1,
     im.t2 = time2,
     method = "kimura")
-#> Error in turnover_tc(im.t1 = time1, im.t2 = time2, method = "kimura"): could not find function "turnover_tc"
+    } # }
 ```

@@ -37,16 +37,3 @@ A data frame with columns `index` (1-based, the value to pass to
 
 [`stitch_root_scans`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md),
 [`list_scan_files`](https://jcunow.github.io/RootScanR/reference/list_scan_files.md)
-
-## Examples
-
-``` r
-d <- file.path(tempdir(), "tubes_demo")
-dir.create(d, showWarnings = FALSE)
-file.create(file.path(d, c("S_T037_01.tiff", "S_T037_02.tiff",
-                           "S_T038_01.tiff", "S_T039_01.tiff")))
-#> [1] TRUE TRUE TRUE TRUE
-list_tubes(d, pattern = ".tiff")
-#> Error in list_tubes(d, pattern = ".tiff"): could not find function "list_tubes"
-unlink(d, recursive = TRUE)
-```

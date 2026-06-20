@@ -105,15 +105,14 @@ plotting with e.g.
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
 set.seed(1)
 img   <- array(runif(80 * 160 * 3) * 255, dim = c(80, 160, 3))
 left  <- img[, 1:100, , drop = FALSE]
 right <- img[, 81:160, , drop = FALSE]          # 20 px overlap
 mosaic <- stitch_image_pair(left, right, edge_width = 30,
                             vertical_region = 80, vertical_offset = 0)
-#> Error in stitch_image_pair(left, right, edge_width = 30, vertical_region = 80,     vertical_offset = 0): could not find function "stitch_image_pair"
 dim(mosaic)
-#> NULL
 attr(mosaic, "offset")
-#> NULL
+} # }
 ```

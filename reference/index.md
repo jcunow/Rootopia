@@ -135,6 +135,8 @@ Statistical indices summarising root distribution with depth.
   Mclust
 - [`circular_mean()`](https://jcunow.github.io/RootScanR/reference/circular_mean.md)
   : Calculate a circular mean to determine average Directionality
+- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
+  Mask a scan to a depth and/or rotation zone (zone masking)
 - [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
   : Calculate root accumulation
 - [`compare_depth_distribution()`](https://jcunow.github.io/RootScanR/reference/compare_depth_distribution.md)
@@ -167,3 +169,5 @@ Built-in example images from the Oulanka 2023 field campaign.
   : Original Minirhizotron Root Scan - Session 3, Tube 67
 - [`TurnoverDPC_data`](https://jcunow.github.io/RootScanR/reference/TurnoverDPC_data.md)
   : Root Turnover Analysis Data
+- [`flatbed_scan_example`](https://jcunow.github.io/RootScanR/reference/flatbed_scan_example.md)
+  : Example Flatbed Root Scan (segmented)

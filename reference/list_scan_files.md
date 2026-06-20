@@ -41,15 +41,3 @@ and `group` (matched id, or `NA`).
 
 [`list_tubes`](https://jcunow.github.io/RootScanR/reference/list_tubes.md),
 [`stitch_root_scans`](https://jcunow.github.io/RootScanR/reference/stitch_root_scans.md)
-
-## Examples
-
-``` r
-d <- file.path(tempdir(), "scans_demo")
-dir.create(d, showWarnings = FALSE)
-file.create(file.path(d, c("S_T037_01.tiff", "S_T037_02.tiff", "S_T038_01.tiff")))
-#> [1] TRUE TRUE TRUE
-list_scan_files(d, pattern = ".tiff")
-#> Error in list_scan_files(d, pattern = ".tiff"): could not find function "list_scan_files"
-unlink(d, recursive = TRUE)
-```

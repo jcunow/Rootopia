@@ -48,27 +48,43 @@ library(tidyverse)
 2.  (Optional) Rotation censor — align field of view across sessions
 3.  Create depth map
 4.  Bin depths
-5.  Extract root traits per depth bin (length, diameter)
-6.  (Optional) Root branching order — classify segments as main axis
-    vs. laterals
-7.  Compute landscape and colour metrics
-8.  Derive distribution indices
+5.  Extract root traits per depth bin (pixels, length, diameter)
+6.  Compute landscape and colour metrics per depth bin
+7.  Derive distribution indices
+8.  Root turnover (two-timepoint comparison)
+
+> **Per depth bin** is the recurring theme below. Two patterns cover
+> every trait:
+>
+> - **Whole profile in one call** with
+>   [`terra::zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
+>   — fast, for traits that reduce to a per-zone sum or mean (pixel
+>   counts, mean diameter).
+> - **One slice at a time** with
+>   [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
+>   — for traits whose function needs a whole image (root length,
+>   landscape metrics, colour). You compute the trait for a single
+>   depth, then wrap that in a loop to cover the full profile.
+>
+> Section 5 introduces both and shows how to scale a single-slice
+> computation to every depth bin.
 
 ------------------------------------------------------------------------
 
 #### 1. Load images
 
 [`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md)
-accepts SpatRasters, arrays, matrices, and file paths.
+accepts SpatRasters, arrays, matrices, and file paths. This is how you
+load your own files:
 
 ``` r
 
 # Segmented image from RootDetector or RootPainter
-seg <- load_flexible_image(
+seg_img <- load_flexible_image(
   "path/to/segmented_image.tif",
   output_format = "spatrast",
   normalize     = FALSE,
-  binarize      = TRUE,   
+  binarize      = TRUE,
   select.layer  = NULL
 )
 
@@ -76,14 +92,32 @@ seg <- load_flexible_image(
 rgb <- load_flexible_image(
   "path/to/rgb_image.tif",
   output_format = "spatrast",
-  normalize = F,
-  binarize = F
+  normalize = FALSE,
+  binarize = FALSE
 )
-
-# Package example data
-data(seg_Oulanka2023_Session01_T067)
-seg <- terra::rast(seg_Oulanka2023_Session01_T067)
 ```
+
+For this vignette we use the bundled example data so every step below
+runs:
+
+``` r
+
+# 3-band RootDetector output; layer 2 is the root channel
+data(seg_Oulanka2023_Session01_T067)
+seg_img    <- terra::rast(seg_Oulanka2023_Session01_T067)
+
+# RootDetector layers are 0/255; binarize the root channel to 0/1 so that
+# pixel sums and the void mask (abs(root_layer - 1)) are meaningful.
+root_layer <- terra::ifel(seg_img[[2]] > 0, 1, 0)
+
+# RGB scan (a different session of the same tube, for the colour demo)
+data(rgb_Oulanka2023_Session03_T067)
+rgb <- terra::rast(rgb_Oulanka2023_Session03_T067)
+
+terra::plot(root_layer, main = "Root layer (binary)")
+```
+
+![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)
 
 ------------------------------------------------------------------------
 
@@ -100,17 +134,24 @@ vignette for how to estimate the rotation shift between sessions.
 ``` r
 
 # Crop to a 1800-pixel-wide window centred on the estimated rotation centre.
-# Here we use half the image width as a simple default. If you have multiple sessions, consider estimating the rotation shift between sessions `estimate_rotation_shift()` and adjust the center offset accordingly.
+# Here we use half the image width as a simple default. If you have multiple
+# sessions, consider estimating the rotation shift between sessions with
+# `estimate_rotation_shift()` and adjust the center offset accordingly.
 
-r0 <- round(dim(seg)[1] / 2, 0)
+r0 <- round(dim(seg_img)[1] / 2, 0)
 
 seg_censored <- rotation_censor(
-  seg,
+  seg_img,
   center.offset  = r0,
   fixed.rotation = TRUE,
   fixed.width    = 1800
 )
 ```
+
+> Rotation censoring changes the image dimensions, so apply it
+> **before** the depth map and keep every downstream raster on the
+> censored grid. The rest of this vignette uses the uncensored example
+> image.
 
 ------------------------------------------------------------------------
 
@@ -134,25 +175,32 @@ curvature of cylindrical tubes.
 
 ``` r
 
-# Use layer 1 as spatial template; actual root layer is separate
-seg_template <- load_flexible_image(img, select.layer = 1, output_format = "spatrast", normalize = F)
+# `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth
+# attribution. Here it is derived from the RootDetector layers.
+mask <- seg_img[[1]] - seg_img[[2]]
+mask[mask == 255] <- NA
 
 depth_map <- create_depthmap(
-  img           = seg_template,
+  img           = seg_img,
+  mask          = mask,
   sinoid        = TRUE,
   tube.thicc    = 7,       # cm — measure your own tube
   tilt          = 45,      # degrees
-  dpi           = 300,
+  dpi           = 150,
   start.soil    = 2.9,     # cm — from in-situ calibration
   center.offset = 0.5      # 0 = top of tube, 1 = bottom
 )
 
-# Align the depth map extent to the segmented image
+# create_depthmap() returns the map on its own grid; align it to the segmented
+# image so depth and root rasters share extent/resolution (required for
+# terra::zonal() and zoning() below).
 depth_map <- terra::flip(terra::t(depth_map))
-terra::ext(depth_map) <- terra::ext(seg_template)
+terra::ext(depth_map) <- terra::ext(root_layer)
 
 terra::plot(depth_map, main = "Depth map (cm)")
 ```
+
+![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)
 
 > **On `start.soil`**: accurate depth attribution requires knowing where
 > the soil surface is in the image. In-situ calibration (marking the
@@ -171,18 +219,25 @@ rounds continuous depth values to discrete intervals. The bin width
 ``` r
 
 depth_bins <- binning(depthmap = depth_map, nn = 5, round.option = "rounding")
+
+# The set of depth bins we will iterate over for per-slice traits
+depths <- sort(unique(terra::values(depth_bins, mat = FALSE)))
+depths <- depths[!is.na(depths)]
+depths
+#>  [1] -5  0  5 10 15 20 25 30 35 40 45 50 55 60
 ```
 
 ------------------------------------------------------------------------
 
 #### 5. Extract root traits per depth bin
 
-##### 5a. Root pixels and void pixels
+##### 5a. Root pixels and void pixels — whole profile with `zonal()`
+
+[`terra::zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
+aggregates a value raster over the zones of a class raster in one pass.
+This is the fast path for traits that are just a per-bin sum or mean.
 
 ``` r
-# Select the root channel (layer 2 or 3 in RootDetector output)
-root_layer <- load_flexible_image(root_layer, binarize = TRUE, select.layer = 2.
-                                  output_format = "spatrast")
 
 # Root pixels per depth bin
 root_px_by_depth <- terra::zonal(root_layer, depth_bins, "sum", na.rm = TRUE)
@@ -196,24 +251,77 @@ colnames(void_px_by_depth) <- c("depth", "voidpx")
 depth_data <- merge(root_px_by_depth, void_px_by_depth, by = "depth")
 depth_data$rootpx.density <- depth_data$rootpx /
                               (depth_data$rootpx + depth_data$voidpx) * 100
+head(depth_data)
+#>   depth rootpx voidpx rootpx.density
+#> 1    -5      0   5158       0.000000
+#> 2     0   7959 277009       2.792945
+#> 3     5  24281 453463       5.082429
+#> 4    10  38748 438949       8.111418
+#> 5    15  36590 441143       7.659090
+#> 6    20  24861 452872       5.203953
 ```
 
-##### 5b. Root length (Kimura method)
+##### 5b. Root length for a *single* depth slice — `zoning()` + `root_length()`
+
+Root length (Kimura method) is computed from a skeleton image, so it
+needs a whole raster rather than a per-pixel reduction.
+[`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
+masks the skeleton to one depth bin (everything outside the bin becomes
+`NA`, the grid is kept), and
+[`root_length()`](https://jcunow.github.io/RootScanR/reference/root_length.md)
+then measures just that slice.
 
 ``` r
 
-# Skeletonize first
+# Skeletonize the full root layer once
 skl <- skeletonize_image(root_layer, verbose = FALSE)
 
-# Root length per depth bin (cm) - not yet finished
-rl <- root_length(skl, units = "cm", dpi = 300)
-
-depth_data <- merge(depth_data, rl_by_depth, by = "depth")
-depth_data$rootlength.density <- depth_data$rootlength /
-  ((depth_data$rootpx + depth_data$voidpx) / (300 / 2.54)^2)
+# Traits for one specific depth slice (the 10 cm bin)
+skl_10cm <- zoning(skl, mode = "depth", depth_map = depth_bins, depth = 10)
+len_10cm <- root_length(skl_10cm, unit = "cm", dpi = 150, show_messages = FALSE)
+len_10cm
+#> [1] 208.3697
 ```
 
-##### 5c. Root diameter
+##### 5c. Scale to the whole profile — loop the single-slice computation
+
+To get the trait for every depth, wrap the single-slice code in a loop
+over `depths`. The same pattern works for any function that takes a
+whole image.
+
+``` r
+
+length_by_depth <- do.call(rbind, lapply(depths, function(d) {
+  skl_d <- zoning(skl, mode = "depth", depth_map = depth_bins, depth = d)
+  # Empty bins have no skeleton to measure, so their length is 0
+  has_root <- terra::global(skl_d, "sum", na.rm = TRUE)[1, 1] > 0
+  data.frame(
+    depth      = d,
+    rootlength = if (has_root) root_length(skl_d, unit = "cm", dpi = 150,
+                                           show_messages = FALSE) else 0
+  )
+}))
+
+depth_data <- merge(depth_data, length_by_depth, by = "depth")
+# Root length density: cm root per cm² of imaged tube wall in that bin
+depth_data$rootlength.density <- depth_data$rootlength /
+  ((depth_data$rootpx + depth_data$voidpx) / (150 / 2.54)^2)
+head(depth_data)
+#>   depth rootpx voidpx rootpx.density rootlength rootlength.density
+#> 1    -5      0   5158       0.000000    0.00000          0.0000000
+#> 2     0   7959 277009       2.792945   54.37009          0.6653943
+#> 3     5  24281 453463       5.082429  136.48109          0.9963051
+#> 4    10  38748 438949       8.111418  208.36966          1.5212376
+#> 5    15  36590 441143       7.659090  211.75244          1.5458176
+#> 6    20  24861 452872       5.203953  128.68449          0.9394119
+```
+
+##### 5d. Root diameter — whole profile with `zonal()`
+
+Diameter is a per-pixel value, so once you have the diameter raster you
+are back in
+[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
+territory.
 
 ``` r
 
@@ -223,6 +331,7 @@ diam_result <- root_diameter(
   unit         = "cm",
   select.layer = NULL
 )
+# Align the diameter raster to the depth grid before zonal aggregation
 terra::ext(diam_result$diameter_rast) <- terra::ext(depth_bins)
 
 diam_by_depth <- terra::zonal(diam_result$diameter_rast, depth_bins,
@@ -230,122 +339,32 @@ diam_by_depth <- terra::zonal(diam_result$diameter_rast, depth_bins,
 colnames(diam_by_depth) <- c("depth", "avg.diameter")
 
 depth_data <- merge(depth_data, diam_by_depth, by = "depth")
-```
-
-##### 5d. Zoning individual depth slices
-
-`zoning()` masks the image to a specific depth range, useful when you
-want to run per-slice analyses (landscape metrics, colour, diameter
-quantiles).
-
-``` r
-
-# Extract a single 5 cm depth zone
-zone_10cm <- zoning(
-  img       = root_layer,
-  mode      = "depth",
-  depth_map = depth_bins,
-  depth     = 10           # selects the bin closest to 10 cm
-)
+head(depth_data)
+#>   depth rootpx voidpx rootpx.density rootlength rootlength.density avg.diameter
+#> 1    -5      0   5158       0.000000    0.00000          0.0000000          NaN
+#> 2     0   7959 277009       2.792945   54.37009          0.6653943   0.01899533
+#> 3     5  24281 453463       5.082429  136.48109          0.9963051   0.01946714
+#> 4    10  38748 438949       8.111418  208.36966          1.5212376   0.01948757
+#> 5    15  36590 441143       7.659090  211.75244          1.5458176   0.01883529
+#> 6    20  24861 452872       5.203953  128.68449          0.9394119   0.01866563
 ```
 
 ------------------------------------------------------------------------
 
-#### 6. Root branching order
+#### 6. Landscape and colour metrics
 
-[`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)
-turns the skeleton into a graph of root segments and classifies each one
-by **branch order**: the thickest, most central root in each connected
-component is order 1 (the main axis); its laterals are order 2; their
-laterals order 3, and so on. This is useful for separating coarse
-“transport” roots from fine “absorptive” laterals.
-
-``` r
-
-order_res <- branch_order_map(
-  skel  = skl,          # skeleton (single-layer SpatRaster)
-  mask  = root_layer,   # filled root mask, same grid — used for diameters
-  order = "branch_order",
-  unit  = "cm",
-  dpi   = 300
-)
-
-# One row per segment, with tip_order / root_order / branch_order columns
-head(order_res$edges)
-
-# One row per order class: length, diameter, tips, branch points
-order_res$summary
-
-# Rasterised branch-order classes, aligned to `skl`
-terra::plot(order_res$class_map, main = "Branch order")
-```
-
-Use
-[`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
-to summarise the result either per order class or as a **focal
-vs. rest** split — for example, the thickest order class (the main
-root(s)) versus everything else:
-
-``` r
-
-# Per-order-class table (same as order_res$summary)
-order_metrics(order_res)
-
-# Main root(s) vs. all laterals
-order_metrics(order_res, focal = "thickest")
-
-# Order 1 vs. everything else
-order_metrics(order_res, focal = 1)
-```
-
-To check the classification visually, write a colour-coded overlay PNG
-(or re-plot a sub-window at native resolution for QC):
-
-``` r
-
-order_res2 <- branch_order_map(
-  skel        = skl,
-  mask        = root_layer,
-  order       = "branch_order",
-  unit        = "cm",
-  dpi         = 300,
-  overlay_png = "branch_order_overlay.png",
-  keep_segments = TRUE
-)
-
-# Zoom into a 200x200 px window at 3x magnification
-plot_order_window(
-  order_res2$edges, skl,
-  r_range = c(100, 300), c_range = c(100, 300),
-  scale = 3, file = "branch_order_window.png"
-)
-```
-
-> **Within
-> [`root_depth_metrics()`](https://jcunow.github.io/RootScanR/reference/root_depth_metrics.md)**:
-> setting `calc_root_order_metrics = TRUE` runs this pipeline once per
-> image and folds the results into the depth-binned output — see the
-> [Batch
-> Processing](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.html#root-branching-order-main-vs-lateral-roots)
-> vignette.
-
-> **For more control** over crossing resolution, pruning of weak tips,
-> and the continuation rule used to group segments into roots, see
-> [`?root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
-> (the engine behind
-> [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)).
-
-------------------------------------------------------------------------
-
-#### 7. Landscape and colour metrics
+Both of these are computed **per depth slice** with the same
+[`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md)
+loop introduced in 5c.
 
 ##### Landscape metrics (spatial structure)
 
 ``` r
 
-# Run per depth slice inside a loop; indexD labels the output rows
-lsm_list <- lapply(sort(unique(terra::values(depth_bins))), function(d) {
+lsm_list <- lapply(depths, function(d) {
   slice <- zoning(root_layer, mode = "depth", depth_map = depth_bins, depth = d)
+  # Skip depth bins that contain no roots
+  if (terra::global(slice, "sum", na.rm = TRUE)[1, 1] == 0) return(NULL)
   root_scape_metrics(
     img     = slice,
     indexD  = d,
@@ -355,44 +374,64 @@ lsm_list <- lapply(sort(unique(terra::values(depth_bins))), function(d) {
 lsm_df <- do.call(rbind, lsm_list)
 ```
 
-> **Note**: landscape metrics are slow — one call per depth bin per
-> image. Consider enabling them only when you specifically need
+> **Note**: landscape metrics are slow (one call per depth bin per
+> image) and require the suggested `landscapemetrics` package, so this
+> chunk is not run here. Enable it when you specifically need
 > patch-level indices.
 
 ##### Colour metrics
 
+[`tube_coloration()`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
+is the colour extractor here — exactly as in the [Flatbed
+Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
+vignette. The only extra step for minirhizotron data is grid alignment:
+the RGB scan and the segmentation often come off the scanner on slightly
+different grids, and per-pixel masking (`rgb[seg == 0] <- NA`) requires
+identical grids.
+[`terra::resample()`](https://rspatial.github.io/terra/reference/resample.html)
+puts the RGB onto the segmentation grid; if your RGB and segmentation
+already share a grid you can skip it.
+
 ``` r
 
-# Align RGB to segmented image
+# Align RGB to the segmented grid (skip if they already match)
 rgb_aligned <- terra::resample(rgb, root_layer, method = "bilinear")
 
-colour_list <- lapply(sort(unique(terra::values(depth_bins))), function(d) {
-  slice_seg <- zoning(root_layer,   mode = "depth", depth_map = depth_bins, depth = d)
-  slice_rgb <- zoning(rgb_aligned,  mode = "depth", depth_map = depth_bins, depth = d)
+colour_list <- lapply(depths, function(d) {
+  slice_seg <- zoning(root_layer,  mode = "depth", depth_map = depth_bins, depth = d)
+  slice_rgb <- zoning(rgb_aligned, mode = "depth", depth_map = depth_bins, depth = d)
 
+  # Split the slice into root vs. background pixels
   root_rgb <- slice_rgb; root_rgb[slice_seg == 0] <- NA
   bg_rgb   <- slice_rgb; bg_rgb[slice_seg == 1]   <- NA
 
+  # Skip depth bins that contain no roots (nothing to colour)
+  if (all(is.na(terra::values(root_rgb[[1]], mat = FALSE)))) return(NULL)
+
   data.frame(
     depth = d,
-    as.data.frame(tube_coloration(root_rgb)) |>
-      setNames(paste0(names(tube_coloration(root_rgb)), "_root")),
-    as.data.frame(tube_coloration(bg_rgb)) |>
-      setNames(paste0(names(tube_coloration(bg_rgb)), "_bg"))
+    setNames(tube_coloration(root_rgb), paste0(names(tube_coloration(root_rgb)), "_root")),
+    setNames(tube_coloration(bg_rgb),   paste0(names(tube_coloration(bg_rgb)),   "_bg"))
   )
 })
-colour_df <- do.call(rbind, colour_list)
+colour_df <- do.call(rbind, colour_list)   # NULLs from empty bins are dropped
 ```
+
+> Looking for **root branching order** (main axis vs. laterals)? That
+> analysis has no depth dimension, so it lives in the [Flatbed
+> Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.html#6b-branch-order-main-axis-vs-laterals)
+> vignette. You can still run it on a minirhizotron skeleton — just
+> compute it once for the whole image rather than per depth bin.
 
 ------------------------------------------------------------------------
 
-#### 8. Distribution indices
+#### 7. Distribution indices
 
 These tube-level summary metrics require a complete depth profile.
 
 ``` r
 
-# Root Weight Distribution Index — depth-weighted mean rooting depth
+# Mean rooting depth — depth-weighted mean
 mrd_val <- MRD(w = depth_data$depth, roots = depth_data$rootlength.density)
 
 # Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)
@@ -403,6 +442,7 @@ total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
 
 cat(sprintf("MRD: %.2f  RPI: %.3f  Total length density: %.4f\n",
             mrd_val, rpi_val, total_ld))
+#> MRD: 19.47  RPI: 0.899  Total length density: 43.6782
 ```
 
 [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
@@ -428,6 +468,8 @@ plot(depth_data$depth, depth_data$rootpx.cumulative, type = "l",
      main = "Root accumulation with depth")
 ```
 
+![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png)
+
 `stdrz = "relative"` rescales the cumulative curve to end at 1, which
 makes accumulation curves directly comparable between tubes that differ
 in total root abundance — only the *shape* of the depth distribution is
@@ -435,7 +477,7 @@ compared.
 
 ------------------------------------------------------------------------
 
-#### 9. Root turnover (two-timepoint comparison)
+#### 8. Root turnover (two-timepoint comparison)
 
 ``` r
 
@@ -445,20 +487,27 @@ t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
 
 turnover <- root_turnover(
-  img1   = t1,
-  img2   = t2,
-  method = "kimura",
-  dpi    = 300,
-  unit   = "cm"
+  img1      = t1,
+  img2      = t2,
+  method    = "tc",        # total-change family
+  tc.method = "kimura",    # length estimator within that family
+  dpi       = 150,
+  unit      = "cm"
 )
+#> Diagonal: 457958 | Orthogonal: 459143
+#> Diagonal: 431284 | Orthogonal: 432437
 print(turnover)
+#>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2
+#> 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618
 ```
 
 ------------------------------------------------------------------------
 
-#### 10. Visualise
+#### 9. Visualise
 
 ``` r
+
+library(ggplot2)
 
 ggplot(depth_data, aes(x = depth, y = rootlength.density)) +
   geom_col(fill = "steelblue4") +
@@ -480,7 +529,8 @@ ggplot(depth_data, aes(x = depth, y = rootlength.density)) +
   call, with fault tolerance and ETA logging
 - [Flatbed
   Scans](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md)
-  — trait extraction without a depth dimension
+  — trait extraction without a depth dimension, including root branching
+  order
 - [Rotation
   Bias](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md)
   — correcting for tube rotation between sessions

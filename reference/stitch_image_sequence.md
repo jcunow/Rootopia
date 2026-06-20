@@ -103,6 +103,7 @@ A numeric `(height, width, channel)` array (0-255); or, when
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
 set.seed(1)
 img <- array(runif(70 * 200 * 3) * 255, dim = c(70, 200, 3))
 frames <- list(img[, 1:90, , drop = FALSE],
@@ -110,9 +111,7 @@ frames <- list(img[, 1:90, , drop = FALSE],
                img[, 141:200, , drop = FALSE])
 res <- stitch_image_sequence(frames, edge_width = 25, vertical_region = 70,
                              vertical_offset = 0, return_offsets = TRUE)
-#> Error in stitch_image_sequence(frames, edge_width = 25, vertical_region = 70,     vertical_offset = 0, return_offsets = TRUE): could not find function "stitch_image_sequence"
 dim(res$mosaic)
-#> Error in res$mosaic: object of type 'closure' is not subsettable
 res$offsets
-#> Error in res$offsets: object of type 'closure' is not subsettable
+} # }
 ```

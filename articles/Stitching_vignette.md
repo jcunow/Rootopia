@@ -82,6 +82,8 @@ data("rgb_Oulanka2023_Session03_T067")
 # load to an (H, W, C) array; downsampled here only to keep the vignette light
 img <- load_flexible_image(terra::rast(rgb_Oulanka2023_Session03_T067),
                            output_format = "array", normalize = FALSE)
+#> Warning: `normalize`, `binarize`, and `denormalize` are deprecated; use `scale`
+#> ("to_01", "to_255", "binary", "none") instead.
 img <- img[seq(1, nrow(img), 3), seq(1, ncol(img), 3), , drop = FALSE]
 dim(img)                                   # rows (rotation) x cols (length) x RGB
 #> [1]  387 1633    3

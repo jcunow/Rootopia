@@ -39,8 +39,10 @@ library(tidyverse)
 #### 1. Load images
 
 [`load_flexible_image()`](https://jcunow.github.io/RootScanR/reference/load_flexible_image.md)
-accepts rasters, arrays, file paths, and most common image formats. Set
-`binarize = TRUE` to force the image to 0/1 values.
+accepts rasters, arrays, file paths, and most common image formats. The
+`scale` argument controls value rescaling: `"binary"` forces 0/1,
+`"to_01"` maps 0-255 down to 0-1, `"to_255"` maps 0-1 up to 0-255, and
+`"none"` leaves values untouched. This is how you load your own files:
 
 ``` r
 
@@ -48,8 +50,7 @@ accepts rasters, arrays, file paths, and most common image formats. Set
 seg <- load_flexible_image(
   "path/to/segmented_scan.tif",
   output_format = "spatrast",
-  normalize     = TRUE,
-  binarize      = TRUE,
+  scale         = "binary",
   select.layer  = 2        # RootDetector: layer 2 is the root channel
 )
 
@@ -57,12 +58,23 @@ seg <- load_flexible_image(
 rgb <- load_flexible_image(
   "path/to/rgb_scan.tif",
   output_format = "spatrast",
-  normalize     = FALSE
+  scale         = "none"
 )
-
-plot(seg, main = "Segmented scan")
-plot(rgb, main = "RGB scan")
 ```
+
+For this vignette we use the bundled example flatbed scan so every step
+below runs. It is a 3-band segmentation; layer 2 is the root channel.
+
+``` r
+
+data(flatbed_scan_example)
+seg <- terra::rast(flatbed_scan_example)
+seg <- terra::ifel(seg[[2]] > 0, 1, 0)   # binarized root channel (0/1)
+
+terra::plot(seg, main = "Segmented flatbed scan")
+```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)
 
 ------------------------------------------------------------------------
 
@@ -74,14 +86,13 @@ root length (Kimura method) and diameter estimation.
 
 ``` r
 
-skl <- skeletonize_image(
-  seg,
-  select.layer = 2,
-  verbose      = TRUE
-)
+# `seg` is already the single root layer, so no select.layer needed here
+skl <- skeletonize_image(seg, verbose = FALSE)
 
-plot(skl, main = "Skeleton")
+terra::plot(skl, main = "Skeleton")
 ```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)
 
 [`skeletonize_image()`](https://jcunow.github.io/RootScanR/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
@@ -97,8 +108,10 @@ segments differently to approximate true path length.
 
 ``` r
 
-rl <- root_length(skl, unit = "cm", dpi = 300, select.layer = NULL)
+rl <- root_length(skl, unit = "cm", dpi = 300, select.layer = NULL,
+                  show_messages = FALSE)
 cat("Total root length:", round(rl, 2), "cm\n")
+#> Total root length: 56.46 cm
 ```
 
 ------------------------------------------------------------------------
@@ -125,6 +138,7 @@ cat(sprintf(
   "Diameter — mean: %.3f cm  SD: %.3f cm  max: %.3f cm\n",
   mean(diam_vals), sd(diam_vals), max(diam_vals)
 ))
+#> Diameter — mean: 0.201 cm  SD: 0.084 cm  max: 0.432 cm
 
 # Distribution
 hist(diam_vals,
@@ -133,6 +147,8 @@ hist(diam_vals,
      main   = "Root diameter distribution",
      col    = "steelblue4")
 ```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
 
 For fine/coarse root separation,
 [`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md)
@@ -160,11 +176,13 @@ void_px <- count_pixels(abs(seg - 1))
 
 root_area_pct <- root_px / (root_px + void_px) * 100
 cat(sprintf("Root area coverage: %.2f %%\n", root_area_pct))
+#> Root area coverage: 5.16 %
 
 # Root length density (cm root per cm² scan area)
 scan_area_cm2 <- (root_px + void_px) / (300 / 2.54)^2
 rl_density    <- rl / scan_area_cm2
 cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
+#> Root length density: 0.1969 cm / cm²
 ```
 
 ------------------------------------------------------------------------
@@ -177,15 +195,20 @@ points (forks).
 
 ``` r
 
-pts <- detect_skeleton_points(skl, select.layer = 2)
+# `skl` is a single-layer skeleton, so no select.layer is needed
+pts <- detect_skeleton_points(skl, select.layer = NULL)
 
 n_tips    <- count_pixels(pts$endpoints)
 n_forks   <- count_pixels(pts$branching_points)
 branch_freq <- n_forks / rl * 100   # branching points per 100 cm
 
-cat(sprintf("Root tips: %d\n", n_tips))
-cat(sprintf("Branching points: %d\n", n_forks))
+# count_pixels() returns a numeric, so coerce to integer for %d formatting
+cat(sprintf("Root tips: %d\n", as.integer(n_tips)))
+#> Root tips: 1285
+cat(sprintf("Branching points: %d\n", as.integer(n_forks)))
+#> Branching points: 273
 cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
+#> Branching frequency: 483.5 per 100 cm
 ```
 
 ------------------------------------------------------------------------
@@ -232,10 +255,47 @@ print(main_vs_lateral)
 lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
 ```
 
-See the [Minirhizotron
-Scans](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.html#6-root-branching-order)
-vignette for the full set of options, including overlay PNGs for visual
-QC.
+[`order_metrics()`](https://jcunow.github.io/RootScanR/reference/order_metrics.md)
+also accepts a numeric `focal` to split one specific order class off
+from the rest:
+
+``` r
+
+# Per-order-class table (same as order_res$summary)
+order_metrics(order_res)
+
+# Order 1 (main root) vs. everything else
+order_metrics(order_res, focal = 1)
+```
+
+To check the classification visually, write a colour-coded overlay PNG,
+or re-plot a sub-window at native resolution for QC:
+
+``` r
+
+order_res2 <- branch_order_map(
+  skel          = skl,
+  mask          = seg,
+  order         = "branch_order",
+  unit          = "cm",
+  dpi           = 300,
+  overlay_png   = "branch_order_overlay.png",
+  keep_segments = TRUE
+)
+
+# Zoom into a 200x200 px window at 3x magnification
+plot_order_window(
+  order_res2$edges, skl,
+  r_range = c(100, 300), c_range = c(100, 300),
+  scale = 3, file = "branch_order_window.png"
+)
+```
+
+> **For more control** over crossing resolution, pruning of weak tips,
+> and the continuation rule used to group segments into roots, see
+> [`?root_graph_pipeline`](https://jcunow.github.io/RootScanR/reference/root_graph_pipeline.md)
+> (the engine behind
+> [`branch_order_map()`](https://jcunow.github.io/RootScanR/reference/branch_order_map.md)).
 
 ------------------------------------------------------------------------
 

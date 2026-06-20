@@ -184,12 +184,17 @@ distributions for valid comparison.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">compare_depth_distribution</span><span class="op">(</span><span class="va">P</span>, <span class="va">Q</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in value[[3L]](cond):</span> tail_weight_function error: object 'P' not found</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">counts_P</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">15</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">counts_Q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">8</span>, <span class="fl">25</span>, <span class="fl">20</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="va">counts_P</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">counts_P</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">Q</span> <span class="op">&lt;-</span> <span class="va">counts_Q</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">counts_Q</span><span class="op">)</span> </span></span>
+<span class="r-in"><span><span class="fu">compare_depth_distribution</span><span class="op">(</span><span class="va">P</span>, <span class="va">Q</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05909091</span>
 <span class="r-in"><span><span class="fu">compare_depth_distribution</span><span class="op">(</span><span class="va">P</span>, <span class="va">Q</span>, metric <span class="op">=</span> <span class="st">"js"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'P' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.01228139</span>
 <span class="r-in"><span><span class="fu">compare_depth_distribution</span><span class="op">(</span><span class="va">P</span>, <span class="va">Q</span>, tail_weight <span class="op">=</span> <span class="cn">TRUE</span>, weighting <span class="op">=</span> <span class="st">"sigmoid"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in value[[3L]](cond):</span> tail_weight_function error: object 'P' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.04693082</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
