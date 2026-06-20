@@ -151,7 +151,7 @@ result <- root_depth_metrics(
 | `calc_root_pixels` | `rootpx`, `voidpx` | Needed for density metrics |
 | `calc_root_length` | `rootlength` | Needed for density + angle metrics |
 | `calc_diameter_stats` | `avg.diameter`, `max.diameter`, `var.diameter` | Needed for surface:volume ratio |
-| `calc_diameter_quantiles` | `rootdiameter.90/95/99`, `avg.diameter.top*pct`, `rootlength.above.*`, `n.diameter.peaks`, `diameter.peak.*` | See `diameter_thresholds` |
+| `calc_diameter_quantiles` | `rootdiameter.90/95/99`, `avg.diameter.top*pct`, `rootlength.above.*`, `n.diameter.peaks`, `diameter.peak.*` | See `diameter_quantiles`, `diameter_thresholds` |
 | `calc_landscape_metrics` | `enn_mn`, `joinent`, `relmutinf`, `np`, `contag`, `np_density` | **Slow** — one call per depth bin |
 | `calc_color_metrics` | `rcc_root`, `gcc_root`, …, `rcc_bg`, `gcc_bg`, … | Requires `path.rgb` |
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |

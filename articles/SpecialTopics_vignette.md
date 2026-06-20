@@ -221,7 +221,7 @@ For the two-timepoint comparison you would instead pass both sessions:
 
 s1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 s3 <- terra::rast(skl_Oulanka2023_Session03_T067)
-root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 300, select.layer = 2)
+root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 150, select.layer = 2)
 ```
 
 ## See also

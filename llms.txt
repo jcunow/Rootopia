@@ -200,6 +200,8 @@ geometry.
   : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
 - [`binning()`](https://jcunow.github.io/RootScanR/reference/binning.md)
   : Bin continuous depth values into discrete intervals
+- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
+  Mask a scan to a depth and/or rotation zone (zone masking)
 - [`estimate_soil_surface()`](https://jcunow.github.io/RootScanR/reference/estimate_soil_surface.md)
   : Estimate soil surface position using tape markers
 - [`estimate_rotation_center()`](https://jcunow.github.io/RootScanR/reference/estimate_rotation_center.md)
@@ -239,8 +241,6 @@ Statistical indices summarising root distribution with depth.
   Mclust
 - [`circular_mean()`](https://jcunow.github.io/RootScanR/reference/circular_mean.md)
   : Calculate a circular mean to determine average Directionality
-- [`zoning()`](https://jcunow.github.io/RootScanR/reference/zoning.md) :
-  Mask a scan to a depth and/or rotation zone (zone masking)
 - [`root_accumulation()`](https://jcunow.github.io/RootScanR/reference/root_accumulation.md)
   : Calculate root accumulation
 - [`compare_depth_distribution()`](https://jcunow.github.io/RootScanR/reference/compare_depth_distribution.md)
@@ -286,6 +286,8 @@ Built-in example images from the Oulanka 2023 field campaign.
   R](https://jcunow.github.io/RootScanR/articles/FlatBedScans_vignettes.md):
 - [Minirhizotron Scans Analysis with RootScanR in
   R](https://jcunow.github.io/RootScanR/articles/MinirhizotronScans_vignettes.md):
+- [RootScanR Package Report, by
+  pkgnet](https://jcunow.github.io/RootScanR/articles/pkgnetreport.md):
 - [Rotation Bias and Rhythmicity Analysis with
   RootScanR](https://jcunow.github.io/RootScanR/articles/Rotation_Bias_vignettes.md):
 - [Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and

@@ -41,6 +41,7 @@ root_depth_metrics(
   calc_advanced_metrics = TRUE,
   diameter_thresholds = c(0.2, 0.5, 1),
   diameter_threshold_unit = "mm",
+  diameter_quantiles = c(0.9, 0.95, 0.99),
   output_path = NULL,
   verbose = TRUE
 )
@@ -161,8 +162,8 @@ root_depth_metrics(
 
 - calc_diameter_quantiles:
 
-  Logical. Compute the 90th, 95th, and 99th percentile of the diameter
-  distribution per bin, conditional means above each quantile,
+  Logical. Compute the diameter distribution percentiles set by
+  `diameter_quantiles` per bin, conditional means above each quantile,
   threshold-based root lengths (see `diameter_thresholds`), and modal
   diameter peaks via
   [`modal_peaks()`](https://jcunow.github.io/RootScanR/reference/modal_peaks.md).
@@ -240,6 +241,15 @@ root_depth_metrics(
 
   Character. Unit of `diameter_thresholds`: `"mm"` (default), `"cm"`, or
   `"px"`.
+
+- diameter_quantiles:
+
+  Numeric vector of probabilities (each strictly between 0 and 1) for
+  the per-bin diameter percentiles computed when
+  `calc_diameter_quantiles = TRUE`. Default `c(0.90, 0.95, 0.99)`.
+  Output columns are named from the probabilities: e.g. `0.90` gives
+  `rootdiameter.90` (the 90th percentile) and `avg.diameter.top10pct`
+  (mean diameter above it).
 
 - output_path:
 
