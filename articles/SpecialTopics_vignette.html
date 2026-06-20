@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover • RootScanR</title>
+<title>Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover • RootScanR</title>
 <script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Roboto-0.4.10/font.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 <link href="../deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -41,7 +41,7 @@
     <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (peat colour, texture, halos, turnover)</a></li>
+    <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -74,7 +74,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover</h1>
+      <h1>Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/jcunow/RootScanR/blob/main/vignettes/SpecialTopics_vignette.Rmd" class="external-link"><code>vignettes/SpecialTopics_vignette.Rmd</code></a></small>
@@ -85,36 +85,36 @@
     
 <p>This article collects a few less-obvious capabilities of
 <strong>RootScanR</strong> that do not fit the main step-by-step
-tutorials but are useful for specific questions: classifying peat/soil
+tutorials but are useful for specific questions: classifying soil/soil
 material by colour, quantifying soil surface texture, building a
 rhizosphere “halo” zone around roots, and measuring root turnover
 between time points.</p>
 <p>All examples use the bundled Oulanka 2023 example rasters, so you can
 run them as-is.</p>
 <div class="section level2">
-<h2 id="peat-and-material-colour-classification">1. Peat and material colour classification<a class="anchor" aria-label="anchor" href="#peat-and-material-colour-classification"></a>
+<h2 id="soil-and-material-colour-classification">1. Soil and material colour classification<a class="anchor" aria-label="anchor" href="#soil-and-material-colour-classification"></a>
 </h2>
-<p><code><a href="../reference/classify_peat_rgb.html">classify_peat_rgb()</a></code> assigns every pixel of an RGB scan
-to a class (e.g., dark peat, red peat, root, silver tape, coarse debris,
+<p><code><a href="../reference/classify_soil_rgb.html">classify_soil_rgb()</a></code> assigns every pixel of an RGB scan
+to a class (e.g., dark soil, red soil, root, silver tape, coarse debris,
 …) by nearest-centroid matching in CIE LAB colour space. Pixels too far
 from any centroid are left “unclassified”.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># downsample_fact speeds up the demo; drop it for full resolution</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_peat_rgb.html">classify_peat_rgb</a></span><span class="op">(</span><span class="va">img</span>, downsample_fact <span class="op">=</span> <span class="fl">4</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span>, downsample_fact <span class="op">=</span> <span class="fl">4</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># A SpatRaster of class IDs (factor levels are the class names)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/peat-classify-1.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-1.png" class="r-plt" alt="" width="100%"></p>
 <p>The returned list also carries per-class statistics – pixel counts,
 area fractions, mean LAB/RGB colours, and the mean distance to the
 centroid:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span></span>
 <span><span class="co">#&gt;           class n_pixels pct_pixels L_mean A_mean B_mean L_sd A_sd B_sd R_mean</span></span>
-<span><span class="co">#&gt; 1     dark_peat    40252     11.331    8.8    1.5    2.4 3.38 1.45 1.35   28.3</span></span>
-<span><span class="co">#&gt; 2      red_peat   233641     65.768   13.9    4.4    5.9 3.55 1.99 2.10   44.2</span></span>
+<span><span class="co">#&gt; 1     dark_soil    40252     11.331    8.8    1.5    2.4 3.38 1.45 1.35   28.3</span></span>
+<span><span class="co">#&gt; 2      red_soil   233641     65.768   13.9    4.4    5.9 3.55 1.99 2.10   44.2</span></span>
 <span><span class="co">#&gt; 3          root     5707      1.606   34.5    4.6   10.7 8.19 3.26 5.74   94.7</span></span>
 <span><span class="co">#&gt; 4   silver_tape    63821     17.965   73.1   -2.0    0.9 3.63 0.55 1.06  176.4</span></span>
 <span><span class="co">#&gt; 5 coarse_debris    11632      3.274   22.5    7.9   11.9 3.57 2.96 3.39   70.4</span></span>
@@ -129,24 +129,24 @@ centroid:</p>
 <div class="section level3">
 <h3 id="visualising-the-classification">Visualising the classification<a class="anchor" aria-label="anchor" href="#visualising-the-classification"></a>
 </h3>
-<p><code><a href="../reference/plot_peat_classification.html">plot_peat_classification()</a></code> renders the class map with a
+<p><code><a href="../reference/plot_soil_classification.html">plot_soil_classification()</a></code> renders the class map with a
 legend and the actual mean colours of each class:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_peat_classification.html">plot_peat_classification</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/peat-plot-1.png" class="r-plt" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_soil_classification.html">plot_soil_classification</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-plot-1.png" class="r-plt" alt="" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="calibrating-your-own-centroids">Calibrating your own centroids<a class="anchor" aria-label="anchor" href="#calibrating-your-own-centroids"></a>
 </h3>
 <p>The default centroids were calibrated on one scanner and site. For
-other data, build your own with <code><a href="../reference/build_peat_centroids.html">build_peat_centroids()</a></code>. You
+other data, build your own with <code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code>. You
 supply <code>picks</code>: a named list with one element per material
 class, where each element is a matrix with 3 columns (R, G, B in 0-255).
 Each row is one colour sample for that class — different classes can
 have different numbers of rows. The function averages each class’s
 samples into a single LAB centroid and returns a table in the same
 format as the built-in defaults, ready to pass back into
-<code><a href="../reference/classify_peat_rgb.html">classify_peat_rgb()</a></code>.</p>
+<code><a href="../reference/classify_soil_rgb.html">classify_soil_rgb()</a></code>.</p>
 <p>The simplest approach is to read representative RGB values off your
 scan with a colour picker (e.g. in an image viewer or QGIS) and enter
 them directly:</p>
@@ -170,16 +170,16 @@ them directly:</p>
 <span><span class="va">max_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>region1 <span class="op">=</span> <span class="fl">14</span>, region2 <span class="op">=</span> <span class="fl">14</span>, region3 <span class="op">=</span> <span class="fl">26</span>,</span>
 <span>              region4 <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cents</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_peat_centroids.html">build_peat_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span>   <span class="co"># prints diagnostics</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_peat_rgb.html">classify_peat_rgb</a></span><span class="op">(</span><span class="va">img</span>, centroids <span class="op">=</span> <span class="va">cents</span><span class="op">)</span></span>
+<span><span class="va">cents</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_soil_centroids.html">build_soil_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span>   <span class="co"># prints diagnostics</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span>, centroids <span class="op">=</span> <span class="va">cents</span><span class="op">)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span><span class="op">)</span></span></code></pre></div>
 <p>Note: provide a class for <strong>every</strong> material in your
 scans. Because classification is nearest-centroid, any material without
 its own class is snapped into whichever defined class sits closest.
-<code><a href="../reference/build_peat_centroids.html">build_peat_centroids()</a></code> prints intra-class spread and
+<code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code> prints intra-class spread and
 inter-class distances to help you tune <code>MAX_DIST</code> before
 running the full classification.</p>
-<p>See <code><a href="../reference/classify_peat_rgb.html">?classify_peat_rgb</a></code> for the full description of the
+<p>See <code><a href="../reference/classify_soil_rgb.html">?classify_soil_rgb</a></code> for the full description of the
 centroid table format and the <code>prior</code>/<code>alpha</code>
 blending workflow for iterative refinement.</p>
 </div>
@@ -274,8 +274,8 @@ sessions:</p>
 <code><a href="../articles/BatchProcessing_vignette.html">vignette("BatchProcessing_vignette")</a></code> – end-to-end depth
 profiling.</li>
 <li>
-<code><a href="../reference/classify_peat_rgb.html">?classify_peat_rgb</a></code>, <code><a href="../reference/build_peat_centroids.html">?build_peat_centroids</a></code>,
-<code><a href="../reference/plot_peat_classification.html">?plot_peat_classification</a></code>
+<code><a href="../reference/classify_soil_rgb.html">?classify_soil_rgb</a></code>, <code><a href="../reference/build_soil_centroids.html">?build_soil_centroids</a></code>,
+<code><a href="../reference/plot_soil_classification.html">?plot_soil_classification</a></code>
 </li>
 <li>
 <code><a href="../reference/analyze_soil_texture.html">?analyze_soil_texture</a></code>,

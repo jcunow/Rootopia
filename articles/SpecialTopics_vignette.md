@@ -1,19 +1,19 @@
-# Special Topics: Peat Colour, Soil Texture, Rhizosphere Halos, and Turnover
+# Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover
 
 This article collects a few less-obvious capabilities of **RootScanR**
 that do not fit the main step-by-step tutorials but are useful for
-specific questions: classifying peat/soil material by colour,
+specific questions: classifying soil/soil material by colour,
 quantifying soil surface texture, building a rhizosphere “halo” zone
 around roots, and measuring root turnover between time points.
 
 All examples use the bundled Oulanka 2023 example rasters, so you can
 run them as-is.
 
-## 1. Peat and material colour classification
+## 1. Soil and material colour classification
 
-[`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
-assigns every pixel of an RGB scan to a class (e.g., dark peat, red
-peat, root, silver tape, coarse debris, …) by nearest-centroid matching
+[`classify_soil_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)
+assigns every pixel of an RGB scan to a class (e.g., dark soil, red
+soil, root, silver tape, coarse debris, …) by nearest-centroid matching
 in CIE LAB colour space. Pixels too far from any centroid are left
 “unclassified”.
 
@@ -22,13 +22,13 @@ in CIE LAB colour space. Pixels too far from any centroid are left
 img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 
 # downsample_fact speeds up the demo; drop it for full resolution
-result <- classify_peat_rgb(img, downsample_fact = 4, verbose = FALSE)
+result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
 terra::plot(result$map)
 ```
 
-![](SpecialTopics_vignette_files/figure-html/peat-classify-1.png)
+![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)
 
 The returned list also carries per-class statistics – pixel counts, area
 fractions, mean LAB/RGB colours, and the mean distance to the centroid:
@@ -37,8 +37,8 @@ fractions, mean LAB/RGB colours, and the mean distance to the centroid:
 
 result$metrics
 #>           class n_pixels pct_pixels L_mean A_mean B_mean L_sd A_sd B_sd R_mean
-#> 1     dark_peat    40252     11.331    8.8    1.5    2.4 3.38 1.45 1.35   28.3
-#> 2      red_peat   233641     65.768   13.9    4.4    5.9 3.55 1.99 2.10   44.2
+#> 1     dark_soil    40252     11.331    8.8    1.5    2.4 3.38 1.45 1.35   28.3
+#> 2      red_soil   233641     65.768   13.9    4.4    5.9 3.55 1.99 2.10   44.2
 #> 3          root     5707      1.606   34.5    4.6   10.7 8.19 3.26 5.74   94.7
 #> 4   silver_tape    63821     17.965   73.1   -2.0    0.9 3.63 0.55 1.06  176.4
 #> 5 coarse_debris    11632      3.274   22.5    7.9   11.9 3.57 2.96 3.39   70.4
@@ -54,29 +54,29 @@ result$metrics
 
 ### Visualising the classification
 
-[`plot_peat_classification()`](https://jcunow.github.io/RootScanR/reference/plot_peat_classification.md)
+[`plot_soil_classification()`](https://jcunow.github.io/RootScanR/reference/plot_soil_classification.md)
 renders the class map with a legend and the actual mean colours of each
 class:
 
 ``` r
 
-plot_peat_classification(result)
+plot_soil_classification(result)
 ```
 
-![](SpecialTopics_vignette_files/figure-html/peat-plot-1.png)
+![](SpecialTopics_vignette_files/figure-html/soil-plot-1.png)
 
 ### Calibrating your own centroids
 
 The default centroids were calibrated on one scanner and site. For other
 data, build your own with
-[`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md).
+[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md).
 You supply `picks`: a named list with one element per material class,
 where each element is a matrix with 3 columns (R, G, B in 0-255). Each
 row is one colour sample for that class — different classes can have
 different numbers of rows. The function averages each class’s samples
 into a single LAB centroid and returns a table in the same format as the
 built-in defaults, ready to pass back into
-[`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md).
+[`classify_soil_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md).
 
 The simplest approach is to read representative RGB values off your scan
 with a colour picker (e.g. in an image viewer or QGIS) and enter them
@@ -103,20 +103,20 @@ picks <- list(
 max_dist <- c(region1 = 14, region2 = 14, region3 = 26,
               region4 = 12)
 
-cents  <- build_peat_centroids(picks, max_dist)   # prints diagnostics
-result <- classify_peat_rgb(img, centroids = cents)
+cents  <- build_soil_centroids(picks, max_dist)   # prints diagnostics
+result <- classify_soil_rgb(img, centroids = cents)
 terra::plot(result$map)
 ```
 
 Note: provide a class for **every** material in your scans. Because
 classification is nearest-centroid, any material without its own class
 is snapped into whichever defined class sits closest.
-[`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
+[`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
 prints intra-class spread and inter-class distances to help you tune
 `MAX_DIST` before running the full classification.
 
 See
-[`?classify_peat_rgb`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
+[`?classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)
 for the full description of the centroid table format and the
 `prior`/`alpha` blending workflow for iterative refinement.
 
@@ -228,9 +228,9 @@ root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 15
 
 - [`vignette("BatchProcessing_vignette")`](https://jcunow.github.io/RootScanR/articles/BatchProcessing_vignette.md)
   – end-to-end depth profiling.
-- [`?classify_peat_rgb`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md),
-  [`?build_peat_centroids`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md),
-  [`?plot_peat_classification`](https://jcunow.github.io/RootScanR/reference/plot_peat_classification.md)
+- [`?classify_soil_rgb`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md),
+  [`?build_soil_centroids`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md),
+  [`?plot_soil_classification`](https://jcunow.github.io/RootScanR/reference/plot_soil_classification.md)
 - [`?analyze_soil_texture`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md),
   [`?tube_coloration`](https://jcunow.github.io/RootScanR/reference/tube_coloration.md)
 - [`?create_root_buffer`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)

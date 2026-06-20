@@ -107,7 +107,7 @@ geometry.
 
 ## Soil and colour characterisation
 
-Colour metrics, peat classification, and texture analysis.
+Colour metrics, soil classification, and texture analysis.
 
 - [`create_root_buffer()`](https://jcunow.github.io/RootScanR/reference/create_root_buffer.md)
   : Create a buffer halo) around non-zero pixels
@@ -115,12 +115,12 @@ Colour metrics, peat classification, and texture analysis.
   : Calculate Image Coloration Metrics
 - [`analyze_soil_texture()`](https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.md)
   : Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)
-- [`classify_peat_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.md)
-  : Classify peat material classes from a minirhizotron RGB raster
-- [`build_peat_centroids()`](https://jcunow.github.io/RootScanR/reference/build_peat_centroids.md)
-  : Build peat class centroids from manual RGB colour picks
-- [`plot_peat_classification()`](https://jcunow.github.io/RootScanR/reference/plot_peat_classification.md)
-  : Plot the output of classify_peat_rgb
+- [`classify_soil_rgb()`](https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.md)
+  : Classify soil material classes from a minirhizotron RGB raster
+- [`build_soil_centroids()`](https://jcunow.github.io/RootScanR/reference/build_soil_centroids.md)
+  : Build soil class centroids from manual RGB colour picks
+- [`plot_soil_classification()`](https://jcunow.github.io/RootScanR/reference/plot_soil_classification.md)
+  : Plot the output of classify_soil_rgb
 
 ## Distribution analysis
 

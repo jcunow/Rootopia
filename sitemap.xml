@@ -20,9 +20,9 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/analyze_soil_texture.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/binning.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/branch_order_map.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/build_peat_centroids.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/build_soil_centroids.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/circular_mean.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/classify_peat_rgb.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/classify_soil_rgb.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/clean_image.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/compare_depth_distribution.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/convert_root_units.html</loc></url>
@@ -49,7 +49,7 @@
 <url><loc>https://jcunow.github.io/RootScanR/reference/order_classification_map.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/order_metrics.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/plot_order_window.html</loc></url>
-<url><loc>https://jcunow.github.io/RootScanR/reference/plot_peat_classification.html</loc></url>
+<url><loc>https://jcunow.github.io/RootScanR/reference/plot_soil_classification.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/prune_terminal_segments.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/remove_small_objects.html</loc></url>
 <url><loc>https://jcunow.github.io/RootScanR/reference/render_order_overlay.html</loc></url>
