@@ -841,7 +841,7 @@ root_depth_metrics <- function(
             sl_rd  <- rd.map; sl_rd[bm != d] <- NA; sl_rd <- terra::trim(sl_rd)
             rd_v   <- terra::values(sl_rd, na.rm = FALSE)
             
-            qv <- quantile(rd_v, diameter_quantiles, na.rm = TRUE)
+            qv <- stats::quantile(rd_v, diameter_quantiles, na.rm = TRUE)
 
             res <- data.frame(depth = d)
             for (qi in seq_along(diameter_quantiles)) {
