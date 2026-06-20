@@ -18,10 +18,23 @@ rotation_censor(
 \arguments{
 \item{img}{Input image as raster, file name, or array.}
 
-\item{center.offset}{Numeric. Meaning depends on \code{fixed.rotation}:
-when \code{TRUE}, the row to centre the kept window on (an absolute row,
-e.g. from \code{estimate_rotation_center()}); when \code{FALSE}, the
-rotation shift in rows to trim (e.g. from \code{estimate_rotation_shift()}).}
+\item{center.offset}{Numeric or character. Where to centre the kept window
+(in fixed mode), given in one of three forms:
+\itemize{
+  \item \strong{Absolute row} - a number \code{> 1}: the exact row to
+    centre on (e.g. from \code{estimate_rotation_center()}). Original
+    behaviour, unchanged.
+  \item \strong{Fraction} - a number in \code{[0, 1]}: a fraction of the
+    image height. \code{0} = top, \code{0.25} = a quarter down,
+    \code{0.5} = middle, \code{1} = bottom (so the centre row is
+    \code{center.offset * nrow}).
+  \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
+    \code{"center"} / \code{"centre"} (= 0.5), or \code{"bottom"} (= 1).
+}
+The default \code{0} centres on the top row, matching previous behaviour.
+When \code{fixed.rotation = FALSE} the resolved value is used as the
+rotation shift in rows to trim (e.g. from
+\code{estimate_rotation_shift()}); pass an absolute number there.}
 
 \item{cut.buffer}{Extra proportion of the rotation axis to trim (variable mode).}
 
@@ -54,4 +67,10 @@ img <- terra::rast(seg_Oulanka2023_Session01_T067)
 r0  <- estimate_rotation_center(img)
 rotation_censor(img, center.offset = r0, fixed.width = 800,
                 fixed.rotation = TRUE, overlay = TRUE)
+
+# Same window centred on the middle of the image, via a fraction or keyword
+rotation_censor(img, center.offset = 0.5,      fixed.width = 800)
+rotation_censor(img, center.offset = "middle", fixed.width = 800)
+# Top of the tube a quarter of the way down
+rotation_censor(img, center.offset = 0.25, fixed.width = 800)
 }
