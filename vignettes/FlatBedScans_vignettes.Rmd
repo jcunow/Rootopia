@@ -8,6 +8,17 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+
+# RootScanR + terra are hard dependencies, so the segmentation-based workflow
+# below runs at build time against the bundled `flatbed_scan_example`. The
+# displayed `load_flexible_image("path/to/...")` chunk stays eval=FALSE — that
+# is how a user supplies their own files.
+library(RootScanR)
+library(terra)
+```
+
 # Analyzing Root Systems from Flatbed Scans
 
 ## Introduction
@@ -44,7 +55,8 @@ library(tidyverse)
 ### 1. Load images
 
 `load_flexible_image()` accepts rasters, arrays, file paths, and most common
-image formats. Set `binarize = TRUE` to force the image to 0/1 values.
+image formats. Set `binarize = TRUE` to force the image to 0/1 values. This is
+how you load your own files:
 
 ```{r, eval=FALSE}
 # Segmented image (binary: root = 1, background = 0)
@@ -62,9 +74,17 @@ rgb <- load_flexible_image(
   output_format = "spatrast",
   normalize     = FALSE
 )
+```
 
-plot(seg, main = "Segmented scan")
-plot(rgb, main = "RGB scan")
+For this vignette we use the bundled example flatbed scan so every step below
+runs. It is a 3-band segmentation; layer 2 is the root channel.
+
+```{r}
+data(flatbed_scan_example)
+seg <- terra::rast(flatbed_scan_example)
+seg <- terra::ifel(seg[[2]] > 0, 1, 0)   # binarized root channel (0/1)
+
+terra::plot(seg, main = "Segmented flatbed scan")
 ```
 
 ---
@@ -74,14 +94,11 @@ plot(rgb, main = "RGB scan")
 `skeletonize_image()` reduces roots to single-pixel-wide centrelines. This is
 required for root length (Kimura method) and diameter estimation.
 
-```{r, eval=FALSE}
-skl <- skeletonize_image(
-  seg,
-  select.layer = 2,
-  verbose      = TRUE
-)
+```{r}
+# `seg` is already the single root layer, so no select.layer needed here
+skl <- skeletonize_image(seg, verbose = FALSE)
 
-plot(skl, main = "Skeleton")
+terra::plot(skl, main = "Skeleton")
 ```
 
 `skeletonize_image()` uses a LUT-based Zhang-Suen thinning algorithm to
@@ -94,8 +111,9 @@ reduce the segmented mask to one-pixel-wide centrelines.
 `root_length()` uses Kimura's formula, which weights orthogonal and diagonal
 skeleton segments differently to approximate true path length.
 
-```{r, eval=FALSE}
-rl <- root_length(skl, unit = "cm", dpi = 300, select.layer = NULL)
+```{r}
+rl <- root_length(skl, unit = "cm", dpi = 300, select.layer = NULL,
+                  show_messages = FALSE)
 cat("Total root length:", round(rl, 2), "cm\n")
 ```
 
@@ -106,7 +124,7 @@ cat("Total root length:", round(rl, 2), "cm\n")
 `root_diameter()` estimates local root width from the distance transform. It
 returns a diameter raster and the raw diameter values.
 
-```{r, eval=FALSE}
+```{r}
 diam_result <- root_diameter(
   seg,
   skeleton.img    = skl,
@@ -147,7 +165,7 @@ cat("Diameter peaks at (cm):", paste(round(peaks$peak_x, 3), collapse = ", "), "
 
 ### 5. Pixel counts and area coverage
 
-```{r, eval=FALSE}
+```{r}
 root_px <- count_pixels(seg)
 void_px <- count_pixels(abs(seg - 1))
 
@@ -167,15 +185,17 @@ cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
 `detect_skeleton_points()` classifies skeleton pixels into endpoints (root
 tips) and branching points (forks).
 
-```{r, eval=FALSE}
-pts <- detect_skeleton_points(skl, select.layer = 2)
+```{r}
+# `skl` is a single-layer skeleton, so no select.layer is needed
+pts <- detect_skeleton_points(skl, select.layer = NULL)
 
 n_tips    <- count_pixels(pts$endpoints)
 n_forks   <- count_pixels(pts$branching_points)
 branch_freq <- n_forks / rl * 100   # branching points per 100 cm
 
-cat(sprintf("Root tips: %d\n", n_tips))
-cat(sprintf("Branching points: %d\n", n_forks))
+# count_pixels() returns a numeric, so coerce to integer for %d formatting
+cat(sprintf("Root tips: %d\n", as.integer(n_tips)))
+cat(sprintf("Branching points: %d\n", as.integer(n_forks)))
 cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 ```
 
@@ -218,9 +238,42 @@ print(main_vs_lateral)
 lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
 ```
 
-See the
-[Minirhizotron Scans](MinirhizotronScans_vignettes.html#6-root-branching-order)
-vignette for the full set of options, including overlay PNGs for visual QC.
+`order_metrics()` also accepts a numeric `focal` to split one specific order
+class off from the rest:
+
+```{r, eval=FALSE}
+# Per-order-class table (same as order_res$summary)
+order_metrics(order_res)
+
+# Order 1 (main root) vs. everything else
+order_metrics(order_res, focal = 1)
+```
+
+To check the classification visually, write a colour-coded overlay PNG, or
+re-plot a sub-window at native resolution for QC:
+
+```{r, eval=FALSE}
+order_res2 <- branch_order_map(
+  skel          = skl,
+  mask          = seg,
+  order         = "branch_order",
+  unit          = "cm",
+  dpi           = 300,
+  overlay_png   = "branch_order_overlay.png",
+  keep_segments = TRUE
+)
+
+# Zoom into a 200x200 px window at 3x magnification
+plot_order_window(
+  order_res2$edges, skl,
+  r_range = c(100, 300), c_range = c(100, 300),
+  scale = 3, file = "branch_order_window.png"
+)
+```
+
+> **For more control** over crossing resolution, pruning of weak tips, and the
+> continuation rule used to group segments into roots, see
+> `?root_graph_pipeline` (the engine behind `branch_order_map()`).
 
 ---
 

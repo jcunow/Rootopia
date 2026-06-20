@@ -600,6 +600,11 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
       stop("Input data frame is empty")
     }
 
+    # Record original row order so the result can be returned aligned to the
+    # input rows (rbind/split rename rows, and sorting row names lexically
+    # would scramble the output).
+    x$.orig_order <- seq_len(nrow(x))
+
     # Split data by group
     split_df <- split(x, x[,group])
 
@@ -647,8 +652,8 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
     # Combine the list back into a single data frame
     result_df <- do.call(rbind, result_list)
 
-    # Reorder the result to match the original row order
-    result_df <- result_df[order(rownames(result_df)), ]
+    # Reorder the result to match the original input row order
+    result_df <- result_df[order(result_df$.orig_order), ]
 
     return(result_df$cs)
 

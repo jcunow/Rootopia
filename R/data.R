@@ -206,3 +206,33 @@
 #'   persistent <- sum(terra::values(img[[3]]) == 1)
 #' }
 "TurnoverDPC_data"
+
+#' @title Example Flatbed Root Scan (segmented)
+#' @description
+#' A segmented flatbed root scan used to demonstrate the depth-independent
+#' flatbed workflow (skeletonisation, root length, diameter, branching, and
+#' branch order). Roots are foreground, background is 0.
+#'
+#' @details
+#' Flatbed scans capture the full root system in a 2D plane, so traits are
+#' computed globally rather than per depth bin. The image is a binary
+#' segmentation (root vs. background) stored across three channels; layer 2 is
+#' used as the root channel in the vignette.
+#'
+#' @author Johannes Cunow \email{johannes.cunow@gmail.com}
+#' @format A RasterBrick object with dimensions:
+#'   \itemize{
+#'     \item 2000 columns (width)
+#'     \item 2000 rows (height)
+#'     \item 3 layers (segmentation channels)
+#'   }
+#' @usage data(flatbed_scan_example)
+#' @source Image by J.Cunow
+#' @examples
+#' \dontrun{
+#'   data(flatbed_scan_example)
+#'   seg <- terra::rast(flatbed_scan_example)
+#'   seg <- terra::ifel(seg[[2]] > 0, 1, 0)
+#'   terra::plot(seg)
+#' }
+"flatbed_scan_example"
