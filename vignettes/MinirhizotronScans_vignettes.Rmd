@@ -72,7 +72,7 @@ library(tidyverse)
 >
 > * **Whole profile in one call** with `terra::zonal()` — fast, for traits that
 >   reduce to a per-zone sum or mean (pixel counts, mean diameter).
-> * **One slice at a time** with `zoning()` — for traits whose function needs a
+> * **One slice at a time** with `depth_zoning()` — for traits whose function needs a
 >   whole image (root length, landscape metrics, color). You compute the trait
 >   for a single depth, then wrap that in a loop to cover the full profile.
 >
@@ -191,7 +191,7 @@ depth_map <- create_depthmap(
 
 # create_depthmap() returns the map on its own grid; align it to the segmented
 # image so depth and root rasters share extent/resolution (required for
-# terra::zonal() and zoning() below).
+# terra::zonal() and depth_zoning() below).
 depth_map <- terra::flip(terra::t(depth_map))
 terra::ext(depth_map) <- terra::ext(root_layer)
 
@@ -246,10 +246,10 @@ depth_data$rootpx.density <- depth_data$rootpx /
 head(depth_data)
 ```
 
-#### 5b. Root length for a *single* depth slice — `zoning()` + `root_length()`
+#### 5b. Root length for a *single* depth slice — `depth_zoning()` + `root_length()`
 
 Root length (Kimura method) is computed from a skeleton image, so it needs a
-whole raster rather than a per-pixel reduction. `zoning()` masks the skeleton
+whole raster rather than a per-pixel reduction. `depth_zoning()` masks the skeleton
 to one depth bin (everything outside the bin becomes `NA`, the grid is kept),
 and `root_length()` then measures just that slice.
 
@@ -258,7 +258,7 @@ and `root_length()` then measures just that slice.
 skl <- skeletonize_image(root_layer, verbose = FALSE)
 
 # Traits for one specific depth slice (the 10 cm bin)
-skl_10cm <- zoning(skl, mode = "depth", depth_map = depth_bins, depth = 10)
+skl_10cm <- depth_zoning(skl, depth_map = depth_bins, depth = 10)
 len_10cm <- root_length(skl_10cm, unit = "cm", dpi = 150, show_messages = FALSE)
 len_10cm
 ```
@@ -270,7 +270,7 @@ To get the trait for every depth, wrap the single-slice code in a loop over
 
 ```{r}
 length_by_depth <- do.call(rbind, lapply(depths, function(d) {
-  skl_d <- zoning(skl, mode = "depth", depth_map = depth_bins, depth = d)
+  skl_d <- depth_zoning(skl, depth_map = depth_bins, depth = d)
   # Empty bins have no skeleton to measure, so their length is 0
   has_root <- terra::global(skl_d, "sum", na.rm = TRUE)[1, 1] > 0
   data.frame(
@@ -314,14 +314,14 @@ head(depth_data)
 
 ### 6. Landscape and color metrics
 
-Both of these are computed **per depth slice** with the same `zoning()` loop
+Both of these are computed **per depth slice** with the same `depth_zoning()` loop
 introduced in 5c.
 
 #### Landscape metrics (spatial structure)
 
 ```{r, eval=FALSE}
 lsm_list <- lapply(depths, function(d) {
-  slice <- zoning(root_layer, mode = "depth", depth_map = depth_bins, depth = d)
+  slice <- depth_zoning(root_layer, depth_map = depth_bins, depth = d)
   # Skip depth bins that contain no roots
   if (terra::global(slice, "sum", na.rm = TRUE)[1, 1] == 0) return(NULL)
   root_scape_metrics(
@@ -352,8 +352,8 @@ grid you can skip it.
 rgb_aligned <- terra::resample(rgb, root_layer, method = "bilinear")
 
 color_list <- lapply(depths, function(d) {
-  slice_seg <- zoning(root_layer,  mode = "depth", depth_map = depth_bins, depth = d)
-  slice_rgb <- zoning(rgb_aligned, mode = "depth", depth_map = depth_bins, depth = d)
+  slice_seg <- depth_zoning(root_layer,  depth_map = depth_bins, depth = d)
+  slice_rgb <- depth_zoning(rgb_aligned, depth_map = depth_bins, depth = d)
 
   # Split the slice into root vs. background pixels
   root_rgb <- slice_rgb; root_rgb[slice_seg == 0] <- NA
