@@ -88,15 +88,14 @@ a measured offset. Optionally previews what is kept versus cut.</p>
 <dt id="arg-center-offset">center.offset<a class="anchor" aria-label="anchor" href="#arg-center-offset"></a></dt>
 <dd><p>Numeric or character. Where to centre the kept window
 (in fixed mode), given in one of three forms:</p><ul><li><p><strong>Absolute row</strong> - a number <code>&gt; 1</code>: the exact row to
-    centre on (e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>). Original
-    behaviour, unchanged.</p></li>
+    centre on (e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>).</p></li>
 <li><p><strong>Fraction</strong> - a number in <code>[0, 1]</code>: a fraction of the
     image height. <code>0</code> = top, <code>0.25</code> = a quarter down,
     <code>0.5</code> = middle, <code>1</code> = bottom (so the centre row is
     <code>center.offset * nrow</code>).</p></li>
 <li><p><strong>Keyword</strong> - <code>"top"</code> (= 0), <code>"middle"</code> /
     <code>"center"</code> / <code>"centre"</code> (= 0.5), or <code>"bottom"</code> (= 1).</p></li>
-</ul><p>The default <code>0</code> centres on the top row, matching previous behaviour.
+</ul><p>The default <code>0</code> centres on the top row.
 When <code>fixed.rotation = FALSE</code> the resolved value is used as the
 rotation shift in rows to trim (e.g. from
 <code><a href="estimate_rotation_shift.html">estimate_rotation_shift()</a></code>); pass an absolute number there.</p></dd>

@@ -36,7 +36,6 @@ rotation_censor(
   - **Absolute row** - a number `> 1`: the exact row to centre on (e.g.
     from
     [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)).
-    Original behaviour, unchanged.
 
   - **Fraction** - a number in `[0, 1]`: a fraction of the image height.
     `0` = top, `0.25` = a quarter down, `0.5` = middle, `1` = bottom (so
@@ -45,9 +44,9 @@ rotation_censor(
   - **Keyword** - `"top"` (= 0), `"middle"` / `"center"` / `"centre"` (=
     0.5), or `"bottom"` (= 1).
 
-  The default `0` centres on the top row, matching previous behaviour.
-  When `fixed.rotation = FALSE` the resolved value is used as the
-  rotation shift in rows to trim (e.g. from
+  The default `0` centres on the top row. When `fixed.rotation = FALSE`
+  the resolved value is used as the rotation shift in rows to trim (e.g.
+  from
   [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md));
   pass an absolute number there.
 

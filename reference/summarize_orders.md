@@ -1,6 +1,9 @@
 # Per-order summary of length and diameter
 
-Per-order summary of length and diameter
+Aggregates the per-segment edge table into one row per order class. All
+lengths and diameters are in the unit of `et` (see
+[`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md));
+counts are integers.
 
 ## Usage
 
