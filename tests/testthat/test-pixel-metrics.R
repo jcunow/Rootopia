@@ -35,7 +35,7 @@ test_that("image_threshold returns a binarised raster across methods", {
   r <- terra::rast(matrix(runif(24 * 28), 24, 28))
   for (mth in c("global", "adaptive")) {
     out <- image_threshold(r, threshold = 0.4, method = mth,
-                           select.layer = 1, mask.layer = NULL, binary_01 = TRUE)
+                           select_layer = 1, mask_layer = NULL, binary_01 = TRUE)
     expect_s4_class(out, "SpatRaster")
     vals <- terra::values(out)
     expect_true(all(vals %in% c(0, 1) | is.na(vals)))

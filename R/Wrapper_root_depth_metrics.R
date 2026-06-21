@@ -2,7 +2,7 @@
 #'
 #' @description
 #' Processes a set of segmented rhizotron or minirhizotron images and returns a
-#' tidy data frame of root traits summarised per depth interval.  Supports both
+#' tidy data frame of root traits summarized per depth interval.  Supports both
 #' cylindrical tube geometry (minirhizotrons) and flat window geometry
 #' (rhizotron panels).
 #'
@@ -20,34 +20,34 @@
 #'
 #' @section Which paths are required for which metrics:
 #' \describe{
-#'   \item{\code{path.seg}}{Always required.}
-#'   \item{\code{path.skl}}{Optional. Used by \code{calc_root_length},
+#'   \item{\code{path_seg}}{Always required.}
+#'   \item{\code{path_skl}}{Optional. Used by \code{calc_root_length},
 #'     \code{calc_diameter_stats}, \code{calc_diameter_quantiles},
 #'     \code{calc_root_angles}, and \code{calc_root_order_metrics} when
-#'     supplied. If \code{path.skl} is \code{NULL} or a skeleton file is
+#'     supplied. If \code{path_skl} is \code{NULL} or a skeleton file is
 #'     missing for an image, the skeleton is computed internally from the
 #'     segmented image via \code{skeletonize_image()}.}
-#'   \item{\code{path.rgb}}{Required when \code{calc_color_metrics} is
+#'   \item{\code{path_rgb}}{Required when \code{calc_color_metrics} is
 #'     \code{TRUE}.}
 #' }
 #'
-#' @param path.seg Character. Path to directory of binary segmented images
+#' @param path_seg Character. Path to directory of binary segmented images
 #'   (foreground/root pixel = 1, background = 0).
-#' @param path.skl Character or \code{NULL}. Path to directory of skeletonised
-#'   images (one-pixel-wide centrelines of roots), used for length, diameter,
+#' @param path_skl Character or \code{NULL}. Path to directory of skeletonised
+#'   images (one-pixel-wide centerlines of roots), used for length, diameter,
 #'   angle, and branching-order metrics. If \code{NULL} or a file is missing,
 #'   the skeleton is computed internally via \code{skeletonize_image()}.
 #'   Default \code{NULL}.
-#' @param path.rgb Character or \code{NULL}. Path to directory of blended
-#'   RGB images, aligned to the segmented images.  Required for colour metrics.
+#' @param path_rgb Character or \code{NULL}. Path to directory of blended
+#'   RGB images, aligned to the segmented images.  Required for color metrics.
 #'   Default \code{NULL}.
 #' @param seg_file_index Integer vector or \code{NULL}. Optional subset index
-#'   applied to \code{list.files(path.seg)}, e.g. \code{37:72}.  Default
+#'   applied to \code{list.files(path_seg)}, e.g. \code{37:72}.  Default
 #'   \code{NULL} (use all files).
 #' @param skl_file_index Integer vector or \code{NULL}. Optional subset index
-#'   applied to \code{list.files(path.skl)}.  Default \code{NULL}.
+#'   applied to \code{list.files(path_skl)}.  Default \code{NULL}.
 #' @param rgb_file_index Integer vector or \code{NULL}. Optional subset index
-#'   applied to \code{list.files(path.rgb)}.  Default \code{NULL}.
+#'   applied to \code{list.files(path_rgb)}.  Default \code{NULL}.
 #'
 #' @section Per-image metadata:
 #' All metadata arguments below accept either a single value (recycled to all
@@ -74,7 +74,7 @@
 #'   convert pixel distances to physical units (cm).  Default \code{300}.
 #' @param tube_diameter_cm Numeric. Inner diameter of the minirhizotron tube in
 #'   \strong{centimetres}.  Passed to \code{create_depthmap()} as
-#'   \code{tube.thicc}.  Its role in flat-window geometry (\code{flat_geometry
+#'   \code{tube_thicc}.  Its role in flat-window geometry (\code{flat_geometry
 #'   = TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
 #'   and may be ignored -- leave at the default unless you know it matters for
 #'   your setup.  Default \code{7}.
@@ -107,7 +107,7 @@
 #'   \code{diameter_thresholds}), and modal diameter peaks via
 #'   \code{modal_peaks()}.  Default \code{FALSE}.
 #' @param calc_landscape_metrics Logical. Compute patch-level landscape metrics
-#'   per depth bin via \code{root_scape_metrics()}: nearest-neighbour distance
+#'   per depth bin via \code{root_scape_metrics()}: nearest-neighbor distance
 #'   (\code{enn_mn}), joint entropy (\code{joinent}), relative mutual
 #'   information (\code{relmutinf}), number of patches (\code{np}), and
 #'   contagion (\code{contag}).  \strong{Slow}: one call per depth bin per
@@ -115,14 +115,14 @@
 #' @param calc_color_metrics Logical. Compute mean chromatic coordinates (rcc,
 #'   gcc, bcc), hue, saturation, luminosity, and raw RGB channel means
 #'   separately for root pixels and background pixels via
-#'   \code{tube_coloration()}.  Requires \code{path.rgb}.  Default \code{FALSE}.
+#'   \code{tube_coloration()}.  Requires \code{path_rgb}.  Default \code{FALSE}.
 #' @param calc_root_angles Logical. Compute \code{deep_drive} (fraction of
 #'   skeleton pixels whose D8 flow direction matches the locally optimal
 #'   downward direction) and \code{mean.steepness.angle} /
 #'   \code{sd.steepness.angle} (degrees, 0 = horizontal, 90 = vertical).
 #'   Uses \code{deep_drive()}.  Default \code{FALSE}.
 #' @param calc_root_order_metrics Logical. Build a per-image branching-order
-#'   graph via \code{branch_order_map()} and summarise it both per depth bin
+#'   graph via \code{branch_order_map()} and summarize it both per depth bin
 #'   and per tube.  Adds \code{mean.branch_order}, \code{max.branch_order},
 #'   \code{mean.root_order}, and \code{lateral_root_fraction} per depth bin,
 #'   plus tube-level \code{main_root.*} / \code{lateral_roots.*} columns
@@ -199,17 +199,17 @@
 #' \dontrun{
 #' # Minimal -- fast default metrics only
 #' result <- root_depth_metrics(
-#'   path.seg         = "scans/segmented/2022_02/",
-#'   path.skl         = "scans/skeleton/2022_02/",
+#'   path_seg         = "scans/segmented/2022_02/",
+#'   path_skl         = "scans/skeleton/2022_02/",
 #'   insertion_angles = tube_meta$angle,
 #'   session          = "2022_02"
 #' )
 #'
 #' # With diameter quantiles and root angle metrics
 #' result <- root_depth_metrics(
-#'   path.seg                = "scans/segmented/2022_02/",
-#'   path.skl                = "scans/skeleton/2022_02/",
-#'   path.rgb                = "scans/blended/2022_02/",
+#'   path_seg                = "scans/segmented/2022_02/",
+#'   path_skl                = "scans/skeleton/2022_02/",
+#'   path_rgb                = "scans/blended/2022_02/",
 #'   rgb_file_index          = 37:72,
 #'   insertion_angles        = tube_meta$angle,
 #'   soil_starts             = tube_meta$soil_row,
@@ -224,13 +224,13 @@
 #'
 #' # Flat rhizotron window (no sinusoidal tube correction)
 #' result <- root_depth_metrics(
-#'   path.seg      = "scans/segmented/rhizotron_A/",
-#'   path.skl      = "scans/skeleton/rhizotron_A/",
+#'   path_seg      = "scans/segmented/rhizotron_A/",
+#'   path_skl      = "scans/skeleton/rhizotron_A/",
 #'   flat_geometry = TRUE
 #' )
 #' }
 #'
-#' @importFrom dplyr group_by filter summarise full_join across rename_with
+#' @importFrom dplyr group_by filter summarize full_join across rename_with
 #'   select mutate cur_data
 #' @importFrom tidyr pivot_wider
 #' @importFrom stringr str_sub
@@ -241,9 +241,9 @@
 root_depth_metrics <- function(
     
   # ---------- paths ----------------------------------------------------------
-  path.seg,
-  path.skl                = NULL,
-  path.rgb                = NULL,
+  path_seg,
+  path_skl                = NULL,
+  path_rgb                = NULL,
   seg_file_index          = NULL,
   skl_file_index          = NULL,
   rgb_file_index          = NULL,
@@ -315,24 +315,24 @@ root_depth_metrics <- function(
   # ===========================================================================
   # 1.  Resolve file lists
   # ===========================================================================
-  if (!dir.exists(path.seg))
-    stop("'path.seg' does not exist: ", path.seg, call. = FALSE)
+  if (!dir.exists(path_seg))
+    stop("'path_seg' does not exist: ", path_seg, call. = FALSE)
   
-  all_seg <- list.files(path.seg)
+  all_seg <- list.files(path_seg)
   im.ls.seg <- if (!is.null(seg_file_index)) all_seg[seg_file_index] else all_seg
   if (length(im.ls.seg) == 0)
-    stop("No files found in 'path.seg': ", path.seg, call. = FALSE)
+    stop("No files found in 'path_seg': ", path_seg, call. = FALSE)
   n_images <- length(im.ls.seg)
   
   im.ls.skl <- NULL
-  if (!is.null(path.skl) && dir.exists(path.skl)) {
-    all_skl <- list.files(path.skl)
+  if (!is.null(path_skl) && dir.exists(path_skl)) {
+    all_skl <- list.files(path_skl)
     im.ls.skl <- if (!is.null(skl_file_index)) all_skl[skl_file_index] else all_skl
   }
   
   im.ls.rgb <- NULL
-  if (!is.null(path.rgb) && dir.exists(path.rgb)) {
-    all_rgb <- list.files(path.rgb)
+  if (!is.null(path_rgb) && dir.exists(path_rgb)) {
+    all_rgb <- list.files(path_rgb)
     im.ls.rgb <- if (!is.null(rgb_file_index)) all_rgb[rgb_file_index] else all_rgb
   }
   
@@ -391,12 +391,12 @@ root_depth_metrics <- function(
     calc_root_angles || calc_root_order_metrics
   if (needs_skl && is.null(im.ls.skl)) {
     message(paste(
-      "[Rootopia] Skeleton directory (path.skl) not found or not supplied.",
+      "[Rootopia] Skeleton directory (path_skl) not found or not supplied.",
       "Skeletons will be computed internally per image via skeletonize_image()."
     ))
   }
   if (calc_color_metrics && is.null(im.ls.rgb)) {
-    warning("RGB directory (path.rgb) not found or not supplied. Disabling calc_color_metrics.",
+    warning("RGB directory (path_rgb) not found or not supplied. Disabling calc_color_metrics.",
             call. = FALSE)
     calc_color_metrics <- FALSE
   }
@@ -457,7 +457,7 @@ root_depth_metrics <- function(
     # 3a. Load images
     # -------------------------------------------------------------------------
     im <- .safe(sprintf("load segmented [%s]", seg_file), {
-      img <- load_flexible_image(paste0(path.seg, seg_file),
+      img <- load_flexible_image(paste0(path_seg, seg_file),
                                  output_format = "spatrast",
                                  scale = "binary")
       if (dim(img)[3] > 3) img <- img[[1:3]]
@@ -475,9 +475,9 @@ root_depth_metrics <- function(
     if (do_length || do_diam_st || do_diam_q || do_angles || do_order) {
       if (!is.null(im.ls.skl) && l <= length(im.ls.skl)) {
         im.skeleton <- .safe(sprintf("load skeleton [%s]", im.ls.skl[l]), {
-          sk <- load_flexible_image(paste0(path.skl, im.ls.skl[l]),
+          sk <- load_flexible_image(paste0(path_skl, im.ls.skl[l]),
                                     output_format = "spatrast",
-                                    scale = "binary", select.layer = 2)
+                                    scale = "binary", select_layer = 2)
           if (dim(sk)[3] > 3) sk <- sk[[1:3]]
           sk
         })
@@ -497,7 +497,7 @@ root_depth_metrics <- function(
     if (do_color) {
       if (!is.null(im.ls.rgb) && l <= length(im.ls.rgb)) {
         im.rgb <- .safe(sprintf("load RGB [%s]", im.ls.rgb[l]),
-                        terra::rast(paste0(path.rgb, im.ls.rgb[l])))
+                        terra::rast(paste0(path_rgb, im.ls.rgb[l])))
       }
       if (is.null(im.rgb)) {
         message(sprintf("[Rootopia] %s: RGB image unavailable -- disabling calc_color_metrics.", tube))
@@ -511,17 +511,17 @@ root_depth_metrics <- function(
     r0 <- round(dim(im)[1] / 2, 0)
     
     im <- .safe("rotation_censor (seg)",
-                rotation_censor(im, center.offset = r0, fixed.rotation = TRUE, fixed.width = 1800),
+                rotation_censor(im, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
                 fallback = im)
     
     if (!is.null(im.skeleton))
       im.skeleton <- .safe("rotation_censor (skl)",
-                           rotation_censor(im.skeleton, center.offset = r0, fixed.rotation = TRUE, fixed.width = 1800),
+                           rotation_censor(im.skeleton, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
                            fallback = im.skeleton)
     
     if (!is.null(im.rgb))
       im.rgb <- .safe("rotation_censor (rgb)",
-                      rotation_censor(im.rgb, center.offset = r0, fixed.rotation = TRUE, fixed.width = 1800),
+                      rotation_censor(im.rgb, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
                       fallback = im.rgb)
     
     # Keep only the segmentation layer; align extents
@@ -537,10 +537,10 @@ root_depth_metrics <- function(
         img         = im,
         sinoid      = !flat_geometry,
         dpi         = dpi,
-        start.soil  = soil0,
-        center.offset = 0,
+        start_soil  = soil0,
+        center_offset = 0,
         tilt        = angle,
-        tube.thicc  = tube_diameter_cm
+        tube_thicc  = tube_diameter_cm
       )
       dm <- terra::flip(terra::t(dm))
       terra::ext(dm) <- terra::ext(im)
@@ -553,7 +553,7 @@ root_depth_metrics <- function(
       next
     }
     
-    bm    <- binning(depthmap = DepthMap, nn = depth_interval_cm, round.option = "rounding")
+    bm    <- binning(depthmap = DepthMap, nn = depth_interval_cm, round_option = "rounding")
     roots <- data.frame(depth = sort(unique(terra::values(bm))))
     
     # -------------------------------------------------------------------------
@@ -592,10 +592,10 @@ root_depth_metrics <- function(
           img           = im,
           sinoid        = FALSE,
           dpi           = dpi,
-          start.soil    = soil0,
-          center.offset = 0.5,
+          start_soil    = soil0,
+          center_offset = 0.5,
           tilt          = angle,
-          tube.thicc    = tube_diameter_cm
+          tube_thicc    = tube_diameter_cm
         )
         dem_flat <- terra::flip(terra::t(dm_flat))
         terra::ext(dem_flat) <- terra::ext(im)
@@ -640,7 +640,7 @@ root_depth_metrics <- function(
     rd.map <- NULL
     if (do_diam_st || do_diam_q) {
       rd.map <- .safe("root_diameter map", {
-        dm <- root_diameter(im, skeleton.img = im.skeleton, unit = "cm")$diameter_rast
+        dm <- root_diameter(im, skeleton_img = im.skeleton, unit = "cm")$diameter_rast
         terra::ext(dm) <- terra::ext(bm)
         dm
       })
@@ -743,7 +743,7 @@ root_depth_metrics <- function(
     
     # -------------------------------------------------------------------------
     # 3h. Per-depth-slice loop
-    #     (landscape metrics, colour metrics, diameter quantiles, root angles)
+    #     (landscape metrics, color metrics, diameter quantiles, root angles)
     # -------------------------------------------------------------------------
     needs_slice <- do_landscape || do_color || do_diam_q || do_angles
     
@@ -814,13 +814,13 @@ root_depth_metrics <- function(
           data.frame(depth = d)
         }
         
-        # --- Colour metrics --------------------------------------------------
+        # --- Color metrics --------------------------------------------------
         rc <- pc <- data.frame()
         empty_col <- data.frame(rcc = NA, gcc = NA, bcc = NA, hue = NA,
                                 saturation = NA, luminosity = NA,
                                 red = NA, green = NA, blue = NA)
         if (do_color && !is.null(im.rgb.crop)) {
-          cr <- .safe(sprintf("colour (depth=%g)", d), {
+          cr <- .safe(sprintf("color (depth=%g)", d), {
             sl  <- im.rgb.crop; sl[bm != d] <- NA; sl <- terra::trim(sl)
             ri  <- sl; ri[im.sl == 0] <- NA   # root pixels only
             pi_ <- sl; pi_[im.sl == 1] <- NA  # background pixels only
@@ -989,7 +989,7 @@ root_depth_metrics <- function(
       r |>
         dplyr::group_by(dplyr::.data$Tube) |>
         dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
-        dplyr::summarise(
+        dplyr::summarize(
           mrd   = Rootopia::MRD(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
           rpi   = Rootopia::RPI(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
           # total.length.density: sum of (length density x bin size) across all bins
@@ -1013,7 +1013,7 @@ root_depth_metrics <- function(
       r |>
         dplyr::group_by(dplyr::.data$Tube, dplyr::.data$depth) |>
         dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
-        dplyr::summarise(
+        dplyr::summarize(
 
           # Fraction of the tube's total length density contributed by this bin
           rootlength.fraction = if (calc_density_metrics && "total.length.density" %in% names(dplyr::pick(dplyr::everything())))

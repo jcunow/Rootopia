@@ -136,7 +136,7 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
 #'
 #' @param img Binary skeleton image. If \code{skeletonize = TRUE}, a segmented
 #'   (non-skeleton) mask can be supplied instead.
-#' @param select.layer Layer index for multi-layer rasters
+#' @param select_layer Layer index for multi-layer rasters
 #' @param skeletonize Logical. If \code{TRUE}, \code{img} is treated as a
 #'   segmented mask and reduced to a skeleton internally via
 #'   \code{skeletonize_image()} before detecting points. Default
@@ -155,13 +155,13 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
 #' img <- seg_Oulanka2023_Session01_T067
 #'
 #' # Skeletonize
-#' skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+#' skel <- skeletonize_image(img, select_layer = 2, verbose = FALSE)
 #' skel.points <- detect_skeleton_points(skel)
 #' 
-detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE) {
+detect_skeleton_points <- function(img, select_layer = NULL, skeletonize = FALSE) {
 
   img <- load_flexible_image(img, output_format = "spatrast", scale = "binary",
-                             select.layer = select.layer)
+                             select_layer = select_layer)
   if (terra::nlyr(img) > 1) img <- img[[1]]
   if (skeletonize) img <- skeletonize_image(img, verbose = FALSE)
 
@@ -211,7 +211,7 @@ detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE
 #'
 #' @param img Input image (SpatRaster, matrix, or compatible format)
 #' @param verbose Logical. Print summary statistics
-#' @param select.layer Layer index for multi-layer rasters
+#' @param select_layer Layer index for multi-layer rasters
 #' @param overlay_png_path Optional file path for saving overlay visualization
 #'
 #' @return Binary SpatRaster representing skeletonized image
@@ -226,17 +226,17 @@ detect_skeleton_points <- function(img, select.layer = NULL, skeletonize = FALSE
 #' img <- seg_Oulanka2023_Session01_T067
 #'
 #' # Skeletonize
-#' skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+#' skel <- skeletonize_image(img, select_layer = 2, verbose = FALSE)
 #'
 #' # Visual check
 #' \dontrun{
-#' skeletonize_image(img, select.layer = 2, overlay_png_path = "overlay.png")
+#' skeletonize_image(img, select_layer = 2, overlay_png_path = "overlay.png")
 #' }
 #'
 #' @export
 skeletonize_image <- function(img,
                               verbose = TRUE,
-                              select.layer = NULL,
+                              select_layer = NULL,
                               overlay_png_path = NULL) {
   
   if (verbose) cat("Skeletonizing...\n")
@@ -245,7 +245,7 @@ skeletonize_image <- function(img,
     img,
     output_format = "spatrast",
     scale = "binary",
-    select.layer = select.layer
+    select_layer = select_layer
   )[[1]]
   
   n_root <- sum(terra::values(img_rast) == 1, na.rm = TRUE)
@@ -296,7 +296,7 @@ skeletonize_image <- function(img,
     # ----------------------------
     pal <- c(
       "white",     # 0 background
-      "grey65",    # 1 root structure
+      "gray65",    # 1 root structure
       "#0072B2" # 2 skeleton (Okabe-Ito blue)
     )
     

@@ -9,8 +9,8 @@ image_threshold(
   threshold = 0.4,
   method = "global",
   window_size = 15,
-  select.layer = 2,
-  mask.layer = 1,
+  select_layer = 2,
+  mask_layer = 1,
   binary_01 = FALSE,
   deblur = FALSE
 )
@@ -25,10 +25,10 @@ For adaptive thresholding, it's a fraction of local mean. For deblurring, it's t
 
 \item{window_size}{Integer (odd), only used for adaptive thresholding.}
 
-\item{select.layer}{Integer or NULL. Which layer to use for thresholding or deblurring.
+\item{select_layer}{Integer or NULL. Which layer to use for thresholding or deblurring.
 If NULL and multilayer, the mean of all layers is used.}
 
-\item{mask.layer}{Integer or NULL. If set, used to preserve masked regions or enhance structure.}
+\item{mask_layer}{Integer or NULL. If set, used to preserve masked regions or enhance structure.}
 
 \item{binary_01}{Logical. If TRUE, binarized output uses 0/1. If FALSE, it retains max value of input.}
 
@@ -45,5 +45,5 @@ masking and simple deblurring based on structural layer separation.
 img = terra::rast(seg_Oulanka2023_Session03_T067)
 image_threshold(img, threshold = 0.3, method = "global")
 image_threshold(img, threshold = 0.9, method = "adaptive", window_size = 15, binary_01 = TRUE)
-image_threshold(img, threshold = 0.4, select.layer = 2, mask.layer = 1, deblur = TRUE)
+image_threshold(img, threshold = 0.4, select_layer = 2, mask_layer = 1, deblur = TRUE)
 }

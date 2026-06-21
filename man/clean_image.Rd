@@ -15,7 +15,7 @@ clean_image(
   kernel_shape = "disk",
   kernel_size = 3,
   iterations = 1,
-  select.layer = NULL,
+  select_layer = NULL,
   output_format = "spatrast",
   report = FALSE
 )
@@ -51,7 +51,7 @@ cleaning.  Default `FALSE`.}
 \item{iterations}{Number of closing iterations for edge smoothing.
 Default `1`.}
 
-\item{select.layer}{Integer or `NULL`.  Which layer to use for multi-layer
+\item{select_layer}{Integer or `NULL`.  Which layer to use for multi-layer
 inputs.}
 
 \item{output_format}{Character.  Format of the returned object.  One of
@@ -122,11 +122,11 @@ img <- terra::rast(seg_Oulanka2023_Session01_T067)
 cleaned <- clean_image(img,
                        max_hole_size     = 50,
                        max_artifact_size = 10,
-                       select.layer      = 2)
+                       select_layer      = 2)
 
 # If you need a cimg for further imager operations:
 cleaned_cimg <- clean_image(img, max_hole_size = 50,
-                            output_format = "cimg", select.layer = 2)
+                            output_format = "cimg", select_layer = 2)
 }
 \seealso{
 [report_image_components()], [skeletonize_image()], [image_threshold()]

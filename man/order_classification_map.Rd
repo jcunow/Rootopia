@@ -24,3 +24,10 @@ Writes any per-segment column (default the order class) back onto the full
 image grid, aligned to \code{template}, for masking and zonal statistics.
 Background pixels are \code{NA}.
 }
+\examples{
+\dontrun{
+res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")
+cmap <- order_classification_map(res$edges, template = skel,
+                                 value = "branch_order")
+}
+}

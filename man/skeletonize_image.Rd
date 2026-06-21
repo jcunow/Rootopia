@@ -7,7 +7,7 @@
 skeletonize_image(
   img,
   verbose = TRUE,
-  select.layer = NULL,
+  select_layer = NULL,
   overlay_png_path = NULL
 )
 }
@@ -16,7 +16,7 @@ skeletonize_image(
 
 \item{verbose}{Logical. Print summary statistics}
 
-\item{select.layer}{Layer index for multi-layer rasters}
+\item{select_layer}{Layer index for multi-layer rasters}
 
 \item{overlay_png_path}{Optional file path for saving overlay visualization}
 }
@@ -52,11 +52,11 @@ data(seg_Oulanka2023_Session01_T067)
 img <- seg_Oulanka2023_Session01_T067
 
 # Skeletonize
-skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+skel <- skeletonize_image(img, select_layer = 2, verbose = FALSE)
 
 # Visual check
 \dontrun{
-skeletonize_image(img, select.layer = 2, overlay_png_path = "overlay.png")
+skeletonize_image(img, select_layer = 2, overlay_png_path = "overlay.png")
 }
 
 }

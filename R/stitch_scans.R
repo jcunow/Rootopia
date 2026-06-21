@@ -29,7 +29,7 @@
 
 #' List the tubes (groups) found in a scan folder
 #'
-#' Summarises the unique groups (tubes) that \code{\link{stitch_root_scans}}
+#' Summarizes the unique groups (tubes) that \code{\link{stitch_root_scans}}
 #' would build, so you can see the tube names and pick a range to stitch
 #' (e.g. \code{tubes = 1:36}).
 #'
@@ -348,14 +348,14 @@ stitch_image_sequence <- function(images, method = "phase",
 #'   changes phase correlation (it is already scale-invariant). On well-textured
 #'   scans \code{"none"} is usually fine.
 #' @param blend How the overlap band is combined: \code{"linear"} (default,
-#'   alpha ramp 1 -> 0, good for colour scans), \code{"overlay"} (img2 hides
+#'   alpha ramp 1 -> 0, good for color scans), \code{"overlay"} (img2 hides
 #'   img1), \code{"overlay_first"} (img1 hides img2), \code{"max"} (lighten /
 #'   union - recommended for segmented/binary masks, where averaging would make
 #'   fractional values and ghost thin roots) or \code{"min"} (darken).
-#' @param blend_width Optional width (px) of the linear ramp, centred in the
+#' @param blend_width Optional width (px) of the linear ramp, centered in the
 #'   overlap (hard img1 to its left, hard img2 to its right); \code{NULL}
 #'   (default) ramps across the whole overlap. A smaller value reduces root
-#'   ghosting on colour scans. Ignored unless \code{blend = "linear"}.
+#'   ghosting on color scans. Ignored unless \code{blend = "linear"}.
 #' @return A numeric \code{(height, width, channel)} array in 0-255. The
 #'   estimated \code{c(dx, dy, peak)} is attached as \code{attr(., "offset")}
 #'   (\code{dx} the horizontal shift, with \code{overlap = edge_width - dx}).
@@ -422,7 +422,7 @@ stitch_image_pair <- function(img1, img2, method = "phase",
 #'   \code{"grad"} or \code{"grad_norm"}.
 #' @return Named numeric vector \code{c(dx, dy, peak)}: \code{dx} horizontal
 #'   placement shift (\code{overlap = edge_width - dx}), \code{dy} vertical shift
-#'   (pixels) and \code{peak} the normalised correlation peak height.
+#'   (pixels) and \code{peak} the normalized correlation peak height.
 #' @seealso \code{\link{stitch_image_pair}}, \code{\link{estimate_rotation_shift}}
 #' @keywords internal
 align_phase_correlation <- function(img1, img2, edge_width = 250,
@@ -613,7 +613,7 @@ stitch_preprocess <- function(m, method = "none") {
 #' @param blend One of \code{"linear"} (alpha ramp 1 -> 0), \code{"overlay"}
 #'   (img2 on top), \code{"overlay_first"} (img1 on top), \code{"max"}
 #'   (lighten / union) or \code{"min"} (darken).
-#' @param blend_width Optional ramp width (px) for \code{"linear"}, centred in
+#' @param blend_width Optional ramp width (px) for \code{"linear"}, centered in
 #'   the overlap; \code{NULL} ramps across the whole overlap.
 #' @return The combined \code{(h, w, c)} array.
 #' @keywords internal
@@ -625,7 +625,7 @@ stitch_blend_overlap <- function(reg1, reg2, blend = "linear", blend_width = NUL
   if (blend == "min") { o <- pmin(reg1, reg2); dim(o) <- d; return(o) }
   # linear feather: alpha 1 (left, img1) -> 0 (right, img2)
   alpha <- seq.int(1, 0, length.out = mw)
-  if (!is.null(blend_width)) {                       # ramp only over a centred band
+  if (!is.null(blend_width)) {                       # ramp only over a centered band
     bw <- max(1L, min(as.integer(blend_width), mw))
     left <- (mw - bw) %/% 2L
     alpha <- c(rep(1, left), seq.int(1, 0, length.out = bw), rep(0, mw - left - bw))
@@ -672,7 +672,7 @@ stitch_discover_files <- function(input, pattern = NULL) {
 
 #' Load any supported image to a (height, width, channel) array in 0-255
 #'
-#' Normalises orientation so that dimension 1 is rows (Y), dimension 2 is
+#' Normalizes orientation so that dimension 1 is rows (Y), dimension 2 is
 #' columns (X) and dimension 3 is channels - matching the (H, W, C) layout used
 #' by the Python reference (OpenCV) so the stitching math ports one-to-one.
 #'

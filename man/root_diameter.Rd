@@ -7,8 +7,8 @@
 root_diameter(
   img,
   skeleton_method = "MAT",
-  skeleton.img = NULL,
-  select.layer = NULL,
+  skeleton_img = NULL,
+  select_layer = NULL,
   diagnostics = FALSE,
   unit = "cm",
   dpi = 300
@@ -22,9 +22,9 @@ The input image to process.}
 only implements LUT-based Zhang-Suen thinning. Kept for backward
 compatibility. Will be skipped if skeleton `SpatRaster` is provided.}
 
-\item{skeleton.img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.}
+\item{skeleton_img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
 
 \item{diagnostics}{Logical. If `TRUE`, enables diagnostic plots and logging. Default is `FALSE`.}
 
@@ -69,7 +69,7 @@ The function supports various input formats and normalizes image values to the r
 # Example usage:
 data(seg_Oulanka2023_Session01_T067)
 result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
-  skeleton_method = "MAT", select.layer = 2, unit = "px",
+  skeleton_method = "MAT", select_layer = 2, unit = "px",
   diagnostics = TRUE)
 
 # Access results:

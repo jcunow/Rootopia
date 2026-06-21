@@ -5,9 +5,9 @@
 \title{Compute root traits over a depth profile from segmented (mini)rhizotron images}
 \usage{
 root_depth_metrics(
-  path.seg,
-  path.skl = NULL,
-  path.rgb = NULL,
+  path_seg,
+  path_skl = NULL,
+  path_rgb = NULL,
   seg_file_index = NULL,
   skl_file_index = NULL,
   rgb_file_index = NULL,
@@ -38,28 +38,28 @@ root_depth_metrics(
 )
 }
 \arguments{
-\item{path.seg}{Character. Path to directory of binary segmented images
+\item{path_seg}{Character. Path to directory of binary segmented images
 (foreground/root pixel = 1, background = 0).}
 
-\item{path.skl}{Character or \code{NULL}. Path to directory of skeletonised
-images (one-pixel-wide centrelines of roots), used for length, diameter,
+\item{path_skl}{Character or \code{NULL}. Path to directory of skeletonised
+images (one-pixel-wide centerlines of roots), used for length, diameter,
 angle, and branching-order metrics. If \code{NULL} or a file is missing,
 the skeleton is computed internally via \code{skeletonize_image()}.
 Default \code{NULL}.}
 
-\item{path.rgb}{Character or \code{NULL}. Path to directory of blended
-RGB images, aligned to the segmented images.  Required for colour metrics.
+\item{path_rgb}{Character or \code{NULL}. Path to directory of blended
+RGB images, aligned to the segmented images.  Required for color metrics.
 Default \code{NULL}.}
 
 \item{seg_file_index}{Integer vector or \code{NULL}. Optional subset index
-applied to \code{list.files(path.seg)}, e.g. \code{37:72}.  Default
+applied to \code{list.files(path_seg)}, e.g. \code{37:72}.  Default
 \code{NULL} (use all files).}
 
 \item{skl_file_index}{Integer vector or \code{NULL}. Optional subset index
-applied to \code{list.files(path.skl)}.  Default \code{NULL}.}
+applied to \code{list.files(path_skl)}.  Default \code{NULL}.}
 
 \item{rgb_file_index}{Integer vector or \code{NULL}. Optional subset index
-applied to \code{list.files(path.rgb)}.  Default \code{NULL}.}
+applied to \code{list.files(path_rgb)}.  Default \code{NULL}.}
 
 \item{insertion_angles}{Numeric. Insertion angle of the tube or window from
 vertical, in \strong{degrees}.  \code{0} = perfectly vertical,
@@ -85,7 +85,7 @@ convert pixel distances to physical units (cm).  Default \code{300}.}
 
 \item{tube_diameter_cm}{Numeric. Inner diameter of the minirhizotron tube in
 \strong{centimetres}.  Passed to \code{create_depthmap()} as
-\code{tube.thicc}.  Its role in flat-window geometry (\code{flat_geometry
+\code{tube_thicc}.  Its role in flat-window geometry (\code{flat_geometry
 = TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
 and may be ignored -- leave at the default unless you know it matters for
 your setup.  Default \code{7}.}
@@ -121,7 +121,7 @@ above each quantile, threshold-based root lengths (see
 \code{modal_peaks()}.  Default \code{FALSE}.}
 
 \item{calc_landscape_metrics}{Logical. Compute patch-level landscape metrics
-per depth bin via \code{root_scape_metrics()}: nearest-neighbour distance
+per depth bin via \code{root_scape_metrics()}: nearest-neighbor distance
 (\code{enn_mn}), joint entropy (\code{joinent}), relative mutual
 information (\code{relmutinf}), number of patches (\code{np}), and
 contagion (\code{contag}).  \strong{Slow}: one call per depth bin per
@@ -130,7 +130,7 @@ image.  Default \code{FALSE}.}
 \item{calc_color_metrics}{Logical. Compute mean chromatic coordinates (rcc,
 gcc, bcc), hue, saturation, luminosity, and raw RGB channel means
 separately for root pixels and background pixels via
-\code{tube_coloration()}.  Requires \code{path.rgb}.  Default \code{FALSE}.}
+\code{tube_coloration()}.  Requires \code{path_rgb}.  Default \code{FALSE}.}
 
 \item{calc_root_angles}{Logical. Compute \code{deep_drive} (fraction of
 skeleton pixels whose D8 flow direction matches the locally optimal
@@ -139,7 +139,7 @@ downward direction) and \code{mean.steepness.angle} /
 Uses \code{deep_drive()}.  Default \code{FALSE}.}
 
 \item{calc_root_order_metrics}{Logical. Build a per-image branching-order
-graph via \code{branch_order_map()} and summarise it both per depth bin
+graph via \code{branch_order_map()} and summarize it both per depth bin
 and per tube.  Adds \code{mean.branch_order}, \code{max.branch_order},
 \code{mean.root_order}, and \code{lateral_root_fraction} per depth bin,
 plus tube-level \code{main_root.*} / \code{lateral_roots.*} columns
@@ -199,7 +199,7 @@ A data frame with one row per tube x depth-bin combination.  Always
 }
 \description{
 Processes a set of segmented rhizotron or minirhizotron images and returns a
-tidy data frame of root traits summarised per depth interval.  Supports both
+tidy data frame of root traits summarized per depth interval.  Supports both
 cylindrical tube geometry (minirhizotrons) and flat window geometry
 (rhizotron panels).
 
@@ -238,14 +238,14 @@ directories if necessary.
 \section{Which paths are required for which metrics}{
 
 \describe{
-  \item{\code{path.seg}}{Always required.}
-  \item{\code{path.skl}}{Optional. Used by \code{calc_root_length},
+  \item{\code{path_seg}}{Always required.}
+  \item{\code{path_skl}}{Optional. Used by \code{calc_root_length},
     \code{calc_diameter_stats}, \code{calc_diameter_quantiles},
     \code{calc_root_angles}, and \code{calc_root_order_metrics} when
-    supplied. If \code{path.skl} is \code{NULL} or a skeleton file is
+    supplied. If \code{path_skl} is \code{NULL} or a skeleton file is
     missing for an image, the skeleton is computed internally from the
     segmented image via \code{skeletonize_image()}.}
-  \item{\code{path.rgb}}{Required when \code{calc_color_metrics} is
+  \item{\code{path_rgb}}{Required when \code{calc_color_metrics} is
     \code{TRUE}.}
 }
 }
@@ -260,17 +260,17 @@ images) or a vector of length equal to the number of images.
 \dontrun{
 # Minimal -- fast default metrics only
 result <- root_depth_metrics(
-  path.seg         = "scans/segmented/2022_02/",
-  path.skl         = "scans/skeleton/2022_02/",
+  path_seg         = "scans/segmented/2022_02/",
+  path_skl         = "scans/skeleton/2022_02/",
   insertion_angles = tube_meta$angle,
   session          = "2022_02"
 )
 
 # With diameter quantiles and root angle metrics
 result <- root_depth_metrics(
-  path.seg                = "scans/segmented/2022_02/",
-  path.skl                = "scans/skeleton/2022_02/",
-  path.rgb                = "scans/blended/2022_02/",
+  path_seg                = "scans/segmented/2022_02/",
+  path_skl                = "scans/skeleton/2022_02/",
+  path_rgb                = "scans/blended/2022_02/",
   rgb_file_index          = 37:72,
   insertion_angles        = tube_meta$angle,
   soil_starts             = tube_meta$soil_row,
@@ -285,8 +285,8 @@ result <- root_depth_metrics(
 
 # Flat rhizotron window (no sinusoidal tube correction)
 result <- root_depth_metrics(
-  path.seg      = "scans/segmented/rhizotron_A/",
-  path.skl      = "scans/skeleton/rhizotron_A/",
+  path_seg      = "scans/segmented/rhizotron_A/",
+  path_skl      = "scans/skeleton/rhizotron_A/",
   flat_geometry = TRUE
 )
 }

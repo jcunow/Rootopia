@@ -7,32 +7,32 @@
 estimate_rotation_shift(
   img1,
   img2,
-  cor.type = "phase",
-  fixed.depth.pixel = NULL,
-  fixed.width = NULL,
-  select.layer = NULL,
+  cor_type = "phase",
+  fixed_depth_pixel = NULL,
+  fixed_width = NULL,
+  select_layer = NULL,
   window = TRUE,
   overlay = FALSE,
-  overlay.layer = 2
+  overlay_layer = 2
 )
 }
 \arguments{
 \item{img1, img2}{Image inputs (paths, arrays, or rasters).}
 
-\item{cor.type}{"phase" (phase correlation) or "ccf" (normalized cross-corr).}
+\item{cor_type}{"phase" (phase correlation) or "ccf" (normalized cross-corr).}
 
-\item{fixed.depth.pixel}{Depth band along COLUMNS. Length-2 = range start:end;
+\item{fixed_depth_pixel}{Depth band along COLUMNS. Length-2 = range start:end;
 longer = explicit column indices; NULL = use full width.}
 
-\item{fixed.width}{Optional: restrict the ROTATION axis (rows), centered.}
+\item{fixed_width}{Optional: restrict the ROTATION axis (rows), centered.}
 
-\item{select.layer}{Layer to use for multi-band inputs.}
+\item{select_layer}{Layer to use for multi-band inputs.}
 
-\item{window}{Demean + Hann-window before FFT to suppress edge artefacts.}
+\item{window}{Demean + Hann-window before FFT to suppress edge artifacts.}
 
 \item{overlay}{If TRUE, also draw a before/after magenta-green overlay.}
 
-\item{overlay.layer}{Layer to display in the overlay (root mask, default 2).}
+\item{overlay_layer}{Layer to display in the overlay (root mask, default 2).}
 }
 \value{
 Named numeric vector: depth (column lag), rotation (row lag), peak.
@@ -45,5 +45,5 @@ data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
 img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
-estimate_rotation_shift(img1, img2, cor.type = "phase", select.layer = 2)
+estimate_rotation_shift(img1, img2, cor_type = "phase", select_layer = 2)
 }

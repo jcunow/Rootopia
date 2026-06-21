@@ -38,8 +38,6 @@ navbar:
       href: news/index.html
     - text: Function Index
       href: reference/index.html
-    - text: Package Structure
-      href: articles/pkgnetreport.html
   structure:
     right: [search, github, lightswitch]
 

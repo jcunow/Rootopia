@@ -13,7 +13,7 @@ test_that("binning warns on Inf but still returns a SpatRaster", {
 test_that("binning produces multiples of the bin width", {
   skip_if_not_installed("terra")
   dm  <- terra::rast(matrix(seq(0, 19), nrow = 4))
-  res <- binning(dm, nn = 5, round.option = "floor")
+  res <- binning(dm, nn = 5, round_option = "floor")
   vals <- terra::values(res)
   expect_true(all(vals %% 5 == 0 | is.na(vals)))
 })
@@ -23,5 +23,5 @@ test_that("binning validates its arguments", {
   dm <- terra::rast(matrix(1:4, 2))
   expect_error(binning(dm))                      # missing nn
   expect_error(binning(dm, nn = -1))             # non-positive
-  expect_error(binning(dm, nn = 5, round.option = "nope"))
+  expect_error(binning(dm, nn = 5, round_option = "nope"))
 })

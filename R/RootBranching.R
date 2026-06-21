@@ -1,6 +1,6 @@
 # ============================================================
 # ROOT GRAPH PIPELINE  (SKELETON -> SEGMENT GRAPH -> TIP-ORDER METRICS)
-# + junction-cluster contraction + order-coloured validation PNG
+# + junction-cluster contraction + order-colored validation PNG
 # ------------------------------------------------------------
 # For FRAGMENTED ("broken") roots: no base/origin assumed; each
 # component handled independently; tip_order via leaf-peeling.
@@ -246,16 +246,16 @@ compute_tip_order <- function(edge_tbl) {
 }
 
 
-#' Write an order-coloured validation overlay (PNG)
+#' Write an order-colored validation overlay (PNG)
 #'
 #' Paints each segment by its order value over the mask; unordered (cyclic)
 #' segments are drawn in red so failures are visible.
 #'
 #' @param segs Segment list (kept via \code{keep_segments = TRUE}).
-#' @param tip_order Numeric vector of the order value per segment to colour by.
+#' @param tip_order Numeric vector of the order value per segment to color by.
 #' @param dims Integer length-2 vector, the (cropped) raster dimensions.
 #' @param file Output PNG path.
-#' @param mask Optional 0/1 mask drawn as a grey background.
+#' @param mask Optional 0/1 mask drawn as a gray background.
 #' @param max_side Long-side cap (px) for the output image.
 #' @return Invisibly, \code{file}.
 #' @export
@@ -278,7 +278,7 @@ render_order_overlay <- function(segs, tip_order, dims, file,
   on.exit(grDevices::dev.off())
   graphics::par(mar = c(0, 0, 0, 0))
   
-  graphics::image(xs, ys, mk_f, col = c("white", "grey88"), axes = FALSE, useRaster = TRUE)
+  graphics::image(xs, ys, mk_f, col = c("white", "gray88"), axes = FALSE, useRaster = TRUE)
   pal <- grDevices::hcl.colors(max(maxo, 1L), "viridis")
   graphics::image(xs, ys, ord_f, col = pal, breaks = seq(0.5, maxo + 0.5, by = 1),
                   add = TRUE, useRaster = TRUE)
@@ -326,7 +326,7 @@ render_order_overlay <- function(segs, tip_order, dims, file,
 #'   (needed for re-plotting and classification maps).
 #' @param resolve_overlaps Resolve degree-4 crossings by continuity.
 #' @param crossing_straight Straightness threshold for crossing resolution.
-#' @param color_by Which order column the overlay colours by.
+#' @param color_by Which order column the overlay colors by.
 #' @param diam_weight Diameter-vs-angle weight for the root-continuation choice.
 #' @param prune_min_length,prune_min_diameter,prune_iter Optional terminal-segment
 #'   pruning (off when \code{prune_iter = 0}); see \code{\link{prune_terminal_segments}}.
@@ -432,18 +432,24 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
 #' Native-resolution validation of a sub-window
 #'
 #' Renders a small window at \code{scale}x magnification (no downsampling) so the
-#' order-coloured graph can be checked against the skeleton. Skeleton pixels are
-#' grey; traced/ordered pixels are coloured on top, so bare grey reveals skeleton
+#' order-colored graph can be checked against the skeleton. Skeleton pixels are
+#' gray; traced/ordered pixels are colored on top, so bare gray reveals skeleton
 #' the graph missed. Coordinates are in the original image frame.
 #'
 #' @param et An \code{edges} table carrying \code{attr(., "segments")} and
 #'   \code{attr(., "crop_offset")} (run with \code{keep_segments = TRUE}).
-#' @param skel The original skeleton (\code{SpatRaster} or matrix) for the grey background.
+#' @param skel The original skeleton (\code{SpatRaster} or matrix) for the gray background.
 #' @param r_range,c_range Integer length-2 row/column ranges (original coordinates).
 #' @param scale Magnification factor (device px per image px).
 #' @param file Output PNG path.
-#' @param order_col Which order column to colour by (default \code{"root_order"}).
+#' @param order_col Which order column to color by (default \code{"root_order"}).
 #' @return Invisibly, \code{file}.
+#' @examples
+#' \dontrun{
+#' res <- branch_order_map(skel, mask, order = "root_order", unit = "px")
+#' plot_order_window(res$edges, skel, r_range = c(1, 500), c_range = c(1, 500),
+#'                   file = tempfile(fileext = ".png"))
+#' }
 #' @export
 plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "window.png",
                               order_col = "root_order") {
@@ -470,7 +476,7 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
   graphics::par(mar = c(0, 0, 0, 0))
   skel_f <- .flip_matrix(skel_w); ord_f <- .flip_matrix(ord)
   xs <- seq(0, 1, length.out = nrow(skel_f)); ys <- seq(0, 1, length.out = ncol(skel_f))
-  graphics::image(xs, ys, skel_f, col = c("white", "grey75"), axes = FALSE, useRaster = TRUE)
+  graphics::image(xs, ys, skel_f, col = c("white", "gray75"), axes = FALSE, useRaster = TRUE)
   graphics::image(xs, ys, ord_f, col = pal, breaks = seq(0.5, maxo + 0.5, by = 1),
                   add = TRUE, useRaster = TRUE)
   invisible(file)
@@ -761,6 +767,12 @@ prune_terminal_segments <- function(segs, DT, min_length = 0, min_diameter = 0, 
 #'   \code{"mean_diameter"}).
 #' @return A \code{SpatRaster} (or matrix) of \code{value} per root pixel, \code{NA}
 #'   elsewhere, aligned to \code{template}.
+#' @examples
+#' \dontrun{
+#' res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")
+#' cmap <- order_classification_map(res$edges, template = skel,
+#'                                  value = "branch_order")
+#' }
 #' @export
 order_classification_map <- function(et, template, value = "branch_order") {
   segs <- attr(et, "segments")
@@ -848,6 +860,11 @@ summarize_orders <- function(et, order_col = "branch_order") {
 #' @param length_method \code{"polyline"} (sqrt(2) chain code) or \code{"kimura"}.
 #' @return \code{et} with length/diameter columns in \code{unit}; records
 #'   \code{unit}, \code{dpi}, \code{length_method} as attributes.
+#' @examples
+#' \dontrun{
+#' et <- root_graph_pipeline(skel, mask)
+#' et_cm <- convert_root_units(et, unit = "cm", dpi = 300)
+#' }
 #' @export
 convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
                                length_method = c("polyline", "kimura")) {
@@ -913,7 +930,7 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 
 #' @param template \code{SpatRaster} defining the \code{$class_map} grid; defaults
 #'   to \code{skel} when it is a raster.
-#' @param overlay_png Optional path; writes the order-coloured validation PNG.
+#' @param overlay_png Optional path; writes the order-colored validation PNG.
 #' @param return_map Build \code{$class_map}.
 #' @param ... Passed to \code{\link{root_graph_pipeline}} (e.g. \code{dt_backend},
 #'   \code{crossing_straight}, \code{prune_iter}, and \code{diam_weight} —

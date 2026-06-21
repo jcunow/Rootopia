@@ -4,7 +4,7 @@
 \alias{validate_conversion_params}
 \title{Validate conversion parameters}
 \usage{
-validate_conversion_params(input, scale, select.layer)
+validate_conversion_params(input, scale, select_layer)
 }
 \description{
 Validate conversion parameters

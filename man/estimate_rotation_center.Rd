@@ -6,28 +6,28 @@
 \usage{
 estimate_rotation_center(
   img,
-  tape.brightness = 0.66,
-  extra.rows = 100,
-  search.area = 0.45,
-  tape.quantile = 0.98,
+  tape_brightness = 0.66,
+  extra_rows = 100,
+  search_area = 0.45,
+  tape_quantile = 0.98,
   nclasses = 3,
-  select.layer = NULL
+  select_layer = NULL
 )
 }
 \arguments{
 \item{img}{Input image as raster, file name, or array}
 
-\item{tape.brightness}{Brightness threshold for tape detection (0-1)}
+\item{tape_brightness}{Brightness threshold for tape detection (0-1)}
 
-\item{extra.rows}{Additional rows to add for analysis}
+\item{extra_rows}{Additional rows to add for analysis}
 
-\item{search.area}{Proportion of image to analyze (0-1)}
+\item{search_area}{Proportion of image to analyze (0-1)}
 
-\item{tape.quantile}{Quantile used to align brightness with tape (0-1)}
+\item{tape_quantile}{Quantile used to align brightness with tape (0-1)}
 
 \item{nclasses}{Number of classes for pixel clustering}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
 }
 \value{
 numeric Position of the center of extruding tape

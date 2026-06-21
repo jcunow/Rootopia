@@ -10,7 +10,7 @@
 #'
 #' @param x Numeric vector of independent variable values (e.g., time).
 #' @param y Numeric vector of dependent variable values.
-#' @param parStart Named list of starting values for parameters:
+#' @param par_start Named list of starting values for parameters:
 #'   - amp: Amplitude (default 3)
 #'   - phase: Phase shift (default 0)
 #'   - offset: Vertical offset (default 0)
@@ -49,7 +49,7 @@
 #'  plot(x,y)
 #'  lines(x,fit_3parameters$predicted, col = "steelblue")
 #'  lines(x,fit_4parameters$predicted, col = "coral")
-fit_sine_curve <- function(x, y, parStart = list(amp=3, phase=0, offset=0, period=24), fix_period = NULL) {
+fit_sine_curve <- function(x, y, par_start = list(amp=3, phase=0, offset=0, period=24), fix_period = NULL) {
   # Check input length
   if(length(x) != length(y)) stop("x and y must be of equal length")
   
@@ -64,9 +64,9 @@ fit_sine_curve <- function(x, y, parStart = list(amp=3, phase=0, offset=0, perio
       y - (amp * sin(2 * pi / period * (x + phase)) + offset)
     }
     
-    parStartVec <- c(parStart$amp, parStart$phase, parStart$offset)
+    par_startVec <- c(par_start$amp, par_start$phase, par_start$offset)
     
-    nls.out <- minpack.lm::nls.lm(par=parStartVec, fn=residFun, y=y, x=x)
+    nls.out <- minpack.lm::nls.lm(par=par_startVec, fn=residFun, y=y, x=x)
     
     amp <- nls.out$par[1]
     phase <- nls.out$par[2] %% period
@@ -82,7 +82,7 @@ fit_sine_curve <- function(x, y, parStart = list(amp=3, phase=0, offset=0, perio
       y - (amp * sin(2 * pi / period * (x + phase)) + offset)
     }
     
-    nls.out <- minpack.lm::nls.lm(par=unlist(parStart), fn=residFun, y=y, x=x)
+    nls.out <- minpack.lm::nls.lm(par=unlist(par_start), fn=residFun, y=y, x=x)
     
     amp <- nls.out$par["amp"]
     phase <- nls.out$par["phase"] %% nls.out$par["period"]
@@ -147,7 +147,7 @@ fit_sine_curve <- function(x, y, parStart = list(amp=3, phase=0, offset=0, perio
 #' @param fix_period Either numeric (e.g., 24) to fix the period, or \code{NULL} to estimate it.
 #' @param method Type of test to use: \code{"F"} for F-test (default), \code{"FLR"} for finite sample 
 #'   likelihood ratio test, or \code{"LR"} for large sample likelihood ratio test.
-#' @param parStart Named list with starting values for parameters: \code{amp}, \code{phase}, \code{offset}, 
+#' @param par_start Named list with starting values for parameters: \code{amp}, \code{phase}, \code{offset}, 
 #'   and \code{period}. Only used when \code{fix_period} is \code{NULL}.
 #'
 #' @return A named list with the following elements:
@@ -186,7 +186,7 @@ fit_sine_curve <- function(x, y, parStart = list(amp=3, phase=0, offset=0, perio
 #' @export
 #' 
 rhythmicity <- function(x, y, fix_period = 24, method = "F", 
-                        parStart = list(amp = 3, phase = 0, offset = 0, period = 12)) {
+                        par_start = list(amp = 3, phase = 0, offset = 0, period = 12)) {
   
   if (!is.numeric(fix_period) && !is.null(fix_period)) {
     stop("fix_period must be numeric (e.g. 24) or NULL")
@@ -200,7 +200,7 @@ rhythmicity <- function(x, y, fix_period = 24, method = "F",
   if (is.numeric(fix_period)) {
     fit <- fit_sine_curve(x, y, fix_period = fix_period)
   } else {
-    fit <- fit_sine_curve(x, y, parStart = parStart)
+    fit <- fit_sine_curve(x, y, par_start = par_start)
   }
   
   n <- length(y)

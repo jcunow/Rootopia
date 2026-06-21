@@ -3,7 +3,7 @@
 test_that("create_depthmap returns a raster matching the input grid", {
   skip_if_not_installed("terra")
   img <- make_binary_spatraster()
-  dm  <- create_depthmap(img, sinoid = TRUE, tube.thicc = 7, tilt = 45, dpi = 300)
+  dm  <- create_depthmap(img, sinoid = TRUE, tube_thicc = 7, tilt = 45, dpi = 300)
   expect_s4_class(dm, "SpatRaster")
 })
 
@@ -11,8 +11,8 @@ test_that("create_depthmap validates parameters", {
   skip_if_not_installed("terra")
   img <- make_binary_spatraster()
   expect_error(create_depthmap(img, tilt = 0))
-  expect_error(create_depthmap(img, tube.thicc = -1))
-  expect_error(create_depthmap(img, center.offset = 2))   # must be in [0,1]
+  expect_error(create_depthmap(img, tube_thicc = -1))
+  expect_error(create_depthmap(img, center_offset = 2))   # must be in [0,1]
 })
 
 test_that("slice_rotation splits into n contiguous slices", {

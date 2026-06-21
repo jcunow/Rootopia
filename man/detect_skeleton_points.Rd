@@ -4,13 +4,13 @@
 \alias{detect_skeleton_points}
 \title{Detect endpoints and branching points in a skeleton image}
 \usage{
-detect_skeleton_points(img, select.layer = NULL, skeletonize = FALSE)
+detect_skeleton_points(img, select_layer = NULL, skeletonize = FALSE)
 }
 \arguments{
 \item{img}{Binary skeleton image. If \code{skeletonize = TRUE}, a segmented
 (non-skeleton) mask can be supplied instead.}
 
-\item{select.layer}{Layer index for multi-layer rasters}
+\item{select_layer}{Layer index for multi-layer rasters}
 
 \item{skeletonize}{Logical. If \code{TRUE}, \code{img} is treated as a
 segmented mask and reduced to a skeleton internally via
@@ -50,7 +50,7 @@ data(seg_Oulanka2023_Session01_T067)
 img <- seg_Oulanka2023_Session01_T067
 
 # Skeletonize
-skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+skel <- skeletonize_image(img, select_layer = 2, verbose = FALSE)
 skel.points <- detect_skeleton_points(skel)
 
 }

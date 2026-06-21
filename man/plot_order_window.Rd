@@ -18,7 +18,7 @@ plot_order_window(
 \item{et}{An \code{edges} table carrying \code{attr(., "segments")} and
 \code{attr(., "crop_offset")} (run with \code{keep_segments = TRUE}).}
 
-\item{skel}{The original skeleton (\code{SpatRaster} or matrix) for the grey background.}
+\item{skel}{The original skeleton (\code{SpatRaster} or matrix) for the gray background.}
 
 \item{r_range, c_range}{Integer length-2 row/column ranges (original coordinates).}
 
@@ -26,14 +26,21 @@ plot_order_window(
 
 \item{file}{Output PNG path.}
 
-\item{order_col}{Which order column to colour by (default \code{"root_order"}).}
+\item{order_col}{Which order column to color by (default \code{"root_order"}).}
 }
 \value{
 Invisibly, \code{file}.
 }
 \description{
 Renders a small window at \code{scale}x magnification (no downsampling) so the
-order-coloured graph can be checked against the skeleton. Skeleton pixels are
-grey; traced/ordered pixels are coloured on top, so bare grey reveals skeleton
+order-colored graph can be checked against the skeleton. Skeleton pixels are
+gray; traced/ordered pixels are colored on top, so bare gray reveals skeleton
 the graph missed. Coordinates are in the original image frame.
+}
+\examples{
+\dontrun{
+res <- branch_order_map(skel, mask, order = "root_order", unit = "px")
+plot_order_window(res$edges, skel, r_range = c(1, 500), c_range = c(1, 500),
+                  file = tempfile(fileext = ".png"))
+}
 }

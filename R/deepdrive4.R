@@ -13,9 +13,9 @@
 #' @param DepthMap A SpatRast object representing local depth (e.g., distance from surface or tube wall).
 #' @param RootMap Optional. A binary SpatRast indicating root presence. Used to infer `AngleMap` if not provided.
 #' @param AngleMap Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from `RootMap` and `DepthMap`.
-#' @param select.layerRM Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `2`.
-#' @param select.layerDM Integer. Which layer to use from `DepthMap`. Default is `NULL`.
-#' @param select.layerAM Integer. Which layer to use from `AngleMap`. Default is `NULL`.
+#' @param select_layer_rm Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `2`.
+#' @param select_layer_dm Integer. Which layer to use from `DepthMap`. Default is `NULL`.
+#' @param select_layer_am Integer. Which layer to use from `AngleMap`. Default is `NULL`.
 #' @param return Character. `"value"` (default) returns a single numeric proportion. `"all"` returns a list with spatial outputs for visualization.
 #'
 #' @return
@@ -33,22 +33,22 @@
 #' @examples
 #' data(skl_Oulanka2023_Session01_T067)
 #' im <- ceiling(terra::rast(skl_Oulanka2023_Session01_T067) / 255)
-#' DepthMap <- terra::t(create_depthmap(im, center.offset = 0, tube.thicc = 3.5))
+#' DepthMap <- terra::t(create_depthmap(im, center_offset = 0, tube_thicc = 3.5))
 #'
 #' # Just the deep drive score
-#' deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2)
+#' deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2)
 #'
 #' # Get spatial outputs too
-#' res <- deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2, return = "all")
+#' res <- deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2, return = "all")
 #' terra::plot(res$aligned_roots)
 #'
 #' @export
 deep_drive <- function(DepthMap,
                        RootMap = NULL,
                        AngleMap = NULL,
-                       select.layerRM = NULL,
-                       select.layerDM = NULL,
-                       select.layerAM = NULL,
+                       select_layer_rm = NULL,
+                       select_layer_dm = NULL,
+                       select_layer_am = NULL,
                        return = c("value", "all")) {
   
   return <- match.arg(return)
@@ -61,25 +61,25 @@ deep_drive <- function(DepthMap,
     }
     
     # Input type validation
-    if (!is.null(select.layerRM) && !is.numeric(select.layerRM)) {
-      stop("select.layerRM must be numeric")
+    if (!is.null(select_layer_rm) && !is.numeric(select_layer_rm)) {
+      stop("select_layer_rm must be numeric")
     }
-    if (!is.null(select.layerDM) && !is.numeric(select.layerDM)) {
-      stop("select.layerDM must be numeric")
+    if (!is.null(select_layer_dm) && !is.numeric(select_layer_dm)) {
+      stop("select_layer_dm must be numeric")
     }
-    if (!is.null(select.layerAM) && !is.numeric(select.layerAM)) {
-      stop("select.layerAM must be numeric")
+    if (!is.null(select_layer_am) && !is.numeric(select_layer_am)) {
+      stop("select_layer_am must be numeric")
     }
     
     # Layer selection validation
-    if (!is.null(select.layerRM) && select.layerRM < 1) {
-      stop("select.layerRM must be positive")
+    if (!is.null(select_layer_rm) && select_layer_rm < 1) {
+      stop("select_layer_rm must be positive")
     }
-    if (!is.null(select.layerDM) && select.layerDM < 1) {
-      stop("select.layerDM must be positive")
+    if (!is.null(select_layer_dm) && select_layer_dm < 1) {
+      stop("select_layer_dm must be positive")
     }
-    if (!is.null(select.layerAM) && select.layerAM < 1) {
-      stop("select.layerAM must be positive")
+    if (!is.null(select_layer_am) && select_layer_am < 1) {
+      stop("select_layer_am must be positive")
     }
     
     # Check if RootMap is provided when AngleMap is NULL
@@ -88,7 +88,7 @@ deep_drive <- function(DepthMap,
     }
     
     # Load and validate DepthMap
-    DepthMap <- load_flexible_image(DepthMap, select.layer=select.layerDM,
+    DepthMap <- load_flexible_image(DepthMap, select_layer=select_layer_dm,
                                     output_format="spatrast", scale = "none")
     if (is.null(DepthMap)) {
       stop("Failed to load DepthMap")
@@ -106,7 +106,7 @@ deep_drive <- function(DepthMap,
   # Main function logic with additional error handling
   tryCatch({
     if(is.null(AngleMap)){
-      RootMap <- load_flexible_image(RootMap, select.layer=select.layerRM,
+      RootMap <- load_flexible_image(RootMap, select_layer=select_layer_rm,
                                      output_format="spatrast", scale = "binary")
       if (is.null(RootMap)) {
         stop("Failed to load RootMap")
@@ -127,7 +127,7 @@ deep_drive <- function(DepthMap,
                               from=c(0,1,2,4,8,16,32,64,128),
                               to=c(NA,90,135,180,225,270,315,0,45))
     } else {
-      AngleMap <- load_flexible_image(AngleMap, select.layer=select.layerAM,
+      AngleMap <- load_flexible_image(AngleMap, select_layer=select_layer_am,
                                       output_format="spatrast", scale = "none")
       if (is.null(AngleMap)) {
         stop("Failed to load AngleMap")

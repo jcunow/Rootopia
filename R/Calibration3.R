@@ -5,55 +5,55 @@
 #' assuming more tape is present on the upper side of the tube.
 #'
 #' @param img Input image as raster, file name, or array
-#' @param tape.brightness Brightness threshold for tape detection (0-1)
-#' @param tape.quantile Quantile used to align brightness with tape (0-1)
-#' @param extra.rows Additional rows to add for analysis
-#' @param search.area Proportion of image to analyze (0-1)
+#' @param tape_brightness Brightness threshold for tape detection (0-1)
+#' @param tape_quantile Quantile used to align brightness with tape (0-1)
+#' @param extra_rows Additional rows to add for analysis
+#' @param search_area Proportion of image to analyze (0-1)
 #' @param nclasses Number of classes for pixel clustering
-#' @param select.layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.
+#' @param select_layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.
 #' @return numeric Position of the center of extruding tape
 #' @export
 #'
 #' @examples
 #' img = seg_Oulanka2023_Session01_T067
 #' r0 = estimate_rotation_center(img)
-estimate_rotation_center = function(img, tape.brightness=0.66, extra.rows=100, search.area=0.45,
-                                    tape.quantile=0.98, nclasses=3, select.layer=NULL) {
+estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, search_area=0.45,
+                                    tape_quantile=0.98, nclasses=3, select_layer=NULL) {
   if (!requireNamespace("RStoolbox", quietly = TRUE))
     stop("Package 'RStoolbox' is required for estimate_rotation_center(). ",
          "Install it with: install.packages(\"RStoolbox\")")
   tryCatch({
     if (is.null(img)) stop("Input image is required")
-    if (!is.numeric(tape.brightness) || tape.brightness < 0 || tape.brightness > 1)
-      stop("tape.brightness must be numeric between 0 and 1")
-    if (!is.numeric(search.area) || search.area <= 0 || search.area > 1)
-      stop("search.area must be numeric between 0 and 1")
-    if (!is.numeric(tape.quantile) || tape.quantile <= 0 || tape.quantile > 1)
-      stop("tape.quantile must be numeric between 0 and 1")
-    if (!is.numeric(extra.rows) || extra.rows < 0) stop("extra.rows must be a positive numeric value")
+    if (!is.numeric(tape_brightness) || tape_brightness < 0 || tape_brightness > 1)
+      stop("tape_brightness must be numeric between 0 and 1")
+    if (!is.numeric(search_area) || search_area <= 0 || search_area > 1)
+      stop("search_area must be numeric between 0 and 1")
+    if (!is.numeric(tape_quantile) || tape_quantile <= 0 || tape_quantile > 1)
+      stop("tape_quantile must be numeric between 0 and 1")
+    if (!is.numeric(extra_rows) || extra_rows < 0) stop("extra_rows must be a positive numeric value")
     if (!is.numeric(nclasses) || nclasses < 2) stop("nclasses must be numeric and at least 2")
-    if (!is.null(select.layer) && (!is.numeric(select.layer) || select.layer < 1))
-      stop("select.layer must be NULL or a positive integer")
+    if (!is.null(select_layer) && (!is.numeric(select_layer) || select_layer < 1))
+      stop("select_layer must be NULL or a positive integer")
     
-    im <- load_flexible_image(img, select.layer=select.layer,
+    im <- load_flexible_image(img, select_layer=select_layer,
                               output_format="array", scale = "to_01")
     if (is.null(im)) stop("Failed to load image")
     if (length(dim(im)) != 3) stop("Input image must be 3-dimensional array (RGB)")
     
     # bright reference band, then crop to the shallow-depth search area
-    red.line = array(dim=c(dim(im)[1], extra.rows, dim(im)[3]))
-    red.line[,,1:dim(im)[3]] <- stats::quantile(im[,,1], tape.quantile, na.rm=TRUE)
+    red.line = array(dim=c(dim(im)[1], extra_rows, dim(im)[3]))
+    red.line[,,1:dim(im)[3]] <- stats::quantile(im[,,1], tape_quantile, na.rm=TRUE)
     img1   = abind2(red.line, im, along=2)
     r.img1 = terra::rast(img1)
-    r.img1 = terra::crop(r.img1, terra::ext(0, search.area*terra::ext(r.img1)[2],
+    r.img1 = terra::crop(r.img1, terra::ext(0, search_area*terra::ext(r.img1)[2],
                                             0, terra::ext(r.img1)[4]))
     if (terra::ncell(r.img1) == 0) stop("No valid pixels after cropping")
     
     vals      = terra::as.array(r.img1)                 # [rows, cols, layers]
     maxval    = terra::global(r.img1, "max", na.rm=TRUE)[[1]]
-    threshold = tape.brightness * maxval
+    threshold = tape_brightness * maxval
     
-    # how many distinct colours are actually present? (cap k-means accordingly)
+    # how many distinct colors are actually present? (cap k-means accordingly)
     px = matrix(vals, ncol = dim(vals)[3])
     px = px[stats::complete.cases(px), , drop = FALSE]
     if (nrow(px) > 2e5) px = px[sample(nrow(px), 2e5), , drop = FALSE]
@@ -103,14 +103,14 @@ estimate_rotation_center = function(img, tape.brightness=0.66, extra.rows=100, s
 #' Estimate rotational/depth shift between two root scans
 #'
 #' @param img1,img2 Image inputs (paths, arrays, or rasters).
-#' @param cor.type "phase" (phase correlation) or "ccf" (normalized cross-corr).
-#' @param fixed.depth.pixel Depth band along COLUMNS. Length-2 = range start:end;
+#' @param cor_type "phase" (phase correlation) or "ccf" (normalized cross-corr).
+#' @param fixed_depth_pixel Depth band along COLUMNS. Length-2 = range start:end;
 #'   longer = explicit column indices; NULL = use full width.
-#' @param fixed.width Optional: restrict the ROTATION axis (rows), centered.
-#' @param select.layer Layer to use for multi-band inputs.
-#' @param window Demean + Hann-window before FFT to suppress edge artefacts.
+#' @param fixed_width Optional: restrict the ROTATION axis (rows), centered.
+#' @param select_layer Layer to use for multi-band inputs.
+#' @param window Demean + Hann-window before FFT to suppress edge artifacts.
 #' @param overlay If TRUE, also draw a before/after magenta-green overlay.
-#' @param overlay.layer Layer to display in the overlay (root mask, default 2).
+#' @param overlay_layer Layer to display in the overlay (root mask, default 2).
 #' @return Named numeric vector: depth (column lag), rotation (row lag), peak.
 #' @export
 #' @examples
@@ -118,25 +118,25 @@ estimate_rotation_center = function(img, tape.brightness=0.66, extra.rows=100, s
 #' data(seg_Oulanka2023_Session03_T067)
 #' img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
 #' img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
-#' estimate_rotation_shift(img1, img2, cor.type = "phase", select.layer = 2)
+#' estimate_rotation_shift(img1, img2, cor_type = "phase", select_layer = 2)
 estimate_rotation_shift <- function(
     img1, img2,
-    cor.type = "phase",
-    fixed.depth.pixel = NULL,
-    fixed.width = NULL,
-    select.layer = NULL,
+    cor_type = "phase",
+    fixed_depth_pixel = NULL,
+    fixed_width = NULL,
+    select_layer = NULL,
     window = TRUE,
     overlay = FALSE,
-    overlay.layer = 2
+    overlay_layer = 2
 ) {
   tryCatch({
     
     if (is.null(img1) || is.null(img2)) stop("Both input images are required")
-    if (!cor.type %in% c("phase", "ccf")) stop("cor.type must be 'phase' or 'ccf'")
+    if (!cor_type %in% c("phase", "ccf")) stop("cor_type must be 'phase' or 'ccf'")
     
-    im1 <- load_flexible_image(img1, select.layer = select.layer,
+    im1 <- load_flexible_image(img1, select_layer = select_layer,
                                output_format = "array", scale = "none")
-    im2 <- load_flexible_image(img2, select.layer = select.layer,
+    im2 <- load_flexible_image(img2, select_layer = select_layer,
                                output_format = "array", scale = "none")
     if (length(dim(im1)) != 3 || length(dim(im2)) != 3)
       stop("Inputs must be 3D RGB arrays")
@@ -153,20 +153,20 @@ estimate_rotation_shift <- function(
     g1 <- g1[rr, cc, drop = FALSE]; g2 <- g2[rr, cc, drop = FALSE]
     
     # depth BAND on columns. length-2 is a RANGE, not two literal indices.
-    if (!is.null(fixed.depth.pixel)) {
-      d <- if (length(fixed.depth.pixel) == 2) {
-        if (fixed.depth.pixel[1] >= fixed.depth.pixel[2])
-          stop("fixed.depth.pixel[1] must be < fixed.depth.pixel[2]")
-        seq(fixed.depth.pixel[1], fixed.depth.pixel[2])
-      } else fixed.depth.pixel
+    if (!is.null(fixed_depth_pixel)) {
+      d <- if (length(fixed_depth_pixel) == 2) {
+        if (fixed_depth_pixel[1] >= fixed_depth_pixel[2])
+          stop("fixed_depth_pixel[1] must be < fixed_depth_pixel[2]")
+        seq(fixed_depth_pixel[1], fixed_depth_pixel[2])
+      } else fixed_depth_pixel
       d <- d[d >= 1 & d <= ncol(g1)]
       if (length(d) < 8) stop("depth band too narrow after clipping to image")
       g1 <- g1[, d, drop = FALSE]; g2 <- g2[, d, drop = FALSE]
     }
     
     # optional rotation-axis (rows) restriction, centered
-    if (!is.null(fixed.width)) {
-      w  <- min(fixed.width, nrow(g1))
+    if (!is.null(fixed_width)) {
+      w  <- min(fixed_width, nrow(g1))
       st <- floor((nrow(g1) - w) / 2) + 1
       rsub <- st:(st + w - 1)
       g1 <- g1[rsub, , drop = FALSE]; g2 <- g2[rsub, , drop = FALSE]
@@ -180,7 +180,7 @@ estimate_rotation_shift <- function(
       g2 <- (g2 - mean(g2)) * win
     }
     
-    a <- if (cor.type == "phase") imagefx::pcorr3d(g1, g2) else imagefx::xcorr3d(g1, g2)
+    a <- if (cor_type == "phase") imagefx::pcorr3d(g1, g2) else imagefx::xcorr3d(g1, g2)
     
     # pcorr3d/xcorr3d: max.shifts[1] = ROW lag (rotation), [2] = COLUMN lag (depth)
     out <- c(depth    = as.numeric(a$max.shifts[2]),
@@ -188,7 +188,7 @@ estimate_rotation_shift <- function(
              peak     = as.numeric(a$max.cor))
     
     if (isTRUE(overlay)) {
-      f1 <- im1[, , overlay.layer]; f2 <- im2[, , overlay.layer]   # roots, 0 = bg
+      f1 <- im1[, , overlay_layer]; f2 <- im2[, , overlay_layer]   # roots, 0 = bg
       if (max(c(f1, f2), na.rm = TRUE) > 1) { f1 <- f1 / 255; f2 <- f2 / 255 }
       f1[is.na(f1)] <- 0; f2[is.na(f2)] <- 0
       
@@ -232,31 +232,31 @@ estimate_rotation_shift <- function(
 #' Censor image edges based on rotation
 #'
 #' Crops the rotation axis (rows) of a root scan. In fixed mode it returns a
-#' fixed-width window centred on a given row (e.g. the rotation centre from
+#' fixed-width window centered on a given row (e.g. the rotation center from
 #' \code{estimate_rotation_center()}); in variable mode it trims a band sized by
 #' a measured offset. Optionally previews what is kept versus cut.
 #'
 #' @param img Input image as raster, file name, or array.
-#' @param center.offset Numeric or character. Where to centre the kept window
+#' @param center_offset Numeric or character. Where to center the kept window
 #'   (in fixed mode), given in one of three forms:
 #'   \itemize{
 #'     \item \strong{Absolute row} - a number \code{> 1}: the exact row to
-#'       centre on (e.g. from \code{estimate_rotation_center()}). 
+#'       center on (e.g. from \code{estimate_rotation_center()}). 
 #'     \item \strong{Fraction} - a number in \code{[0, 1]}: a fraction of the
 #'       image height. \code{0} = top, \code{0.25} = a quarter down,
-#'       \code{0.5} = middle, \code{1} = bottom (so the centre row is
-#'       \code{center.offset * nrow}).
+#'       \code{0.5} = middle, \code{1} = bottom (so the center row is
+#'       \code{center_offset * nrow}).
 #'     \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
-#'       \code{"center"} / \code{"centre"} (= 0.5), or \code{"bottom"} (= 1).
+#'       \code{"center"} / \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
 #'   }
-#'   The default \code{0} centres on the top row.
-#'   When \code{fixed.rotation = FALSE} the resolved value is used as the
+#'   The default \code{0} centers on the top row.
+#'   When \code{fixed_rotation = FALSE} the resolved value is used as the
 #'   rotation shift in rows to trim (e.g. from
 #'   \code{estimate_rotation_shift()}); pass an absolute number there.
-#' @param cut.buffer Extra proportion of the rotation axis to trim (variable mode).
-#' @param fixed.rotation Logical. If \code{TRUE}, return a fixed-width window.
-#' @param fixed.width Output width in rows when \code{fixed.rotation = TRUE}.
-#' @param select.layer Integer or \code{NULL}. Layer to use for multi-band inputs.
+#' @param cut_buffer Extra proportion of the rotation axis to trim (variable mode).
+#' @param fixed_rotation Logical. If \code{TRUE}, return a fixed-width window.
+#' @param fixed_width Output width in rows when \code{fixed_rotation = TRUE}.
+#' @param select_layer Integer or \code{NULL}. Layer to use for multi-band inputs.
 #' @param overlay Logical. If \code{TRUE}, plot the full image with the kept
 #'   window (green outline) and discarded margins (red shading) before cropping.
 #'   Default \code{FALSE}.
@@ -270,57 +270,57 @@ estimate_rotation_shift <- function(
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
 #' r0  <- estimate_rotation_center(img)
-#' rotation_censor(img, center.offset = r0, fixed.width = 800,
-#'                 fixed.rotation = TRUE, overlay = TRUE)
+#' rotation_censor(img, center_offset = r0, fixed_width = 800,
+#'                 fixed_rotation = TRUE, overlay = TRUE)
 #'
-#' # Same window centred on the middle of the image, via a fraction or keyword
-#' rotation_censor(img, center.offset = 0.5,      fixed.width = 800)
-#' rotation_censor(img, center.offset = "middle", fixed.width = 800)
+#' # Same window centered on the middle of the image, via a fraction or keyword
+#' rotation_censor(img, center_offset = 0.5,      fixed_width = 800)
+#' rotation_censor(img, center_offset = "middle", fixed_width = 800)
 #' # Top of the tube a quarter of the way down
-#' rotation_censor(img, center.offset = 0.25, fixed.width = 800)
-rotation_censor <- function(img, center.offset = 0, cut.buffer = 0.02,
-                            fixed.rotation = TRUE, fixed.width = 500,
-                            select.layer = NULL, overlay = FALSE, ...) {
+#' rotation_censor(img, center_offset = 0.25, fixed_width = 800)
+rotation_censor <- function(img, center_offset = 0, cut_buffer = 0.02,
+                            fixed_rotation = TRUE, fixed_width = 500,
+                            select_layer = NULL, overlay = FALSE, ...) {
   tryCatch({
     
     if (is.null(img)) stop("Input image is required")
-    if (!(is.numeric(center.offset) || is.character(center.offset)) ||
-        length(center.offset) != 1L)
-      stop("center.offset must be a single number (absolute row or fraction in [0, 1]) or a keyword")
-    if (!is.numeric(cut.buffer) || cut.buffer < 0 || cut.buffer > 1)
-      stop("cut.buffer must be numeric between 0 and 1")
-    if (!is.logical(fixed.rotation)) stop("fixed.rotation must be logical")
-    if (!is.numeric(fixed.width) || fixed.width <= 0)
-      stop("fixed.width must be positive numeric")
-    if (!is.null(select.layer) && (!is.numeric(select.layer) || select.layer < 1))
-      stop("select.layer must be NULL or positive integer")
+    if (!(is.numeric(center_offset) || is.character(center_offset)) ||
+        length(center_offset) != 1L)
+      stop("center_offset must be a single number (absolute row or fraction in [0, 1]) or a keyword")
+    if (!is.numeric(cut_buffer) || cut_buffer < 0 || cut_buffer > 1)
+      stop("cut_buffer must be numeric between 0 and 1")
+    if (!is.logical(fixed_rotation)) stop("fixed_rotation must be logical")
+    if (!is.numeric(fixed_width) || fixed_width <= 0)
+      stop("fixed_width must be positive numeric")
+    if (!is.null(select_layer) && (!is.numeric(select_layer) || select_layer < 1))
+      stop("select_layer must be NULL or positive integer")
     
-    img.c <- load_flexible_image(img, select.layer = select.layer,
+    img.c <- load_flexible_image(img, select_layer = select_layer,
                                  output_format = "spatrast",
                                  scale = "none")
     if (is.null(img.c)) stop("Failed to load image")
     
     nr <- dim(img.c)[1]; nc <- dim(img.c)[2]    # rows = rotation axis
 
-    # --- resolve center.offset (keyword / fraction / absolute row) to a row ---
-    if (is.character(center.offset)) {
-      key <- tolower(trimws(center.offset))
-      center.offset <- switch(key,
+    # --- resolve center_offset (keyword / fraction / absolute row) to a row ---
+    if (is.character(center_offset)) {
+      key <- tolower(trimws(center_offset))
+      center_offset <- switch(key,
         top    = 0,
-        middle = 0.5, center = 0.5, centre = 0.5,
+        middle = 0.5, center = 0.5,
         bottom = 1,
-        stop("center.offset keyword must be one of 'top', 'middle'/'center', ",
-             "or 'bottom'; got '", center.offset, "'"))
+        stop("center_offset keyword must be one of 'top', 'middle'/'center', ",
+             "or 'bottom'; got '", center_offset, "'"))
     }
     # numbers in [0, 1] are a fraction of image height; > 1 is an absolute row
-    if (center.offset >= 0 && center.offset <= 1)
-      center.offset <- center.offset * nr
+    if (center_offset >= 0 && center_offset <= 1)
+      center_offset <- center_offset * nr
 
-    offset    <- round(center.offset)
-    buffer.px <- round(cut.buffer * nr)
+    offset    <- round(center_offset)
+    buffer.px <- round(cut_buffer * nr)
     
     # --- determine the kept row window (lo:hi, 1 = top) ---
-    if (!fixed.rotation) {
+    if (!fixed_rotation) {
       cut.px <- abs(offset) + buffer.px
       if (cut.px >= nr) stop("Cut size too large, would remove entire image")
       if (offset > 0)      { lo <- cut.px + 1; hi <- nr }
@@ -328,10 +328,10 @@ rotation_censor <- function(img, center.offset = 0, cut.buffer = 0.02,
       else { h <- floor(buffer.px / 2); lo <- 1 + h; hi <- nr - h }
     } else {
       mid      <- offset
-      half     <- fixed.width / 2
+      half     <- fixed_width / 2
       max.half <- min(mid - 1, nr - mid)
       if (half > max.half)
-        message("fixed.width = ", fixed.width, " cannot be centred symmetrically on row ",
+        message("fixed_width = ", fixed_width, " cannot be centered symmetrically on row ",
                 round(mid), " (image is ", nr, " rows). Max symmetric width here is ",
                 max(0, floor(2 * max.half)), " px; clamping to image bounds.")
       lo <- max(1,  round(mid - half))
@@ -379,25 +379,25 @@ rotation_censor <- function(img, center.offset = 0, cut.buffer = 0.02,
 #' Detects the soil surface by analyzing tape coverage patterns in the image.
 #'
 #' @param img Input image (raster, filename, or array)
-#' @param search.area Proportion of image to analyze
-#' @param tape.tresh Minimum tape coverage ratio
+#' @param search_area Proportion of image to analyze
+#' @param tape_thresh Minimum tape coverage ratio
 #' @param dpi Image resolution
 #' @param nclasses Number of clustering classes
 #' @param inverse Invert detection for dark markers
-#' @param tape.overlap Safety margin for tape (cm)
-#' @param tape.brightness Brightness threshold for tape
-#' @param extra.rows Additional analysis rows
-#' @param select.layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.
-#' @param tape.quantile Brightness alignment quantile
+#' @param tape_overlap Safety margin for tape (cm)
+#' @param tape_brightness Brightness threshold for tape
+#' @param extra_rows Additional analysis rows
+#' @param select_layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.
+#' @param tape_quantile Brightness alignment quantile
 #' @return data.frame with soil surface and tape end positions
 #' @export
 #'
 #' @examples
 #' img = rgb_Oulanka2023_Session03_T067
 #' Soil0Estimates = estimate_soil_surface(img)
-estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150, nclasses=3,
-                     inverse=FALSE, tape.overlap=0.5, tape.brightness=0.6,
-                     extra.rows=100, tape.quantile=0.98, select.layer=NULL) {
+estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=150, nclasses=3,
+                     inverse=FALSE, tape_overlap=0.5, tape_brightness=0.6,
+                     extra_rows=100, tape_quantile=0.98, select_layer=NULL) {
   if (!requireNamespace("RStoolbox", quietly = TRUE))
     stop("Package 'RStoolbox' is required for estimate_soil_surface(). ",
          "Install it with: install.packages(\"RStoolbox\")")
@@ -409,11 +409,11 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
     }
 
     # Parameter validation
-    if (!is.numeric(search.area) || search.area <= 0 || search.area > 1) {
-      stop("search.area must be numeric between 0 and 1")
+    if (!is.numeric(search_area) || search_area <= 0 || search_area > 1) {
+      stop("search_area must be numeric between 0 and 1")
     }
-    if (!is.numeric(tape.tresh) || tape.tresh <= 0 || tape.tresh > 1) {
-      stop("tape.tresh must be numeric between 0 and 1")
+    if (!is.numeric(tape_thresh) || tape_thresh <= 0 || tape_thresh > 1) {
+      stop("tape_thresh must be numeric between 0 and 1")
     }
     if (!is.numeric(dpi) || dpi <= 0) {
       stop("dpi must be positive numeric")
@@ -424,24 +424,24 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
     if (!is.logical(inverse)) {
       stop("inverse must be logical")
     }
-    if (!is.numeric(tape.overlap) || tape.overlap < 0) {
-      stop("tape.overlap must be non-negative numeric")
+    if (!is.numeric(tape_overlap) || tape_overlap < 0) {
+      stop("tape_overlap must be non-negative numeric")
     }
-    if (!is.numeric(tape.brightness) || tape.brightness <= 0) {
-      stop("tape.brightness must be positive numeric")
+    if (!is.numeric(tape_brightness) || tape_brightness <= 0) {
+      stop("tape_brightness must be positive numeric")
     }
-    if (!is.numeric(extra.rows) || extra.rows < 0) {
-      stop("extra.rows must be non-negative numeric")
+    if (!is.numeric(extra_rows) || extra_rows < 0) {
+      stop("extra_rows must be non-negative numeric")
     }
-    if (!is.numeric(tape.quantile) || tape.quantile <= 0 || tape.quantile > 1) {
-      stop("tape.quantile must be numeric between 0 and 1")
+    if (!is.numeric(tape_quantile) || tape_quantile <= 0 || tape_quantile > 1) {
+      stop("tape_quantile must be numeric between 0 and 1")
     }
-    if (!is.null(select.layer) && (!is.numeric(select.layer) || select.layer < 1)) {
-      stop("select.layer must be NULL or positive integer")
+    if (!is.null(select_layer) && (!is.numeric(select_layer) || select_layer < 1)) {
+      stop("select_layer must be NULL or positive integer")
     }
 
     # Load and validate image
-    im <- load_flexible_image(img, select.layer=select.layer,
+    im <- load_flexible_image(img, select_layer=select_layer,
                               output_format="array", scale = "none")
     if (is.null(im)) {
       stop("Failed to load image")
@@ -452,14 +452,14 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
 
     # Adjust parameters for inverse mode
     if (inverse) {
-      tape.quantile = 1 - tape.quantile
-      tape.brightness = 1 / tape.brightness
+      tape_quantile = 1 - tape_quantile
+      tape_brightness = 1 / tape_brightness
     }
 
     # Create red line array with validation
-    red.line = array(dim=c(dim(im)[1], extra.rows, dim(im)[3]))
+    red.line = array(dim=c(dim(im)[1], extra_rows, dim(im)[3]))
     quantile_value = tryCatch({
-      stats::quantile(im[,,1], tape.quantile, na.rm=TRUE)
+      stats::quantile(im[,,1], tape_quantile, na.rm=TRUE)
     }, error = function(e) {
       stop("Failed to calculate quantile: ", e$message)
     })
@@ -477,7 +477,7 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
 
     # Convert to raster and crop
     r.img1 = terra::rast(img1)
-    r.img1 = terra::crop(r.img1, c(0, search.area*terra::ext(r.img1)[2],
+    r.img1 = terra::crop(r.img1, c(0, search_area*terra::ext(r.img1)[2],
                                    0, terra::ext(r.img1)[4]))
 
     if (terra::ncell(r.img1) == 0) {
@@ -497,7 +497,7 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
     # Find appropriate cluster
     if (inverse) {
       global_min = terra::global(r.img1, "min")[[1]][1:3]
-      threshold = tape.brightness * global_min
+      threshold = tape_brightness * global_min
       valid_clusters = clust.center[clust.center < threshold]
       if (length(valid_clusters) == 0) {
         warning("No clusters found below brightness threshold")
@@ -506,7 +506,7 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
       clust = which(clust.center == min(valid_clusters))
     } else {
       global_max = terra::global(r.img1, "max")[[1]][1:3]
-      threshold = tape.brightness * global_max
+      threshold = tape_brightness * global_max
       valid_clusters = clust.center[clust.center > threshold]
       if (length(valid_clusters) == 0) {
         warning("No clusters found above brightness threshold")
@@ -529,9 +529,9 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
       ratio_24 = if (i+24 <= max_iter) sum(rr1[,i+24,], na.rm=TRUE) / ncol(rr1) else 0
       ratio_48 = if (i+48 <= max_iter) sum(rr1[,i+48,], na.rm=TRUE) / ncol(rr1) else 0
 
-      if (current_ratio <= tape.tresh &&
-          ratio_24 <= tape.tresh &&
-          ratio_48 <= tape.tresh) {
+      if (current_ratio <= tape_thresh &&
+          ratio_24 <= tape_thresh &&
+          ratio_48 <= tape_thresh) {
         break
       }
 
@@ -546,9 +546,9 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
 
     # Calculate final positions
     rw.ind = i
-    rw.ind = rw.ind - extra.rows - round(tape.overlap * dpi/2.54)
+    rw.ind = rw.ind - extra_rows - round(tape_overlap * dpi/2.54)
     rw.ind = round(rw.ind)
-    tape.end = rw.ind + round(tape.overlap * dpi/2.54)
+    tape.end = rw.ind + round(tape_overlap * dpi/2.54)
     tape.end = round(tape.end)
 
     # Validate final results

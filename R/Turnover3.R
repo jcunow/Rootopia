@@ -7,7 +7,7 @@
 #' @param method Analysis method: "kimura" or "rootpx"
 #' @param unit Unit of root length measurement (only for method = "kimura"). Default: "cm"
 #' @param dpi Image resolution (only for method = "kimura"). Default: 300
-#' @param select.layer Integer specifying the layer to use in both timesteps if \code{img} is a multi-layer `SpatRaster`. Defaults to 2.
+#' @param select_layer Integer specifying the layer to use in both timesteps if \code{img} is a multi-layer `SpatRaster`. Defaults to 2.
 #'
 #' @return data.frame containing:
 #'   - standingroot_t1: Standing roots at first timepoint
@@ -28,7 +28,7 @@
 #'     im.t2 = time2,
 #'     method = "kimura")
 #'     }
-turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select.layer = 2) {
+turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select_layer = 2) {
 
   # Input validation module
   validate_inputs <- function(im.t1,im.t2) {
@@ -83,8 +83,8 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 
   # Main execution with error handling
   tryCatch({
-    im.t1 <- load_flexible_image(im.t1,select.layer = select.layer, scale = "to_01", output_format = "spatrast")
-    im.t2 <- load_flexible_image(im.t2,select.layer = select.layer, scale = "to_01", output_format = "spatrast")
+    im.t1 <- load_flexible_image(im.t1,select_layer = select_layer, scale = "to_01", output_format = "spatrast")
+    im.t2 <- load_flexible_image(im.t2,select_layer = select_layer, scale = "to_01", output_format = "spatrast")
     im.t1 = ceiling(im.t1)
     im.t2 = ceiling(im.t2)
     validate_inputs(im.t1,im.t2)
@@ -93,8 +93,8 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
       px1 <- count_pixels(im.t1)
       px2 <- count_pixels(im.t2)
     } else {  # method == "kimura"
-      px1 <- root_length(im.t1, select.layer = NULL, dpi = dpi, unit = unit)
-      px2 <- root_length(im.t2, select.layer = NULL, dpi = dpi, unit = unit)
+      px1 <- root_length(im.t1, select_layer = NULL, dpi = dpi, unit = unit)
+      px2 <- root_length(im.t2, select_layer = NULL, dpi = dpi, unit = unit)
     }
 
     px.prod <- px2 - px1
@@ -121,24 +121,24 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 #' Extract Root Decay, New Root Production, and No-Change Roots (only 'RootDetector' images)
 #'
 #' @param img SpatRaster with three layers for production, decay, and stagnation
-#' @param product.layer Integer indicating the production layer index (1-3)
-#' @param decay.layer Integer indicating the decay & tape layer index (1-3)
-#' @param blur.capture Threshold for pixel inclusion (0-1). Default: 0.95
-#' @param im.return Logical: return images instead of values? Default: FALSE
-#' @param include.virtualroots Logical: consider all roots present at any timepoint? Default: FALSE
+#' @param product_layer Integer indicating the production layer index (1-3)
+#' @param decay_layer Integer indicating the decay & tape layer index (1-3)
+#' @param blur_capture Threshold for pixel inclusion (0-1). Default: 0.95
+#' @param im_return Logical: return images instead of values? Default: FALSE
+#' @param include_virtualroots Logical: consider all roots present at any timepoint? Default: FALSE
 #'
-#' @return If im.return = FALSE: tibble with pixel sums and ratios
-#'         If im.return = TRUE: list of SpatRaster layers for tape, constant, production, and decay
+#' @return If im_return = FALSE: tibble with pixel sums and ratios
+#'         If im_return = TRUE: list of SpatRaster layers for tape, constant, production, and decay
 #' @keywords internal
 #'
 #' @examples
 #' \dontrun{
 #' data(TurnoverDPC_data)
 #' img = terra::rast(TurnoverDPC_data)
-#' DPCs = turnover_dpc(img = img, im.return = FALSE)
+#' DPCs = turnover_dpc(img = img, im_return = FALSE)
 #' }
-turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
-                        im.return=FALSE, include.virtualroots=FALSE) {
+turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
+                        im_return=FALSE, include_virtualroots=FALSE) {
   # Input validation module
   validate_inputs <- function(img) {
     if (missing(img)) {
@@ -146,21 +146,21 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
     }
 
     # Validate layer indices
-    if (!all(c(product.layer, decay.layer) %in% 1:3)) {
+    if (!all(c(product_layer, decay_layer) %in% 1:3)) {
       stop("Layer indices must be between 1 and 3")
     }
-    if (product.layer == decay.layer) {
+    if (product_layer == decay_layer) {
       stop("Product and decay layers must be different")
     }
 
-    # Validate blur.capture
-    if (!is.numeric(blur.capture) || blur.capture < 0 || blur.capture > 1) {
-      stop("blur.capture must be between 0 and 1")
+    # Validate blur_capture
+    if (!is.numeric(blur_capture) || blur_capture < 0 || blur_capture > 1) {
+      stop("blur_capture must be between 0 and 1")
     }
 
     # Validate logical parameters
-    if (!is.logical(im.return) || !is.logical(include.virtualroots)) {
-      stop("im.return and include.virtualroots must be logical values")
+    if (!is.logical(im_return) || !is.logical(include_virtualroots)) {
+      stop("im_return and include_virtualroots must be logical values")
     }
   }
 
@@ -186,22 +186,22 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
     validate_inputs(img)
 
     # Load and validate image
-    img <- load_flexible_image(img, output_format = "spatrast", scale = "to_01", select.layer = NULL)
+    img <- load_flexible_image(img, output_format = "spatrast", scale = "to_01", select_layer = NULL)
     if (is.null(handle_edge_cases(img))) return(NULL)
 
     # Calculate indices and layers
     l.indx <- 1:3
-    no.change.layer <- which(!l.indx %in% c(product.layer, decay.layer))
-    l.pr <- img[[product.layer]]
+    no.change.layer <- which(!l.indx %in% c(product_layer, decay_layer))
+    l.pr <- img[[product_layer]]
     l.no <- img[[no.change.layer]]
-    l.dc <- img[[decay.layer]]
+    l.dc <- img[[decay_layer]]
 
     # Safe calculations with error checking
     tape <- suppressWarnings({
       temp <- l.no - l.dc
       min_val <- terra::global(temp, "min", na.rm=TRUE)[[1]]
       if (is.na(min_val)) stop("Unable to calculate minimum value for tape layer")
-      temp <= min_val * blur.capture
+      temp <= min_val * blur_capture
     })
 
     tape <- tape * terra::global(l.pr, "max", na.rm=TRUE)[[1]]
@@ -214,11 +214,11 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
       (result >= max_val * blur_capture) * 1
     }
     # Calculate production, decay, and no-change layers with error checking
-    l.pr2 <- calculate_layer(l.pr, l.no, tape, "max", blur.capture)
-    l.dc2 <- calculate_layer(l.dc, l.no, tape, "max", blur.capture)
-    l.no2 <- l.no >= terra::global(l.no, "max", na.rm=TRUE)[[1]] * blur.capture
+    l.pr2 <- calculate_layer(l.pr, l.no, tape, "max", blur_capture)
+    l.dc2 <- calculate_layer(l.dc, l.no, tape, "max", blur_capture)
+    l.no2 <- l.no >= terra::global(l.no, "max", na.rm=TRUE)[[1]] * blur_capture
 
-    if (im.return) {
+    if (im_return) {
       return(list("tape"=tape, "constant"=l.no2, "production"=l.pr2, "decay"=l.dc2))
     } else {
 
@@ -265,7 +265,7 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
         const.px = count_pixels(l.no2),
         prodc.px = count_pixels(l.pr2),
         decay.px = count_pixels(l.dc2),
-        include_virtualroots = include.virtualroots
+        include_virtualroots = include_virtualroots
       )
       return(results)
     }
@@ -286,7 +286,7 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
 #'   \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
 #'     (\code{img1}, \code{img2}) and reports standing roots, production, and
 #'     new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
-#'     \code{tc.method} argument chooses how root amount is measured:
+#'     \code{tc_method} argument chooses how root amount is measured:
 #'     \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
 #'   \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
 #'     multi-layer 'RootDetector' image into decayed, newly produced, and
@@ -302,29 +302,29 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
 #' @param method Which turnover method to run: \code{"tc"} (temporal
 #'   comparison of two images) or \code{"dpc"} (Decay/Production/Constant
 #'   decomposition of one multi-layer image). Default \code{"tc"}.
-#' @param tc.method Measurement sub-method for \code{method = "tc"}:
+#' @param tc_method Measurement sub-method for \code{method = "tc"}:
 #'   \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).
 #'   Ignored for \code{method = "dpc"}. Default \code{"kimura"}.
 #' @param unit Unit of root length measurement (only for
-#'   \code{tc.method = "kimura"}). Default: "cm"
-#' @param dpi Image resolution (only for \code{tc.method = "kimura"}). Default: 300
-#' @param select.layer Integer or NULL. For \code{method = "tc"} with
+#'   \code{tc_method = "kimura"}). Default: "cm"
+#' @param dpi Image resolution (only for \code{tc_method = "kimura"}). Default: 300
+#' @param select_layer Integer or NULL. For \code{method = "tc"} with
 #'   multi-layer images, selects which layer to compare. Ignored for
 #'   \code{method = "dpc"}.
-#' @param product.layer Integer indicating the production layer index for the
+#' @param product_layer Integer indicating the production layer index for the
 #'   DPC method (1-3)
-#' @param decay.layer Integer indicating the decay & tape layer index for the
+#' @param decay_layer Integer indicating the decay & tape layer index for the
 #'   DPC method (1-3)
-#' @param blur.capture Threshold for pixel inclusion in the DPC method (0-1).
+#' @param blur_capture Threshold for pixel inclusion in the DPC method (0-1).
 #'   Default: 0.95
-#' @param im.return Logical: return images instead of values for the DPC
+#' @param im_return Logical: return images instead of values for the DPC
 #'   method? Default: FALSE
-#' @param include.virtualroots Logical: consider all roots present at any
+#' @param include_virtualroots Logical: consider all roots present at any
 #'   timepoint in the DPC method? Default: FALSE
 #'
 #' @return Depends on the method:
 #'   - \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
-#'   - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im.return = TRUE}) a list of SpatRaster layers.
+#'   - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im_return = TRUE}) a list of SpatRaster layers.
 #'
 #' @seealso \code{\link{turnover_tc}}, \code{\link{turnover_dpc}}
 #'
@@ -340,38 +340,38 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
 #' data(skl_Oulanka2023_Session03_T067)
 #' t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 #' t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
-#' root_turnover(t1, t2, method = "tc", tc.method = "kimura")
+#' root_turnover(t1, t2, method = "tc", tc_method = "kimura")
 root_turnover = function(img1, img2 = NULL,
                          method = c("tc", "dpc"),
-                         tc.method = c("kimura", "rootpx"),
+                         tc_method = c("kimura", "rootpx"),
                          unit = "cm",
                          dpi = 300,
-                         select.layer = NULL,
-                         product.layer = 2,
-                         decay.layer = 1,
-                         blur.capture = 0.95,
-                         im.return = FALSE,
-                         include.virtualroots = FALSE) {
+                         select_layer = NULL,
+                         product_layer = 2,
+                         decay_layer = 1,
+                         blur_capture = 0.95,
+                         im_return = FALSE,
+                         include_virtualroots = FALSE) {
 
   method    <- match.arg(method)
-  tc.method <- match.arg(tc.method)
+  tc_method <- match.arg(tc_method)
 
   # Helper function to handle layer selection (TC method only)
-  select_layer <- function(img, select.layer = NULL) {
-    # If select.layer is NULL or img has only one layer, return the image as-is
-    if (is.null(select.layer) || terra::nlyr(img) == 1) {
+  pick_layer <- function(img, select_layer = NULL) {
+    # If select_layer is NULL or img has only one layer, return the image as-is
+    if (is.null(select_layer) || terra::nlyr(img) == 1) {
       return(img)
     }
 
-    # Validate select.layer
-    if (!is.numeric(select.layer) ||
-        select.layer < 1 ||
-        select.layer > terra::nlyr(img)) {
-      stop("Invalid select.layer. Must be an integer between 1 and ", terra::nlyr(img))
+    # Validate select_layer
+    if (!is.numeric(select_layer) ||
+        select_layer < 1 ||
+        select_layer > terra::nlyr(img)) {
+      stop("Invalid select_layer. Must be an integer between 1 and ", terra::nlyr(img))
     }
 
     # Return selected layer
-    return(img[[select.layer]])
+    return(img[[select_layer]])
   }
 
   # Dispatch on method
@@ -382,27 +382,27 @@ root_turnover = function(img1, img2 = NULL,
     }
     return(turnover_dpc(
       img = img1,
-      product.layer = product.layer,
-      decay.layer = decay.layer,
-      blur.capture = blur.capture,
-      im.return = im.return,
-      include.virtualroots = include.virtualroots
+      product_layer = product_layer,
+      decay_layer = decay_layer,
+      blur_capture = blur_capture,
+      im_return = im_return,
+      include_virtualroots = include_virtualroots
     ))
   } else {
     # Temporal Comparison -- two timepoint images
     if (is.null(img2)) {
       stop("method = 'tc' (temporal comparison) requires two images: supply img2")
     }
-    img1 <- select_layer(img1, select.layer)
-    img2 <- select_layer(img2, select.layer)
+    img1 <- pick_layer(img1, select_layer)
+    img2 <- pick_layer(img2, select_layer)
 
     return(turnover_tc(
       im.t1 = img1,
       im.t2 = img2,
-      method = tc.method,
+      method = tc_method,
       unit = unit,
       dpi = dpi,
-      select.layer = NULL  # layer selection already handled above
+      select_layer = NULL  # layer selection already handled above
     ))
   }
 }

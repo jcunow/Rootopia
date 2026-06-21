@@ -1,6 +1,6 @@
 # Image cleaning functions
 #
-# Dependencies: imager (for connected-component labelling, morphological ops)
+# Dependencies: imager (for connected-component labeling, morphological ops)
 # All functions work on `cimg` objects internally; load_flexible_image() handles
 # conversion from SpatRaster / matrix / file path.
 
@@ -295,7 +295,7 @@ smooth_root_edges <- function(img,
 #' @param kernel_size Structuring element size (odd integer).  Default `3`.
 #' @param iterations Number of closing iterations for edge smoothing.
 #'   Default `1`.
-#' @param select.layer Integer or `NULL`.  Which layer to use for multi-layer
+#' @param select_layer Integer or `NULL`.  Which layer to use for multi-layer
 #'   inputs.
 #' @param output_format Character.  Format of the returned object.  One of
 #'   `"spatrast"` (default), `"cimg"`, or `"matrix"`.  Using `"spatrast"`
@@ -320,11 +320,11 @@ smooth_root_edges <- function(img,
 #' cleaned <- clean_image(img,
 #'                        max_hole_size     = 50,
 #'                        max_artifact_size = 10,
-#'                        select.layer      = 2)
+#'                        select_layer      = 2)
 #'
 #' # If you need a cimg for further imager operations:
 #' cleaned_cimg <- clean_image(img, max_hole_size = 50,
-#'                             output_format = "cimg", select.layer = 2)
+#'                             output_format = "cimg", select_layer = 2)
 clean_image <- function(img,
                          pre_threshold              = NULL,
                          pre_threshold_method       = "global",
@@ -335,7 +335,7 @@ clean_image <- function(img,
                          kernel_shape      = "disk",
                          kernel_size       = 3,
                          iterations        = 1,
-                         select.layer      = NULL,
+                         select_layer      = NULL,
                          output_format     = "spatrast",
                          report            = FALSE) {
 
@@ -344,22 +344,22 @@ clean_image <- function(img,
   if (!is.null(pre_threshold)) {
     img <- load_flexible_image(img,
                                 output_format = "spatrast",
-                                select.layer  = select.layer,
+                                select_layer  = select_layer,
                                 scale         = "none")
     img <- image_threshold(img,
                             threshold   = pre_threshold,
                             method      = pre_threshold_method,
                             window_size = pre_threshold_window_size,
-                            select.layer = NULL,
-                            mask.layer   = NULL,
+                            select_layer = NULL,
+                            mask_layer   = NULL,
                             binary_01    = TRUE,
                             deblur       = FALSE)
-    select.layer <- NULL
+    select_layer <- NULL
   }
 
   img_cimg <- load_flexible_image(img,
                                    output_format = "cimg",
-                                   select.layer  = select.layer,
+                                   select_layer  = select_layer,
                                    scale         = "binary")
 
   if (report) report_image_components(img_cimg)

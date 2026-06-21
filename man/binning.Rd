@@ -4,14 +4,14 @@
 \alias{binning}
 \title{Bin continuous depth values into discrete intervals}
 \usage{
-binning(depthmap, nn, round.option = "rounding")
+binning(depthmap, nn, round_option = "rounding")
 }
 \arguments{
 \item{depthmap}{SpatRaster/matrix/array - continuous depth values}
 
 \item{nn}{numeric - bin width}
 
-\item{round.option}{character - binning method: "rounding", "ceiling", or "floor"}
+\item{round_option}{character - binning method: "rounding", "ceiling", or "floor"}
 }
 \value{
 SpatRaster - binned depth values
@@ -25,6 +25,6 @@ img = terra::rast(seg_Oulanka2023_Session01_T067)
 mask = img[[1]] - img[[2]]
 mask[mask == 255] <- NA
 img = img
-depthmap = create_depthmap(img,mask,start.soil = 2.9 )
+depthmap = create_depthmap(img,mask,start_soil = 2.9 )
 binned.map = binning(depthmap,nn = 5)
 }

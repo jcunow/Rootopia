@@ -8,11 +8,11 @@ create_depthmap(
   img,
   mask = NULL,
   sinoid = TRUE,
-  tube.thicc = 7,
+  tube_thicc = 7,
   tilt = 45,
   dpi = 300,
-  start.soil = 0,
-  center.offset = 0.5,
+  start_soil = 0,
+  center_offset = 0.5,
   progress = FALSE
 )
 }
@@ -24,15 +24,15 @@ images, specify band_index parameter}
 
 \item{sinoid}{Logical; if TRUE, accounts for tube curvature in depth calculation}
 
-\item{tube.thicc}{Numeric; diameter of minirhizotron tube in cm}
+\item{tube_thicc}{Numeric; diameter of minirhizotron tube in cm}
 
 \item{tilt}{Numeric; minirhizotron tube insertion angle in degrees (typically 30-45)}
 
 \item{dpi}{Numeric; image resolution in dots per inch}
 
-\item{start.soil}{Numeric; soil surface boundary in cm (0 = surface)}
+\item{start_soil}{Numeric; soil surface boundary in cm (0 = surface)}
 
-\item{center.offset}{Numeric; rotational center offset (0 = centered, 1 = edge)}
+\item{center_offset}{Numeric; rotational center offset (0 = centered, 1 = edge)}
 
 \item{progress}{Message; indicates how mny rows have been processed}
 }
@@ -49,12 +49,12 @@ seg_Oulanka2023_Session01_T067 = terra::rast(seg_Oulanka2023_Session01_T067)
 img = seg_Oulanka2023_Session01_T067
 mask = seg_Oulanka2023_Session01_T067[[1]] - seg_Oulanka2023_Session01_T067[[2]]
 mask[mask == 255] <- NA
-map = create_depthmap(img,mask,start.soil = 0.1,
+map = create_depthmap(img,mask,start_soil = 0.1,
   sinoid = TRUE,
-  tube.thicc = 7,
+  tube_thicc = 7,
   tilt = 45,
   dpi = 300,
-  center.offset = 0.1 )
+  center_offset = 0.1 )
 }
 \author{
 Johannes Cunow, Robert Weigel

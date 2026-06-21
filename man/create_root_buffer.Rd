@@ -4,14 +4,14 @@
 \alias{create_root_buffer}
 \title{Create a buffer halo) around non-zero pixels}
 \usage{
-create_root_buffer(img, width = 2, halo.only = TRUE, kernel = "circle")
+create_root_buffer(img, width = 2, halo_only = TRUE, kernel = "circle")
 }
 \arguments{
 \item{img}{SpatRaster/matrix/array - segmented image}
 
 \item{width}{numeric - buffer width in pixels (default: 2)}
 
-\item{halo.only}{logical - if TRUE, returns only the buffer zone (default: TRUE)}
+\item{halo_only}{logical - if TRUE, returns only the buffer zone (default: TRUE)}
 
 \item{kernel}{character - shape of the thickening kernel: "circle" or "diamond"}
 }

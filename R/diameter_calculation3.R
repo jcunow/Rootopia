@@ -9,8 +9,8 @@
 #' @param skeleton_method Character. Currently unused — `skeletonize_image()`
 #'   only implements LUT-based Zhang-Suen thinning. Kept for backward
 #'   compatibility. Will be skipped if skeleton `SpatRaster` is provided.
-#' @param skeleton.img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.
-#' @param select.layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.
+#' @param skeleton_img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.
+#' @param select_layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.
 #' @param unit output in pixel 'px', 'inch' or in 'cm'
 #' @param dpi scan resolution. Only used if unit = 'cm' or 'inch'
 #'
@@ -46,7 +46,7 @@
 #' # Example usage:
 #' data(seg_Oulanka2023_Session01_T067)
 #' result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
-#'   skeleton_method = "MAT", select.layer = 2, unit = "px",
+#'   skeleton_method = "MAT", select_layer = 2, unit = "px",
 #'   diagnostics = TRUE)
 #'
 #' # Access results:
@@ -54,7 +54,7 @@
 #' terra::plot(result$skeleton_rast)
 #'
 #' @export
-root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, select.layer = NULL, 
+root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, select_layer = NULL, 
                           diagnostics = FALSE, unit = "cm", dpi = 300) {
   # Input validation and error handling module
   tryCatch({
@@ -64,9 +64,9 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
     }
 
 
-    # Validate select.layer
-    if ( (!is.numeric(select.layer) || select.layer < 1) && !is.null(select.layer)) {
-      stop("select.layer must be a positive integer or NULL")
+    # Validate select_layer
+    if ( (!is.numeric(select_layer) || select_layer < 1) && !is.null(select_layer)) {
+      stop("select_layer must be a positive integer or NULL")
     }
 
     # Validate diagnostics
@@ -89,7 +89,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
     # Load and validate image
     tryCatch({
       img <- load_flexible_image(img,
-                                        select.layer = select.layer,
+                                        select_layer = select_layer,
                                         output_format = "cimg",
                                         scale = "binary")
 
@@ -130,7 +130,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
 
     # Convert to SpatRast with validation
     Ds <- tryCatch({
-      load_flexible_image(diameters, output_format = "SpatRaster", scale = "none", select.layer = NULL)
+      load_flexible_image(diameters, output_format = "SpatRaster", scale = "none", select_layer = NULL)
 
 
     }, error = function(e) {
@@ -138,24 +138,24 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
     })
 
     IM <- tryCatch({
-      load_flexible_image(img, output_format = "SpatRaster", scale = "none", select.layer = NULL)
+      load_flexible_image(img, output_format = "SpatRaster", scale = "none", select_layer = NULL)
     }, error = function(e) {
       stop(sprintf("Failed to convert image to SpatRaster: %s", e$message))
     })
 
-    if(is.null(skeleton.img) ){
+    if(is.null(skeleton_img) ){
       # Skeletonization with validation
       IMS <- tryCatch({
-        skeleton <- skeletonize_image(IM, select.layer = NULL, verbose = FALSE)
+        skeleton <- skeletonize_image(IM, select_layer = NULL, verbose = FALSE)
         if (all(terra::values( skeleton) == 0)) {
           warning("Skeletonization produced empty result - check input image")
         }
-        load_flexible_image(skeleton, output_format = "SpatRaster",  scale = "none", select.layer = NULL)
+        load_flexible_image(skeleton, output_format = "SpatRaster",  scale = "none", select_layer = NULL)
       }, error = function(e) {
         stop(sprintf("Skeletonization failed: %s", e$message))
       })      
     }else {
-      IMS = load_flexible_image(skeleton.img, output_format = "SpatRaster",  scale = "binary", select.layer = NULL)
+      IMS = load_flexible_image(skeleton_img, output_format = "SpatRaster",  scale = "binary", select_layer = NULL)
     }
 
     

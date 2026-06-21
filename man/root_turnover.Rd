@@ -8,15 +8,15 @@ root_turnover(
   img1,
   img2 = NULL,
   method = c("tc", "dpc"),
-  tc.method = c("kimura", "rootpx"),
+  tc_method = c("kimura", "rootpx"),
   unit = "cm",
   dpi = 300,
-  select.layer = NULL,
-  product.layer = 2,
-  decay.layer = 1,
-  blur.capture = 0.95,
-  im.return = FALSE,
-  include.virtualroots = FALSE
+  select_layer = NULL,
+  product_layer = 2,
+  decay_layer = 1,
+  blur_capture = 0.95,
+  im_return = FALSE,
+  include_virtualroots = FALSE
 )
 }
 \arguments{
@@ -31,38 +31,38 @@ ignored (with a warning) for \code{method = "dpc"}.}
 comparison of two images) or \code{"dpc"} (Decay/Production/Constant
 decomposition of one multi-layer image). Default \code{"tc"}.}
 
-\item{tc.method}{Measurement sub-method for \code{method = "tc"}:
+\item{tc_method}{Measurement sub-method for \code{method = "tc"}:
 \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).
 Ignored for \code{method = "dpc"}. Default \code{"kimura"}.}
 
 \item{unit}{Unit of root length measurement (only for
-\code{tc.method = "kimura"}). Default: "cm"}
+\code{tc_method = "kimura"}). Default: "cm"}
 
-\item{dpi}{Image resolution (only for \code{tc.method = "kimura"}). Default: 300}
+\item{dpi}{Image resolution (only for \code{tc_method = "kimura"}). Default: 300}
 
-\item{select.layer}{Integer or NULL. For \code{method = "tc"} with
+\item{select_layer}{Integer or NULL. For \code{method = "tc"} with
 multi-layer images, selects which layer to compare. Ignored for
 \code{method = "dpc"}.}
 
-\item{product.layer}{Integer indicating the production layer index for the
+\item{product_layer}{Integer indicating the production layer index for the
 DPC method (1-3)}
 
-\item{decay.layer}{Integer indicating the decay & tape layer index for the
+\item{decay_layer}{Integer indicating the decay & tape layer index for the
 DPC method (1-3)}
 
-\item{blur.capture}{Threshold for pixel inclusion in the DPC method (0-1).
+\item{blur_capture}{Threshold for pixel inclusion in the DPC method (0-1).
 Default: 0.95}
 
-\item{im.return}{Logical: return images instead of values for the DPC
+\item{im_return}{Logical: return images instead of values for the DPC
 method? Default: FALSE}
 
-\item{include.virtualroots}{Logical: consider all roots present at any
+\item{include_virtualroots}{Logical: consider all roots present at any
 timepoint in the DPC method? Default: FALSE}
 }
 \value{
 Depends on the method:
   - \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
-  - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im.return = TRUE}) a list of SpatRaster layers.
+  - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im_return = TRUE}) a list of SpatRaster layers.
 }
 \description{
 Wrapper around the two root-turnover methods. \code{method} selects which
@@ -71,7 +71,7 @@ one runs:
   \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
     (\code{img1}, \code{img2}) and reports standing roots, production, and
     new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
-    \code{tc.method} argument chooses how root amount is measured:
+    \code{tc_method} argument chooses how root amount is measured:
     \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
   \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
     multi-layer 'RootDetector' image into decayed, newly produced, and
@@ -90,7 +90,7 @@ data(skl_Oulanka2023_Session01_T067)
 data(skl_Oulanka2023_Session03_T067)
 t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
-root_turnover(t1, t2, method = "tc", tc.method = "kimura")
+root_turnover(t1, t2, method = "tc", tc_method = "kimura")
 }
 \seealso{
 \code{\link{turnover_tc}}, \code{\link{turnover_dpc}}

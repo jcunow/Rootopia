@@ -27,7 +27,7 @@ A \code{terra::SpatRaster} masked (extent unchanged) to the requested
 \code{depth_zoning()} performs \emph{depth zone masking}: it returns the input
 image with every pixel \emph{outside} the requested depth bin(s) set to
 \code{NA}, keeping the original grid and extent. This lets you run any
-per-pixel trait function (length, diameter, colour, landscape metrics) on a
+per-pixel trait function (length, diameter, color, landscape metrics) on a
 single depth slice without splitting the raster into separate objects.
 }
 \details{
@@ -42,7 +42,7 @@ To split a tube into circumferential (rotation) slices, use
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 mask <- img[[1]] - img[[2]]; mask[mask == 255] <- NA
-depth_map  <- create_depthmap(img, mask, start.soil = 2.9, dpi = 150 )
+depth_map  <- create_depthmap(img, mask, start_soil = 2.9, dpi = 150 )
 depth_bins <- binning(depth_map, nn = 5)
 depth_bins <- terra::flip(terra::t(depth_bins))
 # Keep only the root layer pixels that fall in the 10 cm depth bin

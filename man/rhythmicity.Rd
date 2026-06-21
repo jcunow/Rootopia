@@ -9,7 +9,7 @@ rhythmicity(
   y,
   fix_period = 24,
   method = "F",
-  parStart = list(amp = 3, phase = 0, offset = 0, period = 12)
+  par_start = list(amp = 3, phase = 0, offset = 0, period = 12)
 )
 }
 \arguments{
@@ -22,7 +22,7 @@ rhythmicity(
 \item{method}{Type of test to use: \code{"F"} for F-test (default), \code{"FLR"} for finite sample 
 likelihood ratio test, or \code{"LR"} for large sample likelihood ratio test.}
 
-\item{parStart}{Named list with starting values for parameters: \code{amp}, \code{phase}, \code{offset}, 
+\item{par_start}{Named list with starting values for parameters: \code{amp}, \code{phase}, \code{offset}, 
 and \code{period}. Only used when \code{fix_period} is \code{NULL}.}
 }
 \value{

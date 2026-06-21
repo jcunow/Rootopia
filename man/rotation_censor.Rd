@@ -6,11 +6,11 @@
 \usage{
 rotation_censor(
   img,
-  center.offset = 0,
-  cut.buffer = 0.02,
-  fixed.rotation = TRUE,
-  fixed.width = 500,
-  select.layer = NULL,
+  center_offset = 0,
+  cut_buffer = 0.02,
+  fixed_rotation = TRUE,
+  fixed_width = 500,
+  select_layer = NULL,
   overlay = FALSE,
   ...
 )
@@ -18,30 +18,30 @@ rotation_censor(
 \arguments{
 \item{img}{Input image as raster, file name, or array.}
 
-\item{center.offset}{Numeric or character. Where to centre the kept window
+\item{center_offset}{Numeric or character. Where to center the kept window
 (in fixed mode), given in one of three forms:
 \itemize{
   \item \strong{Absolute row} - a number \code{> 1}: the exact row to
-    centre on (e.g. from \code{estimate_rotation_center()}). 
+    center on (e.g. from \code{estimate_rotation_center()}). 
   \item \strong{Fraction} - a number in \code{[0, 1]}: a fraction of the
     image height. \code{0} = top, \code{0.25} = a quarter down,
-    \code{0.5} = middle, \code{1} = bottom (so the centre row is
-    \code{center.offset * nrow}).
+    \code{0.5} = middle, \code{1} = bottom (so the center row is
+    \code{center_offset * nrow}).
   \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
-    \code{"center"} / \code{"centre"} (= 0.5), or \code{"bottom"} (= 1).
+    \code{"center"} / \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
 }
-The default \code{0} centres on the top row.
-When \code{fixed.rotation = FALSE} the resolved value is used as the
+The default \code{0} centers on the top row.
+When \code{fixed_rotation = FALSE} the resolved value is used as the
 rotation shift in rows to trim (e.g. from
 \code{estimate_rotation_shift()}); pass an absolute number there.}
 
-\item{cut.buffer}{Extra proportion of the rotation axis to trim (variable mode).}
+\item{cut_buffer}{Extra proportion of the rotation axis to trim (variable mode).}
 
-\item{fixed.rotation}{Logical. If \code{TRUE}, return a fixed-width window.}
+\item{fixed_rotation}{Logical. If \code{TRUE}, return a fixed-width window.}
 
-\item{fixed.width}{Output width in rows when \code{fixed.rotation = TRUE}.}
+\item{fixed_width}{Output width in rows when \code{fixed_rotation = TRUE}.}
 
-\item{select.layer}{Integer or \code{NULL}. Layer to use for multi-band inputs.}
+\item{select_layer}{Integer or \code{NULL}. Layer to use for multi-band inputs.}
 
 \item{overlay}{Logical. If \code{TRUE}, plot the full image with the kept
 window (green outline) and discarded margins (red shading) before cropping.
@@ -56,7 +56,7 @@ A cropped \code{SpatRaster} (returned invisibly when
 }
 \description{
 Crops the rotation axis (rows) of a root scan. In fixed mode it returns a
-fixed-width window centred on a given row (e.g. the rotation centre from
+fixed-width window centered on a given row (e.g. the rotation center from
 \code{estimate_rotation_center()}); in variable mode it trims a band sized by
 a measured offset. Optionally previews what is kept versus cut.
 }
@@ -64,12 +64,12 @@ a measured offset. Optionally previews what is kept versus cut.
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 r0  <- estimate_rotation_center(img)
-rotation_censor(img, center.offset = r0, fixed.width = 800,
-                fixed.rotation = TRUE, overlay = TRUE)
+rotation_censor(img, center_offset = r0, fixed_width = 800,
+                fixed_rotation = TRUE, overlay = TRUE)
 
-# Same window centred on the middle of the image, via a fraction or keyword
-rotation_censor(img, center.offset = 0.5,      fixed.width = 800)
-rotation_censor(img, center.offset = "middle", fixed.width = 800)
+# Same window centered on the middle of the image, via a fraction or keyword
+rotation_censor(img, center_offset = 0.5,      fixed_width = 800)
+rotation_censor(img, center_offset = "middle", fixed_width = 800)
 # Top of the tube a quarter of the way down
-rotation_censor(img, center.offset = 0.25, fixed.width = 800)
+rotation_censor(img, center_offset = 0.25, fixed_width = 800)
 }

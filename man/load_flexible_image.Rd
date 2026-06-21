@@ -8,7 +8,7 @@ load_flexible_image(
   input,
   output_format = "cimg",
   scale = c("to_01", "to_255", "binary", "none"),
-  select.layer = NULL,
+  select_layer = NULL,
   normalize = NULL,
   binarize = NULL,
   denormalize = NULL
@@ -24,7 +24,7 @@ load_flexible_image(
 `"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
 conversion is a no-op if the data is already in the target range.}
 
-\item{select.layer}{Numeric, which layer to select if input has multiple layers}
+\item{select_layer}{Numeric, which layer to select if input has multiple layers}
 
 \item{normalize, binarize, denormalize}{Deprecated logical flags kept for
 backward compatibility; use `scale` instead. `normalize = TRUE` maps to

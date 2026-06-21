@@ -10,7 +10,7 @@ turnover_tc(
   method = "kimura",
   unit = "cm",
   dpi = 300,
-  select.layer = 2
+  select_layer = 2
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ turnover_tc(
 
 \item{dpi}{Image resolution (only for method = "kimura"). Default: 300}
 
-\item{select.layer}{Integer specifying the layer to use in both timesteps if \code{img} is a multi-layer `SpatRaster`. Defaults to 2.}
+\item{select_layer}{Integer specifying the layer to use in both timesteps if \code{img} is a multi-layer `SpatRaster`. Defaults to 2.}
 }
 \value{
 data.frame containing:

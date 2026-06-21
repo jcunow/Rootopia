@@ -83,7 +83,7 @@ expect_runs_on_all_inputs <- function(fn, ..., check = NULL, inputs = make_all_i
 
 # Run `fn` across every row of a parameter `grid` (a data.frame from
 # expand.grid). `fixed` supplies args constant across rows. NA cells are
-# dropped so the function's own default applies (handy for select.layer = NA).
+# dropped so the function's own default applies (handy for select_layer = NA).
 # Factors are coerced to character. The failing row is reported on error.
 expect_runs_on_grid <- function(fn, grid, fixed = list(), check = NULL) {
   for (i in seq_len(nrow(grid))) {

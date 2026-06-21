@@ -6,24 +6,24 @@
 \usage{
 estimate_soil_surface(
   img,
-  search.area = 0.45,
-  tape.tresh = 0.33,
+  search_area = 0.45,
+  tape_thresh = 0.33,
   dpi = 150,
   nclasses = 3,
   inverse = FALSE,
-  tape.overlap = 0.5,
-  tape.brightness = 0.6,
-  extra.rows = 100,
-  tape.quantile = 0.98,
-  select.layer = NULL
+  tape_overlap = 0.5,
+  tape_brightness = 0.6,
+  extra_rows = 100,
+  tape_quantile = 0.98,
+  select_layer = NULL
 )
 }
 \arguments{
 \item{img}{Input image (raster, filename, or array)}
 
-\item{search.area}{Proportion of image to analyze}
+\item{search_area}{Proportion of image to analyze}
 
-\item{tape.tresh}{Minimum tape coverage ratio}
+\item{tape_thresh}{Minimum tape coverage ratio}
 
 \item{dpi}{Image resolution}
 
@@ -31,15 +31,15 @@ estimate_soil_surface(
 
 \item{inverse}{Invert detection for dark markers}
 
-\item{tape.overlap}{Safety margin for tape (cm)}
+\item{tape_overlap}{Safety margin for tape (cm)}
 
-\item{tape.brightness}{Brightness threshold for tape}
+\item{tape_brightness}{Brightness threshold for tape}
 
-\item{extra.rows}{Additional analysis rows}
+\item{extra_rows}{Additional analysis rows}
 
-\item{tape.quantile}{Brightness alignment quantile}
+\item{tape_quantile}{Brightness alignment quantile}
 
-\item{select.layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
 }
 \value{
 data.frame with soil surface and tape end positions

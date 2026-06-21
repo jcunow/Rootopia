@@ -7,7 +7,7 @@
 fit_sine_curve(
   x,
   y,
-  parStart = list(amp = 3, phase = 0, offset = 0, period = 24),
+  par_start = list(amp = 3, phase = 0, offset = 0, period = 24),
   fix_period = NULL
 )
 }
@@ -16,7 +16,7 @@ fit_sine_curve(
 
 \item{y}{Numeric vector of dependent variable values.}
 
-\item{parStart}{Named list of starting values for parameters:
+\item{par_start}{Named list of starting values for parameters:
 - amp: Amplitude (default 3)
 - phase: Phase shift (default 0)
 - offset: Vertical offset (default 0)

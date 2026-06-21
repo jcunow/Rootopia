@@ -445,9 +445,9 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 #'                  For adaptive thresholding, it's a fraction of local mean. For deblurring, it's the fraction of max used to recover structure.
 #' @param method "global" or "adaptive". Ignored if `deblur = TRUE`.
 #' @param window_size Integer (odd), only used for adaptive thresholding.
-#' @param select.layer Integer or NULL. Which layer to use for thresholding or deblurring.
+#' @param select_layer Integer or NULL. Which layer to use for thresholding or deblurring.
 #'                     If NULL and multilayer, the mean of all layers is used.
-#' @param mask.layer Integer or NULL. If set, used to preserve masked regions or enhance structure.
+#' @param mask_layer Integer or NULL. If set, used to preserve masked regions or enhance structure.
 #' @param binary_01 Logical. If TRUE, binarized output uses 0/1. If FALSE, it retains max value of input.
 #' @param deblur Logical. If TRUE, applies deblurring logic instead of standard thresholding.
 #'
@@ -458,9 +458,9 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 #' img = terra::rast(seg_Oulanka2023_Session03_T067)
 #' image_threshold(img, threshold = 0.3, method = "global")
 #' image_threshold(img, threshold = 0.9, method = "adaptive", window_size = 15, binary_01 = TRUE)
-#' image_threshold(img, threshold = 0.4, select.layer = 2, mask.layer = 1, deblur = TRUE)
+#' image_threshold(img, threshold = 0.4, select_layer = 2, mask_layer = 1, deblur = TRUE)
 image_threshold <- function(img, threshold = 0.4, method = "global", window_size = 15,
-                            select.layer = 2, mask.layer = 1, binary_01 = FALSE,
+                            select_layer = 2, mask_layer = 1, binary_01 = FALSE,
                             deblur = FALSE) {
   tryCatch({
     if (missing(img)) stop("img parameter is required")
@@ -477,19 +477,19 @@ image_threshold <- function(img, threshold = 0.4, method = "global", window_size
     # ---- DEBLURRING MODE ----
     if (deblur) {
       if (nlyr < 2) stop("Deblurring requires a multi-layer image")
-      if (select.layer == mask.layer) stop("select.layer and mask.layer cannot be the same")
+      if (select_layer == mask_layer) stop("select_layer and mask_layer cannot be the same")
       
-      mx <- terra::global(img[[select.layer]], "max", na.rm = TRUE)[[1]]
-      if (is.na(mx) || mx == 0) stop("Invalid maximum in select.layer")
+      mx <- terra::global(img[[select_layer]], "max", na.rm = TRUE)[[1]]
+      if (is.na(mx) || mx == 0) stop("Invalid maximum in select_layer")
       
       # Deblurring: isolate structure from blurry background
-      img2[[mask.layer]] <- img[[mask.layer]] - img[[select.layer]]
-      img2[[mask.layer]] <- (img2[[mask.layer]] >= (mx * threshold)) * mx
-      img2[[select.layer]] <- (img[[select.layer]] >= (mx * threshold)) * mx
+      img2[[mask_layer]] <- img[[mask_layer]] - img[[select_layer]]
+      img2[[mask_layer]] <- (img2[[mask_layer]] >= (mx * threshold)) * mx
+      img2[[select_layer]] <- (img[[select_layer]] >= (mx * threshold)) * mx
       
-      other.layer <- setdiff(1:nlyr, c(select.layer, mask.layer))
+      other.layer <- setdiff(1:nlyr, c(select_layer, mask_layer))
       if (length(other.layer) > 0) {
-        img2[[other.layer]] <- (img[[select.layer]] >= (mx * threshold)) * mx
+        img2[[other.layer]] <- (img[[select_layer]] >= (mx * threshold)) * mx
       }
       
       return(img2)
@@ -497,14 +497,14 @@ image_threshold <- function(img, threshold = 0.4, method = "global", window_size
     
     # ---- THRESHOLDING MODE ----
     # Determine processing layer
-    if (is.null(select.layer) && nlyr > 1) {
+    if (is.null(select_layer) && nlyr > 1) {
       layer_to_process <- terra::app(img, fun = mean, na.rm = TRUE)
-    } else if (!is.null(select.layer) && select.layer <= nlyr) {
-      layer_to_process <- img[[select.layer]]
+    } else if (!is.null(select_layer) && select_layer <= nlyr) {
+      layer_to_process <- img[[select_layer]]
     } else if (nlyr == 1) {
       layer_to_process <- img
     } else {
-      stop("Invalid select.layer for given image")
+      stop("Invalid select_layer for given image")
     }
     
     mx <- terra::global(layer_to_process, "max", na.rm = TRUE)[[1]]
@@ -527,8 +527,8 @@ image_threshold <- function(img, threshold = 0.4, method = "global", window_size
     # Apply threshold to layers
     if (nlyr > 1) {
       for (i in 1:nlyr) {
-        if (!is.null(mask.layer) && i == mask.layer && (!is.null(select.layer) && mask.layer != select.layer)) {
-          mask_layer_data <- img[[mask.layer]]
+        if (!is.null(mask_layer) && i == mask_layer && (!is.null(select_layer) && mask_layer != select_layer)) {
+          mask_layer_data <- img[[mask_layer]]
           if (tolower(method) == "global") {
             img2[[i]] <- (mask_layer_data >= (mx * threshold)) * output_value
           } else {
@@ -675,7 +675,7 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
 #' gray.raster = rgb2gray(img)
 rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 
-  img <- load_flexible_image(img, scale = "none", output_format = "spatrast", select.layer = NULL)
+  img <- load_flexible_image(img, scale = "none", output_format = "spatrast", select_layer = NULL)
   tryCatch({
     # Input validation
     if (missing(img)) {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/soil_rgb_classification.R
 \name{build_soil_centroids}
 \alias{build_soil_centroids}
-\title{Build soil class centroids from manual RGB colour picks}
+\title{Build soil class centroids from manual RGB color picks}
 \usage{
 build_soil_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 }

@@ -9,11 +9,11 @@
 #'           images, specify band_index parameter
 #' @param mask Raster mask indicating foreign objects (1 = mask, 0 or NA = keep)
 #' @param sinoid Logical; if TRUE, accounts for tube curvature in depth calculation
-#' @param tube.thicc Numeric; diameter of minirhizotron tube in cm
+#' @param tube_thicc Numeric; diameter of minirhizotron tube in cm
 #' @param tilt Numeric; minirhizotron tube insertion angle in degrees (typically 30-45)
 #' @param dpi Numeric; image resolution in dots per inch
-#' @param start.soil Numeric; soil surface boundary in cm (0 = surface)
-#' @param center.offset Numeric; rotational center offset (0 = centered, 1 = edge)
+#' @param start_soil Numeric; soil surface boundary in cm (0 = surface)
+#' @param center_offset Numeric; rotational center offset (0 = centered, 1 = edge)
 #' @param progress Message; indicates how mny rows have been processed  
 #'
 #' @return terra raster object containing the depth map
@@ -27,29 +27,29 @@
 #' img = seg_Oulanka2023_Session01_T067
 #' mask = seg_Oulanka2023_Session01_T067[[1]] - seg_Oulanka2023_Session01_T067[[2]]
 #' mask[mask == 255] <- NA
-#' map = create_depthmap(img,mask,start.soil = 0.1,
+#' map = create_depthmap(img,mask,start_soil = 0.1,
 #'   sinoid = TRUE,
-#'   tube.thicc = 7,
+#'   tube_thicc = 7,
 #'   tilt = 45,
 #'   dpi = 300,
-#'   center.offset = 0.1 )
+#'   center_offset = 0.1 )
 create_depthmap = function(img, mask = NULL, sinoid = TRUE,
-                           tube.thicc = 7, tilt = 45, dpi = 300,
-                           start.soil = 0, center.offset = 0.5, progress = FALSE) {
+                           tube_thicc = 7, tilt = 45, dpi = 300,
+                           start_soil = 0, center_offset = 0.5, progress = FALSE) {
 
   # Input validation module
   tryCatch({
     # Validate numeric parameters
-    if (!is.numeric(tube.thicc) || tube.thicc <= 0)
-      stop("tube.thicc must be a positive number")
+    if (!is.numeric(tube_thicc) || tube_thicc <= 0)
+      stop("tube_thicc must be a positive number")
     if (!is.numeric(tilt) || tilt <= 0 || tilt >= 90)
       stop("tilt must be between 0 and 90 degrees")
     if (!is.numeric(dpi) || dpi <= 0)
       stop("dpi must be a positive number")
-    if (!is.numeric(start.soil))
-      stop("start.soil must be a numeric value")
-    if (!is.numeric(center.offset) || center.offset < 0 || center.offset > 1)
-      stop("center.offset must be between 0 and 1")
+    if (!is.numeric(start_soil))
+      stop("start_soil must be a numeric value")
+    if (!is.numeric(center_offset) || center_offset < 0 || center_offset > 1)
+      stop("center_offset must be between 0 and 1")
 
     # Validate logical parameters
     if (!is.logical(sinoid))
@@ -60,11 +60,11 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
       stop("Input image cannot be NULL")
 
     # all layers have the same dimensions, we select layer 1 to handle multi-layer and single-layer raster
-    select.layer = 1
+    select_layer = 1
     
     # Try loading the image with error handling
     img <- tryCatch({
-      load_flexible_image(img, select.layer = select.layer,
+      load_flexible_image(img, select_layer = select_layer,
                           output_format = "spatrast", scale = "none")
     }, error = function(e) {
       stop(paste("Failed to load image:", e$message))
@@ -88,18 +88,18 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # Core computation with additional safety checks
     radiant = pi/180
     tilt.factor = sin((180-tilt) * radiant)
-    tube.thicc.tilted = round(tube.thicc * tilt.factor, 3)
+    tube_thicc_tilted = round(tube_thicc * tilt.factor, 3)
     px.to.cm.h = (2.54/dpi)
 
     target.col = dim(img)[1]
     target.row = dim(img)[2]
 
     if (sinoid) {
-      df1 = seq(0*pi, 2*pi, length =  (round(tube.thicc*pi*dpi/2.54, 0)-1))
+      df1 = seq(0*pi, 2*pi, length =  (round(tube_thicc*pi*dpi/2.54, 0)-1))
       if (length(df1) < 2)
-        stop("Insufficient points for sine wave generation. Check tube.thicc and dpi values")
+        stop("Insufficient points for sine wave generation. Check tube_thicc and dpi values")
 
-      df00 = (cos(df1+(pi*(center.offset))))*(tube.thicc.tilted/2) + (tube.thicc.tilted/2)
+      df00 = (cos(df1+(pi*(center_offset))))*(tube_thicc_tilted/2) + (tube_thicc_tilted/2)
 
       # Safely handle vector subsetting
       if (target.col > length(df00))
@@ -121,7 +121,7 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
         message(sprintf("Processing row %d of %d", ii, target.row))
     }
 
-    df.depthmap = df - (start.soil)
+    df.depthmap = df - (start_soil)
     masked.depthmap = terra::rast(df.depthmap)
 
     # Final mask application with error checking

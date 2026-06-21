@@ -67,7 +67,7 @@ resolve_scale <- function(scale, normalize, binarize, denormalize, scale_given) 
 
 #' Validate conversion parameters
 #' @keywords internal
-validate_conversion_params <- function(input, scale, select.layer) {
+validate_conversion_params <- function(input, scale, select_layer) {
   if (missing(input)) stop("Input is required")
   if (!is.character(scale) || length(scale) != 1 || !scale %in% .scale_choices) {
     stop("scale must be one of: ", paste(.scale_choices, collapse = ", "))
@@ -119,7 +119,7 @@ normalize_array <- function(arr, scale = "none") {
 #'   `"to_01"` (0-255 -> 0-1, the default), `"to_255"` (0-1 -> 0-255),
 #'   `"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
 #'   conversion is a no-op if the data is already in the target range.
-#' @param select.layer Numeric, which layer to select if input has multiple layers
+#' @param select_layer Numeric, which layer to select if input has multiple layers
 #' @param normalize,binarize,denormalize Deprecated logical flags kept for
 #'   backward compatibility; use `scale` instead. `normalize = TRUE` maps to
 #'   `scale = "to_01"`, `denormalize = TRUE` to `"to_255"`, and
@@ -128,18 +128,18 @@ normalize_array <- function(arr, scale = "none") {
 #' @export
 load_flexible_image <- function(input, output_format = "cimg",
                                 scale = c("to_01", "to_255", "binary", "none"),
-                                select.layer = NULL,
+                                select_layer = NULL,
                                 normalize = NULL, binarize = NULL, denormalize = NULL) {
   scale <- resolve_scale(scale, normalize, binarize, denormalize,
                          scale_given = !missing(scale))
-  validate_conversion_params(input, scale, select.layer)
+  validate_conversion_params(input, scale, select_layer)
 
 
-  if (inherits(input, output_format) && is.null(select.layer)) {
+  if (inherits(input, output_format) && is.null(select_layer)) {
     return(input)   # already in the requested form
   }
 
-  # Normalise the requested output format to a canonical token, so we accept any
+  # Normalize the requested output format to a canonical token, so we accept any
   # capitalisation and the common aliases without repeating long spelling lists.
   # Unknown values fall through unchanged and hit the error branch below.
   ofmt <- switch(tolower(output_format),
@@ -190,10 +190,10 @@ load_flexible_image <- function(input, output_format = "cimg",
   dims <- dim(arr)
 
   # special case #1 for RasterLayer
-  if (ofmt == "rasterlayer" && is.null(select.layer)) {
+  if (ofmt == "rasterlayer" && is.null(select_layer)) {
     if(length(dim(arr)) > 2) {
-      warning("select.layer must be specified if output_format is 'RasterLayer'. Default to layer 1." )
-      select.layer = 1
+      warning("select_layer must be specified if output_format is 'RasterLayer'. Default to layer 1." )
+      select_layer = 1
     }}
 
    # special case #2 for RasterLayer to RasterBrick conversion
@@ -201,12 +201,12 @@ load_flexible_image <- function(input, output_format = "cimg",
      # not possible, will force output format (raster::brick does it by default)
      ofmt  <- "rasterlayer"
      warning("RasterLayer to RasterBrick not possible. Changed output_format to RasterLayer")
-     select.layer = 1
+     select_layer = 1
    }
 
   # Handle layer selection for 3D or 4D arrays (select a specific layer/channel)
-  if (!is.null(select.layer) && length(dims) > 2) {
-    arr <- arr[,,select.layer]  # Select layer
+  if (!is.null(select_layer) && length(dims) > 2) {
+    arr <- arr[,,select_layer]  # Select layer
   }
 
   # Apply the requested value rescaling
@@ -217,7 +217,7 @@ load_flexible_image <- function(input, output_format = "cimg",
   ## Return based on desired output format
   # Overwrite 3D matrix choice
   if (ofmt == "matrix" && dims[3] > 1) {
-    warning("You cannot convert a 3D image to 2D matrix. An array is returned instead. Consider specifying 'select.layer' if you want to return a matrix.")
+    warning("You cannot convert a 3D image to 2D matrix. An array is returned instead. Consider specifying 'select_layer' if you want to return a matrix.")
     ofmt = "array"
   }
 

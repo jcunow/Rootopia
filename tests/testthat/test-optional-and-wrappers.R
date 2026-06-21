@@ -10,7 +10,7 @@ test_that("root_scape_metrics runs when landscapemetrics is available", {
   # landscapemetrics emits a static "use check_landscape()" advisory for any
   # non-geographic raster; muffle ONLY that message so genuine warnings surface.
   res <- withCallingHandlers(
-    root_scape_metrics(make_binary_spatraster(), select.layer = 1),
+    root_scape_metrics(make_binary_spatraster(), select_layer = 1),
     warning = function(w) {
       if (grepl("check_landscape", conditionMessage(w))) invokeRestart("muffleWarning")
     }
@@ -36,7 +36,7 @@ test_that("estimate_rotation_shift runs when imagefx is available", {
   skip_if_not_installed("terra")
   skip_if_not_installed("imagefx")
   rgb <- terra::rast(make_rgb_array() * 255)
-  res <- estimate_rotation_shift(rgb, rgb, select.layer = 1)
+  res <- estimate_rotation_shift(rgb, rgb, select_layer = 1)
   expect_true(all(c("depth", "rotation", "peak") %in% names(res)))
 })
 
@@ -49,7 +49,7 @@ test_that("root_turnover (tc) compares two timepoints", {
   t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
   t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
   res <- suppressWarnings(root_turnover(t1, t2, method = "tc",
-                                        tc.method = "kimura", dpi = 150, unit = "cm"))
+                                        tc_method = "kimura", dpi = 150, unit = "cm"))
   expect_true(is.data.frame(res) || is.list(res))
 })
 
@@ -68,7 +68,7 @@ test_that("root_depth_metrics runs on a one-image directory", {
   terra::writeRaster(terra::rast(seg_Oulanka2023_Session01_T067),
                      file.path(dir, "T067.tif"), overwrite = TRUE)
   res <- suppressWarnings(root_depth_metrics(
-    path.seg         = paste0(dir, "/"),   # root_depth_metrics expects a trailing slash
+    path_seg         = paste0(dir, "/"),   # root_depth_metrics expects a trailing slash
     tube_names       = "T067",
     session          = "test",
     insertion_angles = 45,        # non-zero -> valid depth-map geometry

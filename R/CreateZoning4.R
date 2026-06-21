@@ -3,7 +3,7 @@
 #'
 #' @param img SpatRaster/matrix/array - segmented image
 #' @param width numeric - buffer width in pixels (default: 2)
-#' @param halo.only logical - if TRUE, returns only the buffer zone (default: TRUE)
+#' @param halo_only logical - if TRUE, returns only the buffer zone (default: TRUE)
 #' @param kernel character - shape of the thickening kernel: "circle" or "diamond"
 #'
 #' @return SpatRast - buffer zone around non-zero pixels
@@ -14,7 +14,7 @@
 #' data(seg_Oulanka2023_Session03_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session03_T067)
 #' create_root_buffer(img, width = 2)
-create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
+create_root_buffer = function(img, width=2, halo_only=TRUE, kernel="circle") {
   
   # Validation module
   tryCatch({
@@ -27,8 +27,8 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
     if (!is.numeric(width) || width < 1) {
       stop("width must be a positive integer")
     }
-    if (!is.logical(halo.only)) {
-      stop("halo.only must be logical")
+    if (!is.logical(halo_only)) {
+      stop("halo_only must be logical")
     }
     if (!kernel %in% c("circle", "diamond")) {
       stop("kernel must be either 'circle' or 'diamond'")
@@ -65,7 +65,7 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
     # Create output image
     out.im = (im2 >= 1) * 1
     
-    if (halo.only) {
+    if (halo_only) {
       out.im = out.im - im
       out.im = terra::subst(out.im, from=-1, to=0)
     }
@@ -88,7 +88,7 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
 #'
 #' @param depthmap SpatRaster/matrix/array - continuous depth values
 #' @param nn numeric - bin width
-#' @param round.option character - binning method: "rounding", "ceiling", or "floor"
+#' @param round_option character - binning method: "rounding", "ceiling", or "floor"
 #' @return SpatRaster - binned depth values
 #' @export
 #'
@@ -98,9 +98,9 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
 #' mask = img[[1]] - img[[2]]
 #' mask[mask == 255] <- NA
 #' img = img
-#' depthmap = create_depthmap(img,mask,start.soil = 2.9 )
+#' depthmap = create_depthmap(img,mask,start_soil = 2.9 )
 #' binned.map = binning(depthmap,nn = 5)
-binning = function(depthmap, nn, round.option="rounding") {
+binning = function(depthmap, nn, round_option="rounding") {
   
   # Validation module
   tryCatch({
@@ -116,8 +116,8 @@ binning = function(depthmap, nn, round.option="rounding") {
     if (!is.numeric(nn) || nn <= 0) {
       stop("bin width (nn) must be positive numeric")
     }
-    if (!round.option %in% c("rounding", "ceiling", "floor")) {
-      stop("round.option must be one of: 'rounding', 'ceiling', 'floor'")
+    if (!round_option %in% c("rounding", "ceiling", "floor")) {
+      stop("round_option must be one of: 'rounding', 'ceiling', 'floor'")
     }
     
     # Load and validate image
@@ -138,9 +138,9 @@ binning = function(depthmap, nn, round.option="rounding") {
     
     # Perform binning based on selected method
     im = tryCatch({
-      if (round.option == "rounding") {
+      if (round_option == "rounding") {
         nn * round(depthmap / nn, 0)
-      } else if (round.option == "ceiling") {
+      } else if (round_option == "ceiling") {
         nn * ceiling(depthmap / nn)
       } else {
         nn * floor(depthmap / nn)
@@ -204,7 +204,7 @@ slice_rotation <- function(img, n) {
 #' \code{depth_zoning()} performs \emph{depth zone masking}: it returns the input
 #' image with every pixel \emph{outside} the requested depth bin(s) set to
 #' \code{NA}, keeping the original grid and extent. This lets you run any
-#' per-pixel trait function (length, diameter, colour, landscape metrics) on a
+#' per-pixel trait function (length, diameter, color, landscape metrics) on a
 #' single depth slice without splitting the raster into separate objects.
 #'
 #' Depth is matched against the binned values in \code{depth_map}: a single value
@@ -230,7 +230,7 @@ slice_rotation <- function(img, n) {
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
 #' mask <- img[[1]] - img[[2]]; mask[mask == 255] <- NA
-#' depth_map  <- create_depthmap(img, mask, start.soil = 2.9, dpi = 150 )
+#' depth_map  <- create_depthmap(img, mask, start_soil = 2.9, dpi = 150 )
 #' depth_bins <- binning(depth_map, nn = 5)
 #' depth_bins <- terra::flip(terra::t(depth_bins))
 #' # Keep only the root layer pixels that fall in the 10 cm depth bin

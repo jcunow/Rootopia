@@ -70,7 +70,7 @@ If \code{tail_weight = FALSE}, uniform weighting is used.
 \code{P} and \code{Q} are non-negative vectors representing discrete
 probability mass functions over a shared ordered index (e.g. depth bins).
 
-They are internally normalised to sum to 1 if necessary.
+They are internally normalized to sum to 1 if necessary.
 
 Typical construction:
 

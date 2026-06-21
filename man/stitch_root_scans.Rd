@@ -86,15 +86,15 @@ changes phase correlation (it is already scale-invariant). On well-textured
 scans \code{"none"} is usually fine.}
 
 \item{blend}{How the overlap band is combined: \code{"linear"} (default,
-alpha ramp 1 -> 0, good for colour scans), \code{"overlay"} (img2 hides
+alpha ramp 1 -> 0, good for color scans), \code{"overlay"} (img2 hides
 img1), \code{"overlay_first"} (img1 hides img2), \code{"max"} (lighten /
 union - recommended for segmented/binary masks, where averaging would make
 fractional values and ghost thin roots) or \code{"min"} (darken).}
 
-\item{blend_width}{Optional width (px) of the linear ramp, centred in the
+\item{blend_width}{Optional width (px) of the linear ramp, centered in the
 overlap (hard img1 to its left, hard img2 to its right); \code{NULL}
 (default) ramps across the whole overlap. A smaller value reduces root
-ghosting on colour scans. Ignored unless \code{blend = "linear"}.}
+ghosting on color scans. Ignored unless \code{blend = "linear"}.}
 
 \item{report}{Logical. If \code{TRUE}, return a list with both the mosaics
 and a per-step performance table instead of just the mosaics (see Value).}

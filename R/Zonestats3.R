@@ -33,7 +33,7 @@
 #'   a segmented (non-skeleton) mask can be supplied instead.
 #' @param unit Character. Output unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
 #' @param dpi Numeric. Scan resolution (dots per inch); required for cm/inch conversion.
-#' @param select.layer Numeric. Which layer to select if \code{img} has multiple layers.
+#' @param select_layer Numeric. Which layer to select if \code{img} has multiple layers.
 #' @param show_messages Logical. If \code{TRUE}, prints informational messages during processing.
 #' @param skeletonize Logical. If \code{TRUE}, \code{img} is treated as a
 #'   segmented mask and reduced to a skeleton internally via
@@ -44,7 +44,7 @@
 root_length <- function(img,
                         unit = "cm",
                         dpi = 300,
-                        select.layer = NULL,
+                        select_layer = NULL,
                         method = c("kimura2",
                                    "kimura1",
                                    "freeman_basic",
@@ -78,7 +78,7 @@ root_length <- function(img,
     # -----------------------------
     img <- load_flexible_image(
       img,
-      select.layer = select.layer,
+      select_layer = select_layer,
       output_format = "spatrast",
       scale = "binary"
     )
@@ -204,11 +204,11 @@ root_length <- function(img,
 #'
 #' @param img Segmented raster (values = 0, 1). Consider whether a skeletonized
 #'   raster is more appropriate for your use case.
-#' @param indexD Depth index for the output column "depth". Useful when called
+#' @param index_d Depth index for the output column "depth". Useful when called
 #'   inside a loop over depth bins.
 #' @param metrics Character vector of metrics to calculate; must be valid names
 #'   from `landscapemetrics::list_lsm()`.
-#' @param select.layer Integer. Specifies which layer to use if the input is a
+#' @param select_layer Integer. Specifies which layer to use if the input is a
 #'   multi-band image. Default is `NULL` (single-layer expected).
 #' @return A data frame of metric values with columns: metric, value, object,
 #'   depth.
@@ -217,9 +217,9 @@ root_length <- function(img,
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
-#' RootScapeObject <- root_scape_metrics(img, indexD = 80, select.layer = 2,
+#' RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
 #'                                        metrics = c("lsm_c_ca"))
-root_scape_metrics <- function(img, indexD = NA, select.layer = NULL,
+root_scape_metrics <- function(img, index_d = NA, select_layer = NULL,
                                 metrics = c("lsm_c_ca", "lsm_l_ent", "lsm_c_pd",
                                             "lsm_c_np", "lsm_c_pland",
                                             "lsm_c_area_mn", "lsm_c_area_cv",
@@ -240,13 +240,13 @@ root_scape_metrics <- function(img, indexD = NA, select.layer = NULL,
       stop("Invalid metrics specified: ", paste(invalid_metrics, collapse = ", "))
     }
 
-    if (!is.null(select.layer)) {
-      if (!is.numeric(select.layer) || select.layer < 1) {
-        stop("select.layer must be a positive integer")
+    if (!is.null(select_layer)) {
+      if (!is.numeric(select_layer) || select_layer < 1) {
+        stop("select_layer must be a positive integer")
       }
     }
 
-    img <- load_flexible_image(img, select.layer = select.layer,
+    img <- load_flexible_image(img, select_layer = select_layer,
                                output_format = "spatrast", scale = "none")
 
     if (is.null(img) || terra::nlyr(img) < 1) {
@@ -264,7 +264,7 @@ root_scape_metrics <- function(img, indexD = NA, select.layer = NULL,
     t.object     <- ifelse(rsm$class == 0, "deletable", "root")
     t.object     <- ifelse(is.na(rsm$class), "root", t.object)
     rsm$object   <- t.object
-    rsm$depth    <- indexD
+    rsm$depth    <- index_d
 
     rsm <- dplyr::distinct(rsm)
     rsm <- dplyr::filter(rsm, rsm$object != "deletable")
@@ -342,7 +342,7 @@ tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
 
     img <- load_flexible_image(img, output_format = "spatrast",
                                scale = "none",
-                               select.layer = NULL)
+                               select_layer = NULL)
 
     if (is.null(img) || terra::nlyr(img) != 3) {
       stop("Input must be a valid three-band (RGB) image")
@@ -372,7 +372,7 @@ tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
 
     intensity <- vr + vg + vb
     if (any(intensity == 0, na.rm = TRUE)) {
-      message("Some pixels have zero intensity, which may affect colour calculations")
+      message("Some pixels have zero intensity, which may affect color calculations")
     }
 
     lum.gray       <- vr * r + vg * g + vb * b

@@ -14,7 +14,7 @@ img1 (left) and img2 (right).}
 (img2 on top), \code{"overlay_first"} (img1 on top), \code{"max"}
 (lighten / union) or \code{"min"} (darken).}
 
-\item{blend_width}{Optional ramp width (px) for \code{"linear"}, centred in
+\item{blend_width}{Optional ramp width (px) for \code{"linear"}, centered in
 the overlap; \code{NULL} ramps across the whole overlap.}
 }
 \value{

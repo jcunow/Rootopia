@@ -48,7 +48,7 @@ Required if \code{skel} is \code{NULL}.}
 
 \item{crossing_straight}{Straightness threshold for crossing resolution.}
 
-\item{color_by}{Which order column the overlay colours by.}
+\item{color_by}{Which order column the overlay colors by.}
 
 \item{diam_weight}{Diameter-vs-angle weight for the root-continuation choice.}
 

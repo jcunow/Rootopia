@@ -22,7 +22,7 @@ A data frame with columns \code{index} (1-based, the value to pass to
   \code{n_frames}.
 }
 \description{
-Summarises the unique groups (tubes) that \code{\link{stitch_root_scans}}
+Summarizes the unique groups (tubes) that \code{\link{stitch_root_scans}}
 would build, so you can see the tube names and pick a range to stitch
 (e.g. \code{tubes = 1:36}).
 }

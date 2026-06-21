@@ -40,7 +40,7 @@ diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.}
 \item{template}{\code{SpatRaster} defining the \code{$class_map} grid; defaults
 to \code{skel} when it is a raster.}
 
-\item{overlay_png}{Optional path; writes the order-coloured validation PNG.}
+\item{overlay_png}{Optional path; writes the order-colored validation PNG.}
 
 \item{return_map}{Build \code{$class_map}.}
 

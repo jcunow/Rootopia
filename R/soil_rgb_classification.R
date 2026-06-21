@@ -7,7 +7,7 @@
 # Public functions:
 #   classify_soil_rgb()       -- classify a SpatRaster, return map + metrics
 #   build_soil_centroids()    -- derive centroids from user RGB picks
-#   plot_soil_classification() -- visualise output of classify_soil_rgb()
+#   plot_soil_classification() -- visualize output of classify_soil_rgb()
 #
 # Internal helpers (not exported):
 #   .rgb_to_lab()
@@ -95,7 +95,7 @@
   # minirhizotron images (Blended scans, Session 03).
   #
   # LAB space (D65). MAX_DIST is per-class Euclidean LAB threshold;
-  # pixels beyond this from all centroids are labelled "unclassified".
+  # pixels beyond this from all centroids are labeled "unclassified".
   #
   # Close pairs to be aware of:
   #   dark_soil <-> red_soil  dist ~10 LAB units  (monitor unclassified %)
@@ -117,7 +117,7 @@
 # build_soil_centroids()
 # =============================================================================
 
-#' Build soil class centroids from manual RGB colour picks
+#' Build soil class centroids from manual RGB color picks
 #'
 #' Converts raw RGB pixel picks (collected e.g. in QGIS, FIJI, or ImageJ) to
 #' CIE LAB centroids and returns a centroid table ready to pass to
@@ -283,8 +283,8 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'
 #' Assigns each pixel of an RGB \code{SpatRaster} to a class
 #' (e.g. dark soil, red soil, root, silver tape, coarse debris) by nearest-
-#' centroid assignment in CIE LAB colour space. Pixels beyond the per-class
-#' distance threshold are labelled "unclassified". 
+#' centroid assignment in CIE LAB color space. Pixels beyond the per-class
+#' distance threshold are labeled "unclassified". 
 #'
 #' @param img An RGB image with at least 3 layers/channels interpreted as
 #'   R, G, B (in that order). Values may be 0-255 or 0-1 (auto-detected).
@@ -301,7 +301,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' @param downsample_fact Integer spatial aggregation factor applied before
 #'   classification for speed. \code{NULL} (default) uses full resolution.
 #'   The output map is always disaggregated back to match the input resolution
-#'   and extent exactly (nearest-neighbour, no interpolation).
+#'   and extent exactly (nearest-neighbor, no interpolation).
 #' @param compute_metrics Logical. Compute per-class pixel counts, area
 #'   fractions, LAB statistics, and mean distance to centroid. Default
 #'   \code{TRUE}. Set \code{FALSE} in tight batch loops where only the map is
@@ -317,7 +317,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'     \code{terra::mask()}, \code{terra::freq()}.}
 #'   \item{\code{metrics}}{A \code{data.frame} with per-class pixel counts,
 #'     area fractions (\%), LAB and RGB means and SDs, mean distance to
-#'     centroid, and the actual mean colour rendered as hex. \code{NULL} if
+#'     centroid, and the actual mean color rendered as hex. \code{NULL} if
 #'     \code{compute_metrics = FALSE}.}
 #'   \item{\code{inter_dist}}{Numeric matrix of pairwise LAB distances between
 #'     class centroids.}
@@ -333,7 +333,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'     \code{"dark_soil"}, \code{"root"}). Becomes the factor level in
 #'     \code{result$map} and the \code{class} column of \code{result$metrics}.}
 #'   \item{\code{L}, \code{A}, \code{B}}{Numeric. The class centroid's
-#'     coordinates in CIE LAB colour space (D65 illuminant): \code{L} is
+#'     coordinates in CIE LAB color space (D65 illuminant): \code{L} is
 #'     lightness (0 = black, 100 = white), \code{A} is the green-red axis
 #'     (negative = green, positive = red), and \code{B} is the blue-yellow
 #'     axis (negative = blue, positive = yellow). These are the *mean* LAB
@@ -341,7 +341,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'   \item{\code{MAX_DIST}}{Numeric. The per-class assignment radius, in
 #'     Euclidean LAB units. A pixel is assigned to the class whose centroid
 #'     is nearest in LAB space, but only if that distance is \code{<=
-#'     MAX_DIST}; otherwise the pixel is labelled \code{"unclassified"}.
+#'     MAX_DIST}; otherwise the pixel is labeled \code{"unclassified"}.
 #'     Larger values classify more pixels but risk merging visually distinct
 #'     materials; smaller values leave more pixels unclassified. Typical
 #'     values are roughly 10-30.}
@@ -356,7 +356,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'
 #' \code{build_soil_centroids()} takes \code{picks}: a named list with one
 #' element per material class. Each element is a numeric matrix with exactly
-#' 3 columns (R, G, B in 0-255), where every row is one colour sample
+#' 3 columns (R, G, B in 0-255), where every row is one color sample
 #' believed to belong to that class. Classes may have different numbers of
 #' rows. The function converts each matrix to LAB, averages it to a single
 #' centroid, and returns a \code{data.frame} in the same format as
@@ -364,7 +364,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' \code{classify_soil_rgb(centroids = ...)}.
 #'
 #' The simplest approach is to read representative RGB values off your scan
-#' (e.g. using an image viewer's colour picker) and enter them directly:
+#' (e.g. using an image viewer's color picker) and enter them directly:
 #' \preformatted{
 #' picks <- list(
 #'   dark_soil = matrix(c( 28,  22,  18,
@@ -494,7 +494,7 @@ classify_soil_rgb <- function(img,
   terra::values(class_map) <- labels_full
   names(class_map) <- "class_id"
   
-  # Disaggregate to original resolution (nearest-neighbour, no interpolation)
+  # Disaggregate to original resolution (nearest-neighbor, no interpolation)
   if (!is.null(img_orig)) {
     msg("Disaggregating to original resolution...")
     class_map <- terra::disagg(class_map, fact = downsample_fact, method = "near")
@@ -607,17 +607,17 @@ classify_soil_rgb <- function(img,
 #' @param color_mode Character. One of \code{"contrast"} (default),
 #'   \code{"vibrant"}, or \code{"centroid"}.
 #'   \describe{
-#'     \item{\code{"contrast"}}{Muted, distinguishable colours defined in
+#'     \item{\code{"contrast"}}{Muted, distinguishable colors defined in
 #'       \code{class_colors}.}
-#'     \item{\code{"vibrant"}}{Saturated, high-contrast colours defined in
+#'     \item{\code{"vibrant"}}{Saturated, high-contrast colors defined in
 #'       \code{vibrant_colors}.}
 #'     \item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
-#'       colour -- useful for sanity-checking centroid values.}
+#'       color -- useful for sanity-checking centroid values.}
 #'   }
-#' @param class_colors Named character vector of hex colours for
+#' @param class_colors Named character vector of hex colors for
 #'   \code{"contrast"} mode. Names must match class names in
 #'   \code{result$centroids}. Defaults to a built-in palette.
-#' @param vibrant_colors Named character vector of hex colours for
+#' @param vibrant_colors Named character vector of hex colors for
 #'   \code{"vibrant"} mode. Same naming requirement. Defaults to a built-in
 #'   palette.
 #' @param save_png File path for PNG output, or \code{NULL} (default) to plot
@@ -710,7 +710,7 @@ plot_soil_classification <- function(result,
                         ifelse(is.na(leg_dist), 0, leg_dist))
   leg_fills  <- unname(pal[leg_ids])
   
-  # Map colours for IDs present in raster
+  # Map colors for IDs present in raster
   map_ids  <- sort(unique(stats::na.omit(terra::values(class_map))))
   map_cols <- unname(pal[as.character(map_ids)])
   
@@ -725,7 +725,7 @@ plot_soil_classification <- function(result,
   
   # Panel 1: class map
   graphics::par(mar = c(2, 2, 3, 0.5))
-  # plot() on a numeric raster with a pre-built colour vector keyed to sorted unique IDs
+  # plot() on a numeric raster with a pre-built color vector keyed to sorted unique IDs
   plot_ids <- sort(unique(stats::na.omit(as.vector(terra::values(class_map)))))
   plot_cols <- unname(pal[as.character(plot_ids)])
   terra::plot(class_map,
@@ -742,7 +742,7 @@ plot_soil_classification <- function(result,
   graphics::legend("center",
                    legend = leg_labels,
                    fill   = leg_fills,
-                   border = "grey70",
+                   border = "gray70",
                    bty    = "n",
                    cex    = 0.80,
                    title  = expression(bold("Class          %area  mean d")),

@@ -29,3 +29,9 @@ Pixels convert as \code{inch = px / dpi} and \code{cm = px * 2.54 / dpi}.
 \code{length} is set to the chosen method; \code{length_poly} and
 \code{length_kimura} are both retained in the same unit.
 }
+\examples{
+\dontrun{
+et <- root_graph_pipeline(skel, mask)
+et_cm <- convert_root_units(et, unit = "cm", dpi = 300)
+}
+}
