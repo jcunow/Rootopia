@@ -199,47 +199,30 @@ slice_rotation <- function(img, n) {
 }
 
 
-#' Mask a scan to a depth and/or rotation zone (zone masking)
+#' Mask a scan to a depth zone (depth zone masking)
 #'
-#' \code{zoning()} performs \emph{zone masking}: it returns the input image with
-#' every pixel \emph{outside} the requested zone set to \code{NA}, keeping the
-#' original grid and extent. This lets you run any per-pixel trait function
-#' (length, diameter, colour, landscape metrics) on a single depth slice without
-#' splitting the raster into separate objects.
+#' \code{depth_zoning()} performs \emph{depth zone masking}: it returns the input
+#' image with every pixel \emph{outside} the requested depth bin(s) set to
+#' \code{NA}, keeping the original grid and extent. This lets you run any
+#' per-pixel trait function (length, diameter, colour, landscape metrics) on a
+#' single depth slice without splitting the raster into separate objects.
 #'
-#' The zone is defined by one or both of:
-#' \itemize{
-#'   \item \strong{depth} (\code{mode = "depth"}): keep only pixels whose binned
-#'     depth (from \code{depth_map}) matches \code{depth}. A single value selects
-#'     the closest available bin; a consecutive sequence selects an inclusive
-#'     range; discrete values select each closest bin.
-#'   \item \strong{rotation} (\code{mode = "rotation"}): crop to a contiguous band
-#'     of circumferential slices. For simply splitting a tube into \code{n} equal
-#'     slices, prefer \code{\link{slice_rotation}}; use the rotation mode here only
-#'     when you need to combine a rotation band with depth masking in one call
-#'     (\code{mode = "both"}).
-#' }
+#' Depth is matched against the binned values in \code{depth_map}: a single value
+#' selects the closest available bin; a consecutive sequence selects an inclusive
+#' range; discrete values select each closest bin.
 #'
-#' Note that depth masking sets out-of-zone pixels to \code{NA} (extent
-#' unchanged), whereas rotation masking \emph{crops} the extent to the selected
-#' band.
+#' To split a tube into circumferential (rotation) slices, use
+#' \code{\link{slice_rotation}} instead.
 #'
 #' @param img A \code{terra::SpatRaster}.
 #' @param depth_map A \code{terra::SpatRaster} of binned depth values (see
-#'   \code{\link{binning}}), aligned to \code{img}. Required for
-#'   \code{mode = "depth"} or \code{"both"}.
-#' @param depth Numeric. Target depth bin(s) to keep. Required for
-#'   \code{mode = "depth"} or \code{"both"}.
+#'   \code{\link{binning}}), aligned to \code{img}.
+#' @param depth Numeric. Target depth bin(s) to keep.
 #' @param select_layer Integer. Optionally return a single layer of the result.
 #' @param crop_extent Numeric length-4 \code{c(xmin, xmax, ymin, ymax)}. Optional
 #'   crop applied before masking.
-#' @param mode One of \code{"rotation"}, \code{"depth"}, or \code{"both"}.
-#' @param rotation_slices Numeric length-2 \code{c(from, to)} band of slices to
-#'   keep (1 = top). Required for \code{mode = "rotation"} or \code{"both"}.
-#' @param rotation_total_slices Numeric. Total number of slices the circumference
-#'   is divided into. Required for \code{mode = "rotation"} or \code{"both"}.
-#' @return A \code{terra::SpatRaster} masked (and/or cropped) to the requested
-#'   zone.
+#' @return A \code{terra::SpatRaster} masked (extent unchanged) to the requested
+#'   depth zone.
 #' @seealso \code{\link{binning}}, \code{\link{slice_rotation}}
 #' @export
 #'
@@ -251,55 +234,26 @@ slice_rotation <- function(img, n) {
 #' depth_bins <- binning(depth_map, nn = 5)
 #' depth_bins <- terra::flip(terra::t(depth_bins))
 #' # Keep only the root layer pixels that fall in the 10 cm depth bin
-#' slice_10cm <- zoning(img[[2]], mode = "depth",
-#'                      depth_map = depth_bins, depth = 10)
-zoning <- function(
+#' slice_10cm <- depth_zoning(img[[2]], depth_map = depth_bins, depth = 10)
+depth_zoning <- function(
     img,
-    depth_map = NULL,
-    depth = NULL,
+    depth_map,
+    depth,
     select_layer = NULL,
-    crop_extent = NULL,
-    mode = c("rotation", "depth", "both"),
-    rotation_slices = NULL,
-    rotation_total_slices = NULL
+    crop_extent = NULL
 ) {
-  mode <- match.arg(mode)
-
   if (!inherits(img, "SpatRaster")) {
     stop("img must be a terra::SpatRaster object.")
   }
-
-  # Validate mode-specific requirements
-  if (mode %in% c("depth", "both") && is.null(depth_map)) {
-    stop("depth_map must be supplied for mode = 'depth' or 'both'.")
-  }
-  if (mode %in% c("depth", "both") && is.null(depth)) {
-    stop("depth must be supplied for mode = 'depth' or 'both'.")
-  }
-
-  if (mode %in% c("rotation", "both")) {
-    if (is.null(rotation_slices) || length(rotation_slices) != 2) {
-      stop("rotation_slices must be numeric vector length 2 for mode 'rotation' or 'both'")
-    }
-    if (is.null(rotation_total_slices) || length(rotation_total_slices) != 1 || rotation_total_slices < 1) {
-      stop("rotation_total_slices must be positive numeric scalar for mode 'rotation' or 'both'")
-    }
-    if (rotation_slices[1] >= rotation_slices[2]) {
-      stop("rotation_slices must have increasing values: rotation_slices[1] < rotation_slices[2]")
-    }
-    if (any(rotation_slices > rotation_total_slices)) {
-      stop("Values in rotation_slices cannot be greater than rotation_total_slices")
-    }
-  }
+  if (missing(depth_map) || is.null(depth_map)) stop("depth_map must be supplied.")
+  if (missing(depth) || is.null(depth)) stop("depth must be supplied.")
 
   # Validate spatial compatibility between img and depth_map
-  if (!is.null(depth_map)) {
-    if (!inherits(depth_map, "SpatRaster")) {
-      stop("depth_map must be a terra::SpatRaster object.")
-    }
-    if (!terra::compareGeom(img, depth_map, stopOnError = FALSE)) {
-      stop("img and depth_map must have compatible spatial properties (extent, resolution, CRS).")
-    }
+  if (!inherits(depth_map, "SpatRaster")) {
+    stop("depth_map must be a terra::SpatRaster object.")
+  }
+  if (!terra::compareGeom(img, depth_map, stopOnError = FALSE)) {
+    stop("img and depth_map must have compatible spatial properties (extent, resolution, CRS).")
   }
 
   # Resolve requested depth value(s) to the closest available bin(s)
@@ -330,7 +284,7 @@ zoning <- function(
 
   original_depth_map <- depth_map
 
-  # --- Optional crop first, for all modes ---
+  # --- Optional crop first ---
   if (!is.null(crop_extent)) {
     if (length(crop_extent) != 4) {
       stop("crop_extent must be c(xmin, xmax, ymin, ymax)")
@@ -340,66 +294,41 @@ zoning <- function(
     }
     ext <- terra::ext(crop_extent[1], crop_extent[2], crop_extent[3], crop_extent[4])
 
-    if (mode %in% c("depth", "both") && !is.null(depth_map)) {
-      depth_vals_vec_original <- terra::values(original_depth_map, mat = FALSE)
-      available_original <- sort(unique(depth_vals_vec_original[!is.na(depth_vals_vec_original)]))
-      target_depths <- depth_range_from_input(depth, available_original)
+    depth_vals_vec_original <- terra::values(original_depth_map, mat = FALSE)
+    available_original <- sort(unique(depth_vals_vec_original[!is.na(depth_vals_vec_original)]))
+    target_depths <- depth_range_from_input(depth, available_original)
 
-      depth_map_cropped <- terra::crop(depth_map, ext)
-      depth_vals_vec_cropped <- terra::values(depth_map_cropped, mat = FALSE)
-      available_cropped <- sort(unique(depth_vals_vec_cropped[!is.na(depth_vals_vec_cropped)]))
+    depth_map_cropped <- terra::crop(depth_map, ext)
+    depth_vals_vec_cropped <- terra::values(depth_map_cropped, mat = FALSE)
+    available_cropped <- sort(unique(depth_vals_vec_cropped[!is.na(depth_vals_vec_cropped)]))
 
-      lost_depths <- setdiff(target_depths, available_cropped)
-      if (length(lost_depths) > 0) {
-        warning(sprintf("Cropping will remove pixels with desired depth values: %s. Consider adjusting crop_extent or depth parameters.",
-                        paste(lost_depths, collapse = ", ")))
-      }
-      depth_map <- depth_map_cropped
+    lost_depths <- setdiff(target_depths, available_cropped)
+    if (length(lost_depths) > 0) {
+      warning(sprintf("Cropping will remove pixels with desired depth values: %s. Consider adjusting crop_extent or depth parameters.",
+                      paste(lost_depths, collapse = ", ")))
     }
+    depth_map <- depth_map_cropped
     img <- terra::crop(img, ext)
   }
 
   # --- Depth zone masking: NA outside the selected bin(s), extent unchanged ---
-  if (mode %in% c("depth", "both")) {
-    depth_vals_vec <- terra::values(depth_map, mat = FALSE)
-    available <- sort(unique(depth_vals_vec[!is.na(depth_vals_vec)]))
-    depth_vals <- depth_range_from_input(depth, available)
+  depth_vals_vec <- terra::values(depth_map, mat = FALSE)
+  available <- sort(unique(depth_vals_vec[!is.na(depth_vals_vec)]))
+  depth_vals <- depth_range_from_input(depth, available)
 
-    if (length(depth_vals) == 0) {
-      stop("No matching depths found in depth_map for the provided depth argument.")
-    }
-
-    if (length(depth_vals) == 1) {
-      mask_condition <- depth_map == depth_vals[1]
-    } else {
-      mask_condition <- depth_map == depth_vals[1]
-      for (i in 2:length(depth_vals)) {
-        mask_condition <- mask_condition | (depth_map == depth_vals[i])
-      }
-    }
-    img <- terra::ifel(mask_condition, img, NA)
+  if (length(depth_vals) == 0) {
+    stop("No matching depths found in depth_map for the provided depth argument.")
   }
 
-  # --- Rotation zone masking: crop to a contiguous band of slices ---
-  if (mode %in% c("rotation", "both")) {
-    img_dims <- dim(img)
-    total_rows <- img_dims[1]
-
-    slice_start <- floor((rotation_slices[1] - 1) * total_rows / rotation_total_slices) + 1
-    slice_end <- ceiling(rotation_slices[2] * total_rows / rotation_total_slices)
-    slice_start <- max(1, slice_start)
-    slice_end <- min(total_rows, slice_end)
-
-    x_res <- terra::res(img)[1]
-    img_extent <- terra::ext(img)
-
-    x_min_coord <- img_extent[1] + (slice_start - 1) * x_res
-    x_max_coord <- img_extent[1] + slice_end * x_res
-
-    rotation_crop_extent <- terra::ext(x_min_coord, x_max_coord,
-                                       img_extent[3], img_extent[4])
-    img <- terra::crop(img, rotation_crop_extent)
+  if (length(depth_vals) == 1) {
+    mask_condition <- depth_map == depth_vals[1]
+  } else {
+    mask_condition <- depth_map == depth_vals[1]
+    for (i in 2:length(depth_vals)) {
+      mask_condition <- mask_condition | (depth_map == depth_vals[i])
+    }
   }
+  img <- terra::ifel(mask_condition, img, NA)
 
   if (!is.null(select_layer)) {
     if (!is.numeric(select_layer) || length(select_layer) != 1 || select_layer < 1) {
@@ -412,7 +341,7 @@ zoning <- function(
   }
 
   if (all(is.na(terra::values(img, mat = FALSE)))) {
-    warning("Resulting image contains only NA values. Check your depth, rotation, or crop parameters.")
+    warning("Resulting image contains only NA values. Check your depth or crop parameters.")
   }
 
   return(img)

@@ -1006,6 +1006,9 @@ branch_order_map <- function(skel = NULL, mask = NULL, order = c("branch_order",
 #' @export
 order_metrics <- function(x, order_col = NULL, focal = NULL) {
   et <- if (inherits(x, "branchOrderMap")) x$edges else x
+  # An empty pipeline (e.g. an image with no roots) yields NULL / 0-row edges;
+  # return an empty summary rather than erroring on the missing order column.
+  if (is.null(et) || nrow(et) == 0L) return(data.frame())
   if (is.null(order_col))
     order_col <- if (inherits(x, "branchOrderMap")) x$order else "branch_order"
   if (!order_col %in% names(et)) stop(sprintf("'%s' is not a column of the edge table.", order_col))

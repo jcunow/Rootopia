@@ -1,0 +1,15 @@
+diff --git a/R/flexible_inputs.R b/R/flexible_inputs.R
+index 94ca3a0..f16cffc 100644
+--- a/R/flexible_inputs.R
++++ b/R/flexible_inputs.R
+@@ -147,7 +147,9 @@ load_flexible_image <- function(input, output_format = "cimg",
+     if (ext %in% c("tif", "tiff")) {
+       arr <- as.array(tiff::readTIFF(input))  # 3D array
+     } else {
+-      arr <- as.array(imager::load.image(input))  # 4D array
++      # imager loads as 4D (x, y, depth, channel); drop the depth axis so the
++      # result is a 2D (grayscale) or 3D (RGB) array, matching the cimg branch.
++      arr <- as.array(imager::load.image(input))[, , 1, ]
+     }
+   }
+   else if (inherits(input,"matrix")) {

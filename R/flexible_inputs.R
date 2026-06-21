@@ -161,7 +161,9 @@ load_flexible_image <- function(input, output_format = "cimg",
     if (ext %in% c("tif", "tiff")) {
       arr <- as.array(tiff::readTIFF(input))  # 3D array
     } else {
-      arr <- as.array(imager::load.image(input))  # 4D array
+      # imager loads as 4D (x, y, depth, channel); drop the depth axis so the
+      # result is a 2D (grayscale) or 3D (RGB) array, matching the cimg branch.
+      arr <- as.array(imager::load.image(input))[, , 1, ]
     }
   }
   else if (inherits(input,"matrix")) {
