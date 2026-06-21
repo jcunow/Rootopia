@@ -53,7 +53,7 @@ overlaid in a separate class - saved using base R PNG plotting
 
 ``` r
 library(terra)
-#> terra 1.9.27
+#> terra 1.9.34
 
 # Load example binary segmentation
 data(seg_Oulanka2023_Session01_T067)
