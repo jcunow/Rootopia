@@ -132,8 +132,5 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
   }, error = function(e) {
     # Provide informative error message
     stop(paste("Error in create.depthmap:", e$message))
-  }, warning = function(w) {
-    # Convert certain warnings to messages
-    message(paste("Warning in create.depthmap:", w$message))
   })
 }

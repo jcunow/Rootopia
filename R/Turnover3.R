@@ -115,8 +115,6 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 
   }, error = function(e) {
     stop(paste("Error in Turnover.TC:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in Turnover.TC:", w$message))
   })
 }
 
@@ -274,8 +272,6 @@ turnover_dpc = function(img, product.layer=2, decay.layer=1, blur.capture=0.95,
 
   }, error = function(e) {
     stop(paste("Error in Turnover.DPC:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in Turnover.DPC:", w$message))
   })
 }
 

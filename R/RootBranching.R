@@ -788,11 +788,6 @@ order_classification_map <- function(et, template, value = "branch_order") {
 
 #' Per-order summary of length and diameter
 #'
-#' @param et An \code{edges} table (ideally already in real units via
-#'   \code{\link{convert_root_units}} or \code{\link{branch_order_map}}).
-#' @param order_col Which order column to group by.
-#' Per-order summary of root architecture
-#'
 #' Aggregates the per-segment edge table into one row per order class. All
 #' lengths and diameters are in the unit of \code{et} (see
 #' \code{\link{convert_root_units}}); counts are integers.
@@ -817,31 +812,27 @@ order_classification_map <- function(et, template, value = "branch_order") {
 #'   Unordered (NA) segments are excluded and counted in \code{attr(., "n_unordered")}.
 #' @export
 summarize_orders <- function(et, order_col = "branch_order") {
-  o <- et[[order_col]]; keep <- !is.na(o)
-  o <- o[keep]; len <- et$length[keep]
-  md <- et$mean_diameter[keep]; mdn <- et$median_diameter[keep]
-  ntip <- if (!is.null(et$n_tips)) et$n_tips[keep] else rep(NA_integer_, length(o))
-  nbp  <- if (!is.null(et$n_branch_points)) et$n_branch_points[keep] else rep(NA_integer_, length(o))
-  if (length(o) == 0L) return(data.frame())
-  lv <- sort(unique(o)); k <- as.character(lv)
-  tot  <- as.numeric(tapply(len, o, sum)[k])
-  wdia <- vapply(lv, function(g) { ix <- o == g; w <- len[ix]
-  if (sum(w) > 0) sum(md[ix] * w) / sum(w) else mean(md[ix]) }, numeric(1))
-  ntips <- as.integer(tapply(ntip, o, sum)[k]); nbps <- as.integer(tapply(nbp, o, sum)[k])
-  out <- data.frame(
-    order               = as.integer(lv),
-    n_segments          = as.integer(tapply(len, o, length)[k]),
-    n_tips              = ntips,
-    n_branch_points     = nbps,
-    total_length        = tot,
-    mean_segment_length = as.numeric(tapply(len, o, mean)[k]),
-    branching_frequency = nbps / tot,
-    mean_diameter       = wdia,
-    median_diameter     = as.numeric(tapply(mdn, o, stats::median)[k]),
-    row.names = NULL
-  )
-  attr(out, "order_col")    <- order_col
-  attr(out, "n_unordered")  <- sum(!keep)
+  # Thin wrapper over order_metrics() (focal = NULL) so the per-order
+  # aggregation lives in one place. The columns are reshaped back to this
+  # function's historical contract: a leading integer `order` column and no
+  # `length_fraction` (which order_metrics adds).
+  if (is.null(et)) return(data.frame())
+  out <- order_metrics(et, order_col = order_col, focal = NULL)
+  if (nrow(out) == 0L) return(out)
+
+  n_unordered <- attr(out, "n_unordered")
+  out$length_fraction <- NULL
+  names(out)[1] <- "order"
+  out$order           <- as.integer(out$order)
+  out$n_segments      <- as.integer(out$n_segments)
+  out$n_tips          <- as.integer(out$n_tips)
+  out$n_branch_points <- as.integer(out$n_branch_points)
+  out <- out[, c("order", "n_segments", "n_tips", "n_branch_points",
+                 "total_length", "mean_segment_length", "branching_frequency",
+                 "mean_diameter", "median_diameter")]
+  rownames(out) <- NULL
+  attr(out, "order_col")   <- order_col
+  attr(out, "n_unordered") <- n_unordered
   out
 }
 

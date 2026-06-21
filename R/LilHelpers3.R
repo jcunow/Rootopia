@@ -630,7 +630,6 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
           mx.roots <- max(cs, na.rm = TRUE)
           if (mx.roots == 0) {
             warning(sprintf("Zero maximum value in group %s", grp))
-            cs <- cs
           } else {
             cs <- cs / mx.roots
           }
@@ -638,7 +637,6 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
           sm.roots <- sum(cs, na.rm = TRUE)
           if (sm.roots == 0) {
             warning(sprintf("Zero sum in group %s", grp))
-            cs <- cs
           } else {
             cs <- cs / sm.roots
           }

@@ -139,6 +139,20 @@ load_flexible_image <- function(input, output_format = "cimg",
     return(input)   # already in the requested form
   }
 
+  # Normalise the requested output format to a canonical token, so we accept any
+  # capitalisation and the common aliases without repeating long spelling lists.
+  # Unknown values fall through unchanged and hit the error branch below.
+  ofmt <- switch(tolower(output_format),
+    spatraster = , spatrast      = "spatraster",
+    rasterbrick = , raster = , brick = "rasterbrick",
+    rasterlayer = , layer        = "rasterlayer",
+    array  = "array",
+    matrix = "matrix",
+    cimg   = "cimg",
+    `magick-image` = , magick    = "magick-image",
+    tolower(output_format)
+  )
+
   arr <- NULL
 
   # Handle file input (image or raster)
@@ -174,16 +188,16 @@ load_flexible_image <- function(input, output_format = "cimg",
   dims <- dim(arr)
 
   # special case #1 for RasterLayer
-  if (output_format == "RasterLayer" && is.null(select.layer)) {
+  if (ofmt == "rasterlayer" && is.null(select.layer)) {
     if(length(dim(arr)) > 2) {
       warning("select.layer must be specified if output_format is 'RasterLayer'. Default to layer 1." )
       select.layer = 1
     }}
 
    # special case #2 for RasterLayer to RasterBrick conversion
-   if(inherits(input,"RasterLayer") && output_format == "RasterBrick" ) {
+   if(inherits(input,"RasterLayer") && ofmt == "rasterbrick" ) {
      # not possible, will force output format (raster::brick does it by default)
-     output_format  <- "RasterLayer"
+     ofmt  <- "rasterlayer"
      warning("RasterLayer to RasterBrick not possible. Changed output_format to RasterLayer")
      select.layer = 1
    }
@@ -200,64 +214,35 @@ load_flexible_image <- function(input, output_format = "cimg",
 
   ## Return based on desired output format
   # Overwrite 3D matrix choice
-  if((output_format == "matrix" || 
-      output_format == "Matrix" ||
-      output_format == "MATRIX") && dims[3] > 1 ){
+  if (ofmt == "matrix" && dims[3] > 1) {
     warning("You cannot convert a 3D image to 2D matrix. An array is returned instead. Consider specifying 'select.layer' if you want to return a matrix.")
-    output_format = "array"
+    ofmt = "array"
   }
-  
+
   # flexible output  conversion
-  if (output_format == "SpatRaster" ||
-      output_format == "spatraster" ||
-      output_format == "spatrast" ||
-      output_format == "SpatRast"||
-      output_format == "SPATRASTER" ||
-      output_format == "SPATRAST" ) {
+  if (ofmt == "spatraster") {
     r <- terra::rast(arr)
     # Register RGB(A) channel metadata so terra::plotRGB() works on 3/4-band
     # outputs without a separate terra::RGB(r) <- ... call by the caller.
     if (terra::nlyr(r) %in% c(3L, 4L)) terra::RGB(r) <- seq_len(terra::nlyr(r))
     return(r)
   }
-  else if (output_format == "RasterBrick" ||
-           output_format == "rasterbrick" ||
-           output_format == "raster" ||
-           output_format == "brick" ||
-           output_format == "BRICK" ||
-           output_format == "RASTERBRICK") {
+  else if (ofmt == "rasterbrick") {
     return(raster::brick(terra::rast(arr)))
   }
-  else if (output_format == "RasterLayer" ||
-           output_format == "rasterlayer" ||
-           output_format == "RASTERLAYER" ||
-           output_format == "layer" ||
-           output_format == "LAYER") {
+  else if (ofmt == "rasterlayer") {
     return(raster::raster(arr))
   }
-  
-    
-  else if (output_format == "array" ||
-           output_format == "Array" ||
-           output_format == "ARRAY") {
+  else if (ofmt == "array") {
     array(arr,dim = dims)
   }
-  else if (output_format == "matrix" ||
-           output_format == "Matrix" ||
-           output_format == "MATRIX") {
+  else if (ofmt == "matrix") {
     return(matrix(arr, dims))
   }
-  else if (output_format == "cimg" ||
-           output_format == "Cimg" ||
-           output_format == "CIMG") {
+  else if (ofmt == "cimg") {
     return(suppressWarnings(imager::as.cimg(arr)))
   }
-  else if(output_format == "magick-image" ||
-          output_format == "magick" ||
-          output_format == "Magick" ||
-          output_format == "Magick-Image" ||
-          output_format == "MAGICK" ||
-          output_format == "MAGICK-IMAGE" ){
+  else if (ofmt == "magick-image") {
     return(imager::cimg2magick(suppressWarnings(imager::as.cimg(arr))))
   }
   else {

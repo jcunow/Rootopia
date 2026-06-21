@@ -561,8 +561,6 @@ estimate_soil_surface = function(img, search.area=0.45, tape.tresh=0.33, dpi=150
 
   }, error = function(e) {
     stop(paste("Error in SoilSurfE:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in SoilSurfE:", w$message))
   })
 }
 

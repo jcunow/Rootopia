@@ -189,14 +189,8 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
       px   = 1
     )
 
-    # outpur unit conversion
-    if(unit == "cm") {
-      DsSKL = DsSKL / (dpi / 2.54)
-    }else if(unit == "inch"){
-      DsSKL = DsSKL / (dpi)
-    }else if(unit == "px"){
-      DsSKL = DsSKL
-    }
+    # output unit conversion (same per-pixel factor used for volume/surface below)
+    DsSKL <- DsSKL * px_to_unit
 
 
     # Compute statistics with validation
@@ -249,9 +243,6 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton.img = NULL, se
   }, error = function(e) {
     # Main error handler
     stop(sprintf("Error in root.diameters: %s", e$message))
-  }, warning = function(w) {
-    # Warning handler
-    warning(sprintf("Warning in root.diameters: %s", w$message))
   })
 }
 

@@ -178,7 +178,5 @@ deep_drive <- function(DepthMap,
     
   }, error = function(e) {
     stop(paste("Error in main function:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in main function:", w$message))
   })
 }

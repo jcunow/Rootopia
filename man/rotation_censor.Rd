@@ -22,8 +22,7 @@ rotation_censor(
 (in fixed mode), given in one of three forms:
 \itemize{
   \item \strong{Absolute row} - a number \code{> 1}: the exact row to
-    centre on (e.g. from \code{estimate_rotation_center()}). Original
-    behaviour, unchanged.
+    centre on (e.g. from \code{estimate_rotation_center()}). 
   \item \strong{Fraction} - a number in \code{[0, 1]}: a fraction of the
     image height. \code{0} = top, \code{0.25} = a quarter down,
     \code{0.5} = middle, \code{1} = bottom (so the centre row is
@@ -31,7 +30,7 @@ rotation_censor(
   \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
     \code{"center"} / \code{"centre"} (= 0.5), or \code{"bottom"} (= 1).
 }
-The default \code{0} centres on the top row, matching previous behaviour.
+The default \code{0} centres on the top row.
 When \code{fixed.rotation = FALSE} the resolved value is used as the
 rotation shift in rows to trim (e.g. from
 \code{estimate_rotation_shift()}); pass an absolute number there.}

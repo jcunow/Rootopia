@@ -79,8 +79,6 @@ create_root_buffer = function(img, width=2, halo.only=TRUE, kernel="circle") {
     
   }, error = function(e) {
     stop(paste("Error in Halo:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in Halo:", w$message))
   })
 }
 
@@ -160,8 +158,6 @@ binning = function(depthmap, nn, round.option="rounding") {
     
   }, error = function(e) {
     stop(paste("Error in binning:", e$message))
-  }, warning = function(w) {
-    warning(paste("Warning in binning:", w$message))
   })
 }
 

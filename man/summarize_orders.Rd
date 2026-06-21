@@ -30,5 +30,7 @@ A data.frame with one row per order:
   Unordered (NA) segments are excluded and counted in \code{attr(., "n_unordered")}.
 }
 \description{
-Per-order summary of length and diameter
+Aggregates the per-segment edge table into one row per order class. All
+lengths and diameters are in the unit of \code{et} (see
+\code{\link{convert_root_units}}); counts are integers.
 }
