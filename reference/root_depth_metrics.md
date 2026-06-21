@@ -1,7 +1,7 @@
 # Compute root traits over a depth profile from segmented (mini)rhizotron images
 
 Processes a set of segmented rhizotron or minirhizotron images and
-returns a tidy data frame of root traits summarised per depth interval.
+returns a tidy data frame of root traits summarized per depth interval.
 Supports both cylindrical tube geometry (minirhizotrons) and flat window
 geometry (rhizotron panels).
 
@@ -14,9 +14,9 @@ be loaded it is dropped and listed in a warning at the end.
 
 ``` r
 root_depth_metrics(
-  path.seg,
-  path.skl = NULL,
-  path.rgb = NULL,
+  path_seg,
+  path_skl = NULL,
+  path_rgb = NULL,
   seg_file_index = NULL,
   skl_file_index = NULL,
   rgb_file_index = NULL,
@@ -49,39 +49,39 @@ root_depth_metrics(
 
 ## Arguments
 
-- path.seg:
+- path_seg:
 
   Character. Path to directory of binary segmented images
   (foreground/root pixel = 1, background = 0).
 
-- path.skl:
+- path_skl:
 
   Character or `NULL`. Path to directory of skeletonised images
-  (one-pixel-wide centrelines of roots), used for length, diameter,
+  (one-pixel-wide centerlines of roots), used for length, diameter,
   angle, and branching-order metrics. If `NULL` or a file is missing,
   the skeleton is computed internally via
   [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
   Default `NULL`.
 
-- path.rgb:
+- path_rgb:
 
   Character or `NULL`. Path to directory of blended RGB images, aligned
-  to the segmented images. Required for colour metrics. Default `NULL`.
+  to the segmented images. Required for color metrics. Default `NULL`.
 
 - seg_file_index:
 
   Integer vector or `NULL`. Optional subset index applied to
-  `list.files(path.seg)`, e.g. `37:72`. Default `NULL` (use all files).
+  `list.files(path_seg)`, e.g. `37:72`. Default `NULL` (use all files).
 
 - skl_file_index:
 
   Integer vector or `NULL`. Optional subset index applied to
-  `list.files(path.skl)`. Default `NULL`.
+  `list.files(path_skl)`. Default `NULL`.
 
 - rgb_file_index:
 
   Integer vector or `NULL`. Optional subset index applied to
-  `list.files(path.rgb)`. Default `NULL`.
+  `list.files(path_rgb)`. Default `NULL`.
 
 - insertion_angles:
 
@@ -119,7 +119,7 @@ root_depth_metrics(
   Numeric. Inner diameter of the minirhizotron tube in **centimetres**.
   Passed to
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  as `tube.thicc`. Its role in flat-window geometry
+  as `tube_thicc`. Its role in flat-window geometry
   (`flat_geometry = TRUE`) is uncertain; it likely has a default inside
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
   and may be ignored – leave at the default unless you know it matters
@@ -173,7 +173,7 @@ root_depth_metrics(
 
   Logical. Compute patch-level landscape metrics per depth bin via
   [`root_scape_metrics()`](https://jcunow.github.io/Rootopia/reference/root_scape_metrics.md):
-  nearest-neighbour distance (`enn_mn`), joint entropy (`joinent`),
+  nearest-neighbor distance (`enn_mn`), joint entropy (`joinent`),
   relative mutual information (`relmutinf`), number of patches (`np`),
   and contagion (`contag`). **Slow**: one call per depth bin per image.
   Default `FALSE`.
@@ -184,7 +184,7 @@ root_depth_metrics(
   saturation, luminosity, and raw RGB channel means separately for root
   pixels and background pixels via
   [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md).
-  Requires `path.rgb`. Default `FALSE`.
+  Requires `path_rgb`. Default `FALSE`.
 
 - calc_root_angles:
 
@@ -199,7 +199,7 @@ root_depth_metrics(
 
   Logical. Build a per-image branching-order graph via
   [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
-  and summarise it both per depth bin and per tube. Adds
+  and summarize it both per depth bin and per tube. Adds
   `mean.branch_order`, `max.branch_order`, `mean.root_order`, and
   `lateral_root_fraction` per depth bin, plus tube-level `main_root.*` /
   `lateral_roots.*` columns (length, diameter, branching frequency,
@@ -303,20 +303,20 @@ those directories if necessary.
 
 ## Which paths are required for which metrics
 
-- `path.seg`:
+- `path_seg`:
 
   Always required.
 
-- `path.skl`:
+- `path_skl`:
 
   Optional. Used by `calc_root_length`, `calc_diameter_stats`,
   `calc_diameter_quantiles`, `calc_root_angles`, and
-  `calc_root_order_metrics` when supplied. If `path.skl` is `NULL` or a
+  `calc_root_order_metrics` when supplied. If `path_skl` is `NULL` or a
   skeleton file is missing for an image, the skeleton is computed
   internally from the segmented image via
   [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
 
-- `path.rgb`:
+- `path_rgb`:
 
   Required when `calc_color_metrics` is `TRUE`.
 
@@ -331,17 +331,17 @@ all images) or a vector of length equal to the number of images.
 if (FALSE) { # \dontrun{
 # Minimal -- fast default metrics only
 result <- root_depth_metrics(
-  path.seg         = "scans/segmented/2022_02/",
-  path.skl         = "scans/skeleton/2022_02/",
+  path_seg         = "scans/segmented/2022_02/",
+  path_skl         = "scans/skeleton/2022_02/",
   insertion_angles = tube_meta$angle,
   session          = "2022_02"
 )
 
 # With diameter quantiles and root angle metrics
 result <- root_depth_metrics(
-  path.seg                = "scans/segmented/2022_02/",
-  path.skl                = "scans/skeleton/2022_02/",
-  path.rgb                = "scans/blended/2022_02/",
+  path_seg                = "scans/segmented/2022_02/",
+  path_skl                = "scans/skeleton/2022_02/",
+  path_rgb                = "scans/blended/2022_02/",
   rgb_file_index          = 37:72,
   insertion_angles        = tube_meta$angle,
   soil_starts             = tube_meta$soil_row,
@@ -356,8 +356,8 @@ result <- root_depth_metrics(
 
 # Flat rhizotron window (no sinusoidal tube correction)
 result <- root_depth_metrics(
-  path.seg      = "scans/segmented/rhizotron_A/",
-  path.skl      = "scans/skeleton/rhizotron_A/",
+  path_seg      = "scans/segmented/rhizotron_A/",
+  path_skl      = "scans/skeleton/rhizotron_A/",
   flat_geometry = TRUE
 )
 } # }

@@ -8,16 +8,16 @@ image.
 ``` r
 estimate_soil_surface(
   img,
-  search.area = 0.45,
-  tape.tresh = 0.33,
+  search_area = 0.45,
+  tape_thresh = 0.33,
   dpi = 150,
   nclasses = 3,
   inverse = FALSE,
-  tape.overlap = 0.5,
-  tape.brightness = 0.6,
-  extra.rows = 100,
-  tape.quantile = 0.98,
-  select.layer = NULL
+  tape_overlap = 0.5,
+  tape_brightness = 0.6,
+  extra_rows = 100,
+  tape_quantile = 0.98,
+  select_layer = NULL
 )
 ```
 
@@ -27,11 +27,11 @@ estimate_soil_surface(
 
   Input image (raster, filename, or array)
 
-- search.area:
+- search_area:
 
   Proportion of image to analyze
 
-- tape.tresh:
+- tape_thresh:
 
   Minimum tape coverage ratio
 
@@ -47,23 +47,23 @@ estimate_soil_surface(
 
   Invert detection for dark markers
 
-- tape.overlap:
+- tape_overlap:
 
   Safety margin for tape (cm)
 
-- tape.brightness:
+- tape_brightness:
 
   Brightness threshold for tape
 
-- extra.rows:
+- extra_rows:
 
   Additional analysis rows
 
-- tape.quantile:
+- tape_quantile:
 
   Brightness alignment quantile
 
-- select.layer:
+- select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
   image. Default is \`NULL\`.

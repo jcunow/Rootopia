@@ -30,3 +30,13 @@ order_classification_map(et, template, value = "branch_order")
 
 A `SpatRaster` (or matrix) of `value` per root pixel, `NA` elsewhere,
 aligned to `template`.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")
+cmap <- order_classification_map(res$edges, template = skel,
+                                 value = "branch_order")
+} # }
+```

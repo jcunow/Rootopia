@@ -63,7 +63,7 @@ branch_order_map(
 
 - overlay_png:
 
-  Optional path; writes the order-coloured validation PNG.
+  Optional path; writes the order-colored validation PNG.
 
 - return_map:
 

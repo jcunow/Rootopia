@@ -5,7 +5,7 @@ Create a buffer halo) around non-zero pixels
 ## Usage
 
 ``` r
-create_root_buffer(img, width = 2, halo.only = TRUE, kernel = "circle")
+create_root_buffer(img, width = 2, halo_only = TRUE, kernel = "circle")
 ```
 
 ## Arguments
@@ -18,7 +18,7 @@ create_root_buffer(img, width = 2, halo.only = TRUE, kernel = "circle")
 
   numeric - buffer width in pixels (default: 2)
 
-- halo.only:
+- halo_only:
 
   logical - if TRUE, returns only the buffer zone (default: TRUE)
 

@@ -11,8 +11,8 @@ to a binary image before processing.
 root_diameter(
   img,
   skeleton_method = "MAT",
-  skeleton.img = NULL,
-  select.layer = NULL,
+  skeleton_img = NULL,
+  select_layer = NULL,
   diagnostics = FALSE,
   unit = "cm",
   dpi = 300
@@ -33,13 +33,13 @@ root_diameter(
   LUT-based Zhang-Suen thinning. Kept for backward compatibility. Will
   be skipped if skeleton \`SpatRaster\` is provided.
 
-- skeleton.img:
+- skeleton_img:
 
   A character string (file path), \`SpatRaster\`, \`RasterBrick\`,
   \`RasterLayer\`, \`cimg\`, \`magick-image\`, or array. Uses this
   object instead of computing it from scratch.
 
-- select.layer:
+- select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
   image. Default is \`2\`.
@@ -120,7 +120,7 @@ raster operations and the \`imager\` package for image processing.
 # Example usage:
 data(seg_Oulanka2023_Session01_T067)
 result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
-  skeleton_method = "MAT", select.layer = 2, unit = "px",
+  skeleton_method = "MAT", select_layer = 2, unit = "px",
   diagnostics = TRUE)
 #> Processing complete. Summary statistics:
 #> Mean diameter: 2.23

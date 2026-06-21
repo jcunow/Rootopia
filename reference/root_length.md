@@ -10,7 +10,7 @@ root_length(
   img,
   unit = "cm",
   dpi = 300,
-  select.layer = NULL,
+  select_layer = NULL,
   method = c("kimura2", "kimura1", "freeman_basic", "freeman_corrected"),
   show_messages = TRUE,
   skeletonize = FALSE
@@ -33,7 +33,7 @@ root_length(
   Numeric. Scan resolution (dots per inch); required for cm/inch
   conversion.
 
-- select.layer:
+- select_layer:
 
   Numeric. Which layer to select if `img` has multiple layers.
 

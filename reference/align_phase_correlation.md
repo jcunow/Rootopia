@@ -47,7 +47,7 @@ align_phase_correlation(
 
 Named numeric vector `c(dx, dy, peak)`: `dx` horizontal placement shift
 (`overlap = edge_width - dx`), `dy` vertical shift (pixels) and `peak`
-the normalised correlation peak height.
+the normalized correlation peak height.
 
 ## Details
 

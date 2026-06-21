@@ -75,7 +75,7 @@ order, and summarise root architecture by order class.
 - [`prune_terminal_segments()`](https://jcunow.github.io/Rootopia/reference/prune_terminal_segments.md)
   : Prune short or thin terminal segments
 - [`render_order_overlay()`](https://jcunow.github.io/Rootopia/reference/render_order_overlay.md)
-  : Write an order-coloured validation overlay (PNG)
+  : Write an order-colored validation overlay (PNG)
 - [`plot_order_window()`](https://jcunow.github.io/Rootopia/reference/plot_order_window.md)
   : Native-resolution validation of a sub-window
 
@@ -96,8 +96,8 @@ geometry.
   : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
 - [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md)
   : Bin continuous depth values into discrete intervals
-- [`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md) :
-  Mask a scan to a depth and/or rotation zone (zone masking)
+- [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
+  : Mask a scan to a depth zone (depth zone masking)
 - [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md)
   : Estimate soil surface position using tape markers
 - [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
@@ -118,7 +118,7 @@ Colour metrics, soil classification, and texture analysis.
 - [`classify_soil_rgb()`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md)
   : Classify soil material classes from a minirhizotron RGB raster
 - [`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
-  : Build soil class centroids from manual RGB colour picks
+  : Build soil class centroids from manual RGB color picks
 - [`plot_soil_classification()`](https://jcunow.github.io/Rootopia/reference/plot_soil_classification.md)
   : Plot the output of classify_soil_rgb
 

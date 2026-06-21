@@ -40,9 +40,9 @@ Frames are loaded through
 so the **same call works whatever your format**: file paths (`.png`,
 `.jpg/.jpeg`, `.tif/.tiff`, `.bmp`), a `terra` `SpatRaster`, a `raster`
 `RasterLayer`/`RasterBrick`, an `imager` `cimg`, a `magick-image`, or a
-plain `matrix` (grayscale) / `array` (`height x width x channel`).
-Colour and grayscale both work — colour is reduced to luma for the
-alignment step only.
+plain `matrix` (grayscale) / `array` (`height x width x channel`). Color
+and grayscale both work — color is reduced to luma for the alignment
+step only.
 
 ------------------------------------------------------------------------
 
@@ -122,11 +122,11 @@ res <- stitch_root_scans(d, pattern = ".png", edge_width = ov,
                          report = TRUE, verbose = FALSE)
 mosaic <- res$mosaics[["T067"]]
 dim(mosaic)            # reconstructed length
-#> [1]  387 1360    3
+#> [1] 723 926   3
 res$report             # per-join dx, dy, peak (confidence), overlap
-#>   tube step dx dy peak overlap
-#> 1 T067    1  0  0    1     136
-#> 2 T067    2  0  0    1     136
+#>   tube step dx   dy         peak overlap
+#> 1 T067    1 -7 -137 9.802271e-05     143
+#> 2 T067    2 44  179 1.129344e-04      92
 ```
 
 ``` r
@@ -180,9 +180,9 @@ backend, so it errors with a message rather than guessing.
 
 | value | effect | use when |
 |----|----|----|
-| `"none"` | raw luma | well-textured colour scans |
+| `"none"` | raw luma | well-textured color scans |
 | `"center"` | subtract mean | mild offset differences |
-| `"hann"` | demean + Hann window | suppress FFT edge/wrap artefacts |
+| `"hann"` | demean + Hann window | suppress FFT edge/wrap artifacts |
 | `"grad"` / `"grad_norm"` | gradient magnitude | uneven lighting / vignetting, sparse texture |
 | `"norm"` / `"center_norm"` | scale by SD | little effect on phase correlation alone |
 
@@ -190,7 +190,7 @@ backend, so it errors with a message rather than guessing.
 
 | value | effect | use when |
 |----|----|----|
-| `"linear"` | feather (alpha 1-\>0) | colour scans; hides exposure seams |
+| `"linear"` | feather (alpha 1-\>0) | color scans; hides exposure seams |
 | `"overlay"` | second frame on top | hard seam, no averaging |
 | `"overlay_first"` | first frame on top | hard seam, keep frame 1 |
 | `"max"` | per-pixel brighter / union | **segmented / binary masks** |
@@ -200,18 +200,18 @@ For **segmented masks** (root = 1, background = 0) prefer `"max"`:
 feathering *averages*, turning a root pixel into a fractional value
 (e.g. 0.5) and **ghosting thin roots** where alignment is off by a
 pixel. `"max"` keeps any root from either frame and never invents
-in-between values. `blend_width` narrows the linear ramp to a centred
-band to reduce ghosting on colour scans.
+in-between values. `blend_width` narrows the linear ramp to a centered
+band to reduce ghosting on color scans.
 
 #### Cheat-sheet by image type
 
-| Your data | Suggested call |
-|----|----|
-| Colour flatbed / RGB tube frames | `preprocess = "none"`, `blend = "linear"` |
-| Uneven lighting / vignetting | `preprocess = "grad"` (or `"hann"`) |
-| Segmented / binary masks | `blend = "max"`, `preprocess = "none"` |
-| Strips acquired down the tube | `direction = "vertical"` |
-| Low, fixed overlap | `edge_width` ~ 1-2x that overlap |
+| Your data                       | Suggested call                            |
+|---------------------------------|-------------------------------------------|
+| Color flatbed / RGB tube frames | `preprocess = "none"`, `blend = "linear"` |
+| Uneven lighting / vignetting    | `preprocess = "grad"` (or `"hann"`)       |
+| Segmented / binary masks        | `blend = "max"`, `preprocess = "none"`    |
+| Strips acquired down the tube   | `direction = "vertical"`                  |
+| Low, fixed overlap              | `edge_width` ~ 1-2x that overlap          |
 
 Only how you *supply* frames changes with format; the settings behave
 the same.

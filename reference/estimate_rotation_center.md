@@ -8,12 +8,12 @@ coverage, assuming more tape is present on the upper side of the tube.
 ``` r
 estimate_rotation_center(
   img,
-  tape.brightness = 0.66,
-  extra.rows = 100,
-  search.area = 0.45,
-  tape.quantile = 0.98,
+  tape_brightness = 0.66,
+  extra_rows = 100,
+  search_area = 0.45,
+  tape_quantile = 0.98,
   nclasses = 3,
-  select.layer = NULL
+  select_layer = NULL
 )
 ```
 
@@ -23,19 +23,19 @@ estimate_rotation_center(
 
   Input image as raster, file name, or array
 
-- tape.brightness:
+- tape_brightness:
 
   Brightness threshold for tape detection (0-1)
 
-- extra.rows:
+- extra_rows:
 
   Additional rows to add for analysis
 
-- search.area:
+- search_area:
 
   Proportion of image to analyze (0-1)
 
-- tape.quantile:
+- tape_quantile:
 
   Quantile used to align brightness with tape (0-1)
 
@@ -43,7 +43,7 @@ estimate_rotation_center(
 
   Number of classes for pixel clustering
 
-- select.layer:
+- select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
   image. Default is \`NULL\`.

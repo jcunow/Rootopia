@@ -2,8 +2,8 @@
 
 Assigns each pixel of an RGB `SpatRaster` to a class (e.g. dark soil,
 red soil, root, silver tape, coarse debris) by nearest- centroid
-assignment in CIE LAB colour space. Pixels beyond the per-class distance
-threshold are labelled "unclassified".
+assignment in CIE LAB color space. Pixels beyond the per-class distance
+threshold are labeled "unclassified".
 
 ## Usage
 
@@ -43,7 +43,7 @@ classify_soil_rgb(
   Integer spatial aggregation factor applied before classification for
   speed. `NULL` (default) uses full resolution. The output map is always
   disaggregated back to match the input resolution and extent exactly
-  (nearest-neighbour, no interpolation).
+  (nearest-neighbor, no interpolation).
 
 - compute_metrics:
 
@@ -72,7 +72,7 @@ A named list with elements:
 
   A `data.frame` with per-class pixel counts, area fractions (%), LAB
   and RGB means and SDs, mean distance to centroid, and the actual mean
-  colour rendered as hex. `NULL` if `compute_metrics = FALSE`.
+  color rendered as hex. `NULL` if `compute_metrics = FALSE`.
 
 - `inter_dist`:
 
@@ -94,7 +94,7 @@ The `centroids` table has one row per material class and these columns:
 
 - `L`, `A`, `B`:
 
-  Numeric. The class centroid's coordinates in CIE LAB colour space (D65
+  Numeric. The class centroid's coordinates in CIE LAB color space (D65
   illuminant): `L` is lightness (0 = black, 100 = white), `A` is the
   green-red axis (negative = green, positive = red), and `B` is the
   blue-yellow axis (negative = blue, positive = yellow). These are the
@@ -105,7 +105,7 @@ The `centroids` table has one row per material class and these columns:
   Numeric. The per-class assignment radius, in Euclidean LAB units. A
   pixel is assigned to the class whose centroid is nearest in LAB space,
   but only if that distance is `<= MAX_DIST`; otherwise the pixel is
-  labelled `"unclassified"`. Larger values classify more pixels but risk
+  labeled `"unclassified"`. Larger values classify more pixels but risk
   merging visually distinct materials; smaller values leave more pixels
   unclassified. Typical values are roughly 10-30.
 
@@ -121,14 +121,14 @@ site, so for other data you should derive your own via
 [`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
 takes `picks`: a named list with one element per material class. Each
 element is a numeric matrix with exactly 3 columns (R, G, B in 0-255),
-where every row is one colour sample believed to belong to that class.
+where every row is one color sample believed to belong to that class.
 Classes may have different numbers of rows. The function converts each
 matrix to LAB, averages it to a single centroid, and returns a
 `data.frame` in the same format as `.default_soil_centroids()` – ready
 to pass straight back into `classify_soil_rgb(centroids = ...)`.
 
 The simplest approach is to read representative RGB values off your scan
-(e.g. using an image viewer's colour picker) and enter them directly:
+(e.g. using an image viewer's color picker) and enter them directly:
 
 
     picks <- list(

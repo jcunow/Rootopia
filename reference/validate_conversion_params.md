@@ -5,5 +5,5 @@ Validate conversion parameters
 ## Usage
 
 ``` r
-validate_conversion_params(input, scale, select.layer)
+validate_conversion_params(input, scale, select_layer)
 ```

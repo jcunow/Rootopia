@@ -12,7 +12,7 @@ rhythmicity(
   y,
   fix_period = 24,
   method = "F",
-  parStart = list(amp = 3, phase = 0, offset = 0, period = 12)
+  par_start = list(amp = 3, phase = 0, offset = 0, period = 12)
 )
 ```
 
@@ -36,7 +36,7 @@ rhythmicity(
   sample likelihood ratio test, or `"LR"` for large sample likelihood
   ratio test.
 
-- parStart:
+- par_start:
 
   Named list with starting values for parameters: `amp`, `phase`,
   `offset`, and `period`. Only used when `fix_period` is `NULL`.

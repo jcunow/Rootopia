@@ -23,7 +23,7 @@ stitch_blend_overlap(reg1, reg2, blend = "linear", blend_width = NULL)
 
 - blend_width:
 
-  Optional ramp width (px) for `"linear"`, centred in the overlap;
+  Optional ramp width (px) for `"linear"`, centered in the overlap;
   `NULL` ramps across the whole overlap.
 
 ## Value

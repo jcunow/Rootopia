@@ -9,7 +9,7 @@ phase)) + offset \\ to data points (x, y) using nonlinear least squares.
 fit_sine_curve(
   x,
   y,
-  parStart = list(amp = 3, phase = 0, offset = 0, period = 24),
+  par_start = list(amp = 3, phase = 0, offset = 0, period = 24),
   fix_period = NULL
 )
 ```
@@ -24,7 +24,7 @@ fit_sine_curve(
 
   Numeric vector of dependent variable values.
 
-- parStart:
+- par_start:
 
   Named list of starting values for parameters: - amp: Amplitude
   (default 3) - phase: Phase shift (default 0) - offset: Vertical offset

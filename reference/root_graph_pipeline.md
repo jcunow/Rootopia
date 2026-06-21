@@ -79,7 +79,7 @@ root_graph_pipeline(
 
 - color_by:
 
-  Which order column the overlay colours by.
+  Which order column the overlay colors by.
 
 - diam_weight:
 

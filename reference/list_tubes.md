@@ -1,6 +1,6 @@
 # List the tubes (groups) found in a scan folder
 
-Summarises the unique groups (tubes) that
+Summarizes the unique groups (tubes) that
 [`stitch_root_scans`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 would build, so you can see the tube names and pick a range to stitch
 (e.g. `tubes = 1:36`).

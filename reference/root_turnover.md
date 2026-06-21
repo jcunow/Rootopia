@@ -8,7 +8,7 @@ runs:
   Compares two timepoint images (`img1`, `img2`) and reports standing
   roots, production, and new-root percentages. Dispatches to
   [`turnover_tc`](https://jcunow.github.io/Rootopia/reference/turnover_tc.md).
-  The `tc.method` argument chooses how root amount is measured:
+  The `tc_method` argument chooses how root amount is measured:
   `"kimura"` (root length) or `"rootpx"` (root pixel count).
 
 - `"dpc"` (Decay, Production, Constant):
@@ -25,15 +25,15 @@ root_turnover(
   img1,
   img2 = NULL,
   method = c("tc", "dpc"),
-  tc.method = c("kimura", "rootpx"),
+  tc_method = c("kimura", "rootpx"),
   unit = "cm",
   dpi = 300,
-  select.layer = NULL,
-  product.layer = 2,
-  decay.layer = 1,
-  blur.capture = 0.95,
-  im.return = FALSE,
-  include.virtualroots = FALSE
+  select_layer = NULL,
+  product_layer = 2,
+  decay_layer = 1,
+  blur_capture = 0.95,
+  im_return = FALSE,
+  include_virtualroots = FALSE
 )
 ```
 
@@ -56,7 +56,7 @@ root_turnover(
   images) or `"dpc"` (Decay/Production/Constant decomposition of one
   multi-layer image). Default `"tc"`.
 
-- tc.method:
+- tc_method:
 
   Measurement sub-method for `method = "tc"`: `"kimura"` (root length)
   or `"rootpx"` (root pixel count). Ignored for `method = "dpc"`.
@@ -64,37 +64,37 @@ root_turnover(
 
 - unit:
 
-  Unit of root length measurement (only for `tc.method = "kimura"`).
+  Unit of root length measurement (only for `tc_method = "kimura"`).
   Default: "cm"
 
 - dpi:
 
-  Image resolution (only for `tc.method = "kimura"`). Default: 300
+  Image resolution (only for `tc_method = "kimura"`). Default: 300
 
-- select.layer:
+- select_layer:
 
   Integer or NULL. For `method = "tc"` with multi-layer images, selects
   which layer to compare. Ignored for `method = "dpc"`.
 
-- product.layer:
+- product_layer:
 
   Integer indicating the production layer index for the DPC method (1-3)
 
-- decay.layer:
+- decay_layer:
 
   Integer indicating the decay & tape layer index for the DPC method
   (1-3)
 
-- blur.capture:
+- blur_capture:
 
   Threshold for pixel inclusion in the DPC method (0-1). Default: 0.95
 
-- im.return:
+- im_return:
 
   Logical: return images instead of values for the DPC method? Default:
   FALSE
 
-- include.virtualroots:
+- include_virtualroots:
 
   Logical: consider all roots present at any timepoint in the DPC
   method? Default: FALSE
@@ -103,7 +103,7 @@ root_turnover(
 
 Depends on the method: - `"tc"`: data.frame with standing roots,
 production, and new-root percentages. - `"dpc"`: data.frame of pixel
-sums and ratios, or (if `im.return = TRUE`) a list of SpatRaster layers.
+sums and ratios, or (if `im_return = TRUE`) a list of SpatRaster layers.
 
 ## See also
 
@@ -125,7 +125,7 @@ data(skl_Oulanka2023_Session01_T067)
 data(skl_Oulanka2023_Session03_T067)
 t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
-root_turnover(t1, t2, method = "tc", tc.method = "kimura")
+root_turnover(t1, t2, method = "tc", tc_method = "kimura")
 #> Diagonal: 457958 | Orthogonal: 459143
 #> Diagonal: 431284 | Orthogonal: 432437
 #>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2

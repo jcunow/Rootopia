@@ -5,7 +5,7 @@
 ### Introduction
 
 This vignette walks through the individual-function workflow for
-analysing minirhizotron images — loading, calibrating, depth-mapping,
+analyzing minirhizotron images — loading, calibrating, depth-mapping,
 and extracting root traits step by step. It is aimed at users who want
 full control over each processing stage or who are working on a specific
 subset of functions.
@@ -49,7 +49,7 @@ library(tidyverse)
 3.  Create depth map
 4.  Bin depths
 5.  Extract root traits per depth bin (pixels, length, diameter)
-6.  Compute landscape and colour metrics per depth bin
+6.  Compute landscape and color metrics per depth bin
 7.  Derive distribution indices
 8.  Root turnover (two-timepoint comparison)
 
@@ -61,10 +61,10 @@ library(tidyverse)
 >   — fast, for traits that reduce to a per-zone sum or mean (pixel
 >   counts, mean diameter).
 > - **One slice at a time** with
->   [`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md)
+>   [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
 >   — for traits whose function needs a whole image (root length,
->   landscape metrics, colour). You compute the trait for a single
->   depth, then wrap that in a loop to cover the full profile.
+>   landscape metrics, color). You compute the trait for a single depth,
+>   then wrap that in a loop to cover the full profile.
 >
 > Section 5 introduces both and shows how to scale a single-slice
 > computation to every depth bin.
@@ -85,10 +85,10 @@ seg_img <- load_flexible_image(
   output_format = "spatrast",
   normalize     = FALSE,
   binarize      = TRUE,
-  select.layer  = NULL
+  select_layer  = NULL
 )
 
-# RGB scan for colour analysis
+# RGB scan for color analysis
 rgb <- load_flexible_image(
   "path/to/rgb_image.tif",
   output_format = "spatrast",
@@ -110,7 +110,7 @@ seg_img    <- terra::rast(seg_Oulanka2023_Session01_T067)
 # pixel sums and the void mask (abs(root_layer - 1)) are meaningful.
 root_layer <- terra::ifel(seg_img[[2]] > 0, 1, 0)
 
-# RGB scan (a different session of the same tube, for the colour demo)
+# RGB scan (a different session of the same tube, for the color demo)
 data(rgb_Oulanka2023_Session03_T067)
 rgb <- terra::rast(rgb_Oulanka2023_Session03_T067)
 
@@ -133,7 +133,7 @@ vignette for how to estimate the rotation shift between sessions.
 
 ``` r
 
-# Crop to a 1800-pixel-wide window centred on the estimated rotation centre.
+# Crop to a 1800-pixel-wide window centered on the estimated rotation center.
 # Here we use half the image width as a simple default. If you have multiple
 # sessions, consider estimating the rotation shift between sessions with
 # `estimate_rotation_shift()` and adjust the center offset accordingly.
@@ -142,9 +142,9 @@ r0 <- round(dim(seg_img)[1] / 2, 0)
 
 seg_censored <- rotation_censor(
   seg_img,
-  center.offset  = r0,
-  fixed.rotation = TRUE,
-  fixed.width    = 1800
+  center_offset  = r0,
+  fixed_rotation = TRUE,
+  fixed_width    = 1800
 )
 ```
 
@@ -167,11 +167,11 @@ curvature of cylindrical tubes.
 | Parameter | Description |
 |----|----|
 | `sinoid` | `TRUE` for cylindrical minirhizotron tubes; `FALSE` for flat windows |
-| `tube.thicc` | Inner tube diameter in cm (typically 4.4 or 7 cm) |
+| `tube_thicc` | Inner tube diameter in cm (typically 4.4 or 7 cm) |
 | `tilt` | Insertion angle from vertical in degrees (often 30–45°) |
 | `dpi` | Scanner resolution |
-| `start.soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
-| `center.offset` | Fractional position of the rotational centre (0–1). 0.5 = centred. |
+| `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
+| `center_offset` | Fractional position of the rotational center (0–1). 0.5 = centered. |
 
 ``` r
 
@@ -184,16 +184,16 @@ depth_map <- create_depthmap(
   img           = seg_img,
   mask          = mask,
   sinoid        = TRUE,
-  tube.thicc    = 7,       # cm — measure your own tube
+  tube_thicc    = 7,       # cm — measure your own tube
   tilt          = 45,      # degrees
   dpi           = 150,
-  start.soil    = 2.9,     # cm — from in-situ calibration
-  center.offset = 0.5      # 0 = top of tube, 1 = bottom
+  start_soil    = 2.9,     # cm — from in-situ calibration
+  center_offset = 0.5      # 0 = top of tube, 1 = bottom
 )
 
 # create_depthmap() returns the map on its own grid; align it to the segmented
 # image so depth and root rasters share extent/resolution (required for
-# terra::zonal() and zoning() below).
+# terra::zonal() and depth_zoning() below).
 depth_map <- terra::flip(terra::t(depth_map))
 terra::ext(depth_map) <- terra::ext(root_layer)
 
@@ -202,10 +202,10 @@ terra::plot(depth_map, main = "Depth map (cm)")
 
 ![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)
 
-> **On `start.soil`**: accurate depth attribution requires knowing where
+> **On `start_soil`**: accurate depth attribution requires knowing where
 > the soil surface is in the image. In-situ calibration (marking the
 > tube at installation) is the most reliable approach. Without
-> calibration data, use `start.soil = 0` and interpret depths as
+> calibration data, use `start_soil = 0` and interpret depths as
 > relative to the top of the scan.
 
 ------------------------------------------------------------------------
@@ -218,14 +218,17 @@ rounds continuous depth values to discrete intervals. The bin width
 
 ``` r
 
-depth_bins <- binning(depthmap = depth_map, nn = 5, round.option = "rounding")
+depth_bins <- binning(depthmap = depth_map, nn = 5, round_option = "rounding")
 
 # The set of depth bins we will iterate over for per-slice traits
 depths <- sort(unique(terra::values(depth_bins, mat = FALSE)))
 depths <- depths[!is.na(depths)]
 depths
 #>  [1] -5  0  5 10 15 20 25 30 35 40 45 50 55 60
+terra::plot(depth_bins)
 ```
+
+![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
 
 ------------------------------------------------------------------------
 
@@ -261,11 +264,11 @@ head(depth_data)
 #> 6    20  24861 452872       5.203953
 ```
 
-##### 5b. Root length for a *single* depth slice — `zoning()` + `root_length()`
+##### 5b. Root length for a *single* depth slice — `depth_zoning()` + `root_length()`
 
 Root length (Kimura method) is computed from a skeleton image, so it
 needs a whole raster rather than a per-pixel reduction.
-[`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md)
+[`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
 masks the skeleton to one depth bin (everything outside the bin becomes
 `NA`, the grid is kept), and
 [`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
@@ -277,7 +280,7 @@ then measures just that slice.
 skl <- skeletonize_image(root_layer, verbose = FALSE)
 
 # Traits for one specific depth slice (the 10 cm bin)
-skl_10cm <- zoning(skl, mode = "depth", depth_map = depth_bins, depth = 10)
+skl_10cm <- depth_zoning(skl, depth_map = depth_bins, depth = 10)
 len_10cm <- root_length(skl_10cm, unit = "cm", dpi = 150, show_messages = FALSE)
 len_10cm
 #> [1] 208.3697
@@ -292,7 +295,7 @@ whole image.
 ``` r
 
 length_by_depth <- do.call(rbind, lapply(depths, function(d) {
-  skl_d <- zoning(skl, mode = "depth", depth_map = depth_bins, depth = d)
+  skl_d <- depth_zoning(skl, depth_map = depth_bins, depth = d)
   # Empty bins have no skeleton to measure, so their length is 0
   has_root <- terra::global(skl_d, "sum", na.rm = TRUE)[1, 1] > 0
   data.frame(
@@ -327,9 +330,9 @@ territory.
 
 diam_result <- root_diameter(
   root_layer,
-  skeleton.img = skl,
+  skeleton_img = skl,
   unit         = "cm",
-  select.layer = NULL
+  select_layer = NULL
 )
 # Align the diameter raster to the depth grid before zonal aggregation
 terra::ext(diam_result$diameter_rast) <- terra::ext(depth_bins)
@@ -351,23 +354,23 @@ head(depth_data)
 
 ------------------------------------------------------------------------
 
-#### 6. Landscape and colour metrics
+#### 6. Landscape and color metrics
 
 Both of these are computed **per depth slice** with the same
-[`zoning()`](https://jcunow.github.io/Rootopia/reference/zoning.md) loop
-introduced in 5c.
+[`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
+loop introduced in 5c.
 
 ##### Landscape metrics (spatial structure)
 
 ``` r
 
 lsm_list <- lapply(depths, function(d) {
-  slice <- zoning(root_layer, mode = "depth", depth_map = depth_bins, depth = d)
+  slice <- depth_zoning(root_layer, depth_map = depth_bins, depth = d)
   # Skip depth bins that contain no roots
   if (terra::global(slice, "sum", na.rm = TRUE)[1, 1] == 0) return(NULL)
   root_scape_metrics(
     img     = slice,
-    indexD  = d,
+    index_d  = d,
     metrics = c("lsm_c_np", "lsm_c_enn_mn", "lsm_l_ent")
   )
 })
@@ -379,10 +382,10 @@ lsm_df <- do.call(rbind, lsm_list)
 > chunk is not run here. Enable it when you specifically need
 > patch-level indices.
 
-##### Colour metrics
+##### Color metrics
 
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
-is the colour extractor here — exactly as in the [Flatbed
+is the color extractor here — exactly as in the [Flatbed
 Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
 vignette. The only extra step for minirhizotron data is grid alignment:
 the RGB scan and the segmentation often come off the scanner on slightly
@@ -397,15 +400,15 @@ already share a grid you can skip it.
 # Align RGB to the segmented grid (skip if they already match)
 rgb_aligned <- terra::resample(rgb, root_layer, method = "bilinear")
 
-colour_list <- lapply(depths, function(d) {
-  slice_seg <- zoning(root_layer,  mode = "depth", depth_map = depth_bins, depth = d)
-  slice_rgb <- zoning(rgb_aligned, mode = "depth", depth_map = depth_bins, depth = d)
+color_list <- lapply(depths, function(d) {
+  slice_seg <- depth_zoning(root_layer,  depth_map = depth_bins, depth = d)
+  slice_rgb <- depth_zoning(rgb_aligned, depth_map = depth_bins, depth = d)
 
   # Split the slice into root vs. background pixels
   root_rgb <- slice_rgb; root_rgb[slice_seg == 0] <- NA
   bg_rgb   <- slice_rgb; bg_rgb[slice_seg == 1]   <- NA
 
-  # Skip depth bins that contain no roots (nothing to colour)
+  # Skip depth bins that contain no roots (nothing to color)
   if (all(is.na(terra::values(root_rgb[[1]], mat = FALSE)))) return(NULL)
 
   data.frame(
@@ -414,7 +417,7 @@ colour_list <- lapply(depths, function(d) {
     setNames(tube_coloration(bg_rgb),   paste0(names(tube_coloration(bg_rgb)),   "_bg"))
   )
 })
-colour_df <- do.call(rbind, colour_list)   # NULLs from empty bins are dropped
+color_df <- do.call(rbind, color_list)   # NULLs from empty bins are dropped
 ```
 
 > Looking for **root branching order** (main axis vs. laterals)? That
@@ -490,7 +493,7 @@ turnover <- root_turnover(
   img1      = t1,
   img2      = t2,
   method    = "tc",        # total-change family
-  tc.method = "kimura",    # length estimator within that family
+  tc_method = "kimura",    # length estimator within that family
   dpi       = 150,
   unit      = "cm"
 )
@@ -503,7 +506,7 @@ print(turnover)
 
 ------------------------------------------------------------------------
 
-#### 9. Visualise
+#### 9. Visualize
 
 ``` r
 

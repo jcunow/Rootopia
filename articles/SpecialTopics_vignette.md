@@ -1,20 +1,20 @@
-# Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and Turnover
+# Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover
 
 This article collects a few less-obvious capabilities of **Rootopia**
 that do not fit the main step-by-step tutorials but are useful for
-specific questions: classifying soil/soil material by colour,
-quantifying soil surface texture, building a rhizosphere “halo” zone
-around roots, and measuring root turnover between time points.
+specific questions: classifying soil/soil material by color, quantifying
+soil surface texture, building a rhizosphere “halo” zone around roots,
+and measuring root turnover between time points.
 
 All examples use the bundled Oulanka 2023 example rasters, so you can
 run them as-is.
 
-## 1. Soil and material colour classification
+## 1. Soil and material color classification
 
 [`classify_soil_rgb()`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md)
 assigns every pixel of an RGB scan to a class (e.g., dark soil, red
 soil, root, silver tape, coarse debris, …) by nearest-centroid matching
-in CIE LAB colour space. Pixels too far from any centroid are left
+in CIE LAB color space. Pixels too far from any centroid are left
 “unclassified”.
 
 ``` r
@@ -31,7 +31,7 @@ terra::plot(result$map)
 ![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)
 
 The returned list also carries per-class statistics – pixel counts, area
-fractions, mean LAB/RGB colours, and the mean distance to the centroid:
+fractions, mean LAB/RGB colors, and the mean distance to the centroid:
 
 ``` r
 
@@ -52,10 +52,10 @@ result$metrics
 #> 6   36.5       13.9                    NA    #50240F
 ```
 
-### Visualising the classification
+### Visualizing the classification
 
 [`plot_soil_classification()`](https://jcunow.github.io/Rootopia/reference/plot_soil_classification.md)
-renders the class map with a legend and the actual mean colours of each
+renders the class map with a legend and the actual mean colors of each
 class:
 
 ``` r
@@ -72,14 +72,14 @@ data, build your own with
 [`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md).
 You supply `picks`: a named list with one element per material class,
 where each element is a matrix with 3 columns (R, G, B in 0-255). Each
-row is one colour sample for that class — different classes can have
+row is one color sample for that class — different classes can have
 different numbers of rows. The function averages each class’s samples
 into a single LAB centroid and returns a table in the same format as the
 built-in defaults, ready to pass back into
 [`classify_soil_rgb()`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md).
 
 The simplest approach is to read representative RGB values off your scan
-with a colour picker (e.g. in an image viewer or QGIS) and enter them
+with a color picker (e.g. in an image viewer or QGIS) and enter them
 directly:
 
 ``` r
@@ -123,8 +123,8 @@ for the full description of the centroid table format and the
 ## 2. Soil surface texture and color
 
 [`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md)
-computes grey-level co-occurrence matrix (GLCM) texture metrics from a
-colour image, which can be informative on the spatial heterogeneity
+computes gray-level co-occurrence matrix (GLCM) texture metrics from a
+color image, which can be informative on the spatial heterogeneity
 within a scan.
 
 ``` r
@@ -140,14 +140,14 @@ terra::plot(tex)
 
 ![](SpecialTopics_vignette_files/figure-html/soil-texture-1.png)
 
-A simple summary of overall tube colour (mean RGB and a single luminance
+A simple summary of overall tube color (mean RGB and a single luminance
 value) is available via
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md):
 
 ``` r
 
 tube_coloration(img)
-#> Some pixels have zero intensity, which may affect colour calculations
+#> Some pixels have zero intensity, which may affect color calculations
 #>      rcc    gcc   bcc        hue saturation luminosity      red    green
 #> 1 0.4117 0.3192 0.269 0.06635659  0.1982295  0.2660763 67.84946 59.75458
 #>      blue
@@ -158,13 +158,13 @@ tube_coloration(img)
 
 [`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
 grows a buffer of a chosen width around every root pixel – a simple
-proxy for the rhizosphere / diffusion zone. With `halo.only = TRUE` it
+proxy for the rhizosphere / diffusion zone. With `halo_only = TRUE` it
 returns only the ring around the roots (excluding the roots themselves).
 
 ``` r
 
-seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select.layer = 2)
-halo <- create_root_buffer(seg, width = 3, halo.only = TRUE, kernel = "circle")
+seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select_layer = 2)
+halo <- create_root_buffer(seg, width = 3, halo_only = TRUE, kernel = "circle")
 terra::plot(halo)
 ```
 
@@ -173,7 +173,7 @@ terra::plot(halo)
 ``` r
 
 
-halo10 <- create_root_buffer(seg, width = 10, halo.only = TRUE, kernel = "circle")
+halo10 <- create_root_buffer(seg, width = 10, halo_only = TRUE, kernel = "circle")
 terra::plot(halo10)
 ```
 
@@ -181,15 +181,15 @@ terra::plot(halo10)
 
 ``` r
 
-halo10 <- create_root_buffer(seg, width = 10, halo.only = FALSE, kernel = "circle")
+halo10 <- create_root_buffer(seg, width = 10, halo_only = FALSE, kernel = "circle")
 terra::plot(halo10)
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)
 
-The `kernel` argument switches between a `"circle"` (8-neighbour) and a
-`"diamond"` (4-neighbour) growth shape, and `width` controls how many
-dilation iterations are applied. Set `halo.only = FALSE` to return the
+The `kernel` argument switches between a `"circle"` (8-neighbor) and a
+`"diamond"` (4-neighbor) growth shape, and `width` controls how many
+dilation iterations are applied. Set `halo_only = FALSE` to return the
 roots plus their buffer as a single filled mask.
 
 ## 4. Root turnover between time points
@@ -199,7 +199,7 @@ quantifies how much root material was produced, lost, or retained.
 `method` selects one of two approaches:
 
 - `"tc"` (Temporal Comparison) – compare two segmented images from
-  different sessions. The `tc.method` argument picks how root amount is
+  different sessions. The `tc_method` argument picks how root amount is
   measured: `"kimura"` (root length) or `"rootpx"` (root pixel count).
 - `"dpc"` (Decay, Production, Constant) – decompose a single multi-layer
   image produced by RootDetector into decayed, newly produced, and
@@ -221,7 +221,7 @@ For the two-timepoint comparison you would instead pass both sessions:
 
 s1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 s3 <- terra::rast(skl_Oulanka2023_Session03_T067)
-root_turnover(s1, s3, method = "tc", tc.method = "rootpx", unit = "cm", dpi = 150, select.layer = 2)
+root_turnover(s1, s3, method = "tc", tc_method = "rootpx", unit = "cm", dpi = 150, select_layer = 2)
 ```
 
 ## See also

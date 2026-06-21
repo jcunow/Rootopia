@@ -1,8 +1,8 @@
 # Native-resolution validation of a sub-window
 
 Renders a small window at `scale`x magnification (no downsampling) so
-the order-coloured graph can be checked against the skeleton. Skeleton
-pixels are grey; traced/ordered pixels are coloured on top, so bare grey
+the order-colored graph can be checked against the skeleton. Skeleton
+pixels are gray; traced/ordered pixels are colored on top, so bare gray
 reveals skeleton the graph missed. Coordinates are in the original image
 frame.
 
@@ -29,7 +29,7 @@ plot_order_window(
 
 - skel:
 
-  The original skeleton (`SpatRaster` or matrix) for the grey
+  The original skeleton (`SpatRaster` or matrix) for the gray
   background.
 
 - r_range, c_range:
@@ -46,8 +46,18 @@ plot_order_window(
 
 - order_col:
 
-  Which order column to colour by (default `"root_order"`).
+  Which order column to color by (default `"root_order"`).
 
 ## Value
 
 Invisibly, `file`.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+res <- branch_order_map(skel, mask, order = "root_order", unit = "px")
+plot_order_window(res$edges, skel, r_range = c(1, 500), c_range = c(1, 500),
+                  file = tempfile(fileext = ".png"))
+} # }
+```

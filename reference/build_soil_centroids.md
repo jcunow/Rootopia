@@ -1,4 +1,4 @@
-# Build soil class centroids from manual RGB colour picks
+# Build soil class centroids from manual RGB color picks
 
 Converts raw RGB pixel picks (collected e.g. in QGIS, FIJI, or ImageJ)
 to CIE LAB centroids and returns a centroid table ready to pass to

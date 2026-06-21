@@ -11,9 +11,9 @@ deep_drive(
   DepthMap,
   RootMap = NULL,
   AngleMap = NULL,
-  select.layerRM = NULL,
-  select.layerDM = NULL,
-  select.layerAM = NULL,
+  select_layer_rm = NULL,
+  select_layer_dm = NULL,
+  select_layer_am = NULL,
   return = c("value", "all")
 )
 ```
@@ -35,16 +35,16 @@ deep_drive(
   Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If
   missing, inferred from \`RootMap\` and \`DepthMap\`.
 
-- select.layerRM:
+- select_layer_rm:
 
   Integer. Which layer to use from \`RootMap\` if it has multiple bands.
   Default is \`2\`.
 
-- select.layerDM:
+- select_layer_dm:
 
   Integer. Which layer to use from \`DepthMap\`. Default is \`NULL\`.
 
-- select.layerAM:
+- select_layer_am:
 
   Integer. Which layer to use from \`AngleMap\`. Default is \`NULL\`.
 
@@ -77,14 +77,14 @@ It uses a depth raster (\`DepthMap\`) and a root direction raster
 ``` r
 data(skl_Oulanka2023_Session01_T067)
 im <- ceiling(terra::rast(skl_Oulanka2023_Session01_T067) / 255)
-DepthMap <- terra::t(create_depthmap(im, center.offset = 0, tube.thicc = 3.5))
+DepthMap <- terra::t(create_depthmap(im, center_offset = 0, tube_thicc = 3.5))
 
 # Just the deep drive score
-deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2)
+deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2)
 #> [1] 0.2440492
 
 # Get spatial outputs too
-res <- deep_drive(DepthMap = DepthMap, RootMap = im, select.layerRM = 2, return = "all")
+res <- deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2, return = "all")
 terra::plot(res$aligned_roots)
 
 ```

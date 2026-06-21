@@ -11,8 +11,8 @@ image_threshold(
   threshold = 0.4,
   method = "global",
   window_size = 15,
-  select.layer = 2,
-  mask.layer = 1,
+  select_layer = 2,
+  mask_layer = 1,
   binary_01 = FALSE,
   deblur = FALSE
 )
@@ -38,12 +38,12 @@ image_threshold(
 
   Integer (odd), only used for adaptive thresholding.
 
-- select.layer:
+- select_layer:
 
   Integer or NULL. Which layer to use for thresholding or deblurring. If
   NULL and multilayer, the mean of all layers is used.
 
-- mask.layer:
+- mask_layer:
 
   Integer or NULL. If set, used to preserve masked regions or enhance
   structure.
@@ -86,7 +86,7 @@ image_threshold(img, threshold = 0.9, method = "adaptive", window_size = 15, bin
 #> names       : lyr.1, lyr.2, lyr.2
 #> min values  :     0,     0,     0
 #> max values  :     1,     1,     1
-image_threshold(img, threshold = 0.4, select.layer = 2, mask.layer = 1, deblur = TRUE)
+image_threshold(img, threshold = 0.4, select_layer = 2, mask_layer = 1, deblur = TRUE)
 #> class       : SpatRaster
 #> size        : 1161, 4900, 3  (nrow, ncol, nlyr)
 #> resolution  : 1, 1  (x, y)

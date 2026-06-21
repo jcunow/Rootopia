@@ -51,10 +51,10 @@ seg <- load_flexible_image(
   "path/to/segmented_scan.tif",
   output_format = "spatrast",
   scale         = "binary",
-  select.layer  = 2        # RootDetector: layer 2 is the root channel
+  select_layer  = 2        # RootDetector: layer 2 is the root channel
 )
 
-# Original RGB scan for colour analysis
+# Original RGB scan for color analysis
 rgb <- load_flexible_image(
   "path/to/rgb_scan.tif",
   output_format = "spatrast",
@@ -81,12 +81,12 @@ terra::plot(seg, main = "Segmented flatbed scan")
 #### 2. Skeletonize
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
-reduces roots to single-pixel-wide centrelines. This is required for
+reduces roots to single-pixel-wide centerlines. This is required for
 root length (Kimura method) and diameter estimation.
 
 ``` r
 
-# `seg` is already the single root layer, so no select.layer needed here
+# `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg, verbose = FALSE)
 
 terra::plot(skl, main = "Skeleton")
@@ -96,7 +96,7 @@ terra::plot(skl, main = "Skeleton")
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
-mask to one-pixel-wide centrelines.
+mask to one-pixel-wide centerlines.
 
 ------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ segments differently to approximate true path length.
 
 ``` r
 
-rl <- root_length(skl, unit = "cm", dpi = 300, select.layer = NULL,
+rl <- root_length(skl, unit = "cm", dpi = 300, select_layer = NULL,
                   show_messages = FALSE)
 cat("Total root length:", round(rl, 2), "cm\n")
 #> Total root length: 56.46 cm
@@ -126,9 +126,9 @@ diameter raster and the raw diameter values.
 
 diam_result <- root_diameter(
   seg,
-  skeleton.img    = skl,
+  skeleton_img    = skl,
   skeleton_method = "MAT",
-  select.layer    = NULL,
+  select_layer    = NULL,
   unit            = "cm"
 )
 
@@ -195,8 +195,8 @@ points (forks).
 
 ``` r
 
-# `skl` is a single-layer skeleton, so no select.layer is needed
-pts <- detect_skeleton_points(skl, select.layer = NULL)
+# `skl` is a single-layer skeleton, so no select_layer is needed
+pts <- detect_skeleton_points(skl, select_layer = NULL)
 
 n_tips    <- count_pixels(pts$endpoints)
 n_forks   <- count_pixels(pts$branching_points)
@@ -268,7 +268,7 @@ order_metrics(order_res)
 order_metrics(order_res, focal = 1)
 ```
 
-To check the classification visually, write a colour-coded overlay PNG,
+To check the classification visually, write a color-coded overlay PNG,
 or re-plot a sub-window at native resolution for QC:
 
 ``` r
@@ -310,7 +310,7 @@ connectivity.
 
 lsm <- root_scape_metrics(
   img     = seg,
-  indexD  = NA,          # no depth index for flatbed scans
+  index_d  = NA,          # no depth index for flatbed scans
   metrics = c("lsm_c_ca", "lsm_c_np", "lsm_c_enn_mn",
               "lsm_c_area_mn", "lsm_l_ent")
 )
@@ -319,7 +319,7 @@ print(lsm)
 
 ------------------------------------------------------------------------
 
-#### 8. Colour analysis
+#### 8. Color analysis
 
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
 extracts mean chromatic coordinates and HSV values from an RGB image. On
@@ -330,14 +330,14 @@ flatbed scans this characterises overall root pigmentation.
 # Root pixels only
 rgb_roots <- rgb
 rgb_roots[seg == 0] <- NA
-root_colour <- tube_coloration(rgb_roots)
-print(root_colour)
+root_color <- tube_coloration(rgb_roots)
+print(root_color)
 
 # Background (soil / petri dish) pixels
 rgb_bg <- rgb
 rgb_bg[seg == 1] <- NA
-bg_colour <- tube_coloration(rgb_bg)
-print(bg_colour)
+bg_color <- tube_coloration(rgb_bg)
+print(bg_color)
 ```
 
 ------------------------------------------------------------------------

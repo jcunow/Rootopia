@@ -38,3 +38,12 @@ convert_root_units(
 
 `et` with length/diameter columns in `unit`; records `unit`, `dpi`,
 `length_method` as attributes.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+et <- root_graph_pipeline(skel, mask)
+et_cm <- convert_root_units(et, unit = "cm", dpi = 300)
+} # }
+```

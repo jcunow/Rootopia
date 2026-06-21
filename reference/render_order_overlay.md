@@ -1,4 +1,4 @@
-# Write an order-coloured validation overlay (PNG)
+# Write an order-colored validation overlay (PNG)
 
 Paints each segment by its order value over the mask; unordered (cyclic)
 segments are drawn in red so failures are visible.
@@ -17,7 +17,7 @@ render_order_overlay(segs, tip_order, dims, file, mask = NULL, max_side = 2000)
 
 - tip_order:
 
-  Numeric vector of the order value per segment to colour by.
+  Numeric vector of the order value per segment to color by.
 
 - dims:
 
@@ -29,7 +29,7 @@ render_order_overlay(segs, tip_order, dims, file, mask = NULL, max_side = 2000)
 
 - mask:
 
-  Optional 0/1 mask drawn as a grey background.
+  Optional 0/1 mask drawn as a gray background.
 
 - max_side:
 

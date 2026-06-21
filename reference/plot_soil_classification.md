@@ -32,27 +32,27 @@ plot_soil_classification(
 
   `"contrast"`
 
-  :   Muted, distinguishable colours defined in `class_colors`.
+  :   Muted, distinguishable colors defined in `class_colors`.
 
   `"vibrant"`
 
-  :   Saturated, high-contrast colours defined in `vibrant_colors`.
+  :   Saturated, high-contrast colors defined in `vibrant_colors`.
 
   `"centroid"`
 
-  :   Each class rendered as its actual LAB centroid colour – useful for
+  :   Each class rendered as its actual LAB centroid color – useful for
       sanity-checking centroid values.
 
 - class_colors:
 
-  Named character vector of hex colours for `"contrast"` mode. Names
-  must match class names in `result$centroids`. Defaults to a built-in
+  Named character vector of hex colors for `"contrast"` mode. Names must
+  match class names in `result$centroids`. Defaults to a built-in
   palette.
 
 - vibrant_colors:
 
-  Named character vector of hex colours for `"vibrant"` mode. Same
-  naming requirement. Defaults to a built-in palette.
+  Named character vector of hex colors for `"vibrant"` mode. Same naming
+  requirement. Defaults to a built-in palette.
 
 - save_png:
 

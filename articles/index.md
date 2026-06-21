@@ -12,7 +12,7 @@
   pkgnet](https://jcunow.github.io/Rootopia/articles/pkgnetreport.md):
 - [Rotation Bias and Rhythmicity Analysis with
   Rootopia](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md):
-- [Special Topics: Soil Colour, Soil Texture, Rhizosphere Halos, and
+- [Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and
   Turnover](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.md):
 - [Stitching Scan Sequences into Mosaics with
   Rootopia](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md):

@@ -1,6 +1,6 @@
 # Load any supported image to a (height, width, channel) array in 0-255
 
-Normalises orientation so that dimension 1 is rows (Y), dimension 2 is
+Normalizes orientation so that dimension 1 is rows (Y), dimension 2 is
 columns (X) and dimension 3 is channels - matching the (H, W, C) layout
 used by the Python reference (OpenCV) so the stitching math ports
 one-to-one.

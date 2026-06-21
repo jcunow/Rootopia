@@ -12,7 +12,7 @@ turnover_tc(
   method = "kimura",
   unit = "cm",
   dpi = 300,
-  select.layer = 2
+  select_layer = 2
 )
 ```
 
@@ -39,7 +39,7 @@ turnover_tc(
 
   Image resolution (only for method = "kimura"). Default: 300
 
-- select.layer:
+- select_layer:
 
   Integer specifying the layer to use in both timesteps if `img` is a
   multi-layer \`SpatRaster\`. Defaults to 2.

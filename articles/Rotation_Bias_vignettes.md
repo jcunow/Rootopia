@@ -25,7 +25,7 @@ Rootopia addresses this through four functions:
   — crops images to the shared, overlap region
 - `zoning(mode = "rotation")` — splits the tube surface into slices
   along the rotation axis (circumference), so that root traits can be
-  summarised separately for each slice
+  summarized separately for each slice
 
 The last point matters beyond rotation correction itself: once the tube
 circumference is split into slices, the
@@ -80,10 +80,10 @@ Key parameters:
 
 | Parameter | Description |
 |----|----|
-| `tape.brightness` | Brightness threshold (0–1) for classifying tape pixels |
-| `search.area` | Fraction of image width to analyse (tape is near one edge) |
+| `tape_brightness` | Brightness threshold (0–1) for classifying tape pixels |
+| `search_area` | Fraction of image width to analyze (tape is near one edge) |
 | `nclasses` | Number of unsupervised clustering classes |
-| `tape.quantile` | Quantile used to align the brightness scale |
+| `tape_quantile` | Quantile used to align the brightness scale |
 
 ------------------------------------------------------------------------
 
@@ -104,8 +104,8 @@ data(seg_Oulanka2023_Session03_T067)
 shift <- estimate_rotation_shift(
   seg_Oulanka2023_Session01_T067,
   seg_Oulanka2023_Session03_T067,
-  cor.type          = "phase",
-  fixed.depth.pixel = c(1000, 4000)
+  cor_type          = "phase",
+  fixed_depth_pixel = c(1000, 4000)
 )
 ```
 
@@ -122,7 +122,7 @@ cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
 ``` r
 
 # Visual inspection
-estimate_rotation_shift(seg_Oulanka2023_Session01_T067, seg_Oulanka2023_Session03_T067, cor.type = "phase", select.layer = 2, overlay = T)
+estimate_rotation_shift(seg_Oulanka2023_Session01_T067, seg_Oulanka2023_Session03_T067, cor_type = "phase", select_layer = 2, overlay = T)
 ```
 
     ## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size
@@ -153,9 +153,9 @@ counts directly comparable across sessions.
 
 Two modes are available:
 
-- **`fixed.rotation = FALSE`** — cuts proportionally based on the
+- **`fixed_rotation = FALSE`** — cuts proportionally based on the
   measured offset; output width varies
-- **`fixed.rotation = TRUE`** — centres the crop on a specified row and
+- **`fixed_rotation = TRUE`** — centers the crop on a specified row and
   forces a fixed output width; recommended when comparing multiple
   sessions
 
@@ -164,17 +164,17 @@ Two modes are available:
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# rotation centre (absolute row) to centre the crop on
+# rotation center (absolute row) to center the crop on
 r0 <- estimate_rotation_center(img)
 
 # preview the crop (green = kept, red = cut) and apply it in one call.
-# fixed.width must be <= image height (1144 rows here) to sit symmetrically.
+# fixed_width must be <= image height (1144 rows here) to sit symmetrically.
 censored <- rotation_censor(
   img,
-  center.offset  = r0,
-  cut.buffer     = 0.02,
-  fixed.width    = 800,
-  fixed.rotation = TRUE,
+  center_offset  = r0,
+  cut_buffer     = 0.02,
+  fixed_width    = 800,
+  fixed_rotation = TRUE,
   overlay        = TRUE,
   main = "Rotation censor: kept window (green) vs cut (red)"
 )
@@ -210,7 +210,7 @@ this sequence with `x` = slice index and the period `P` fixed to
 whether roots are distributed **evenly around the tube** or concentrated
 on one side (e.g. a systematic top-down bias from gravitropism, light
 incidence on one face of the installation, or an installation-angle
-artefact).
+artifact).
 
 #### Extract a root trait per circumferential slice
 
@@ -218,7 +218,7 @@ artefact).
 
 data(seg_Oulanka2023_Session01_T067)
 
-root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binary", select.layer = 2,
+root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binary", select_layer = 2,
                                   output_format = "spatrast")
 
 
@@ -226,7 +226,7 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binar
 e <- terra::ext(root_layer)
 root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
 plot(root_layer)
-# --> the trimming avoids noisy deep layer and tape artefacts at the top
+# --> the trimming avoids noisy deep layer and tape artifacts at the top
 
 # create circumferential zones
 n_slices <- 48
@@ -258,7 +258,7 @@ res <- rhythmicity(
   y          = slice_traits$rld,
   fix_period = n_slices,
   method     = "F",
-  parStart   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootlen),
+  par_start   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootlen),
                      period = n_slices)
 )
 
@@ -272,7 +272,7 @@ varies systematically with circumferential position — i.e. there is more
 root material on one side of the tube than the other. `res$phase` (and
 `res$peakTime`) identify *which* slice the pattern peaks at.
 
-#### Visualise the fit
+#### Visualize the fit
 
 ``` r
 
@@ -281,25 +281,25 @@ fit_seq   <- res$amplitude *
               sin(2 * pi / n_slices * (slice_seq + res$phase)) +
               res$offset
 
-plot(slice_traits$slice, slice_traits$rld, pch = 16, col = "grey50",
+plot(slice_traits$slice, slice_traits$rld, pch = 16, col = "gray50",
      xlab = "Circumferential slice (1 = top, going around the tube)",
      ylab = "Root Length Density (cm / cm2)",
      main = "Root distribution around tube circumference")
 lines(slice_seq, fit_seq, col = "coral", lwd = 2)
-abline( a = res$offset, b = 0, col  = "grey40", lty = 3)
+abline( a = res$offset, b = 0, col  = "gray40", lty = 3)
 
 segments(x0 = res$peakTime,
          x1 = res$peakTime,
          y0 = res$offset,
          y1 = res$offset + res$amplitude,
          lwd = 2, lty = 2,
-         col = "grey40")
+         col = "gray40")
 segments(x0 = res$peakTime + res$period/2,
          x1 = res$peakTime +  res$period/2,
          y0 = res$offset,
          y1 = res$offset -  res$amplitude,
          lwd = 2, lty = 2,
-         col = "grey40")
+         col = "gray40")
 legend("topright",
        legend = sprintf("A = %.4f, R² = %.3f, p = %.4f",
                         res$amplitude, res$R2, res$p_value),

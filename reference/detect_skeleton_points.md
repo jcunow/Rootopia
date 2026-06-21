@@ -6,7 +6,7 @@ Computes local connectivity of each foreground pixel using an
 ## Usage
 
 ``` r
-detect_skeleton_points(img, select.layer = NULL, skeletonize = FALSE)
+detect_skeleton_points(img, select_layer = NULL, skeletonize = FALSE)
 ```
 
 ## Arguments
@@ -16,7 +16,7 @@ detect_skeleton_points(img, select.layer = NULL, skeletonize = FALSE)
   Binary skeleton image. If `skeletonize = TRUE`, a segmented
   (non-skeleton) mask can be supplied instead.
 
-- select.layer:
+- select_layer:
 
   Layer index for multi-layer rasters
 
@@ -65,6 +65,6 @@ data(seg_Oulanka2023_Session01_T067)
 img <- seg_Oulanka2023_Session01_T067
 
 # Skeletonize
-skel <- skeletonize_image(img, select.layer = 2, verbose = FALSE)
+skel <- skeletonize_image(img, select_layer = 2, verbose = FALSE)
 skel.points <- detect_skeleton_points(skel)
 ```

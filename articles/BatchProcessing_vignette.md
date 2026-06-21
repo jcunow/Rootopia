@@ -29,8 +29,8 @@ Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
 | What you need | Where it comes from |
 |----|----|
 | Segmented images (binary, root = 1) | [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or [RootPainter](https://github.com/Abe404/root_painter) |
-| Skeletonised images (one-pixel centrelines) — *optional* | RootDetector (channel 2), or omit `path.skl` and [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
-| RGB images aligned to segmented images | Original scan — needed for colour metrics only |
+| Skeletonised images (one-pixel centerlines) — *optional* | RootDetector (channel 2), or omit `path_skl` and [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
+| RGB images aligned to segmented images | Original scan — needed for color metrics only |
 | Tube insertion angle per image | Field metadata |
 | Soil-surface pixel row per image — *optional*, defaults to `0` | Field metadata or [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md); only needed if you want depths reported relative to the true soil surface rather than the top of the image |
 
@@ -55,8 +55,8 @@ library(tidyverse)   # for downstream plotting
 
 ### Quick start — default metrics only
 
-This is the fastest way to get going. Only `path.seg` is required;
-everything else has sensible defaults. `path.skl` is optional — if
+This is the fastest way to get going. Only `path_seg` is required;
+everything else has sensible defaults. `path_skl` is optional — if
 omitted, skeletons needed for length, diameter, and angle metrics are
 computed internally via
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
@@ -64,8 +64,8 @@ computed internally via
 ``` r
 
 result <- root_depth_metrics(
-  path.seg = "scans/segmented/2022_02/",
-  path.skl = "scans/skeleton/2022_02/",   # optional — computed internally if omitted
+  path_seg = "scans/segmented/2022_02/",
+  path_skl = "scans/skeleton/2022_02/",   # optional — computed internally if omitted
   session  = "2022_02"
 )
 
@@ -95,8 +95,8 @@ tube_meta <- read.csv("metadata/tube_metadata_2022_02.csv")
 # Expected columns: filename, angle, soil_row, tube_id
 
 result <- root_depth_metrics(
-  path.seg         = "scans/segmented/2022_02/",
-  path.skl         = "scans/skeleton/2022_02/",
+  path_seg         = "scans/segmented/2022_02/",
+  path_skl         = "scans/skeleton/2022_02/",
   insertion_angles = tube_meta$angle,       # degrees from vertical
   soil_starts      = tube_meta$soil_row,    # pixel row of soil surface
   tube_names       = tube_meta$tube_id,     # e.g. "T042"
@@ -120,9 +120,9 @@ reference the same column names regardless of what was computed.
 ``` r
 
 result <- root_depth_metrics(
-  path.seg  = "scans/segmented/2022_02/",
-  path.skl  = "scans/skeleton/2022_02/",
-  path.rgb  = "scans/blended/2022_02/",
+  path_seg  = "scans/segmented/2022_02/",
+  path_skl  = "scans/skeleton/2022_02/",
+  path_rgb  = "scans/blended/2022_02/",
   session   = "2022_02",
 
   # --- core (on by default, shown explicitly for clarity) ---
@@ -137,7 +137,7 @@ result <- root_depth_metrics(
 
   # --- extended (off by default — enable as needed) ---
   calc_diameter_quantiles = TRUE,   # 90th/95th/99th percentile + modal peaks
-  calc_color_metrics      = TRUE,   # RGB colour per root vs background pixels
+  calc_color_metrics      = TRUE,   # RGB color per root vs background pixels
   calc_root_angles        = TRUE,   # deep_drive + steepness angle distribution
   calc_root_order_metrics = TRUE,   # branching order (main vs lateral roots)
   calc_landscape_metrics  = FALSE   # slow — enable only when needed
@@ -153,7 +153,7 @@ result <- root_depth_metrics(
 | `calc_diameter_stats` | `avg.diameter`, `max.diameter`, `var.diameter` | Needed for surface:volume ratio |
 | `calc_diameter_quantiles` | `rootdiameter.90/95/99`, `avg.diameter.top*pct`, `rootlength.above.*`, `n.diameter.peaks`, `diameter.peak.*` | See `diameter_quantiles`, `diameter_thresholds` |
 | `calc_landscape_metrics` | `enn_mn`, `joinent`, `relmutinf`, `np`, `contag`, `np_density` | **Slow** — one call per depth bin |
-| `calc_color_metrics` | `rcc_root`, `gcc_root`, …, `rcc_bg`, `gcc_bg`, … | Requires `path.rgb` |
+| `calc_color_metrics` | `rcc_root`, `gcc_root`, …, `rcc_bg`, `gcc_bg`, … | Requires `path_rgb` |
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |
 | `calc_root_order_metrics` | Per bin: `mean.branch_order`, `max.branch_order`, `mean.root_order`, `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, …), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length` |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
@@ -170,8 +170,8 @@ thresholds that separate fine roots from coarse roots:
 ``` r
 
 result <- root_depth_metrics(
-  path.seg                = "scans/segmented/2022_02/",
-  path.skl                = "scans/skeleton/2022_02/",
+  path_seg                = "scans/segmented/2022_02/",
+  path_skl                = "scans/skeleton/2022_02/",
   calc_diameter_quantiles = TRUE,
   diameter_thresholds     = c(0.2, 0.5, 1.0),   # fine / medium / coarse
   diameter_threshold_unit = "mm"                 # "mm", "cm", or "px"
@@ -196,8 +196,8 @@ vignette for a worked example of the underlying pipeline.
 ``` r
 
 result <- root_depth_metrics(
-  path.seg                = "scans/segmented/2022_02/",
-  path.skl                = "scans/skeleton/2022_02/",
+  path_seg                = "scans/segmented/2022_02/",
+  path_skl                = "scans/skeleton/2022_02/",
   session                 = "2022_02",
   calc_root_order_metrics = TRUE
 )
@@ -227,7 +227,7 @@ vs. lateral roots, split by `order_metrics(..., focal = "thickest")`:
 
 library(ggplot2)
 
-ggplot(result, aes(x = depth, y = lateral_root_fraction, colour = Tube)) +
+ggplot(result, aes(x = depth, y = lateral_root_fraction, color = Tube)) +
   geom_line() +
   geom_point() +
   coord_flip() +
@@ -256,8 +256,8 @@ correction that is otherwise applied to cylindrical minirhizotron tubes.
 ``` r
 
 result <- root_depth_metrics(
-  path.seg      = "scans/segmented/rhizotron_A/",
-  path.skl      = "scans/skeleton/rhizotron_A/",
+  path_seg      = "scans/segmented/rhizotron_A/",
+  path_skl      = "scans/skeleton/rhizotron_A/",
   flat_geometry = TRUE,
   insertion_angles = 0   # vertical windows
 )
@@ -275,9 +275,9 @@ segmented directory (e.g. multiple sessions in one folder), use
 
 # Use only files 37–72 from the RGB directory
 result <- root_depth_metrics(
-  path.seg       = "scans/segmented/2022_02/",
-  path.skl       = "scans/skeleton/2022_02/",
-  path.rgb       = "scans/blended/all_sessions/",
+  path_seg       = "scans/segmented/2022_02/",
+  path_skl       = "scans/skeleton/2022_02/",
+  path_rgb       = "scans/blended/all_sessions/",
   rgb_file_index = 37:72,
   session        = "2022_02"
 )
@@ -294,8 +294,8 @@ it does not exist.
 ``` r
 
 result <- root_depth_metrics(
-  path.seg    = "scans/segmented/2022_02/",
-  path.skl    = "scans/skeleton/2022_02/",
+  path_seg    = "scans/segmented/2022_02/",
+  path_skl    = "scans/skeleton/2022_02/",
   session     = "2022_02",
   output_path = "output/root_metrics_2022_02.RData"
 )
@@ -326,22 +326,22 @@ To suppress all progress output:
 ``` r
 
 result <- root_depth_metrics(
-  path.seg = "scans/segmented/2022_02/",
-  path.skl = "scans/skeleton/2022_02/",
+  path_seg = "scans/segmented/2022_02/",
+  path_skl = "scans/skeleton/2022_02/",
   verbose  = FALSE
 )
 ```
 
 ------------------------------------------------------------------------
 
-### Example: visualising depth profiles
+### Example: visualizing depth profiles
 
 ``` r
 
 library(ggplot2)
 
 # Root length density by depth, one line per tube
-ggplot(result, aes(x = depth, y = rootlength.density, colour = Tube)) +
+ggplot(result, aes(x = depth, y = rootlength.density, color = Tube)) +
   geom_line() +
   geom_point() +
   coord_flip() +
@@ -367,7 +367,7 @@ ggplot(result, aes(x = depth, y = avg.diameter)) +
 
 # mrd distribution across tubes
 ggplot(result |> dplyr::distinct(Tube, mrd), aes(x = mrd)) +
-  geom_histogram(bins = 15, fill = "steelblue4", colour = "white") +
+  geom_histogram(bins = 15, fill = "steelblue4", color = "white") +
   theme_minimal() +
   labs(
     title = "Mean Root Depth Distribution (MRD)",
@@ -387,9 +387,9 @@ tube_meta <- read.csv("metadata/tube_metadata_2022_02.csv")
 result <- root_depth_metrics(
 
   # Paths
-  path.seg       = "scans/segmented/2022_02/",
-  path.skl       = "scans/skeleton/2022_02/",
-  path.rgb       = "scans/blended/2022_02/",
+  path_seg       = "scans/segmented/2022_02/",
+  path_skl       = "scans/skeleton/2022_02/",
+  path_rgb       = "scans/blended/2022_02/",
 
   # Per-image metadata
   insertion_angles = tube_meta$angle,
@@ -442,7 +442,7 @@ result <- root_depth_metrics(
   — trait extraction from flatbed scanner images (no depth dimension)
 - [Rotation
   Bias](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
-  — correcting for tube rotation artefacts before analysis
+  — correcting for tube rotation artifacts before analysis
 - [Function
   reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function

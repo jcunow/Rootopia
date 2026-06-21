@@ -37,5 +37,5 @@ red, green, blue.
 data(rgb_Oulanka2023_Session03_T067)
 img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 colorvector <- tube_coloration(img)
-#> Some pixels have zero intensity, which may affect colour calculations
+#> Some pixels have zero intensity, which may affect color calculations
 ```
