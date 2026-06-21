@@ -1,0 +1,909 @@
+diff --git a/tests/testthat.R b/tests/testthat.R
+new file mode 100644
+index 0000000..ee70858
+--- /dev/null
++++ b/tests/testthat.R
+@@ -0,0 +1,5 @@
++# Standard testthat entry point. `R CMD check` and devtools::test() run this.
++library(testthat)
++library(Rootopia)        # <- package name; change if your DESCRIPTION differs
++
++test_check("Rootopia")
+diff --git a/tests/testthat/helper-fixtures.R b/tests/testthat/helper-fixtures.R
+new file mode 100644
+index 0000000..9f9fdc7
+--- /dev/null
++++ b/tests/testthat/helper-fixtures.R
+@@ -0,0 +1,104 @@
++# ---------------------------------------------------------------------------
++# Shared test fixtures + generic runners.
++#
++# Files named helper-*.R are sourced automatically by testthat before any
++# test-*.R, so everything here is available in every test file.
++#
++# The philosophy (see also the package's testing notes):
++#   * load_flexible_image() is the input "seam" -- test the FULL input-type
++#     matrix there, and at the handful of functions that do their OWN type
++#     branching. Everything else gets ONE representative input.
++#   * expect_runs_on_all_inputs() / expect_runs_on_grid() make the
++#     table-driven parts one-liners.
++# ---------------------------------------------------------------------------
++
++# A small synthetic binary "root" image (rows x cols), background 0, root = 1:
++# one diagonal main axis plus a short lateral, enough to skeletonise/trace.
++make_binary_matrix <- function(nr = 24, nc = 28) {
++  m <- matrix(0, nr, nc)
++  for (i in 3:18)  m[i, i] <- 1                  # main diagonal root
++  for (k in 0:5)   m[10 + k, 12 - k] <- 1        # a lateral off the main axis
++  m
++}
++
++# Same content as a 3-band (RGB) array, values 0/1.
++make_rgb_array <- function(nr = 24, nc = 28) {
++  m <- make_binary_matrix(nr, nc)
++  array(c(m, m, m), dim = c(nr, nc, 3))
++}
++
++# A single-layer binary SpatRaster (the canonical "representative" input).
++make_binary_spatraster <- function(nr = 24, nc = 28) {
++  skip_if_not_installed("terra")
++  terra::rast(make_binary_matrix(nr, nc))
++}
++
++# Build the SAME logical image in every input type load_flexible_image()
++# supports. Entries that need an optional package (or that don't apply for the
++# requested band count) are omitted, so callers can simply iterate the list.
++#
++# bands = 1 -> matrix + 1-band array/raster; bands = 3 -> RGB array/raster/cimg.
++make_all_inputs <- function(nr = 24, nc = 28, bands = 3, include_paths = TRUE) {
++  arr <- if (bands == 1) make_binary_matrix(nr, nc) else make_rgb_array(nr, nc)
++  out <- list(array = arr)
++  if (bands == 1) out$matrix <- make_binary_matrix(nr, nc)
++
++  if (requireNamespace("terra", quietly = TRUE)) {
++    out$spatraster <- terra::rast(arr)
++  }
++  # Plain TIFF (tiff::writeTIFF) avoids the geo-tag read warnings a terra-written
++  # GeoTIFF would emit; values must be in [0, 1], which our 0/1 arrays already are.
++  if (include_paths && requireNamespace("tiff", quietly = TRUE)) {
++    tif <- tempfile(fileext = ".tif")
++    suppressWarnings(tiff::writeTIFF(arr, tif))
++    out$tif_path <- tif
++  }
++  if (requireNamespace("imager", quietly = TRUE)) {
++    out$cimg <- suppressWarnings(imager::as.cimg(arr))
++    if (include_paths) {
++      png <- tempfile(fileext = ".png")
++      suppressWarnings(imager::save.image(imager::as.cimg(arr), png))
++      out$png_path <- png
++    }
++  }
++  out
++}
++
++# Assert `fn(input, ...)` runs without error for EVERY input type, with the
++# offending type named on failure. `check(res, type_name)` runs extra
++# assertions on each successful result (optional).
++expect_runs_on_all_inputs <- function(fn, ..., check = NULL, inputs = make_all_inputs()) {
++  for (nm in names(inputs)) {
++    inp <- inputs[[nm]]
++    if (is.null(inp)) next
++    res <- tryCatch(fn(inp, ...), error = function(e) e)
++    testthat::expect_false(
++      inherits(res, "error"),
++      info = sprintf("input type '%s' errored: %s", nm,
++                     if (inherits(res, "error")) conditionMessage(res) else "")
++    )
++    if (!is.null(check) && !inherits(res, "error")) check(res, nm)
++  }
++}
++
++# Run `fn` across every row of a parameter `grid` (a data.frame from
++# expand.grid). `fixed` supplies args constant across rows. NA cells are
++# dropped so the function's own default applies (handy for select.layer = NA).
++# Factors are coerced to character. The failing row is reported on error.
++expect_runs_on_grid <- function(fn, grid, fixed = list(), check = NULL) {
++  for (i in seq_len(nrow(grid))) {
++    row  <- as.list(grid[i, , drop = FALSE])
++    row  <- lapply(row, function(x) if (is.factor(x)) as.character(x) else x)
++    row  <- row[!vapply(row, function(x) length(x) == 1L && is.na(x), logical(1))]
++    args <- c(row, fixed)
++    res  <- tryCatch(do.call(fn, args), error = function(e) e)
++    testthat::expect_false(
++      inherits(res, "error"),
++      info = paste0("grid row ", i, " (",
++                    paste(names(grid), unlist(grid[i, ]), sep = "=", collapse = ", "),
++                    ") errored: ",
++                    if (inherits(res, "error")) conditionMessage(res) else "")
++    )
++    if (!is.null(check) && !inherits(res, "error")) check(res, i)
++  }
++}
+diff --git a/tests/testthat/test-binning.R b/tests/testthat/test-binning.R
+new file mode 100644
+index 0000000..b9be0c7
+--- /dev/null
++++ b/tests/testthat/test-binning.R
+@@ -0,0 +1,27 @@
++# Regression test for the tryCatch(warning=) fix (#1): an internal warning()
++# must NOT abort the function and return NULL. Before the fix, an Inf in the
++# depthmap raised a warning that the top-level handler turned into an early
++# NULL return; now it warns and still returns the binned raster.
++
++test_that("binning warns on Inf but still returns a SpatRaster", {
++  skip_if_not_installed("terra")
++  dm <- terra::rast(matrix(c(1, 2, Inf, 4, 5, 6), nrow = 2))
++  expect_warning(res <- binning(dm, nn = 1))
++  expect_s4_class(res, "SpatRaster")          # would be NULL before the #1 fix
++})
++
++test_that("binning produces multiples of the bin width", {
++  skip_if_not_installed("terra")
++  dm  <- terra::rast(matrix(seq(0, 19), nrow = 4))
++  res <- binning(dm, nn = 5, round.option = "floor")
++  vals <- terra::values(res)
++  expect_true(all(vals %% 5 == 0 | is.na(vals)))
++})
++
++test_that("binning validates its arguments", {
++  skip_if_not_installed("terra")
++  dm <- terra::rast(matrix(1:4, 2))
++  expect_error(binning(dm))                      # missing nn
++  expect_error(binning(dm, nn = -1))             # non-positive
++  expect_error(binning(dm, nn = 5, round.option = "nope"))
++})
+diff --git a/tests/testthat/test-branching.R b/tests/testthat/test-branching.R
+new file mode 100644
+index 0000000..55da4bc
+--- /dev/null
++++ b/tests/testthat/test-branching.R
+@@ -0,0 +1,52 @@
++# Branch-order pipeline + the downstream table functions. Build the graph once,
++# then exercise the consumers on it.
++
++make_order_map <- function() {
++  skip_if_not_installed("terra")
++  skel <- make_binary_spatraster()
++  # baseR distance-transform fallback exists, so imager is not required here.
++  branch_order_map(skel = skel, mask = skel, order = "branch_order",
++                   unit = "px", return_map = TRUE)
++}
++
++test_that("branch_order_map returns the documented object", {
++  res <- make_order_map()
++  expect_s3_class(res, "branchOrderMap")
++  expect_true(all(c("edges", "summary", "order", "unit") %in% names(res)))
++  expect_s3_class(res$edges, "data.frame")
++  expect_true(all(c("tip_order", "root_order", "branch_order") %in% names(res$edges)))
++})
++
++test_that("convert_root_units rescales lengths and records attributes", {
++  res <- make_order_map()
++  cm  <- convert_root_units(res$edges, unit = "cm", dpi = 300)
++  expect_equal(attr(cm, "unit"), "cm")
++  expect_equal(cm$length, res$edges$length * 2.54 / 300, tolerance = 1e-6)
++})
++
++test_that("summarize_orders and order_metrics agree on shared columns", {
++  res <- make_order_map()
++  so <- summarize_orders(res$edges, order_col = "branch_order")
++  om <- order_metrics(res, focal = NULL)
++  expect_s3_class(so, "data.frame")
++  expect_s3_class(om, "data.frame")
++  # same per-order totals (order_metrics adds length_fraction + col name differs)
++  expect_equal(sort(so$total_length), sort(om$total_length), tolerance = 1e-6)
++})
++
++test_that("order_metrics focal split returns focal + rest", {
++  res <- make_order_map()
++  om <- order_metrics(res, focal = "thinnest")
++  expect_true(all(om$group %in% c("focal", "rest")))
++})
++
++test_that("order_classification_map rasterises onto the template", {
++  res <- make_order_map()
++  cm  <- order_classification_map(res$edges, template = make_binary_spatraster(),
++                                  value = "branch_order")
++  expect_s4_class(cm, "SpatRaster")
++})
++
++test_that("summarize_orders handles NULL edge table without erroring", {
++  expect_s3_class(summarize_orders(NULL), "data.frame")
++})
+diff --git a/tests/testthat/test-circular_mean.R b/tests/testthat/test-circular_mean.R
+new file mode 100644
+index 0000000..ebf64cb
+--- /dev/null
++++ b/tests/testthat/test-circular_mean.R
+@@ -0,0 +1,27 @@
++# Pure-numeric leaf function: demonstrates parameter + edge-case testing with
++# no image dependencies. Good template for the other math helpers
++# (MRD, RPI, root_accumulation, count_pixels, ...).
++
++test_that("known circular means are correct", {
++  expect_equal(circular_mean(c(0, 90), input_units = "degrees",
++                             output_units = "degrees"), 45)
++  # wrap-around: mean of 350 and 10 degrees is the 0/360 direction -> 0
++  expect_equal(circular_mean(c(350, 10)), 0, tolerance = 1e-6)
++})
++
++test_that("unit conversions round-trip", {
++  deg <- circular_mean(c(0, 90), output_units = "degrees")
++  rad <- circular_mean(c(0, 90), output_units = "radians")
++  expect_equal(rad, deg * pi / 180, tolerance = 1e-8)
++})
++
++test_that("invalid arguments error", {
++  expect_error(circular_mean("a"))
++  expect_error(circular_mean(numeric(0)))
++  expect_error(circular_mean(c(1, 2), input_units = "grads"))
++})
++
++test_that("NA / Inf are dropped with a warning", {
++  expect_warning(out <- circular_mean(c(0, 90, NA, Inf)))
++  expect_equal(out, 45)
++})
+diff --git a/tests/testthat/test-classification.R b/tests/testthat/test-classification.R
+new file mode 100644
+index 0000000..ec42c5e
+--- /dev/null
++++ b/tests/testthat/test-classification.R
+@@ -0,0 +1,28 @@
++# RGB material classification. Uses the soil_* names (post-rename); adjust if
++# your package still uses the older names.
++
++test_that("classify_soil_rgb returns map + metrics on an RGB raster", {
++  skip_if_not_installed("terra")
++  rgb <- terra::rast(make_rgb_array() * 255)
++  res <- classify_soil_rgb(rgb, verbose = FALSE)
++  expect_type(res, "list")
++  expect_true(all(c("map", "metrics", "centroids") %in% names(res)))
++  expect_s4_class(res$map, "SpatRaster")
++})
++
++test_that("build_soil_centroids returns a centroid table from picks", {
++  picks <- list(
++    dark = matrix(c(28, 22, 18, 32, 26, 21), ncol = 3, byrow = TRUE),
++    root = matrix(c(180, 160, 130, 175, 155, 125), ncol = 3, byrow = TRUE)
++  )
++  max_dist <- c(dark = 14, root = 26)
++  cents <- build_soil_centroids(picks, max_dist, verbose = FALSE)
++  expect_s3_class(cents, "data.frame")
++  expect_true(all(c("class", "L", "A", "B", "MAX_DIST") %in% names(cents)))
++  expect_equal(nrow(cents), 2L)
++})
++
++test_that("build_soil_centroids errors when max_dist is missing a class", {
++  picks <- list(dark = matrix(c(28, 22, 18), ncol = 3))
++  expect_error(build_soil_centroids(picks, max_dist = c(other = 14), verbose = FALSE))
++})
+diff --git a/tests/testthat/test-clean_image.R b/tests/testthat/test-clean_image.R
+new file mode 100644
+index 0000000..24e5884
+--- /dev/null
++++ b/tests/testthat/test-clean_image.R
+@@ -0,0 +1,22 @@
++# clean_image: hole filling / artifact removal. Output-format sweep + a
++# behavioural check that an isolated speck is removed and an enclosed hole filled.
++
++test_that("clean_image returns each requested output format", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  img <- make_binary_spatraster()
++  expect_s4_class(clean_image(img, output_format = "spatrast"), "SpatRaster")
++  expect_s3_class(clean_image(img, output_format = "cimg"), "cimg")
++  expect_true(is.matrix(clean_image(img, output_format = "matrix")))
++})
++
++test_that("clean_image removes a small isolated artifact", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  m <- matrix(0, 30, 30)
++  m[10:20, 10:20] <- 1     # solid block (touches nothing else)
++  m[3, 3] <- 1             # isolated 1-px artifact
++  cleaned <- clean_image(terra::rast(m), max_artifact_size = 5,
++                         output_format = "matrix")
++  expect_equal(cleaned[3, 3], 0)
++})
+diff --git a/tests/testthat/test-compare-distribution.R b/tests/testthat/test-compare-distribution.R
+new file mode 100644
+index 0000000..dcdf88d
+--- /dev/null
++++ b/tests/testthat/test-compare-distribution.R
+@@ -0,0 +1,16 @@
++# compare_depth_distribution: distance between two depth profiles (numeric in,
++# numeric out). Pure-numeric, so precise property checks are possible.
++
++test_that("identical profiles give zero distance, different ones give > 0", {
++  P <- c(1, 5, 10, 5, 1)
++  expect_equal(compare_depth_distribution(P, P, metric = "wasserstein"),
++               0, tolerance = 1e-6)
++  Q <- c(1, 2, 3, 8, 12)
++  expect_gt(compare_depth_distribution(P, Q, metric = "wasserstein"), 0)
++})
++
++test_that("js and kl metrics return a single numeric value", {
++  P <- c(2, 4, 8, 4, 2); Q <- c(1, 3, 9, 5, 2)
++  expect_true(is.numeric(compare_depth_distribution(P, Q, metric = "js")))
++  expect_true(is.numeric(compare_depth_distribution(P, Q, metric = "kl")))
++})
+diff --git a/tests/testthat/test-depthmap-zoning.R b/tests/testthat/test-depthmap-zoning.R
+new file mode 100644
+index 0000000..5ab31a9
+--- /dev/null
++++ b/tests/testthat/test-depthmap-zoning.R
+@@ -0,0 +1,53 @@
++# Depth map construction + zoning / slicing utilities.
++
++test_that("create_depthmap returns a raster matching the input grid", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  dm  <- create_depthmap(img, sinoid = TRUE, tube.thicc = 7, tilt = 45, dpi = 300)
++  expect_s4_class(dm, "SpatRaster")
++})
++
++test_that("create_depthmap validates parameters", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  expect_error(create_depthmap(img, tilt = 0))
++  expect_error(create_depthmap(img, tube.thicc = -1))
++  expect_error(create_depthmap(img, center.offset = 2))   # must be in [0,1]
++})
++
++test_that("slice_rotation splits into n contiguous slices", {
++  skip_if_not_installed("terra")
++  img    <- make_binary_spatraster()
++  slices <- slice_rotation(img, n = 3)
++  expect_length(slices, 3)
++  expect_true(all(vapply(slices, inherits, logical(1), "SpatRaster")))
++  total_rows <- sum(vapply(slices, terra::nrow, numeric(1)))  # terra::nrow is double
++  expect_equal(total_rows, terra::nrow(img))              # exact, no overlap/gap
++})
++
++test_that("slice_rotation validates n", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  expect_error(slice_rotation(img, n = 0))
++  expect_error(slice_rotation(img, n = terra::nrow(img) + 1))
++})
++
++test_that("depth_zoning masks pixels outside the selected depth bin", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster(24, 28)
++  dmat <- matrix(10, 24, 28); dmat[1:12, ] <- 5      # top half = 5, bottom = 10
++  dm <- terra::rast(dmat)
++  z <- depth_zoning(img, depth_map = dm, depth = 5)
++  expect_s4_class(z, "SpatRaster")
++  expect_equal(terra::nrow(z), terra::nrow(img))      # extent unchanged
++  zmat <- matrix(terra::values(z), nrow = 24, byrow = TRUE)
++  expect_true(all(is.na(zmat[13:24, ])))              # depth-10 half is masked out
++  expect_false(all(is.na(zmat[1:12, ])))              # depth-5 half retained
++})
++
++test_that("depth_zoning requires depth_map and depth", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  expect_error(depth_zoning(img, depth = 5))
++  expect_error(depth_zoning(img, depth_map = make_binary_spatraster()))
++})
+diff --git a/tests/testthat/test-distribution-metrics.R b/tests/testthat/test-distribution-metrics.R
+new file mode 100644
+index 0000000..8abcfe5
+--- /dev/null
++++ b/tests/testthat/test-distribution-metrics.R
+@@ -0,0 +1,36 @@
++# Pure-numeric distribution metrics: precise value + edge-case tests.
++
++test_that("MRD is the root-weighted mean depth", {
++  expect_equal(MRD(w = c(10, 20, 30), roots = c(0, 0, 1)), 30, tolerance = 1e-6)
++  expect_equal(MRD(w = c(10, 20),     roots = c(1, 1)),     15, tolerance = 1e-6)
++})
++
++test_that("MRD validates inputs", {
++  expect_error(MRD(c(1, 2), c(1, 2, 3)))      # length mismatch
++  expect_error(MRD(c(1, 2), c(0, 0)))         # zero roots
++  expect_error(MRD(c(1, 2), c(-1, 2)))        # negative roots
++  expect_error(MRD(c(1, NA), c(1, 2)))        # NA
++})
++
++test_that("RPI lies in [-1, 1] and is shallow-positive", {
++  w     <- seq(5, 25, 5)
++  shallow <- c(10, 7, 3, 1, 0)
++  deep    <- c(0, 1, 3, 7, 10)
++  rpi_s <- RPI(roots = shallow, w = w)
++  rpi_d <- RPI(roots = deep,    w = w)
++  expect_true(rpi_s >= -1 && rpi_s <= 1)
++  expect_true(rpi_d >= -1 && rpi_d <= 1)
++  expect_gt(rpi_s, rpi_d)                      # shallower profile => higher RPI
++})
++
++test_that("root_accumulation returns a cumulative vector aligned to input rows", {
++  df <- data.frame(
++    depth  = c(seq(0, 80, 20), seq(0, 80, 20)),
++    Plot   = c(rep("a", 5), rep("b", 5)),
++    rootpx = c(5, 50, 20, 15, 5, 10, 40, 30, 10, 5)
++  )
++  acc <- root_accumulation(df, group = "Plot", depth = "depth", variable = "rootpx")
++  expect_length(acc, nrow(df))
++  expect_equal(acc[5], 95)                     # group a cumulative total
++  expect_true(all(diff(acc[1:5]) >= 0))        # monotonic within a group
++})
+diff --git a/tests/testthat/test-estimate_soil_surface.R b/tests/testthat/test-estimate_soil_surface.R
+new file mode 100644
+index 0000000..423481e
+--- /dev/null
++++ b/tests/testthat/test-estimate_soil_surface.R
+@@ -0,0 +1,11 @@
++# estimate_soil_surface: detects the soil/tape boundary from an RGB scan.
++# Needs RStoolbox; uses the bundled RGB example for realistic tape markers.
++
++test_that("estimate_soil_surface returns soil/tape positions", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("RStoolbox")
++  data(rgb_Oulanka2023_Session03_T067)
++  rgb <- terra::rast(rgb_Oulanka2023_Session03_T067)
++  res <- suppressWarnings(estimate_soil_surface(rgb, dpi = 150))
++  expect_true(is.data.frame(res) || is.numeric(res))
++})
+diff --git a/tests/testthat/test-load_flexible_image.R b/tests/testthat/test-load_flexible_image.R
+new file mode 100644
+index 0000000..69f181d
+--- /dev/null
++++ b/tests/testthat/test-load_flexible_image.R
+@@ -0,0 +1,39 @@
++# The input "seam": test the full input-type x output-format matrix HERE, once.
++# Downstream functions that just delegate to load_flexible_image() then only
++# need one representative input each.
++
++test_that("every input type converts to a SpatRaster", {
++  skip_if_not_installed("terra")
++  expect_runs_on_all_inputs(
++    load_flexible_image,
++    output_format = "spatrast", scale = "none",
++    check = function(res, nm) expect_s4_class(res, "SpatRaster")
++  )
++})
++
++test_that("output_format is case-insensitive and accepts aliases", {
++  skip_if_not_installed("terra")
++  arr <- make_rgb_array()
++  for (fmt in c("SpatRaster", "spatrast", "SPATRASTER")) {
++    expect_s4_class(load_flexible_image(arr, output_format = fmt, scale = "none"),
++                    "SpatRaster")
++  }
++})
++
++test_that("scale transforms land in the expected range", {
++  skip_if_not_installed("terra")
++  arr255 <- make_rgb_array() * 255
++
++  r01 <- load_flexible_image(arr255, output_format = "spatrast", scale = "to_01")
++  expect_lte(max(terra::global(r01, "max", na.rm = TRUE)[[1]]), 1)  # per-layer maxima
++
++  rbin <- load_flexible_image(arr255, output_format = "spatrast", scale = "binary")
++  vals <- terra::values(rbin)
++  expect_true(all(vals %in% c(0, 1) | is.na(vals)))
++})
++
++test_that("invalid inputs error cleanly (not silently)", {
++  expect_error(load_flexible_image("does_not_exist.tif"))
++  expect_error(load_flexible_image(make_rgb_array(), output_format = "not_a_format",
++                                   scale = "none"))
++})
+diff --git a/tests/testthat/test-misc-smoke.R b/tests/testthat/test-misc-smoke.R
+new file mode 100644
+index 0000000..1cc8078
+--- /dev/null
++++ b/tests/testthat/test-misc-smoke.R
+@@ -0,0 +1,28 @@
++# Smoke tests for the remaining exported functions + buffer/zone helpers.
++
++test_that("deep_drive returns a single proportion (or NA)", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  dm  <- terra::t(create_depthmap(img, center.offset = 0, tube.thicc = 3.5))
++  res <- suppressWarnings(deep_drive(DepthMap = dm, RootMap = img,
++                                     select.layerRM = 1))
++  expect_true(length(res) == 1L && (is.na(res) || (res >= 0 && res <= 1)))
++})
++
++test_that("deep_drive 'all' returns spatial outputs", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  dm  <- terra::t(create_depthmap(img, center.offset = 0, tube.thicc = 3.5))
++  res <- suppressWarnings(deep_drive(DepthMap = dm, RootMap = img,
++                                     select.layerRM = 1, return = "all"))
++  expect_type(res, "list")
++  expect_true("deep_drive" %in% names(res))
++})
++
++test_that("create_root_buffer returns a raster", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  img <- make_binary_spatraster()
++  buf <- create_root_buffer(img, width = 2, halo.only = TRUE)
++  expect_s4_class(buf, "SpatRaster")
++})
+diff --git a/tests/testthat/test-modal_peaks.R b/tests/testthat/test-modal_peaks.R
+new file mode 100644
+index 0000000..3b901ad
+--- /dev/null
++++ b/tests/testthat/test-modal_peaks.R
+@@ -0,0 +1,15 @@
++# modal_peaks: peak detection on a distribution (display_type = "none" to avoid
++# opening a graphics device during tests).
++
++test_that("modal_peaks finds two peaks in a clear bimodal sample", {
++  set.seed(2)
++  x <- c(rnorm(300, -3, 0.5), rnorm(300, 3, 0.5))
++  res <- modal_peaks(x, prominence_threshold = 0.001, display_type = "none")
++  expect_type(res, "list")
++  expect_true("peak_x" %in% names(res))
++  expect_gte(length(res$peak_x), 2)
++})
++
++test_that("modal_peaks rejects an invalid display_type", {
++  expect_error(modal_peaks(rnorm(50), display_type = "bogus"))
++})
+diff --git a/tests/testthat/test-optional-and-wrappers.R b/tests/testthat/test-optional-and-wrappers.R
+new file mode 100644
+index 0000000..31610dd
+--- /dev/null
++++ b/tests/testthat/test-optional-and-wrappers.R
+@@ -0,0 +1,93 @@
++# Functions that need optional packages or real on-disk fixtures.
++# These are guarded so the suite stays green in a minimal environment; fill in
++# the fixtures to turn them into full tests.
++
++# ---- optional-dependency functions (skip if the suggested pkg is absent) ----
++
++test_that("root_scape_metrics runs when landscapemetrics is available", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("landscapemetrics")
++  # landscapemetrics emits a static "use check_landscape()" advisory for any
++  # non-geographic raster; muffle ONLY that message so genuine warnings surface.
++  res <- withCallingHandlers(
++    root_scape_metrics(make_binary_spatraster(), select.layer = 1),
++    warning = function(w) {
++      if (grepl("check_landscape", conditionMessage(w))) invokeRestart("muffleWarning")
++    }
++  )
++  expect_s3_class(res, "data.frame")
++})
++
++test_that("analyze_soil_texture runs on an RGB raster", {
++  skip_if_not_installed("terra")
++  rgb <- terra::rast(make_rgb_array() * 255)
++  expect_error(analyze_soil_texture(rgb), regexp = NA)   # expect no error
++})
++
++test_that("estimate_rotation_center runs when RStoolbox is available", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("RStoolbox")
++  rgb <- terra::rast(make_rgb_array() * 255)
++  expect_silent_or_warning <- suppressWarnings(estimate_rotation_center(rgb))
++  expect_true(is.numeric(expect_silent_or_warning) || is.na(expect_silent_or_warning))
++})
++
++test_that("estimate_rotation_shift runs when imagefx is available", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imagefx")
++  rgb <- terra::rast(make_rgb_array() * 255)
++  res <- estimate_rotation_shift(rgb, rgb, select.layer = 1)
++  expect_true(all(c("depth", "rotation", "peak") %in% names(res)))
++})
++
++# ---- wrappers exercised with the bundled example data ----
++
++test_that("root_turnover (tc) compares two timepoints", {
++  skip_if_not_installed("terra")
++  data(skl_Oulanka2023_Session01_T067)
++  data(skl_Oulanka2023_Session03_T067)
++  t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
++  t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
++  res <- suppressWarnings(root_turnover(t1, t2, method = "tc",
++                                        tc.method = "kimura", dpi = 150, unit = "cm"))
++  expect_true(is.data.frame(res) || is.list(res))
++})
++
++test_that("root_turnover (dpc) runs on a single multi-layer image", {
++  skip_if_not_installed("terra")
++  data(TurnoverDPC_data)
++  img <- terra::rast(TurnoverDPC_data)
++  res <- suppressWarnings(root_turnover(img, method = "dpc", dpi = 150, unit = "cm"))
++  expect_true(is.data.frame(res) || is.list(res))
++})
++
++test_that("root_depth_metrics runs on a one-image directory", {
++  skip_if_not_installed("terra")
++  data(seg_Oulanka2023_Session01_T067)
++  dir <- tempfile("seg"); dir.create(dir)
++  terra::writeRaster(terra::rast(seg_Oulanka2023_Session01_T067),
++                     file.path(dir, "T067.tif"), overwrite = TRUE)
++  res <- suppressWarnings(root_depth_metrics(
++    path.seg         = paste0(dir, "/"),   # root_depth_metrics expects a trailing slash
++    tube_names       = "T067",
++    session          = "test",
++    insertion_angles = 45,        # non-zero -> valid depth-map geometry
++    soil_starts      = 0,
++    dpi              = 150,
++    calc_root_length         = FALSE,
++    calc_diameter_stats      = FALSE,
++    calc_density_metrics     = FALSE,
++    calc_distribution_indices = FALSE,
++    calc_advanced_metrics    = FALSE,
++    verbose          = FALSE
++  ))
++  expect_s3_class(res, "data.frame")
++  expect_gt(nrow(res), 0)
++})
++
++# stitch_root_scans needs an overlapping scan SEQUENCE, which the bundled
++# single-tube data cannot provide. Supply a directory of overlapping frames to
++# enable this test.
++test_that("stitch_root_scans end-to-end (needs a scan-sequence fixture)", {
++  skip("Provide a directory of overlapping scans to enable this test.")
++})
+diff --git a/tests/testthat/test-pixel-metrics.R b/tests/testthat/test-pixel-metrics.R
+new file mode 100644
+index 0000000..6e7cec8
+--- /dev/null
++++ b/tests/testthat/test-pixel-metrics.R
+@@ -0,0 +1,43 @@
++# Pixel / colour metrics. These delegate input handling to load_flexible_image,
++# so one representative input each, plus the property each is supposed to compute.
++
++test_that("count_pixels counts foreground pixels", {
++  skip_if_not_installed("terra")
++  m <- make_binary_matrix()
++  expect_equal(count_pixels(terra::rast(m)), sum(m))
++})
++
++test_that("rgb2gray returns a single-layer raster", {
++  skip_if_not_installed("terra")
++  rgb <- terra::rast(make_rgb_array())
++  g <- rgb2gray(rgb)
++  expect_s4_class(g, "SpatRaster")
++  expect_equal(terra::nlyr(g), 1L)
++})
++
++test_that("rgb2gray requires exactly 3 layers", {
++  skip_if_not_installed("terra")
++  expect_error(rgb2gray(make_binary_spatraster()))
++})
++
++test_that("tube_coloration returns the documented colour data.frame", {
++  skip_if_not_installed("terra")
++  rgb <- terra::rast(make_rgb_array() * 255)
++  cv <- tube_coloration(rgb)
++  expect_s3_class(cv, "data.frame")
++  expect_true(all(c("rcc", "gcc", "bcc", "hue", "saturation", "luminosity")
++                  %in% names(cv)))
++})
++
++test_that("image_threshold returns a binarised raster across methods", {
++  skip_if_not_installed("terra")
++  set.seed(1)
++  r <- terra::rast(matrix(runif(24 * 28), 24, 28))
++  for (mth in c("global", "adaptive")) {
++    out <- image_threshold(r, threshold = 0.4, method = mth,
++                           select.layer = 1, mask.layer = NULL, binary_01 = TRUE)
++    expect_s4_class(out, "SpatRaster")
++    vals <- terra::values(out)
++    expect_true(all(vals %in% c(0, 1) | is.na(vals)))
++  }
++})
+diff --git a/tests/testthat/test-plots.R b/tests/testthat/test-plots.R
+new file mode 100644
+index 0000000..6651da5
+--- /dev/null
++++ b/tests/testthat/test-plots.R
+@@ -0,0 +1,38 @@
++# Smoke tests for the plotting / file-output functions: build valid inputs,
++# render to a temp PNG, and assert the file is produced without error. We do not
++# check the visual content (that is impractical) -- only that it runs end-to-end.
++
++make_order_map_for_plots <- function() {
++  skip_if_not_installed("terra")
++  skel <- make_binary_spatraster()
++  branch_order_map(skel = skel, mask = skel, order = "branch_order", unit = "px")
++}
++
++test_that("render_order_overlay writes a PNG", {
++  res  <- make_order_map_for_plots()
++  segs <- attr(res$edges, "segments")
++  dims <- attr(res$edges, "dims")
++  f <- tempfile(fileext = ".png")
++  # tiny synthetic graph -> harmless size/empty-layer warnings; this is a smoke test
++  suppressWarnings(render_order_overlay(segs, res$edges$tip_order, dims, file = f))
++  expect_true(file.exists(f))
++})
++
++test_that("plot_order_window writes a PNG", {
++  res <- make_order_map_for_plots()
++  f <- tempfile(fileext = ".png")
++  suppressWarnings(
++    plot_order_window(res$edges, make_binary_spatraster(),
++                      r_range = c(1, 24), c_range = c(1, 28), file = f)
++  )
++  expect_true(file.exists(f))
++})
++
++test_that("plot_soil_classification writes a PNG", {
++  skip_if_not_installed("terra")
++  rgb <- terra::rast(make_rgb_array() * 255)
++  cls <- classify_soil_rgb(rgb, verbose = FALSE)
++  f <- tempfile(fileext = ".png")
++  suppressWarnings(plot_soil_classification(cls, save_png = f))
++  expect_true(file.exists(f))
++})
+diff --git a/tests/testthat/test-rhythmicity.R b/tests/testthat/test-rhythmicity.R
+new file mode 100644
+index 0000000..b4645c2
+--- /dev/null
++++ b/tests/testthat/test-rhythmicity.R
+@@ -0,0 +1,21 @@
++# Sine fitting + rhythmicity. Need minpack.lm for the non-linear fit.
++
++test_that("fit_sine_curve recovers a known sine", {
++  skip_if_not_installed("minpack.lm")
++  x <- seq(0, 48, by = 1)
++  y <- 5 * sin(2 * pi * x / 24 + 0.5) + 10
++  fit <- fit_sine_curve(x, y,
++                        parStart = list(amp = 3, phase = 0, offset = 0, period = 24))
++  expect_type(fit, "list")
++  expect_equal(unname(abs(fit$amp)), 5, tolerance = 0.5)
++  expect_equal(unname(fit$offset), 10, tolerance = 0.5)
++})
++
++test_that("rhythmicity returns its documented list", {
++  skip_if_not_installed("minpack.lm")
++  set.seed(1)
++  x <- seq(0, 48, by = 1)
++  y <- 5 * sin(2 * pi * x / 24) + 10 + rnorm(length(x), 0, 0.2)
++  res <- rhythmicity(x, y, fix_period = 24)
++  expect_type(res, "list")
++})
+diff --git a/tests/testthat/test-root_diameter.R b/tests/testthat/test-root_diameter.R
+new file mode 100644
+index 0000000..513296a
+--- /dev/null
++++ b/tests/testthat/test-root_diameter.R
+@@ -0,0 +1,42 @@
++# Leaf compute function: ONE representative input (it delegates input handling
++# to load_flexible_image), but a parameter sweep over its own `unit` argument
++# plus the important edge case (empty image must error cleanly, not return junk).
++
++test_that("root_diameter returns the documented structure", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  img <- make_binary_spatraster()
++  res <- root_diameter(img, unit = "px", select.layer = 1)
++
++  expect_type(res, "list")
++  expect_true(all(c("mean_diameter", "median_diameter", "diameters",
++                    "root_volume", "root_surface_area") %in% names(res)))
++  expect_true(is.numeric(res$mean_diameter) && length(res$mean_diameter) == 1)
++})
++
++test_that("root_diameter runs across all unit settings", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  img  <- make_binary_spatraster()
++  grid <- expand.grid(unit = c("px", "cm", "inch"), stringsAsFactors = FALSE)
++  expect_runs_on_grid(
++    function(unit) root_diameter(img, unit = unit, select.layer = 1, dpi = 300),
++    grid
++  )
++})
++
++test_that("unit scaling is internally consistent (cm == px * 2.54/dpi)", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  img <- make_binary_spatraster()
++  px  <- root_diameter(img, unit = "px",  select.layer = 1)$mean_diameter
++  cm  <- root_diameter(img, unit = "cm",  select.layer = 1, dpi = 300)$mean_diameter
++  expect_equal(cm, px * 2.54 / 300, tolerance = 1e-6)
++})
++
++test_that("an empty (all-zero) image errors cleanly", {
++  skip_if_not_installed("terra")
++  skip_if_not_installed("imager")
++  empty <- terra::rast(matrix(0, 24, 28))
++  expect_error(root_diameter(empty, unit = "px", select.layer = 1))
++})
+diff --git a/tests/testthat/test-root_length.R b/tests/testthat/test-root_length.R
+new file mode 100644
+index 0000000..12a2857
+--- /dev/null
++++ b/tests/testthat/test-root_length.R
+@@ -0,0 +1,28 @@
++# root_length: one representative input, parameter sweep over method x unit,
++# plus unit-scaling consistency.
++
++test_that("root_length runs across all method x unit combinations", {
++  skip_if_not_installed("terra")
++  img  <- make_binary_spatraster()
++  grid <- expand.grid(
++    method = c("kimura2", "kimura1", "freeman_basic", "freeman_corrected"),
++    unit   = c("px", "cm", "inch"),
++    stringsAsFactors = FALSE
++  )
++  expect_runs_on_grid(
++    function(method, unit)
++      root_length(img, method = method, unit = unit, dpi = 300,
++                  show_messages = FALSE),
++    grid,
++    check = function(res, i) expect_true(is.numeric(res) && length(res) == 1)
++  )
++})
++
++test_that("root_length cm equals px * 2.54/dpi", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  px  <- root_length(img, unit = "px", method = "kimura2", show_messages = FALSE)
++  cm  <- root_length(img, unit = "cm", dpi = 300, method = "kimura2",
++                     show_messages = FALSE)
++  expect_equal(cm, px * 2.54 / 300, tolerance = 1e-6)
++})
+diff --git a/tests/testthat/test-rotation_censor.R b/tests/testthat/test-rotation_censor.R
+new file mode 100644
+index 0000000..77576d0
+--- /dev/null
++++ b/tests/testthat/test-rotation_censor.R
+@@ -0,0 +1,28 @@
++# rotation_censor, including the center.offset enhancement: it must accept an
++# absolute row (> 1), a fraction in [0, 1], and a keyword, and produce the same
++# window when they describe the same position.
++
++test_that("rotation_censor returns a fixed-width window", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster(nr = 40, nc = 28)
++  out <- rotation_censor(img, center.offset = 20, fixed.width = 10,
++                         fixed.rotation = TRUE)
++  expect_s4_class(out, "SpatRaster")
++  expect_lt(terra::nrow(out), terra::nrow(img))
++})
++
++test_that("fraction and keyword agree with the equivalent absolute row", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster(nr = 40, nc = 28)   # middle row = 20
++  by_row     <- rotation_censor(img, center.offset = 20,       fixed.width = 10)
++  by_frac    <- rotation_censor(img, center.offset = 0.5,      fixed.width = 10)
++  by_keyword <- rotation_censor(img, center.offset = "middle", fixed.width = 10)
++  expect_equal(terra::nrow(by_frac),    terra::nrow(by_row))
++  expect_equal(terra::nrow(by_keyword), terra::nrow(by_row))
++})
++
++test_that("rotation_censor rejects unknown keywords", {
++  skip_if_not_installed("terra")
++  img <- make_binary_spatraster()
++  expect_error(rotation_censor(img, center.offset = "sideways"))
++})
+diff --git a/tests/testthat/test-skeleton.R b/tests/testthat/test-skeleton.R
+new file mode 100644
+index 0000000..8fd40b0
+--- /dev/null
++++ b/tests/testthat/test-skeleton.R
+@@ -0,0 +1,21 @@
++# Skeletonisation + skeleton point detection.
++
++test_that("skeletonize_image returns a binary single-layer raster", {
++  skip_if_not_installed("terra")
++  sk <- skeletonize_image(make_binary_spatraster(), verbose = FALSE)
++  expect_s4_class(sk, "SpatRaster")
++  vals <- terra::values(sk)
++  expect_true(all(vals %in% c(0, 1) | is.na(vals)))
++  expect_gt(sum(vals == 1, na.rm = TRUE), 0)     # something survived
++})
++
++test_that("skeletonize_image errors on an empty image", {
++  skip_if_not_installed("terra")
++  expect_error(skeletonize_image(terra::rast(matrix(0, 24, 28)), verbose = FALSE))
++})
++
++test_that("detect_skeleton_points returns a list", {
++  skip_if_not_installed("terra")
++  res <- detect_skeleton_points(make_binary_spatraster(), skeletonize = TRUE)
++  expect_type(res, "list")
++})
