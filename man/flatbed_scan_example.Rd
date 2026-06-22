@@ -36,7 +36,7 @@ used as the root channel in the vignette.
   data(flatbed_scan_example)
   seg <- terra::rast(flatbed_scan_example)
   seg <- terra::ifel(seg[[2]] > 0, 1, 0)
-  terra::plot(seg)
+  show_root_image(seg)
 }
 }
 \author{

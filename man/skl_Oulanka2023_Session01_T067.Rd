@@ -36,7 +36,7 @@ the root system topology.
 \dontrun{
   data(skl_Oulanka2023_Session01_T067)
   skl_Oulanka2023_Session01_T067 = terra::rast(skl_Oulanka2023_Session01_T067)
-  terra::plot(skl_Oulanka2023_Session01_T067)
+  show_root_image(skl_Oulanka2023_Session01_T067)
 }
 }
 \author{

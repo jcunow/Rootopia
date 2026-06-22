@@ -120,7 +120,7 @@ root_layer <- terra::ifel(seg_img[[2]] > 0, 1, 0)
 data(rgb_Oulanka2023_Session03_T067)
 rgb <- terra::rast(rgb_Oulanka2023_Session03_T067)
 
-terra::plot(root_layer, main = "Root layer (binary)")
+show_root_image(root_layer, main = "Root layer (binary)")
 ```
 
 ---
@@ -195,7 +195,7 @@ depth_map <- create_depthmap(
 depth_map <- terra::flip(terra::t(depth_map))
 terra::ext(depth_map) <- terra::ext(root_layer)
 
-terra::plot(depth_map, main = "Depth map (cm)")
+show_root_image(depth_map, fun = "mean", main = "Depth map (cm)")
 ```
 
 > **On `start_soil`**: accurate depth attribution requires knowing where
@@ -217,7 +217,7 @@ depth_bins <- binning(depthmap = depth_map, nn = 5, round_option = "rounding")
 depths <- sort(unique(terra::values(depth_bins, mat = FALSE)))
 depths <- depths[!is.na(depths)]
 depths
-terra::plot(depth_bins)
+show_root_image(depth_bins, fun = "mean")
 
 ```
 

@@ -40,7 +40,7 @@
 #'
 #' # Get spatial outputs too
 #' res <- deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2, return = "all")
-#' terra::plot(res$aligned_roots)
+#' show_root_image(res$aligned_roots)
 #'
 #' @export
 deep_drive <- function(DepthMap,

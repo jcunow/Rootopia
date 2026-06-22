@@ -193,7 +193,7 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binar
 # rotation trim: drop the top 33% of rows
 e <- terra::ext(root_layer)
 root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
-plot(root_layer)
+show_root_image(root_layer)
 # --> the trimming avoids noisy deep layer and tape artifacts at the top
 
 # create circumferential zones

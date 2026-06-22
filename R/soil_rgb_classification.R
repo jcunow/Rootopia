@@ -409,7 +409,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #' result <- classify_soil_rgb(img)
 #'
 #' # Access outputs
-#' terra::plot(result$map)
+#' show_root_image(result$map)
 #' result$metrics
 #'
 #' # Zonal stats with a depth-band raster

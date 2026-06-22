@@ -84,7 +84,7 @@ data(flatbed_scan_example)
 seg <- terra::rast(flatbed_scan_example)
 seg <- terra::ifel(seg[[2]] > 0, 1, 0)   # binarized root channel (0/1)
 
-terra::plot(seg, main = "Segmented flatbed scan")
+show_root_image(seg, main = "Segmented flatbed scan")
 ```
 
 ---
@@ -98,7 +98,7 @@ required for root length (Kimura method) and diameter estimation.
 # `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg, verbose = FALSE)
 
-terra::plot(skl, main = "Skeleton")
+show_root_image(skl, main = "Skeleton")
 ```
 
 `skeletonize_image()` uses a LUT-based Zhang-Suen thinning algorithm to
@@ -223,7 +223,7 @@ order_res <- branch_order_map(
 order_res$summary
 
 # Rasterised branch-order classes, aligned to the skeleton
-plot(order_res$class_map, main = "Branch order")
+show_root_image(order_res$class_map, main = "Branch order")
 ```
 
 `order_metrics()` can split the architecture into the main root(s) versus
