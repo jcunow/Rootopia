@@ -162,39 +162,45 @@ computation to every depth bin.</p>
 <p><code><a href="../reference/load_flexible_image.html">load_flexible_image()</a></code> accepts SpatRasters, arrays,
 matrices, and file paths. This is how you load your own files:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Segmented image from RootDetector or RootPainter</span></span>
+<code class="sourceCode R"><span><span class="co"># Segmented image from RootDetector or RootPainter:</span></span>
+<span><span class="co"># select_layer = 2 takes the root channel, scale = "binary" maps it to 0/1.</span></span>
 <span><span class="va">seg_img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span></span>
 <span>  <span class="st">"path/to/segmented_image.tif"</span>,</span>
 <span>  output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
-<span>  normalize     <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  binarize      <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  select_layer  <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  scale         <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>  select_layer  <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># RGB scan for color analysis</span></span>
+<span><span class="co"># RGB scan for color analysis (no rescaling)</span></span>
 <span><span class="va">rgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span></span>
 <span>  <span class="st">"path/to/rgb_image.tif"</span>,</span>
 <span>  output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
-<span>  normalize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  binarize <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  scale         <span class="op">=</span> <span class="st">"none"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>For this vignette we use the bundled example data so every step below
 runs:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 3-band RootDetector output; layer 2 is the root channel</span></span>
+<code class="sourceCode R"><span><span class="co"># 3-band RootDetector output; layer 2 is the root channel.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
-<span><span class="va">seg_img</span>    <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># RootDetector layers are 0/255; binarize the root channel to 0/1 so that</span></span>
-<span><span class="co"># pixel sums and the void mask (abs(root_layer - 1)) are meaningful.</span></span>
-<span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ifelse.html" class="external-link">ifel</a></span><span class="op">(</span><span class="va">seg_img</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co"># Keep the full 3-band image (0/255) for the rotation and depth steps below.</span></span>
+<span><span class="va">seg_img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>,</span>
+<span>                               output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># load_flexible_image() also selects the root channel and binarizes it to 0/1</span></span>
+<span><span class="co"># in one call, so pixel sums and the void mask (abs(root_layer - 1)) are</span></span>
+<span><span class="co"># meaningful.</span></span>
+<span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>,</span>
+<span>                                  output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
+<span>                                  scale <span class="op">=</span> <span class="st">"binary"</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># RGB scan (a different session of the same tube, for the color demo)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
-<span><span class="va">rgb</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
+<span><span class="va">rgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span>,</span>
+<span>                           output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">root_layer</span>, main <span class="op">=</span> <span class="st">"Root layer (binary)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700"></p>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">root_layer</span>, main <span class="op">=</span> <span class="st">"Root layer (binary)"</span>, frac <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" alt="" width="700"></p>
 <hr>
 </div>
 <div class="section level4">
@@ -324,7 +330,7 @@ scale — 5 cm is a common choice.</p>
 <span><span class="va">depths</span> <span class="op">&lt;-</span> <span class="va">depths</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">depths</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">depths</span></span>
 <span><span class="co">#&gt;  [1] -5  0  5 10 15 20 25 30 35 40 45 50 55 60</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_bins</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_bins</span>, main <span class="op">=</span> <span class="st">"Depth bins"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
 <hr>
 </div>
@@ -438,7 +444,10 @@ you are back in <code><a href="https://rspatial.github.io/terra/reference/zonal.
 <span><span class="co">#&gt; 3     5  24281 453463       5.082429  136.48109          0.9963051   0.01946714</span></span>
 <span><span class="co">#&gt; 4    10  38748 438949       8.111418  208.36966          1.5212376   0.01948757</span></span>
 <span><span class="co">#&gt; 5    15  36590 441143       7.659090  211.75244          1.5458176   0.01883529</span></span>
-<span><span class="co">#&gt; 6    20  24861 452872       5.203953  128.68449          0.9394119   0.01866563</span></span></code></pre></div>
+<span><span class="co">#&gt; 6    20  24861 452872       5.203953  128.68449          0.9394119   0.01866563</span></span>
+<span><span class="co"># root thickness</span></span>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">diam_result</span><span class="op">$</span><span class="va">distance_map_rast</span>, frac <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="" width="700"></p>
 <hr>
 </div>
 </div>
@@ -488,7 +497,7 @@ if your RGB and segmentation already share a grid you can skip it.</p>
 <span>  <span class="va">slice_seg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/depth_zoning.html">depth_zoning</a></span><span class="op">(</span><span class="va">root_layer</span>,  depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span>  <span class="va">slice_rgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/depth_zoning.html">depth_zoning</a></span><span class="op">(</span><span class="va">rgb_aligned</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="co"># Split the slice into root vs. background pixels</span></span>
+<span>  <span class="co"># Split the slice into root vs. background pixels. mask the roots or background</span></span>
 <span>  <span class="va">root_rgb</span> <span class="op">&lt;-</span> <span class="va">slice_rgb</span>; <span class="va">root_rgb</span><span class="op">[</span><span class="va">slice_seg</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
 <span>  <span class="va">bg_rgb</span>   <span class="op">&lt;-</span> <span class="va">slice_rgb</span>; <span class="va">bg_rgb</span><span class="op">[</span><span class="va">slice_seg</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span>   <span class="op">&lt;-</span> <span class="cn">NA</span></span>
 <span></span>
@@ -543,7 +552,7 @@ accumulation curves between tubes/plots.</p>
 <span>  group    <span class="op">=</span> <span class="st">"Tube"</span>,</span>
 <span>  depth    <span class="op">=</span> <span class="st">"depth"</span>,</span>
 <span>  variable <span class="op">=</span> <span class="st">"rootpx"</span>,</span>
-<span>  stdrz    <span class="op">=</span> <span class="st">"relative"</span>   <span class="co"># "counts" (raw), "additive" (/max), or "relative" (/sum)</span></span>
+<span>  stdrz    <span class="op">=</span> <span class="st">"additive"</span>   <span class="co"># "counts" (raw), "additive" (/max), or "relative" (/sum)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, <span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx.cumulative</span>, type <span class="op">=</span> <span class="st">"l"</span>,</span>
@@ -592,6 +601,15 @@ depth distribution is compared.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Soil depth (cm)"</span>, y <span class="op">=</span> <span class="st">"Root length density (cm / cm²)"</span>,</span>
+<span>       title <span class="op">=</span> <span class="st">"Root length density profile"</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span><span class="va">rootpx.density</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"aquamarine3"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_flip.html" class="external-link">coord_flip</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_reverse</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Soil depth (cm)"</span>, y <span class="op">=</span> <span class="st">"Root pixel density  (%)"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root length density profile"</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>

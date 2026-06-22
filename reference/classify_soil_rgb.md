@@ -182,7 +182,7 @@ img    <- rast("scan.tiff")
 result <- classify_soil_rgb(img)
 
 # Access outputs
-terra::plot(result$map)
+terra::plot(result$map, maxcell = Inf)
 result$metrics
 
 # Zonal stats with a depth-band raster

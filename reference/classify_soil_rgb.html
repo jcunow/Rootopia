@@ -230,7 +230,7 @@ own class is snapped into whichever defined class is closest.</p>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">classify_soil_rgb</span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Access outputs</span></span></span>
-<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Zonal stats with a depth-band raster</span></span></span>

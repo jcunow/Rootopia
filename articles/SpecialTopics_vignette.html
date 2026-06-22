@@ -104,8 +104,8 @@ from any centroid are left “unclassified”.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span>, downsample_fact <span class="op">=</span> <span class="fl">4</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># A SpatRaster of class IDs (factor levels are the class names)</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-1.png" class="r-plt" alt="" width="100%"></p>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, main <span class="op">=</span> <span class="st">"Soil classification"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-1.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/soil-classify-2.png" class="r-plt" alt="" width="100%"></p>
 <p>The returned list also carries per-class statistics – pixel counts,
 area fractions, mean LAB/RGB colors, and the mean distance to the
 centroid:</p>
@@ -171,7 +171,7 @@ them directly:</p>
 <span></span>
 <span><span class="va">cents</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_soil_centroids.html">build_soil_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span>   <span class="co"># prints diagnostics</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span>, centroids <span class="op">=</span> <span class="va">cents</span><span class="op">)</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, main <span class="op">=</span> <span class="st">"Soil classification"</span><span class="op">)</span></span></code></pre></div>
 <p>Note: provide a class for <strong>every</strong> material in your
 scans. Because classification is nearest-centroid, any material without
 its own class is snapped into whichever defined class sits closest.
@@ -218,17 +218,17 @@ the roots (excluding the roots themselves).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seg</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session03_T067</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">halo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">3</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span>, kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">halo</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-1.png" class="r-plt" alt="" width="100%"></p>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">halo</span>, main <span class="op">=</span> <span class="st">"Rhizosphere halo (width 3)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-1.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/root-buffer-2.png" class="r-plt" alt="" width="100%"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">halo10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">10</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span>, kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">halo10</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-2.png" class="r-plt" alt="" width="100%"></p>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">halo10</span>, main <span class="op">=</span> <span class="st">"Halo only (width 10)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-3.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/root-buffer-4.png" class="r-plt" alt="" width="100%"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">halo10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">10</span>, halo_only <span class="op">=</span> <span class="cn">FALSE</span>, kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">halo10</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-3.png" class="r-plt" alt="" width="100%"></p>
+<span><span class="fu">show_scan</span><span class="op">(</span><span class="va">halo10</span>, main <span class="op">=</span> <span class="st">"Roots + halo (width 10)"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-5.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/root-buffer-6.png" class="r-plt" alt="" width="100%"></p>
 <p>The <code>kernel</code> argument switches between a
 <code>"circle"</code> (8-neighbor) and a <code>"diamond"</code>
 (4-neighbor) growth shape, and <code>width</code> controls how many

@@ -59,7 +59,7 @@ if (FALSE) { # \dontrun{
   data(TurnoverDPC_data)
   img = terra::rast(TurnoverDPC_data)
   # Plot individual layers
-  terra::plot(img)
+  terra::plot(img, maxcell = Inf)
   # Calculate turnover statistics
   decay <- sum(terra::values(img[[1]]) == 1)
   growth <- sum(terra::values(img[[2]]) == 1)

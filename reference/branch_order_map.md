@@ -130,6 +130,6 @@ skel <- skeletonize_image(mask)
 res  <- branch_order_map(skel, mask, order = "branch_order",
                          unit = "cm", dpi = 300, dt_backend = "imager")
 res$summary
-terra::plot(res$class_map)
+terra::plot(res$class_map, maxcell = Inf)
 } # }
 ```

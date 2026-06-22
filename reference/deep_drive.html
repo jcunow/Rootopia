@@ -134,7 +134,7 @@ compared using a D8 neighborhood scheme.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Get spatial outputs too</span></span></span>
 <span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">deep_drive</span><span class="op">(</span>DepthMap <span class="op">=</span> <span class="va">DepthMap</span>, RootMap <span class="op">=</span> <span class="va">im</span>, select_layer_rm <span class="op">=</span> <span class="fl">2</span>, return <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">aligned_roots</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">aligned_roots</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="deep_drive-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

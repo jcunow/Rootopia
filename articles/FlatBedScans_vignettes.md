@@ -68,17 +68,34 @@ below runs. It is a 3-band segmentation; layer 2 is the root channel.
 ``` r
 
 data(flatbed_scan_example)
-seg <- terra::rast(flatbed_scan_example)
-seg <- terra::ifel(seg[[2]] > 0, 1, 0)   # binarized root channel (0/1)
+# Same call as above, but pointed at the bundled object instead of a file path:
+# select_layer = 2 takes the root channel, scale = "binary" maps it to 0/1.
+seg <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
+                           scale = "binary", select_layer = 2)
 
-terra::plot(seg, main = "Segmented flatbed scan")
+show_scan(seg, main = "Segmented flatbed scan")
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
 
 ------------------------------------------------------------------------
 
-#### 2. Skeletonize
+#### 2. Clean-image
+
+``` r
+
+seg_clean = clean_image(seg,
+                        max_hole_size = 10, 
+                        max_artifact_size = 400)
+
+show_scan(seg_clean)
+```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-2.png)
+
+------------------------------------------------------------------------
+
+#### 3. Skeletonize
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 reduces roots to single-pixel-wide centerlines. This is required for
@@ -89,10 +106,10 @@ root length (Kimura method) and diameter estimation.
 # `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg, verbose = FALSE)
 
-terra::plot(skl, main = "Skeleton")
+show_scan(skl, main = "Skeleton", frac = 2)
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png)
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
@@ -100,7 +117,7 @@ mask to one-pixel-wide centerlines.
 
 ------------------------------------------------------------------------
 
-#### 3. Root length
+#### 4. Root length
 
 [`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
 uses Kimura’s formula, which weights orthogonal and diagonal skeleton
@@ -116,7 +133,7 @@ cat("Total root length:", round(rl, 2), "cm\n")
 
 ------------------------------------------------------------------------
 
-#### 4. Root diameter
+#### 5. Root diameter
 
 [`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
 estimates local root width from the distance transform. It returns a
@@ -148,7 +165,7 @@ hist(diam_vals,
      col    = "steelblue4")
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)
 
 For fine/coarse root separation,
 [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
@@ -167,7 +184,7 @@ cat("Diameter peaks at (cm):", paste(round(peaks$peak_x, 3), collapse = ", "), "
 
 ------------------------------------------------------------------------
 
-#### 5. Pixel counts and area coverage
+#### 6. Pixel counts and area coverage
 
 ``` r
 
@@ -187,7 +204,7 @@ cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
 
 ------------------------------------------------------------------------
 
-#### 6. Branching structure
+#### 7. Branching structure
 
 [`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md)
 classifies skeleton pixels into endpoints (root tips) and branching
@@ -213,7 +230,7 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 ------------------------------------------------------------------------
 
-#### 6b. Branch order (main axis vs. laterals)
+#### 7b. Branch order (main axis vs. laterals)
 
 [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 goes one step further than
@@ -238,7 +255,7 @@ order_res <- branch_order_map(
 order_res$summary
 
 # Rasterised branch-order classes, aligned to the skeleton
-plot(order_res$class_map, main = "Branch order")
+show_scan(order_res$class_map, main = "Branch order")
 ```
 
 [`order_metrics()`](https://jcunow.github.io/Rootopia/reference/order_metrics.md)
@@ -299,7 +316,7 @@ plot_order_window(
 
 ------------------------------------------------------------------------
 
-#### 7. Root-level landscape metrics
+#### 8. Root-level landscape metrics
 
 [`root_scape_metrics()`](https://jcunow.github.io/Rootopia/reference/root_scape_metrics.md)
 applies landscape ecology metrics to the binary root image, treating
@@ -319,7 +336,7 @@ print(lsm)
 
 ------------------------------------------------------------------------
 
-#### 8. Color analysis
+#### 9. Color analysis
 
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
 extracts mean chromatic coordinates and HSV values from an RGB image. On
@@ -342,7 +359,7 @@ print(bg_color)
 
 ------------------------------------------------------------------------
 
-#### 9. Collecting results
+#### 10. Collecting results
 
 ``` r
 

@@ -46,6 +46,6 @@ Johannes Cunow <johannes.cunow@gmail.com>
 if (FALSE) { # \dontrun{
   data(seg_Oulanka2023_Session03_T067)
   seg_Oulanka2023_Session03_T067 = terra::rast(seg_Oulanka2023_Session03_T067)
-  terra::plot(seg_Oulanka2023_Session03_T067)
+  terra::plot(seg_Oulanka2023_Session03_T067, maxcell = Inf)
 } # }
 ```

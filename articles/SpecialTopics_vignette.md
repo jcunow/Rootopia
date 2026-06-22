@@ -25,10 +25,10 @@ img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
-terra::plot(result$map)
+show_scan(result$map, main = "Soil classification")
 ```
 
-![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)
+![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)![](SpecialTopics_vignette_files/figure-html/soil-classify-2.png)
 
 The returned list also carries per-class statistics – pixel counts, area
 fractions, mean LAB/RGB colors, and the mean distance to the centroid:
@@ -105,7 +105,7 @@ max_dist <- c(region1 = 14, region2 = 14, region3 = 26,
 
 cents  <- build_soil_centroids(picks, max_dist)   # prints diagnostics
 result <- classify_soil_rgb(img, centroids = cents)
-terra::plot(result$map)
+show_scan(result$map, main = "Soil classification")
 ```
 
 Note: provide a class for **every** material in your scans. Because
@@ -165,27 +165,27 @@ returns only the ring around the roots (excluding the roots themselves).
 
 seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select_layer = 2)
 halo <- create_root_buffer(seg, width = 3, halo_only = TRUE, kernel = "circle")
-terra::plot(halo)
+show_scan(halo, main = "Rhizosphere halo (width 3)")
 ```
 
-![](SpecialTopics_vignette_files/figure-html/root-buffer-1.png)
+![](SpecialTopics_vignette_files/figure-html/root-buffer-1.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-2.png)
 
 ``` r
 
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = TRUE, kernel = "circle")
-terra::plot(halo10)
+show_scan(halo10, main = "Halo only (width 10)")
 ```
 
-![](SpecialTopics_vignette_files/figure-html/root-buffer-2.png)
+![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-4.png)
 
 ``` r
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = FALSE, kernel = "circle")
-terra::plot(halo10)
+show_scan(halo10, main = "Roots + halo (width 10)")
 ```
 
-![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)
+![](SpecialTopics_vignette_files/figure-html/root-buffer-5.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-6.png)
 
 The `kernel` argument switches between a `"circle"` (8-neighbor) and a
 `"diamond"` (4-neighbor) growth shape, and `width` controls how many

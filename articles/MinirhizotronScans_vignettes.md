@@ -79,21 +79,20 @@ load your own files:
 
 ``` r
 
-# Segmented image from RootDetector or RootPainter
+# Segmented image from RootDetector or RootPainter:
+# select_layer = 2 takes the root channel, scale = "binary" maps it to 0/1.
 seg_img <- load_flexible_image(
   "path/to/segmented_image.tif",
   output_format = "spatrast",
-  normalize     = FALSE,
-  binarize      = TRUE,
-  select_layer  = NULL
+  scale         = "binary",
+  select_layer  = 2
 )
 
-# RGB scan for color analysis
+# RGB scan for color analysis (no rescaling)
 rgb <- load_flexible_image(
   "path/to/rgb_image.tif",
   output_format = "spatrast",
-  normalize = FALSE,
-  binarize = FALSE
+  scale         = "none"
 )
 ```
 
@@ -102,22 +101,29 @@ runs:
 
 ``` r
 
-# 3-band RootDetector output; layer 2 is the root channel
+# 3-band RootDetector output; layer 2 is the root channel.
 data(seg_Oulanka2023_Session01_T067)
-seg_img    <- terra::rast(seg_Oulanka2023_Session01_T067)
 
-# RootDetector layers are 0/255; binarize the root channel to 0/1 so that
-# pixel sums and the void mask (abs(root_layer - 1)) are meaningful.
-root_layer <- terra::ifel(seg_img[[2]] > 0, 1, 0)
+# Keep the full 3-band image (0/255) for the rotation and depth steps below.
+seg_img <- load_flexible_image(seg_Oulanka2023_Session01_T067,
+                               output_format = "spatrast", scale = "none")
+
+# load_flexible_image() also selects the root channel and binarizes it to 0/1
+# in one call, so pixel sums and the void mask (abs(root_layer - 1)) are
+# meaningful.
+root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067,
+                                  output_format = "spatrast",
+                                  scale = "binary", select_layer = 2)
 
 # RGB scan (a different session of the same tube, for the color demo)
 data(rgb_Oulanka2023_Session03_T067)
-rgb <- terra::rast(rgb_Oulanka2023_Session03_T067)
+rgb <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
+                           output_format = "spatrast", scale = "none")
 
-terra::plot(root_layer, main = "Root layer (binary)")
+show_scan(root_layer, main = "Root layer (binary)", frac = 0.1)
 ```
 
-![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)
+![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
 
 ------------------------------------------------------------------------
 
@@ -225,7 +231,7 @@ depths <- sort(unique(terra::values(depth_bins, mat = FALSE)))
 depths <- depths[!is.na(depths)]
 depths
 #>  [1] -5  0  5 10 15 20 25 30 35 40 45 50 55 60
-terra::plot(depth_bins)
+terra::plot(depth_bins, main = "Depth bins")
 ```
 
 ![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
@@ -350,7 +356,11 @@ head(depth_data)
 #> 4    10  38748 438949       8.111418  208.36966          1.5212376   0.01948757
 #> 5    15  36590 441143       7.659090  211.75244          1.5458176   0.01883529
 #> 6    20  24861 452872       5.203953  128.68449          0.9394119   0.01866563
+# root thickness
+show_scan(diam_result$distance_map_rast, frac = 0.1)
 ```
+
+![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png)![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png)
 
 ------------------------------------------------------------------------
 
@@ -404,7 +414,7 @@ color_list <- lapply(depths, function(d) {
   slice_seg <- depth_zoning(root_layer,  depth_map = depth_bins, depth = d)
   slice_rgb <- depth_zoning(rgb_aligned, depth_map = depth_bins, depth = d)
 
-  # Split the slice into root vs. background pixels
+  # Split the slice into root vs. background pixels. mask the roots or background
   root_rgb <- slice_rgb; root_rgb[slice_seg == 0] <- NA
   bg_rgb   <- slice_rgb; bg_rgb[slice_seg == 1]   <- NA
 
@@ -463,7 +473,7 @@ depth_data$rootpx.cumulative <- root_accumulation(
   group    = "Tube",
   depth    = "depth",
   variable = "rootpx",
-  stdrz    = "relative"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
+  stdrz    = "additive"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
 )
 
 plot(depth_data$depth, depth_data$rootpx.cumulative, type = "l",
@@ -518,6 +528,15 @@ ggplot(depth_data, aes(x = depth, y = rootlength.density)) +
   scale_x_reverse() +
   theme_minimal() +
   labs(x = "Soil depth (cm)", y = "Root length density (cm / cm²)",
+       title = "Root length density profile")
+
+
+ggplot(depth_data, aes(x = depth, y =rootpx.density)) +
+  geom_col(fill = "aquamarine3") +
+  coord_flip() +
+  scale_x_reverse() +
+  theme_minimal() +
+  labs(x = "Soil depth (cm)", y = "Root pixel density  (%)",
        title = "Root length density profile")
 ```
 
