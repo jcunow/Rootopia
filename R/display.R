@@ -33,6 +33,7 @@
 #'   \code{terra::plotRGB()}.
 #' @param ... Further graphical arguments passed to \code{terra::plot()}.
 #' @return Invisibly, the (possibly aggregated) \code{SpatRaster} that was drawn.
+#' @keywords internal
 #' @examples
 #' \dontrun{
 #'   # Binary mask or skeleton: keep thin lines with block-max (the default)
