@@ -1,5 +1,3 @@
-#### open issue: get away from raster and save data as other type
-
 #' @title Original Minirhizotron Root Scan - Session 3, Tube 67
 #' @description
 #' Original RGB root scan image from a sedge fen in northern Finland (October 2023).

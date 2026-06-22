@@ -825,8 +825,8 @@ order_classification_map <- function(et, template, value = "branch_order") {
 #' @export
 summarize_orders <- function(et, order_col = "branch_order") {
   # Thin wrapper over order_metrics() (focal = NULL) so the per-order
-  # aggregation lives in one place. The columns are reshaped back to this
-  # function's historical contract: a leading integer `order` column and no
+  # aggregation lives in one place. The columns are reshaped to this
+  # function's output format: a leading integer `order` column and no
   # `length_fraction` (which order_metrics adds).
   if (is.null(et)) return(data.frame())
   out <- order_metrics(et, order_col = order_col, focal = NULL)

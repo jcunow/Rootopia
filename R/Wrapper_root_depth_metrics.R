@@ -98,7 +98,16 @@
 #'   Required for length density and angle metrics.  Default \code{TRUE}.
 #' @param calc_diameter_stats Logical. Compute per-bin mean, maximum, and
 #'   variance of root diameter (cm) using the distance-transform approach in
-#'   \code{root_diameter()}.  Default \code{TRUE}.
+#'   \code{root_diameter()}, plus \code{root.surface.area} (lateral surface
+#'   area, cm\eqn{^2}) and \code{root.volume} (cm\eqn{^3}) per bin, and
+#'   \code{rootsurface_rootvolume_ratio} (cm\eqn{^{-1}}).  \code{root.surface.area}
+#'   is the curved wall wrapping each cylindrical root (its soil-contact area),
+#'   \emph{not} the flat root area visible in the image.
+#'   \code{rootsurface_rootvolume_ratio} is the length-weighted mean of the
+#'   \emph{local} ratio \eqn{2 / r_i} over skeleton pixels, so it is dominated by
+#'   fine roots and is deliberately not equal to
+#'   \code{root.surface.area / root.volume} (a bulk ratio dominated by thick
+#'   roots); the two answer different questions.  Default \code{TRUE}.
 #'
 # --- Extended metrics (off by default) ---
 #' @param calc_diameter_quantiles Logical. Compute the diameter distribution
@@ -143,10 +152,8 @@
 #'   \code{calc_density_metrics}.  Default \code{TRUE}.
 #' @param calc_advanced_metrics Logical. Compute per-bin derived metrics:
 #'   \code{rootlength.fraction} (each bin's length density as a fraction of the
-#'   tube total), \code{mean.var.diameter} (mean of within-bin diameter
-#'   variance), and \code{rootsurface_rootvolume_ratio} (lateral surface area
-#'   over cylinder volume, summed over skeleton pixels in the bin and expressed
-#'   as cm^2 per cm^3).  Auto-enables \code{calc_distribution_indices} and
+#'   tube total) and \code{mean.var.diameter} (mean of within-bin diameter
+#'   variance).  Auto-enables \code{calc_distribution_indices} and
 #'   \code{calc_diameter_stats}.  Default \code{TRUE}.
 #'
 # --- Diameter threshold settings (used when \code{calc_diameter_quantiles = TRUE}) ---
@@ -178,15 +185,23 @@
 #'   \code{NULL} invisibly if every image failed.
 #'
 #' @details
-#' \strong{Surface-to-volume ratio.}  For each skeleton pixel, the root segment
-#' is modelled as a cylinder of length \eqn{l_i} (the D8 path length of that
-#' pixel in cm) and radius \eqn{r_i} (half the local diameter in cm).  The
-#' lateral surface area is \eqn{2 \pi r_i l_i} and the volume is
-#' \eqn{\pi r_i^2 l_i}.  Their ratio simplifies to \eqn{2 / r_i}.
-#' \code{rootsurface_rootvolume_ratio} is the length-weighted mean of
-#' \eqn{2 / r_i} over all skeleton pixels in the depth bin, in units of
-#' cm\eqn{^{-1}} (cm^2 surface per cm^3 volume).  Thicker roots have a smaller
-#' ratio; fine roots have a larger ratio.
+#' \strong{Surface, volume, and their ratio.}  For each skeleton pixel, the root
+#' segment is modelled as a cylinder of length \eqn{l_i} (one pixel edge in cm)
+#' and radius \eqn{r_i} (half the local diameter in cm).  Its \emph{lateral}
+#' surface area is \eqn{2 \pi r_i l_i} -- the curved wall wrapping the root, i.e.
+#' the area in contact with the soil, not the flat root area seen in the image --
+#' and its volume is \eqn{\pi r_i^2 l_i}.  \code{root.surface.area} (cm\eqn{^2})
+#' and \code{root.volume} (cm\eqn{^3}) are these quantities summed over all
+#' skeleton pixels in the depth bin.
+#'
+#' The per-pixel surface-to-volume ratio simplifies to \eqn{2 / r_i}, and
+#' \code{rootsurface_rootvolume_ratio} (cm\eqn{^{-1}}) is the length-weighted
+#' mean of \eqn{2 / r_i} over the bin's skeleton pixels.  Because it averages the
+#' \emph{local} ratio, it is dominated by fine roots (small \eqn{r_i} give large
+#' \eqn{2 / r_i}).  This is deliberately not the same as the bulk ratio
+#' \code{root.surface.area / root.volume}, which is dominated by thick roots
+#' (they hold most of the volume); the two summarise different things and will
+#' not match unless every root in the bin has the same diameter.
 #'
 #' \strong{Fault tolerance.}  Every metric block is wrapped in
 #' \code{tryCatch}.  Failures produce a \code{[Rootopia] SKIPPED} message and
@@ -381,7 +396,7 @@ root_depth_metrics <- function(
       calc_distribution_indices <- TRUE
     }
     if (!calc_diameter_stats) {
-      message("[Rootopia] Auto-enabling calc_diameter_stats (required for rootsurface_rootvolume_ratio).")
+      message("[Rootopia] Auto-enabling calc_diameter_stats (required for mean.var.diameter).")
       calc_diameter_stats <- TRUE
     }
   }
@@ -411,9 +426,9 @@ root_depth_metrics <- function(
   thr_names <- paste0(diameter_thresholds, diameter_threshold_unit)
 
   # Diameter quantile column names, derived from `diameter_quantiles` so the
-  # output stays in step when the probabilities are customised. Defaults
-  # c(0.90, 0.95, 0.99) reproduce the historical
-  # rootdiameter.{90,95,99} / avg.diameter.top{10,5,1}pct columns.
+  # output stays in step when the probabilities are customised. The default
+  # c(0.90, 0.95, 0.99) yields the rootdiameter.{90,95,99} and
+  # avg.diameter.top{10,5,1}pct columns.
   if (!is.numeric(diameter_quantiles) || length(diameter_quantiles) == 0 ||
       any(is.na(diameter_quantiles)) ||
       any(diameter_quantiles <= 0 | diameter_quantiles >= 1)) {
@@ -656,12 +671,40 @@ root_depth_metrics <- function(
         avg <- terra::zonal(rd.map, bm, "mean", na.rm = TRUE); colnames(avg) <- c("depth", "avg.diameter")
         mx  <- terra::zonal(rd.map, bm, "max",  na.rm = TRUE); colnames(mx)  <- c("depth", "max.diameter")
         vr  <- terra::zonal(rd.map, bm, "var",  na.rm = TRUE); colnames(vr)  <- c("depth", "var.diameter")
-        Reduce(function(a, b) merge(a, b, by = "depth"), list(avg, mx, vr))
+
+        # Lateral root surface area and volume per bin. Each skeleton pixel is a
+        # cylinder of diameter d (cm, from rd.map) and length one pixel edge
+        # (px_cm = 2.54 / dpi). The *lateral* surface is the curved wall that
+        # wraps around the cylindrical root (pi * d * length) -- the soil-contact
+        # area of the whole root, not the flat root area visible in the image.
+        # Volume is pi * (d/2)^2 * length. Summing per pixel and scaling by the
+        # pixel length gives cm^2 (surface) and cm^3 (volume) per depth bin.
+        px_cm <- 2.54 / dpi
+        sa <- terra::zonal(pi * rd.map, bm, "sum", na.rm = TRUE)
+        sa[, 2] <- sa[, 2] * px_cm;        colnames(sa) <- c("depth", "root.surface.area")
+        vo <- terra::zonal(pi * (rd.map / 2)^2, bm, "sum", na.rm = TRUE)
+        vo[, 2] <- vo[, 2] * px_cm;        colnames(vo) <- c("depth", "root.volume")
+
+        # Surface-to-volume ratio per bin (cm^-1): the length-weighted mean of
+        # the *local* per-pixel ratio 2 / r = 4 / diameter. Because skeleton
+        # pixels share equal unit length, the plain mean of 4 / diameter over the
+        # bin is that length-weighted mean. It is computed on the diameter raster
+        # before aggregation, so it is unbiased (4 / mean(diameter) would not be,
+        # since mean(1 / d) != 1 / mean(d)).
+        # NOTE: this is the mean of local ratios, so it is dominated by fine
+        # roots and is deliberately NOT equal to root.surface.area /
+        # root.volume (the bulk ratio, which is dominated by thick roots). The
+        # two answer different questions; do not expect them to match.
+        sv  <- terra::zonal(4 / rd.map, bm, "mean", na.rm = TRUE)
+        colnames(sv) <- c("depth", "rootsurface_rootvolume_ratio")
+        Reduce(function(a, b) merge(a, b, by = "depth"), list(avg, mx, vr, sa, vo, sv))
       })
       if (!is.null(diam)) {
         roots <- merge(roots, diam, by = "depth", all.x = TRUE)
       } else {
-        roots[c("avg.diameter", "max.diameter", "var.diameter")] <- NA_real_
+        roots[c("avg.diameter", "max.diameter", "var.diameter",
+                "root.surface.area", "root.volume",
+                "rootsurface_rootvolume_ratio")] <- NA_real_
       }
     }
     
@@ -1032,23 +1075,8 @@ root_depth_metrics <- function(
           mean.var.diameter = if (calc_diameter_stats && "var.diameter" %in% names(dplyr::pick(dplyr::everything())))
             mean(dplyr::.data$var.diameter, na.rm = TRUE) else NA_real_,
 
-          # Surface-to-volume ratio (cm^-1).
-          # Each skeleton pixel i contributes a cylinder of length l_i (cm)
-          # and radius r_i = avg.diameter / 2.
-          # Lateral surface area = 2*pi*r_i*l_i
-          # Volume               =   pi*r_i^2*l_i
-          # Ratio per pixel      = 2 / r_i   (l_i cancels)
-          # Here we use the bin-mean diameter as a proxy for r_i.
-          # TODO: ideally this should be computed pixel-by-pixel using the full
-          # diameter raster and root-length-map before zonal aggregation, so
-          # that the length-weighted mean of 2/r_i is returned rather than
-          # 2 / mean(r_i). Flag for future revision.
-          rootsurface_rootvolume_ratio = if (
-            calc_diameter_stats && calc_density_metrics &&
-            all(c("avg.diameter", "rootlength.density") %in%
-                names(dplyr::pick(dplyr::everything()))) &&
-            !is.na(dplyr::.data$avg.diameter) && dplyr::.data$avg.diameter > 0
-          ) 2 / (dplyr::.data$avg.diameter / 2) else NA_real_,
+          # NB: rootsurface_rootvolume_ratio is computed per bin in section 3f
+          # (directly on the diameter raster) so it is unbiased; see there.
 
           .groups = "drop"
         )

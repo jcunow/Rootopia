@@ -79,7 +79,8 @@ head(result)
 The result is a data frame with one row per tube × depth-bin combination.
 Always-present columns: `Tube`, `Session`, `Plot`, `depth`.
 Default metric columns: `rootpx`, `voidpx`, `rootlength`, `avg.diameter`,
-`max.diameter`, `var.diameter`, `rootpx.density`, `rootlength.density`,
+`max.diameter`, `var.diameter`, `root.surface.area`, `root.volume`,
+`rootpx.density`, `rootlength.density`,
 `mrd`, `rpi`, `total.length.density`, `rootlength.fraction`,
 `mean.var.diameter`, `rootsurface_rootvolume_ratio`.
 
@@ -150,7 +151,7 @@ result <- root_depth_metrics(
 |---|---|---|
 | `calc_root_pixels` | `rootpx`, `voidpx` | Needed for density metrics |
 | `calc_root_length` | `rootlength` | Needed for density + angle metrics |
-| `calc_diameter_stats` | `avg.diameter`, `max.diameter`, `var.diameter` | Needed for surface:volume ratio |
+| `calc_diameter_stats` | `avg.diameter`, `max.diameter`, `var.diameter`, `root.surface.area`, `root.volume`, `rootsurface_rootvolume_ratio` | Surface = lateral (soil-contact) area of the cylindrical root, not the image-visible area. Ratio is the length-weighted mean of local 2/r (fine-root dominated), not `root.surface.area / root.volume` |
 | `calc_diameter_quantiles` | `rootdiameter.90/95/99`, `avg.diameter.top*pct`, `rootlength.above.*`, `n.diameter.peaks`, `diameter.peak.*` | See `diameter_quantiles`, `diameter_thresholds` |
 | `calc_landscape_metrics` | `enn_mn`, `joinent`, `relmutinf`, `np`, `contag`, `np_density` | **Slow** — one call per depth bin |
 | `calc_color_metrics` | `rcc_root`, `gcc_root`, ..., `rcc_bg`, `gcc_bg`, ... | Requires `path_rgb` |
@@ -158,7 +159,7 @@ result <- root_depth_metrics(
 | `calc_root_order_metrics` | Per bin: `mean.branch_order`, `max.branch_order`, `mean.root_order`, `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, ...), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length` |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
 | `calc_distribution_indices` | `mrd`, `rpi`, `total.length.density` | Tube-level summary |
-| `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter`, `rootsurface_rootvolume_ratio` | Auto-enables distribution indices + diameter stats |
+| `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter` | Auto-enables distribution indices + diameter stats |
 
 ---
 

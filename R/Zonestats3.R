@@ -135,7 +135,10 @@ root_length <- function(img,
     u1 <- terra::focal(img, w = g1, fun = "sum", na.rm = TRUE)
     
     # -----------------------------
-    # IMPORTANT: scalar extraction (fixes your error source)
+    # Per-pixel pair detection
+    # A focal sum of 2 means the pixel and exactly one neighbour (in the
+    # relevant direction) are both root, i.e. a connected step. Compare the
+    # rasters element-wise to flag those steps before summing them below.
     # -----------------------------
     orth.img <- (r0 == 2) | (r1 == 2)
     diag.img <- (u0 == 2) | (u1 == 2)
