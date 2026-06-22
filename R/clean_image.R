@@ -32,7 +32,8 @@ fill_holes <- function(img, max_size = NULL) {
   ))
   border_labels <- border_labels[border_labels > 0]
 
-  internal_labels <- lbl * as.numeric(!(lbl %in% border_labels))
+  lblv <- as.numeric(lbl)
+  internal_labels <- lblv * as.numeric(!(lblv %in% border_labels))
 
   if (!is.null(max_size)) {
     sizes          <- table(internal_labels[internal_labels > 0])
@@ -69,7 +70,8 @@ remove_small_objects <- function(img, max_size = NULL) {
   ))
   border_labels <- border_labels[border_labels > 0]
 
-  internal_labels <- lbl * as.numeric(!(lbl %in% border_labels))
+  lblv <- as.numeric(lbl)
+  internal_labels <- lblv * as.numeric(!(lblv %in% border_labels))
 
   if (!is.null(max_size)) {
     sizes        <- table(internal_labels[internal_labels > 0])

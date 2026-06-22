@@ -138,7 +138,12 @@ deep_drive <- function(DepthMap,
     DepthMap = terra::t(terra::flip(DepthMap))
     
     # which pixel to go to reach the next deepest pixel in 8px neighbourhood
-    mxslope <- terra::focal(DepthMap, w=c(3,3), fun=function(x)x[c(1:4,6:9)] - x[5])
+    offs   <- list(c(1,1),c(1,2),c(1,3),c(2,1),c(2,3),c(3,1),c(3,2),c(3,3))
+    slopes <- lapply(offs, function(o) {
+      w <- matrix(0,3,3); w[2,2] <- -1; w[o[1],o[2]] <- 1
+      terra::focal(DepthMap, w = w, fun = "sum", na.rm = FALSE)
+    })
+    mxslope <- terra::rast(slopes)
     # correct for diagonal length 
     mxslope[[c(1,3,6,8)]] = mxslope[[c(1,3,6,8)]] / sqrt(2)
     # finding the steepest descend
