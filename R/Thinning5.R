@@ -75,20 +75,14 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
     
     mp <- matrix(0L, nr + 2, nc + 2)
     mp[2:(nr+1), 2:(nc+1)] <- m
-    
-    code <- integer(nr * nc)
-    
-    k <- 1L
-    for (i in 2:(nr+1)) {
-      for (j in 2:(nc+1)) {
-        if (mp[i, j] == 1L) {
-          block <- mp[(i-1):(i+1), (j-1):(j+1)]
-          code[k] <- sum(block * mask)
-        }
-        k <- k + 1L
-      }
-    }
-    
+
+    # vectorized neighborhood code (replaces the per-pixel double loop)
+    nw<-mp[1:nr,1:nc];      nn<-mp[1:nr,2:(nc+1)];      ne<-mp[1:nr,3:(nc+2)]
+    ww<-mp[2:(nr+1),1:nc];                              ee<-mp[2:(nr+1),3:(nc+2)]
+    sw<-mp[3:(nr+2),1:nc];  ss<-mp[3:(nr+2),2:(nc+1)];  se<-mp[3:(nr+2),3:(nc+2)]
+    Cmat <- 1L*nw + 2L*nn + 4L*ne + 128L*ww + 8L*ee + 64L*sw + 32L*ss + 16L*se
+    Cmat[m != 1L] <- 0L
+    code <- as.vector(t(Cmat))
     lut_code <- lut[code + 1L]
     
     rm1 <- lut_code %in% c(1L, 3L)
@@ -167,18 +161,13 @@ detect_skeleton_points <- function(img, select_layer = NULL, skeletonize = FALSE
 
   img <- matrix(terra::values(img), nrow = nrow(img), byrow = TRUE)
 
-  kernel <- matrix(1,3,3); kernel[2,2] <- 0
-  
-  padded <- matrix(0, nrow(img)+2, ncol(img)+2)
-  padded[2:(nrow(img)+1), 2:(ncol(img)+1)] <- img
-  
-  n <- matrix(0, nrow(img), ncol(img))
-  
-  for (i in seq_len(nrow(img))) {
-    for (j in seq_len(ncol(img))) {
-      n[i,j] <- sum(padded[i:(i+2), j:(j+2)] * kernel)
-    }
-  }
+  nr <- nrow(img); nc <- ncol(img)
+  padded <- matrix(0, nr + 2, nc + 2)
+  padded[2:(nr+1), 2:(nc+1)] <- img
+  # vectorized 8-neighbor count (replaces the per-pixel double loop)
+  n <- padded[1:nr,1:nc]     + padded[1:nr,2:(nc+1)]     + padded[1:nr,3:(nc+2)] +
+       padded[2:(nr+1),1:nc] +                            padded[2:(nr+1),3:(nc+2)] +
+       padded[3:(nr+2),1:nc] + padded[3:(nr+2),2:(nc+1)] + padded[3:(nr+2),3:(nc+2)]
   
   list(
     endpoints = terra::rast((img == 1 & n == 1) * 1),
