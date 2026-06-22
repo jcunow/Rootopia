@@ -19,23 +19,17 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 # objects are eval=TRUE so the code is actually exercised.
 library(Rootopia)
 library(terra)
-
-# Faithful preview helper (vignette-local; not part of the package).
-# A minirhizotron scan is several thousand pixels wide. Shrinking that to fit an
-# html_vignette figure forces the graphics device to drop one-pixel-wide roots
-# and skeletons. We therefore show two views per step: a full-image overview
-# for spatial context, and a centred native-resolution crop where thin features
-# survive at (near) 1:1. `frac` is the fraction of each axis kept in the crop.
-show_scan <- function(x, main = "", frac = 0.125, ...) {
-  terra::plot(x, maxcell = Inf, main = paste0(main, " - overview"), ...)
-  ev <- as.vector(terra::ext(x))            # xmin, xmax, ymin, ymax
-  cx <- (ev[1] + ev[2]) / 2; cy <- (ev[3] + ev[4]) / 2
-  hw <- frac * (ev[2] - ev[1]) / 2
-  hh <- frac * (ev[4] - ev[3]) / 2
-  terra::plot(terra::crop(x, terra::ext(cx - hw, cx + hw, cy - hh, cy + hh)),
-              maxcell = Inf, main = paste0(main, " - native crop"), ...)
-}
 ```
+
+> **A note on figures.** Minirhizotron scans are several thousand pixels wide.
+> Shrinking one to fit an html_vignette figure forces the graphics device to
+> drop one-pixel-wide roots and skeletons, so they appear broken or vanish.
+> The figures below therefore use `zoom_plot()` (a Rootopia function): it draws
+> a full-image **overview** with the magnified region outlined, plus a
+> **native-resolution inset** where thin features survive at ~1:1. `frac` sets
+> the fraction of each axis kept in the inset (magnification `1/frac`); `center`
+> controls which part is magnified (`"center"`, `"densest"`, or relative
+> `c(fx, fy)`).
 
 # Minirhizotron Scans Analysis with Rootopia
 
@@ -142,7 +136,7 @@ data(rgb_Oulanka2023_Session03_T067)
 rgb <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
                            output_format = "spatrast", scale = "none")
 
-show_scan(root_layer, main = "Root layer (binary)", frac = 0.1)
+zoom_plot(root_layer, main = "Root layer (binary)", frac = 0.1)
 ```
 
 ---
@@ -331,7 +325,7 @@ colnames(diam_by_depth) <- c("depth", "avg.diameter")
 depth_data <- merge(depth_data, diam_by_depth, by = "depth")
 head(depth_data)
 # root thickness
-show_scan(diam_result$distance_map_rast, frac = 0.1)
+zoom_plot(diam_result$distance_map_rast, frac = 0.1)
 ```
 
 ---

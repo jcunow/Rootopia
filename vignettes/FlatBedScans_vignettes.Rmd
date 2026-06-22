@@ -17,23 +17,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 # is how a user supplies their own files.
 library(Rootopia)
 library(terra)
-
-# Faithful preview helper (vignette-local; not part of the package).
-# The bundled scan is several thousand pixels wide. Shrinking that to fit an
-# html_vignette figure forces the graphics device to drop one-pixel-wide roots
-# and skeletons. We therefore show two views per step: a full-image overview
-# for spatial context, and a centred native-resolution crop where thin features
-# survive at (near) 1:1. `frac` is the fraction of each axis kept in the crop.
-show_scan <- function(x, main = "", frac = 0.1, ...) {
-  terra::plot(x, maxcell = Inf, main = paste0(main, " - overview"), ...)
-  ev <- as.vector(terra::ext(x))            # xmin, xmax, ymin, ymax
-  cx <- (ev[1] + ev[2]) / 2; cy <- (ev[3] + ev[4]) / 2
-  hw <- frac * (ev[2] - ev[1]) / 2
-  hh <- frac * (ev[4] - ev[3]) / 2
-  terra::plot(terra::crop(x, terra::ext(cx - hw, cx + hw, cy - hh, cy + hh)),
-              maxcell = Inf, main = paste0(main, " - native crop"), ...)
-}
 ```
+
+> **A note on figures.** The bundled scan is several thousand pixels wide.
+> Shrinking it to fit an html_vignette figure forces the graphics device to
+> drop one-pixel-wide roots and skeletons, so they look broken or disappear.
+> The figures below use `zoom_plot()` (a Rootopia function): a full-image
+> **overview** with the magnified region outlined, plus a **native-resolution
+> inset** where thin features survive at ~1:1. `frac` sets the fraction of each
+> axis kept in the inset (magnification `1/frac`), and `center` controls which
+> part is magnified (`"center"`, `"densest"`, or relative `c(fx, fy)`).
 
 # Analyzing Root Systems from Flatbed Scans
 
@@ -102,23 +95,43 @@ data(flatbed_scan_example)
 seg <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
                            scale = "binary", select_layer = 2)
 
-show_scan(seg, main = "Segmented flatbed scan")
+zoom_plot(seg, main = "Segmented flatbed scan")
 ```
 
 
 ---
 
-### 2. Clean-image
+### 2. Clean the segmentation
+
+Segmentation output usually carries two defect types: small **holes** inside
+roots (gaps the model missed) and isolated **artifacts** (false-positive
+specks). Both distort the skeleton — a hole forces the medial axis to fork
+around it, a speck adds a phantom branch. `clean_image()` fills holes and
+removes artifacts in one pass.
+
+Inspect the actual pixel counts first so the thresholds aren't guesswork:
+
 ```{r}
-seg_clean = clean_image(seg,
-                        max_hole_size = 10, 
-                        max_artifact_size = 400)
-
-show_scan(seg_clean)
-
+report_image_components(seg)
 ```
 
+Use those numbers to set `max_hole_size` (largest gap to fill) and
+`max_artifact_size` (largest speck to delete). Specks touching the image edge
+are removed by the same size test as anywhere else — being at the border no
+longer protects an artifact. Set `protect_border = TRUE` only if you have real
+roots leaving the frame that you must keep.
 
+```{r}
+seg_clean <- clean_image(seg,
+                         max_hole_size     = 10,
+                         max_artifact_size = 400,
+                         protect_border    = FALSE)
+
+zoom_plot(seg_clean, main = "Cleaned segmentation")
+```
+
+> `clean_image()` expects a binary mask. If your input is a raw probability or
+> grayscale image, binarize it with `image_threshold()` first.
 
 
 ---
@@ -130,13 +143,34 @@ required for root length (Kimura method) and diameter estimation.
 
 ```{r}
 # `seg` is already the single root layer, so no select_layer needed here
-skl <- skeletonize_image(seg, verbose = FALSE)
+skl <- skeletonize_image(seg_clean, verbose = FALSE)
 
-show_scan(skl, main = "Skeleton", frac = 2)
+zoom_plot(skl, main = "Skeleton", frac = 0.2, center = c(0.5,0.5))
 ```
 
 `skeletonize_image()` uses a LUT-based Zhang-Suen thinning algorithm to
 reduce the segmented mask to one-pixel-wide centerlines.
+
+---
+
+### 3b. Remove spurs (optional)
+
+Thinning can leave short terminal "spurs" — stubs hanging off real roots that
+inflate tip counts and branching. `prune_skeleton()` removes terminal branches
+below a length (or diameter) threshold. It operates on the skeleton graph but
+can return either the cleaned skeleton or, with `output = "mask"`, a cleaned
+segmentation: each surviving skeleton pixel is regrown by its local radius
+(from the distance transform of `mask`) and clipped to `mask`, so the spur's
+body is removed from the segmentation too.
+
+```{r}
+skl <- prune_skeleton(skl, mask = seg_clean, min_length = 15, iter = 2)
+zoom_plot(skl, main = "Skeleton (spurs pruned)", frac = 0.125)
+
+# To clean the segmentation itself instead of the skeleton:
+# seg_clean <- prune_skeleton(skl, mask = seg_clean, min_length = 15,
+#                             output = "mask")
+```
 
 ---
 
@@ -257,7 +291,7 @@ order_res <- branch_order_map(
 order_res$summary
 
 # Rasterised branch-order classes, aligned to the skeleton
-show_scan(order_res$class_map, main = "Branch order")
+zoom_plot(order_res$class_map, main = "Branch order")
 ```
 
 `order_metrics()` can split the architecture into the main root(s) versus

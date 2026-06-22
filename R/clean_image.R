@@ -54,31 +54,40 @@ fill_holes <- function(img, max_size = NULL) {
 #' image border.
 #'
 #' @param img A `cimg` binary image (values 0 and 1).
-#' @param max_size Maximum artifact size in pixels to remove.  If `NULL`
-#'   (default), all isolated white regions are removed.
+#' @param max_size Maximum artifact size in pixels to remove.  If `NULL`,
+#'   all candidate white regions are removed.
+#' @param protect_border Logical.  If `TRUE`, white regions touching the image
+#'   border are never removed (they are assumed to be roots leaving the frame).
+#'   If `FALSE` (default), border-touching regions are subject to the same
+#'   `max_size` test as any other region, so edge specks are removed too.
+#'   Border location confers no protection on its own.
 #' @return A `cimg` with artifacts removed.
 #' @keywords internal
-remove_small_objects <- function(img, max_size = NULL) {
+remove_small_objects <- function(img, max_size = NULL, protect_border = FALSE) {
   lbl <- imager::label(img)
   nd  <- dim(lbl)
 
-  border_labels <- unique(c(
-    lbl[1,    , 1, 1],
-    lbl[nd[1],, 1, 1],
-    lbl[, 1,   1, 1],
-    lbl[, nd[2], 1, 1]
-  ))
-  border_labels <- border_labels[border_labels > 0]
-
   lblv <- as.numeric(lbl)
-  internal_labels <- lblv * as.numeric(!(lblv %in% border_labels))
+
+  if (protect_border) {
+    border_labels <- unique(c(
+      lbl[1,    , 1, 1],
+      lbl[nd[1],, 1, 1],
+      lbl[, 1,   1, 1],
+      lbl[, nd[2], 1, 1]
+    ))
+    border_labels <- border_labels[border_labels > 0]
+    candidate <- lblv * as.numeric(!(lblv %in% border_labels))
+  } else {
+    candidate <- lblv                       # every white region is a candidate
+  }
 
   if (!is.null(max_size)) {
-    sizes        <- table(internal_labels[internal_labels > 0])
+    sizes        <- table(candidate[candidate > 0])
     small        <- as.integer(names(sizes[sizes <= max_size]))
-    remove_mask  <- internal_labels %in% small
+    remove_mask  <- candidate %in% small
   } else {
-    remove_mask <- internal_labels > 0
+    remove_mask <- candidate > 0
   }
 
   img[remove_mask] <- 0
@@ -269,27 +278,21 @@ smooth_root_edges <- function(img,
 #' root diameter measurements.  Only use it when the segmentation output has
 #' very jagged edges; leave it off (`FALSE`, the default) otherwise.
 #'
-#' @section Optional pre-thresholding:
-#' If the input is not yet a clean binary mask (e.g. a raw probability /
-#' grayscale image from a segmentation model), set `pre_threshold` to binarize
-#' it via [image_threshold()] *before* hole-filling and artifact removal. This
-#' runs first because [image_threshold()] expects a non-binary `SpatRaster`;
-#' once thresholded, the result feeds into the same hole-filling /
-#' artifact-removal / edge-smoothing steps as a normal binary mask.
+#' @section Input must be binary:
+#' `clean_image()` operates on a binary mask (root = 1, background = 0). If your
+#' input is a raw probability / grayscale image from a segmentation model,
+#' binarize it first with [image_threshold()] and pass the result here.
 #'
-#' @param img A `cimg` object, `SpatRaster`, matrix, or file path.
-#' @param pre_threshold Numeric (0-1) or `NULL` (default). If not `NULL`,
-#'   [image_threshold()] is applied to `img` first, using this value as its
-#'   `threshold` argument, before any hole-filling or artifact removal.
-#' @param pre_threshold_method Thresholding method passed to
-#'   [image_threshold()] when `pre_threshold` is set: `"global"` (default) or
-#'   `"adaptive"`.
-#' @param pre_threshold_window_size Window size passed to [image_threshold()]
-#'   when `pre_threshold_method = "adaptive"`. Default `15`.
+#' @param img A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).
 #' @param max_hole_size Maximum hole size in pixels to fill.  If `NULL`, all
 #'   enclosed holes are filled.  See **Choosing thresholds** above.
 #' @param max_artifact_size Maximum artifact size in pixels to remove.  If
-#'   `NULL`, all isolated white regions are removed.
+#'   `NULL`, all candidate white regions are removed.
+#' @param protect_border Logical.  If `TRUE`, white regions touching the image
+#'   border are kept regardless of size (roots leaving the frame).  If `FALSE`
+#'   (default), border-touching specks are removed by the same
+#'   `max_artifact_size` test as anything else — being at the edge does not
+#'   protect an artifact.
 #' @param edge_smooth Logical.  Apply morphological closing after hole/artifact
 #'   cleaning.  Default `FALSE`.
 #' @param kernel_shape Structuring element shape for edge smoothing:
@@ -328,11 +331,9 @@ smooth_root_edges <- function(img,
 #' cleaned_cimg <- clean_image(img, max_hole_size = 50,
 #'                             output_format = "cimg", select_layer = 2)
 clean_image <- function(img,
-                         pre_threshold              = NULL,
-                         pre_threshold_method       = "global",
-                         pre_threshold_window_size  = 15,
                          max_hole_size     = NULL,
                          max_artifact_size = NULL,
+                         protect_border    = FALSE,
                          edge_smooth       = FALSE,
                          kernel_shape      = "disk",
                          kernel_size       = 3,
@@ -343,22 +344,6 @@ clean_image <- function(img,
 
   output_format <- match.arg(output_format, c("spatrast", "cimg", "matrix"))
 
-  if (!is.null(pre_threshold)) {
-    img <- load_flexible_image(img,
-                                output_format = "spatrast",
-                                select_layer  = select_layer,
-                                scale         = "none")
-    img <- image_threshold(img,
-                            threshold   = pre_threshold,
-                            method      = pre_threshold_method,
-                            window_size = pre_threshold_window_size,
-                            select_layer = NULL,
-                            mask_layer   = NULL,
-                            binary_01    = TRUE,
-                            deblur       = FALSE)
-    select_layer <- NULL
-  }
-
   img_cimg <- load_flexible_image(img,
                                    output_format = "cimg",
                                    select_layer  = select_layer,
@@ -367,7 +352,8 @@ clean_image <- function(img,
   if (report) report_image_components(img_cimg)
 
   img_filled  <- fill_holes(img_cimg, max_hole_size)
-  img_cleaned <- remove_small_objects(img_filled, max_artifact_size)
+  img_cleaned <- remove_small_objects(img_filled, max_artifact_size,
+                                      protect_border = protect_border)
 
   img_out <- if (edge_smooth) {
     smooth_root_edges(img_cleaned, kernel_shape, kernel_size, iterations)

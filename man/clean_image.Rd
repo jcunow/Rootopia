@@ -6,11 +6,9 @@
 \usage{
 clean_image(
   img,
-  pre_threshold = NULL,
-  pre_threshold_method = "global",
-  pre_threshold_window_size = 15,
   max_hole_size = NULL,
   max_artifact_size = NULL,
+  protect_border = FALSE,
   edge_smooth = FALSE,
   kernel_shape = "disk",
   kernel_size = 3,
@@ -21,24 +19,19 @@ clean_image(
 )
 }
 \arguments{
-\item{img}{A `cimg` object, `SpatRaster`, matrix, or file path.}
-
-\item{pre_threshold}{Numeric (0-1) or `NULL` (default). If not `NULL`,
-[image_threshold()] is applied to `img` first, using this value as its
-`threshold` argument, before any hole-filling or artifact removal.}
-
-\item{pre_threshold_method}{Thresholding method passed to
-[image_threshold()] when `pre_threshold` is set: `"global"` (default) or
-`"adaptive"`.}
-
-\item{pre_threshold_window_size}{Window size passed to [image_threshold()]
-when `pre_threshold_method = "adaptive"`. Default `15`.}
+\item{img}{A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).}
 
 \item{max_hole_size}{Maximum hole size in pixels to fill.  If `NULL`, all
 enclosed holes are filled.  See **Choosing thresholds** above.}
 
 \item{max_artifact_size}{Maximum artifact size in pixels to remove.  If
-`NULL`, all isolated white regions are removed.}
+`NULL`, all candidate white regions are removed.}
+
+\item{protect_border}{Logical.  If `TRUE`, white regions touching the image
+border are kept regardless of size (roots leaving the frame).  If `FALSE`
+(default), border-touching specks are removed by the same
+`max_artifact_size` test as anything else — being at the edge does not
+protect an artifact.}
 
 \item{edge_smooth}{Logical.  Apply morphological closing after hole/artifact
 cleaning.  Default `FALSE`.}
@@ -103,14 +96,11 @@ root diameter measurements.  Only use it when the segmentation output has
 very jagged edges; leave it off (`FALSE`, the default) otherwise.
 }
 
-\section{Optional pre-thresholding}{
+\section{Input must be binary}{
 
-If the input is not yet a clean binary mask (e.g. a raw probability /
-grayscale image from a segmentation model), set `pre_threshold` to binarize
-it via [image_threshold()] *before* hole-filling and artifact removal. This
-runs first because [image_threshold()] expects a non-binary `SpatRaster`;
-once thresholded, the result feeds into the same hole-filling /
-artifact-removal / edge-smoothing steps as a normal binary mask.
+`clean_image()` operates on a binary mask (root = 1, background = 0). If your
+input is a raw probability / grayscale image from a segmentation model,
+binarize it first with [image_threshold()] and pass the result here.
 }
 
 \examples{

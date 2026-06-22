@@ -60,6 +60,7 @@ reference:
       - clean_image
       - image_threshold
       - rgb2gray
+      - prune_skeleton
       - rotation_censor
       - skeletonize_image
 
@@ -87,6 +88,7 @@ reference:
       - prune_terminal_segments
       - render_order_overlay
       - plot_order_window
+
 
   - title: "Root turnover"
     desc: "Estimate root production, decay, and turnover from temporal image
@@ -133,7 +135,15 @@ reference:
       - slice_rotation
       - fit_sine_curve
       - rhythmicity
-      
+
+
+  - title: "Visualization"
+    desc: "Helper to zoom into an image."
+    contents:
+      - zoom_plot
+
+
+
 
 
   - title: "Example data"

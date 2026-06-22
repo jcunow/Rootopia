@@ -4,13 +4,19 @@
 \alias{remove_small_objects}
 \title{Remove small isolated white artifacts from a binary image}
 \usage{
-remove_small_objects(img, max_size = NULL)
+remove_small_objects(img, max_size = NULL, protect_border = FALSE)
 }
 \arguments{
 \item{img}{A `cimg` binary image (values 0 and 1).}
 
-\item{max_size}{Maximum artifact size in pixels to remove.  If `NULL`
-(default), all isolated white regions are removed.}
+\item{max_size}{Maximum artifact size in pixels to remove.  If `NULL`,
+all candidate white regions are removed.}
+
+\item{protect_border}{Logical.  If `TRUE`, white regions touching the image
+border are never removed (they are assumed to be roots leaving the frame).
+If `FALSE` (default), border-touching regions are subject to the same
+`max_size` test as any other region, so edge specks are removed too.
+Border location confers no protection on its own.}
 }
 \value{
 A `cimg` with artifacts removed.

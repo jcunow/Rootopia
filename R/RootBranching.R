@@ -754,6 +754,109 @@ prune_terminal_segments <- function(segs, DT, min_length = 0, min_diameter = 0, 
   segs
 }
 
+#' Prune short or thin spurs from a skeleton or segmentation image
+#'
+#' Standalone clean-up step that removes short/thin terminal branches ("spurs")
+#' that survive segmentation. Spurs are defined on the skeleton graph (that is
+#' where connectivity lives), but the result can be returned either as the
+#' cleaned skeleton (\code{output = "skeleton"}) or propagated back into
+#' segmentation space (\code{output = "mask"}).
+#'
+#' @details
+#' The skeleton is traced into segments and \code{\link{prune_terminal_segments}}
+#' removes terminal segments below \code{min_length} / \code{min_diameter},
+#' iterated \code{iter} times. For \code{output = "mask"}, each surviving
+#' skeleton pixel is regrown by its local distance-transform radius (the medial
+#' axis reconstruction) and intersected with the original \code{mask}, so the
+#' spur's body is removed from the segmentation while the real roots are
+#' restored to their original thickness. A \code{mask} is therefore strongly
+#' recommended (and required for trustworthy \code{output = "mask"} and the
+#' \code{min_diameter} test); without it diameters collapse to ~1 px.
+#'
+#' @param skel Binary skeleton: single-layer \code{SpatRaster} or 0/1 matrix.
+#' @param mask Filled root mask on the same grid, for the distance transform and
+#'   (when \code{output = "mask"}) reconstruction. Optional but recommended.
+#' @param min_length Minimum terminal-segment length (px) to keep.
+#' @param min_diameter Minimum terminal-segment diameter (px) to keep.
+#' @param iter Number of pruning passes.
+#' @param output \code{"skeleton"} (default) returns the pruned skeleton;
+#'   \code{"mask"} returns the pruned binary segmentation.
+#' @param verbose Print progress.
+#' @return A cleaned image matching the class of \code{skel} (\code{SpatRaster}
+#'   in, \code{SpatRaster} out; matrix in, matrix out).
+#' @seealso \code{\link{prune_terminal_segments}}, \code{\link{clean_image}}
+#' @export
+#' @examples
+#' \dontrun{
+#' skl <- skeletonize_image(mask)
+#' # remove spurs shorter than 15 px, return a cleaned skeleton
+#' skl2 <- prune_skeleton(skl, mask, min_length = 15, iter = 2)
+#' # ... or clean the segmentation itself
+#' seg2 <- prune_skeleton(skl, mask, min_length = 15, output = "mask")
+#' }
+prune_skeleton <- function(skel, mask = NULL,
+                           min_length = 0, min_diameter = 0, iter = 1L,
+                           output = c("skeleton", "mask"), verbose = FALSE) {
+  output <- match.arg(output)
+  is_rast  <- inherits(skel, "SpatRaster")
+  template <- if (is_rast) skel[[1]] else NULL
+
+  skel_m <- .to_binary_matrix(skel)
+  if (is.null(mask)) {
+    if (output == "mask")
+      warning("No 'mask' supplied; reconstructed mask will be ~1 px wide. Pass 'mask' for seg-space pruning.")
+    mask_m <- skel_m
+  } else {
+    mask_m <- .to_binary_matrix(mask)
+    if (!all(dim(mask_m) == dim(skel_m))) stop("'skel' and 'mask' dims must match.")
+  }
+
+  DT   <- .distance_transform_edt(mask_m)
+  segs <- trace_segments(skel_m)
+  n0   <- length(segs)
+  segs <- prune_terminal_segments(segs, DT, min_length = min_length,
+                                  min_diameter = min_diameter, iter = iter)
+  if (verbose) cat(sprintf("prune_skeleton: %d -> %d segment(s)\n", n0, length(segs)))
+
+  nr <- nrow(skel_m); nc <- ncol(skel_m)
+  kept <- matrix(0L, nr, nc)
+  for (s in segs) kept[s$coords] <- 1L          # coords are (row, col)
+
+  if (output == "skeleton") {
+    out_m <- kept
+  } else {
+    # Medial-axis reconstruction: stamp a DT-radius disk at each kept pixel,
+    # then clip to the original mask so we never grow beyond the real root.
+    out_m <- matrix(0L, nr, nc)
+    idx   <- which(kept > 0L, arr.ind = TRUE)
+    if (nrow(idx) > 0L) {
+      rad <- DT[kept > 0L]
+      disk_cache <- list()
+      for (k in seq_len(nrow(idx))) {
+        rr <- max(0L, as.integer(floor(rad[k])))
+        key <- as.character(rr)
+        off <- disk_cache[[key]]
+        if (is.null(off)) {                      # offsets for a disk of radius rr
+          g <- expand.grid(dr = -rr:rr, dc = -rr:rr)
+          off <- as.matrix(g[g$dr^2 + g$dc^2 <= rr^2, , drop = FALSE])
+          disk_cache[[key]] <- off
+        }
+        R <- idx[k, 1] + off[, 1]; C <- idx[k, 2] + off[, 2]
+        ok <- R >= 1L & R <= nr & C >= 1L & C <= nc
+        out_m[cbind(R[ok], C[ok])] <- 1L
+      }
+    }
+    out_m <- out_m * mask_m                      # clip to original segmentation
+  }
+
+  if (is_rast) {
+    out <- terra::rast(template)
+    terra::values(out) <- as.vector(t(out_m))
+    names(out) <- if (output == "mask") "pruned_mask" else "pruned_skeleton"
+    out
+  } else out_m
+}
+
 #' Rasterise a per-segment value onto the image grid
 #'
 #' Writes any per-segment column (default the order class) back onto the full
