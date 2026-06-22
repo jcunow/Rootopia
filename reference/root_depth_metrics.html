@@ -221,7 +221,16 @@ Required for length density and angle metrics.  Default <code>TRUE</code>.</p></
 <dt id="arg-calc-diameter-stats">calc_diameter_stats<a class="anchor" aria-label="anchor" href="#arg-calc-diameter-stats"></a></dt>
 <dd><p>Logical. Compute per-bin mean, maximum, and
 variance of root diameter (cm) using the distance-transform approach in
-<code><a href="root_diameter.html">root_diameter()</a></code>.  Default <code>TRUE</code>.</p></dd>
+<code><a href="root_diameter.html">root_diameter()</a></code>, plus <code>root.surface.area</code> (lateral surface
+area, cm\(^2\)) and <code>root.volume</code> (cm\(^3\)) per bin, and
+<code>rootsurface_rootvolume_ratio</code> (cm\(^{-1}\)).  <code>root.surface.area</code>
+is the curved wall wrapping each cylindrical root (its soil-contact area),
+<em>not</em> the flat root area visible in the image.
+<code>rootsurface_rootvolume_ratio</code> is the length-weighted mean of the
+<em>local</em> ratio \(2 / r_i\) over skeleton pixels, so it is dominated by
+fine roots and is deliberately not equal to
+<code>root.surface.area / root.volume</code> (a bulk ratio dominated by thick
+roots); the two answer different questions.  Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-calc-diameter-quantiles">calc_diameter_quantiles<a class="anchor" aria-label="anchor" href="#arg-calc-diameter-quantiles"></a></dt>
@@ -286,10 +295,8 @@ density over all bins, in cm root per cm^2 per cm depth).  Auto-enables
 <dt id="arg-calc-advanced-metrics">calc_advanced_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-advanced-metrics"></a></dt>
 <dd><p>Logical. Compute per-bin derived metrics:
 <code>rootlength.fraction</code> (each bin's length density as a fraction of the
-tube total), <code>mean.var.diameter</code> (mean of within-bin diameter
-variance), and <code>rootsurface_rootvolume_ratio</code> (lateral surface area
-over cylinder volume, summed over skeleton pixels in the bin and expressed
-as cm^2 per cm^3).  Auto-enables <code>calc_distribution_indices</code> and
+tube total) and <code>mean.var.diameter</code> (mean of within-bin diameter
+variance).  Auto-enables <code>calc_distribution_indices</code> and
 <code>calc_diameter_stats</code>.  Default <code>TRUE</code>.</p></dd>
 
 
@@ -336,15 +343,22 @@ predicted clock-time of completion.  Default <code>TRUE</code>.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>Surface-to-volume ratio.</strong>  For each skeleton pixel, the root segment
-is modelled as a cylinder of length \(l_i\) (the D8 path length of that
-pixel in cm) and radius \(r_i\) (half the local diameter in cm).  The
-lateral surface area is \(2 \pi r_i l_i\) and the volume is
-\(\pi r_i^2 l_i\).  Their ratio simplifies to \(2 / r_i\).
-<code>rootsurface_rootvolume_ratio</code> is the length-weighted mean of
-\(2 / r_i\) over all skeleton pixels in the depth bin, in units of
-cm\(^{-1}\) (cm^2 surface per cm^3 volume).  Thicker roots have a smaller
-ratio; fine roots have a larger ratio.</p>
+    <p><strong>Surface, volume, and their ratio.</strong>  For each skeleton pixel, the root
+segment is modelled as a cylinder of length \(l_i\) (one pixel edge in cm)
+and radius \(r_i\) (half the local diameter in cm).  Its <em>lateral</em>
+surface area is \(2 \pi r_i l_i\) – the curved wall wrapping the root, i.e.
+the area in contact with the soil, not the flat root area seen in the image –
+and its volume is \(\pi r_i^2 l_i\).  <code>root.surface.area</code> (cm\(^2\))
+and <code>root.volume</code> (cm\(^3\)) are these quantities summed over all
+skeleton pixels in the depth bin.</p>
+<p>The per-pixel surface-to-volume ratio simplifies to \(2 / r_i\), and
+<code>rootsurface_rootvolume_ratio</code> (cm\(^{-1}\)) is the length-weighted
+mean of \(2 / r_i\) over the bin's skeleton pixels.  Because it averages the
+<em>local</em> ratio, it is dominated by fine roots (small \(r_i\) give large
+\(2 / r_i\)).  This is deliberately not the same as the bulk ratio
+<code>root.surface.area / root.volume</code>, which is dominated by thick roots
+(they hold most of the volume); the two summarise different things and will
+not match unless every root in the bin has the same diameter.</p>
 <p><strong>Fault tolerance.</strong>  Every metric block is wrapped in
 <code>tryCatch</code>.  Failures produce a <code>[Rootopia] SKIPPED</code> message and
 <code>NA</code> values; they never abort the run.</p>

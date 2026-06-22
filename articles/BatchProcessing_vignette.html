@@ -188,6 +188,7 @@ combination. Always-present columns: <code>Tube</code>,
 metric columns: <code>rootpx</code>, <code>voidpx</code>,
 <code>rootlength</code>, <code>avg.diameter</code>,
 <code>max.diameter</code>, <code>var.diameter</code>,
+<code>root.surface.area</code>, <code>root.volume</code>,
 <code>rootpx.density</code>, <code>rootlength.density</code>,
 <code>mrd</code>, <code>rpi</code>, <code>total.length.density</code>,
 <code>rootlength.fraction</code>, <code>mean.var.diameter</code>,
@@ -281,9 +282,14 @@ computed.</p>
 <td><code>calc_diameter_stats</code></td>
 <td>
 <code>avg.diameter</code>, <code>max.diameter</code>,
-<code>var.diameter</code>
+<code>var.diameter</code>, <code>root.surface.area</code>,
+<code>root.volume</code>, <code>rootsurface_rootvolume_ratio</code>
 </td>
-<td>Needed for surface:volume ratio</td>
+<td>Surface = lateral (soil-contact) area of the cylindrical root, not
+the image-visible area. Ratio is the length-weighted mean of local 2/r
+(fine-root dominated), not
+<code>root.surface.area / root.volume</code>
+</td>
 </tr>
 <tr class="even">
 <td><code>calc_diameter_quantiles</code></td>
@@ -353,8 +359,8 @@ computed.</p>
 <tr class="odd">
 <td><code>calc_advanced_metrics</code></td>
 <td>
-<code>rootlength.fraction</code>, <code>mean.var.diameter</code>,
-<code>rootsurface_rootvolume_ratio</code>
+<code>rootlength.fraction</code>,
+<code>mean.var.diameter</code>
 </td>
 <td>Auto-enables distribution indices + diameter stats</td>
 </tr>
