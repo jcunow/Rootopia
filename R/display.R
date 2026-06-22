@@ -34,7 +34,6 @@
 #' @param ... Further graphical arguments passed to \code{terra::plot()}.
 #' @return Invisibly, the (possibly aggregated) \code{SpatRaster} that was drawn.
 #' @keywords internal
-#' @export
 #' @examples
 #' \dontrun{
 #'   # Binary mask or skeleton: keep thin lines with block-max (the default)
@@ -66,8 +65,12 @@ show_root_image <- function(x, fun = "max", max_dim = 1000,
   } else {
     # maxcell = ncell disables terra's own subsampling; smooth = FALSE keeps
     # nearest-neighbour rendering (no interpolation across cell edges).
-    terra::plot(r, maxcell = terra::ncell(r), smooth = FALSE,
-                col = col, legend = legend, main = main, ...)
+    # Forward `col` only when supplied -- passing col = NULL would override
+    # terra's default palette with NULL and error inside terra::plot().
+    args <- list(r, maxcell = terra::ncell(r), smooth = FALSE,
+                 legend = legend, main = main, ...)
+    if (!is.null(col)) args$col <- col
+    do.call(terra::plot, args)
   }
 
   invisible(r)
