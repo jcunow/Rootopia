@@ -49,7 +49,7 @@ Background is represented as 0 in all layers.
   data(TurnoverDPC_data)
   img = terra::rast(TurnoverDPC_data)
   # Plot individual layers
-  show_root_image(img, fun = "mean")
+  terra::plot(img, maxcell = Inf)
   # Calculate turnover statistics
   decay <- sum(terra::values(img[[1]]) == 1)
   growth <- sum(terra::values(img[[2]]) == 1)

@@ -19,6 +19,21 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 library(Rootopia)
+
+# Faithful preview helper (vignette-local; not part of the package).
+# These rasters are large; shrinking them to fit a vignette figure makes the
+# graphics device drop one-pixel-wide features. We therefore show two views:
+# a full-image overview for context, and a centred native-resolution crop where
+# thin features survive at (near) 1:1. `frac` is the fraction of each axis kept.
+show_scan <- function(x, main = "", frac = 0.3, ...) {
+  terra::plot(x, maxcell = Inf, main = paste0(main, " - overview"), ...)
+  ev <- as.vector(terra::ext(x))            # xmin, xmax, ymin, ymax
+  cx <- (ev[1] + ev[2]) / 2; cy <- (ev[3] + ev[4]) / 2
+  hw <- frac * (ev[2] - ev[1]) / 2
+  hh <- frac * (ev[4] - ev[3]) / 2
+  terra::plot(terra::crop(x, terra::ext(cx - hw, cx + hw, cy - hh, cy + hh)),
+              maxcell = Inf, main = paste0(main, " - native crop"), ...)
+}
 ```
 
 This article collects a few less-obvious capabilities of **Rootopia** that
@@ -44,7 +59,7 @@ img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
-show_root_image(result$map)
+show_scan(result$map, main = "Soil classification")
 ```
 
 The returned list also carries per-class statistics -- pixel counts, area
@@ -100,7 +115,7 @@ max_dist <- c(region1 = 14, region2 = 14, region3 = 26,
 
 cents  <- build_soil_centroids(picks, max_dist)   # prints diagnostics
 result <- classify_soil_rgb(img, centroids = cents)
-show_root_image(result$map)
+show_scan(result$map, main = "Soil classification")
 ```
 
 Note: provide a class for **every** material in your scans. Because
@@ -147,12 +162,12 @@ roots themselves).
 ```{r root-buffer}
 seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select_layer = 2)
 halo <- create_root_buffer(seg, width = 3, halo_only = TRUE, kernel = "circle")
-show_root_image(halo)
+show_scan(halo, main = "Rhizosphere halo (width 3)")
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = TRUE, kernel = "circle")
-show_root_image(halo10)
+show_scan(halo10, main = "Halo only (width 10)")
 halo10 <- create_root_buffer(seg, width = 10, halo_only = FALSE, kernel = "circle")
-show_root_image(halo10)
+show_scan(halo10, main = "Roots + halo (width 10)")
 ```
 
 The `kernel` argument switches between a `"circle"` (8-neighbor) and a

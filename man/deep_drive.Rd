@@ -60,6 +60,6 @@ deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2)
 
 # Get spatial outputs too
 res <- deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2, return = "all")
-show_root_image(res$aligned_roots)
+terra::plot(res$aligned_roots, maxcell = Inf)
 
 }

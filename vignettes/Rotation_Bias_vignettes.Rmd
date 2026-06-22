@@ -135,7 +135,7 @@ Two modes are available:
 
 ```{r, eval=FALSE}
 data(seg_Oulanka2023_Session01_T067)
-img <- terra::rast(seg_Oulanka2023_Session01_T067)
+img <- load_flexible_image(seg_Oulanka2023_Session01_T067, "spatrast")
 
 # rotation center (absolute row) to center the crop on
 r0 <- estimate_rotation_center(img)
@@ -193,7 +193,7 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binar
 # rotation trim: drop the top 33% of rows
 e <- terra::ext(root_layer)
 root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
-show_root_image(root_layer)
+terra::plot(root_layer, maxcell = Inf)
 # --> the trimming avoids noisy deep layer and tape artifacts at the top
 
 # create circumferential zones
@@ -213,7 +213,7 @@ slice_traits <- data.frame(
 
 # root length per observed area (root + soil pixels)
 slice_traits$rld <- slice_traits$rootlen /
-                    ((slice_traits$rootpx + slice_traits$soilpx) * (2.54/300)^2)
+                    ((slice_traits$rootpx + slice_traits$soilpx) * (2.54/150)^2)
 #slice_traits$rld.fraction <- slice_traits$rld / sum(slice_traits$rld, na.rm = TRUE)
 ```
 

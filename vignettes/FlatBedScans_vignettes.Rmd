@@ -17,6 +17,22 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 # is how a user supplies their own files.
 library(Rootopia)
 library(terra)
+
+# Faithful preview helper (vignette-local; not part of the package).
+# The bundled scan is several thousand pixels wide. Shrinking that to fit an
+# html_vignette figure forces the graphics device to drop one-pixel-wide roots
+# and skeletons. We therefore show two views per step: a full-image overview
+# for spatial context, and a centred native-resolution crop where thin features
+# survive at (near) 1:1. `frac` is the fraction of each axis kept in the crop.
+show_scan <- function(x, main = "", frac = 0.1, ...) {
+  terra::plot(x, maxcell = Inf, main = paste0(main, " - overview"), ...)
+  ev <- as.vector(terra::ext(x))            # xmin, xmax, ymin, ymax
+  cx <- (ev[1] + ev[2]) / 2; cy <- (ev[3] + ev[4]) / 2
+  hw <- frac * (ev[2] - ev[1]) / 2
+  hh <- frac * (ev[4] - ev[3]) / 2
+  terra::plot(terra::crop(x, terra::ext(cx - hw, cx + hw, cy - hh, cy + hh)),
+              maxcell = Inf, main = paste0(main, " - native crop"), ...)
+}
 ```
 
 # Analyzing Root Systems from Flatbed Scans
@@ -81,15 +97,33 @@ runs. It is a 3-band segmentation; layer 2 is the root channel.
 
 ```{r}
 data(flatbed_scan_example)
-seg <- terra::rast(flatbed_scan_example)
-seg <- terra::ifel(seg[[2]] > 0, 1, 0)   # binarized root channel (0/1)
+# Same call as above, but pointed at the bundled object instead of a file path:
+# select_layer = 2 takes the root channel, scale = "binary" maps it to 0/1.
+seg <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
+                           scale = "binary", select_layer = 2)
 
-show_root_image(seg, main = "Segmented flatbed scan")
+show_scan(seg, main = "Segmented flatbed scan")
 ```
+
 
 ---
 
-### 2. Skeletonize
+### 2. Clean-image
+```{r}
+seg_clean = clean_image(seg,
+                        max_hole_size = 10, 
+                        max_artifact_size = 400)
+
+show_scan(seg_clean)
+
+```
+
+
+
+
+---
+
+### 3. Skeletonize
 
 `skeletonize_image()` reduces roots to single-pixel-wide centerlines. This is
 required for root length (Kimura method) and diameter estimation.
@@ -98,7 +132,7 @@ required for root length (Kimura method) and diameter estimation.
 # `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg, verbose = FALSE)
 
-show_root_image(skl, main = "Skeleton")
+show_scan(skl, main = "Skeleton", frac = 2)
 ```
 
 `skeletonize_image()` uses a LUT-based Zhang-Suen thinning algorithm to
@@ -106,7 +140,7 @@ reduce the segmented mask to one-pixel-wide centerlines.
 
 ---
 
-### 3. Root length
+### 4. Root length
 
 `root_length()` uses Kimura's formula, which weights orthogonal and diagonal
 skeleton segments differently to approximate true path length.
@@ -119,7 +153,7 @@ cat("Total root length:", round(rl, 2), "cm\n")
 
 ---
 
-### 4. Root diameter
+### 5. Root diameter
 
 `root_diameter()` estimates local root width from the distance transform. It
 returns a diameter raster and the raw diameter values.
@@ -163,7 +197,7 @@ cat("Diameter peaks at (cm):", paste(round(peaks$peak_x, 3), collapse = ", "), "
 
 ---
 
-### 5. Pixel counts and area coverage
+### 6. Pixel counts and area coverage
 
 ```{r}
 root_px <- count_pixels(seg)
@@ -180,7 +214,7 @@ cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
 
 ---
 
-### 6. Branching structure
+### 7. Branching structure
 
 `detect_skeleton_points()` classifies skeleton pixels into endpoints (root
 tips) and branching points (forks).
@@ -201,7 +235,7 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 ---
 
-### 6b. Branch order (main axis vs. laterals)
+### 7b. Branch order (main axis vs. laterals)
 
 `branch_order_map()` goes one step further than `detect_skeleton_points()`:
 it builds a full segment graph from the skeleton and classifies every
@@ -223,7 +257,7 @@ order_res <- branch_order_map(
 order_res$summary
 
 # Rasterised branch-order classes, aligned to the skeleton
-show_root_image(order_res$class_map, main = "Branch order")
+show_scan(order_res$class_map, main = "Branch order")
 ```
 
 `order_metrics()` can split the architecture into the main root(s) versus
@@ -277,7 +311,7 @@ plot_order_window(
 
 ---
 
-### 7. Root-level landscape metrics
+### 8. Root-level landscape metrics
 
 `root_scape_metrics()` applies landscape ecology metrics to the binary root
 image, treating roots as "patches". Useful for characterising spatial
@@ -295,7 +329,7 @@ print(lsm)
 
 ---
 
-### 8. Color analysis
+### 9. Color analysis
 
 `tube_coloration()` extracts mean chromatic coordinates and HSV values from
 an RGB image. On flatbed scans this characterises overall root pigmentation.
@@ -316,7 +350,7 @@ print(bg_color)
 
 ---
 
-### 9. Collecting results
+### 10. Collecting results
 
 ```{r, eval=FALSE}
 results <- data.frame(

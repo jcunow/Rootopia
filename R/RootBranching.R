@@ -947,7 +947,7 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' res  <- branch_order_map(skel, mask, order = "branch_order",
 #'                          unit = "cm", dpi = 300, dt_backend = "imager")
 #' res$summary
-#' show_root_image(res$class_map)
+#' terra::plot(res$class_map, maxcell = Inf)
 #' }
 #' @export
 branch_order_map <- function(skel = NULL, mask = NULL, order = c("branch_order", "root_order", "tip_order"),

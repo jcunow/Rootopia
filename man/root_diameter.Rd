@@ -74,6 +74,6 @@ result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
 
 # Access results:
 print(result$mean_diameter)
-show_root_image(result$skeleton_rast)
+terra::plot(result$skeleton_rast, maxcell = Inf)
 
 }

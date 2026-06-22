@@ -24,7 +24,7 @@
 #' \dontrun{
 #'   data(rgb_Oulanka2023_Session03_T067)
 #'   rgb_Oulanka2023_Session03_T067 = terra::rast(rgb_Oulanka2023_Session03_T067)
-#'   show_root_image(rgb_Oulanka2023_Session03_T067, fun = "mean")
+#'   terra::plotRGB(rgb_Oulanka2023_Session03_T067, maxcell = Inf)
 #' }
 "rgb_Oulanka2023_Session03_T067"
 
@@ -56,7 +56,7 @@
 #' \dontrun{
 #'   data(seg_Oulanka2023_Session01_T067)
 #'   seg_Oulanka2023_Session01_T067 = terra::rast(seg_Oulanka2023_Session01_T067)
-#'   show_root_image(seg_Oulanka2023_Session01_T067)
+#'   terra::plot(seg_Oulanka2023_Session01_T067, maxcell = Inf)
 #' }
 "seg_Oulanka2023_Session01_T067"
 
@@ -88,7 +88,7 @@
 #' \dontrun{
 #'   data(seg_Oulanka2023_Session03_T067)
 #'   seg_Oulanka2023_Session03_T067 = terra::rast(seg_Oulanka2023_Session03_T067)
-#'   show_root_image(seg_Oulanka2023_Session03_T067)
+#'   terra::plot(seg_Oulanka2023_Session03_T067, maxcell = Inf)
 #' }
 "seg_Oulanka2023_Session03_T067"
 
@@ -120,7 +120,7 @@
 #' \dontrun{
 #'   data(skl_Oulanka2023_Session01_T067)
 #'   skl_Oulanka2023_Session01_T067 = terra::rast(skl_Oulanka2023_Session01_T067)
-#'   show_root_image(skl_Oulanka2023_Session01_T067)
+#'   terra::plot(skl_Oulanka2023_Session01_T067, maxcell = Inf)
 #' }
 "skl_Oulanka2023_Session01_T067"
 
@@ -152,7 +152,7 @@
 #' \dontrun{
 #'   data(skl_Oulanka2023_Session03_T067)
 #'   skl_Oulanka2023_Session03_T067 = terra::rast(skl_Oulanka2023_Session03_T067)
-#'   show_root_image(skl_Oulanka2023_Session03_T067)
+#'   terra::plot(skl_Oulanka2023_Session03_T067, maxcell = Inf)
 #' }
 "skl_Oulanka2023_Session03_T067"
 
@@ -197,7 +197,7 @@
 #'   data(TurnoverDPC_data)
 #'   img = terra::rast(TurnoverDPC_data)
 #'   # Plot individual layers
-#'   show_root_image(img, fun = "mean")
+#'   terra::plot(img, maxcell = Inf)
 #'   # Calculate turnover statistics
 #'   decay <- sum(terra::values(img[[1]]) == 1)
 #'   growth <- sum(terra::values(img[[2]]) == 1)
@@ -233,6 +233,6 @@
 #'   data(flatbed_scan_example)
 #'   seg <- terra::rast(flatbed_scan_example)
 #'   seg <- terra::ifel(seg[[2]] > 0, 1, 0)
-#'   show_root_image(seg)
+#'   terra::plot(seg, maxcell = Inf)
 #' }
 "flatbed_scan_example"

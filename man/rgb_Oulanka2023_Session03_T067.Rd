@@ -34,7 +34,7 @@ The image represents a complete tube scan where:
 \dontrun{
   data(rgb_Oulanka2023_Session03_T067)
   rgb_Oulanka2023_Session03_T067 = terra::rast(rgb_Oulanka2023_Session03_T067)
-  show_root_image(rgb_Oulanka2023_Session03_T067, fun = "mean")
+  terra::plotRGB(rgb_Oulanka2023_Session03_T067, maxcell = Inf)
 }
 }
 \author{

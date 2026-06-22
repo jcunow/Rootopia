@@ -51,7 +51,7 @@
 #'
 #' # Access results:
 #' print(result$mean_diameter)
-#' show_root_image(result$skeleton_rast)
+#' terra::plot(result$skeleton_rast, maxcell = Inf)
 #'
 #' @export
 root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, select_layer = NULL, 
