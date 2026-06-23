@@ -2,44 +2,50 @@
 % Please edit documentation in R/clean_image.R
 \name{report_image_components}
 \alias{report_image_components}
-\title{Report sizes of holes and isolated artifacts in a binary image}
+\title{Summarise the component-size distribution of a binary image}
 \usage{
-report_image_components(img)
+report_image_components(img, plot = TRUE, breaks = 30, select_layer = NULL)
 }
 \arguments{
-\item{img}{A `cimg` binary image (values 0 and 1), or any format accepted
-by [load_flexible_image()].}
+\item{img}{A binary image (`SpatRaster`, `cimg`, matrix, or file path); any
+format accepted by [load_flexible_image()].}
+
+\item{plot}{Logical. Draw size-distribution histograms (log10 x-axis, with
+mean and median marked). Default `TRUE`.}
+
+\item{breaks}{Number of histogram breaks. Default `30`.}
+
+\item{select_layer}{Integer or `NULL`. Layer to use for multi-layer inputs.}
 }
 \value{
-Invisibly `NULL`.  Prints to the console.
+Invisibly, a list with numeric vectors `holes` and `objects` giving
+  the size (in pixels) of every enclosed hole and every root component.
 }
 \description{
-Prints a human-readable summary of all internal black holes and isolated
-white artifacts in `img`, together with their pixel counts.  Use this
-**before** calling [clean_image()] to decide on appropriate values for
-`max_hole_size` and `max_artifact_size`.
-}
-\section{Choosing thresholds}{
-
-At 300 DPI a single root cross-section in a minirhizotron scan is
-roughly 5–150 px^2 depending on root diameter.  As a starting point:
+Reports the size distribution of the two component types that [clean_image()]
+acts on, to help you choose `max_hole_size` and `max_artifact_size`:
 \itemize{
-  \item `max_artifact_size = 10` removes single-pixel noise and tiny
-        segmentation specks while preserving fine roots.
-  \item `max_hole_size = 50` fills small gaps inside roots without
-        merging genuinely separate objects.
+  \item **holes** — `background (0)` regions fully enclosed by `root (1)`
+        (segmentation gaps inside roots). Regions touching the image border
+        are background, not holes, and are excluded.
+  \item **root components** — connected `root (1)` regions. The whole root
+        system is usually one large component; genuine artifacts are the
+        small components at the low end of this distribution.
 }
-Scale these linearly if your scanner DPI differs (e.g. at 150 DPI,
-halve both values).
+}
+\section{No size threshold here}{
+
+This function applies **no** size cutoff — it characterises *every*
+component. There is therefore nothing special separating a "big root" from an
+"artifact": both are root components, distinguished only by size. Use the
+printed summary and the histograms to pick the `max_*_size` values you then
+pass to [clean_image()]. (Values are in pixels; scale with your scanner DPI.)
 }
 
 \examples{
 \dontrun{
-img <- imager::as.cimg(matrix(0, 50, 50))
-img[10:20, 10:20] <- 1   # white square
-img[13:15, 13:15] <- 0   # hole inside it
-img[40, 40]        <- 1  # isolated artifact
-report_image_components(img)
+data(seg_Oulanka2023_Session01_T067)
+sizes <- report_image_components(seg_Oulanka2023_Session01_T067)
+quantile(sizes$objects)   # inspect the small end to set max_artifact_size
 }
 }
-\keyword{internal}

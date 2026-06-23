@@ -136,74 +136,111 @@ create_kernel <- function(shape = "disk", size = 3) {
 # Exported diagnostic helper
 # ---------------------------------------------------------------------------
 
-#' Report sizes of holes and isolated artifacts in a binary image
+#' Summarise the component-size distribution of a binary image
 #'
-#' Prints a human-readable summary of all internal black holes and isolated
-#' white artifacts in `img`, together with their pixel counts.  Use this
-#' **before** calling [clean_image()] to decide on appropriate values for
-#' `max_hole_size` and `max_artifact_size`.
-#'
-#' @section Choosing thresholds:
-#' At 300 DPI a single root cross-section in a minirhizotron scan is
-#' roughly 5–150 px^2 depending on root diameter.  As a starting point:
+#' Reports the size distribution of the two component types that [clean_image()]
+#' acts on, to help you choose `max_hole_size` and `max_artifact_size`:
 #' \itemize{
-#'   \item `max_artifact_size = 10` removes single-pixel noise and tiny
-#'         segmentation specks while preserving fine roots.
-#'   \item `max_hole_size = 50` fills small gaps inside roots without
-#'         merging genuinely separate objects.
+#'   \item **holes** — `background (0)` regions fully enclosed by `root (1)`
+#'         (segmentation gaps inside roots). Regions touching the image border
+#'         are background, not holes, and are excluded.
+#'   \item **root components** — connected `root (1)` regions. The whole root
+#'         system is usually one large component; genuine artifacts are the
+#'         small components at the low end of this distribution.
 #' }
-#' Scale these linearly if your scanner DPI differs (e.g. at 150 DPI,
-#' halve both values).
 #'
-#' @param img A `cimg` binary image (values 0 and 1), or any format accepted
-#'   by [load_flexible_image()].
-#' @return Invisibly `NULL`.  Prints to the console.
-#' @keywords internal
+#' @section No size threshold here:
+#' This function applies **no** size cutoff — it characterises *every*
+#' component. There is therefore nothing special separating a "big root" from an
+#' "artifact": both are root components, distinguished only by size. Use the
+#' printed summary and the histograms to pick the `max_*_size` values you then
+#' pass to [clean_image()]. (Values are in pixels; scale with your scanner DPI.)
+#'
+#' @param img A binary image (`SpatRaster`, `cimg`, matrix, or file path); any
+#'   format accepted by [load_flexible_image()].
+#' @param plot Logical. Draw size-distribution histograms (log10 x-axis, with
+#'   mean and median marked). Default `TRUE`.
+#' @param breaks Number of histogram breaks. Default `30`.
+#' @param select_layer Integer or `NULL`. Layer to use for multi-layer inputs.
+#' @return Invisibly, a list with numeric vectors `holes` and `objects` giving
+#'   the size (in pixels) of every enclosed hole and every root component.
+#' @export
 #' @examples
 #' \dontrun{
-#' img <- imager::as.cimg(matrix(0, 50, 50))
-#' img[10:20, 10:20] <- 1   # white square
-#' img[13:15, 13:15] <- 0   # hole inside it
-#' img[40, 40]        <- 1  # isolated artifact
-#' report_image_components(img)
+#' data(seg_Oulanka2023_Session01_T067)
+#' sizes <- report_image_components(seg_Oulanka2023_Session01_T067)
+#' quantile(sizes$objects)   # inspect the small end to set max_artifact_size
 #' }
-report_image_components <- function(img) {
-  img <- load_flexible_image(img, output_format = "cimg", scale = "binary")
+report_image_components <- function(img, plot = TRUE, breaks = 30,
+                                    select_layer = NULL) {
+  img <- load_flexible_image(img, output_format = "cimg", scale = "binary",
+                             select_layer = select_layer)
 
-  cat("=== HOLES (black regions enclosed by white) ===\n")
-  lbl_h   <- imager::label(1 - img)
-  nd      <- dim(lbl_h)
-  bl_h    <- unique(c(lbl_h[1,,1,1], lbl_h[nd[1],,1,1],
-                       lbl_h[,1,1,1], lbl_h[,nd[2],1,1]))
-  bl_h    <- bl_h[bl_h > 0]
-  int_h   <- lbl_h * as.numeric(!(lbl_h %in% bl_h))
-  ids_h   <- unique(as.numeric(int_h[int_h > 0]))
+  holes   <- .component_sizes(1 - img, exclude_border = TRUE)   # enclosed background (0)
+  objects <- .component_sizes(img,     exclude_border = FALSE)  # root (1) components
 
-  if (length(ids_h) == 0) {
-    cat("  No holes found.\n")
-  } else {
-    for (id in ids_h)
-      cat(sprintf("  Hole %d: %d px\n", id,
-                  sum(img[int_h == id] == 0, na.rm = TRUE)))
+  .print_size_summary("Enclosed holes  (background 0 surrounded by root 1)", holes)
+  .print_size_summary("Root components (connected root-1 regions)",          objects)
+
+  if (isTRUE(plot) && (length(holes) > 0 || length(objects) > 0)) {
+    op <- graphics::par(mfrow = c(1, 2)); on.exit(graphics::par(op))
+    .plot_size_hist(holes,   "Enclosed hole sizes",   breaks)
+    .plot_size_hist(objects, "Root component sizes",  breaks)
   }
 
-  cat("\n=== ARTIFACTS (isolated white regions not touching border) ===\n")
-  lbl_a   <- imager::label(img)
-  bl_a    <- unique(c(lbl_a[1,,1,1], lbl_a[nd[1],,1,1],
-                       lbl_a[,1,1,1], lbl_a[,nd[2],1,1]))
-  bl_a    <- bl_a[bl_a > 0]
-  int_a   <- lbl_a * as.numeric(!(lbl_a %in% bl_a))
-  ids_a   <- unique(as.numeric(int_a[int_a > 0]))
+  invisible(list(holes = holes, objects = objects))
+}
 
-  if (length(ids_a) == 0) {
-    cat("  No isolated artifacts found.\n")
-  } else {
-    for (id in ids_a)
-      cat(sprintf("  Artifact %d: %d px\n", id,
-                  sum(img[int_a == id] == 1, na.rm = TRUE)))
+#' Connected-component sizes (px) of a binary cimg
+#'
+#' Labels the connected `1`-regions of `bin_cimg` and returns one size per
+#' component. With `exclude_border = TRUE`, components touching the image edge
+#' are dropped (used for enclosed holes).
+#' @keywords internal
+.component_sizes <- function(bin_cimg, exclude_border) {
+  lbl <- imager::label(bin_cimg)
+  v   <- as.integer(lbl)
+  keep <- v > 0
+  if (exclude_border) {
+    nd <- dim(lbl)
+    bl <- unique(c(lbl[1, , 1, 1], lbl[nd[1], , 1, 1],
+                   lbl[, 1, 1, 1], lbl[, nd[2], 1, 1]))
+    bl <- bl[bl > 0]
+    keep <- keep & !(v %in% bl)
   }
+  if (!any(keep)) return(integer(0))
+  as.integer(table(v[keep]))
+}
 
-  invisible(NULL)
+#' Print a one-line size summary (n / min / median / mean / max)
+#' @keywords internal
+.print_size_summary <- function(title, sizes) {
+  cat(sprintf("=== %s ===\n", title))
+  if (length(sizes) == 0) { cat("  none\n\n"); return(invisible()) }
+  cat(sprintf("  n = %d | min = %d | median = %g | mean = %.1f | max = %d  (px)\n\n",
+              length(sizes), min(sizes), stats::median(sizes),
+              mean(sizes), max(sizes)))
+  invisible()
+}
+
+#' Histogram of component sizes on a log10 axis, with mean/median marked
+#' @keywords internal
+.plot_size_hist <- function(sizes, main, breaks) {
+  if (length(sizes) == 0) {
+    graphics::plot.new(); graphics::title(main = paste0(main, " (none)"))
+    return(invisible())
+  }
+  lg <- log10(pmax(sizes, 1))
+  graphics::hist(lg, breaks = breaks, main = main,
+                 xlab = "component size (px, log10)",
+                 col = "grey80", border = "white")
+  graphics::abline(v = log10(mean(sizes)),          col = "red",  lwd = 2)
+  graphics::abline(v = log10(stats::median(sizes)), col = "blue", lwd = 2, lty = 2)
+  graphics::legend("topright", bty = "n",
+                   legend = c(sprintf("mean = %.1f px",   mean(sizes)),
+                              sprintf("median = %g px", stats::median(sizes))),
+                   col = c("red", "blue"), lwd = 2, lty = c(1, 2))
+  invisible()
 }
 
 
