@@ -9,7 +9,8 @@ modal_peaks(
   prominence_threshold = 0.005,
   display_type = "density",
   adjust = 1,
-  mclust = FALSE
+  mclust = FALSE,
+  G = NULL
 )
 }
 \arguments{
@@ -22,6 +23,12 @@ modal_peaks(
 \item{adjust}{numeric. Adjusts the size of the density kernel. Higher values lead to more smoothing.}
 
 \item{mclust}{Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.}
+
+\item{G}{Number of mixture components (clusters) for `mclust::Mclust`, used only
+when \code{mclust = TRUE}. \code{NULL} (default) lets Mclust select the number
+of components automatically over \code{G = 1:9} by BIC. Supply an integer to
+fix the count (e.g. \code{G = 2} for fine vs coarse roots) or an integer
+vector to restrict the BIC search (e.g. \code{G = 1:4}).}
 }
 \value{
 A list with the following elements:
@@ -44,7 +51,9 @@ using `mclust` to estimate the number and characteristics of distributional comp
 Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
 This helps identify meaningful peaks while filtering out spurious noise-driven ones.  
 When \code{mclust = TRUE}, model-based clustering is performed using Gaussian mixture models (\code{V} variance structure),
-and the results are returned along with a classification vector.
+and the results are returned along with a classification vector. By default the
+number of components is chosen automatically by BIC (\code{G = NULL}); set
+\code{G} to constrain or fix it.
 
 The classification strategy depends on \code{mclust}:  
 - If \code{TRUE}, it returns cluster assignments from \code{mclust::Mclust()}.  
