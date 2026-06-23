@@ -57,40 +57,46 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
     2,3,0,1,0,0,0,1,0,0,0,0,0,0,0,0,3,3,0,1,0,0,0,0,2,2,0,0,2,0,0,0
   ))
   
-  mask <- matrix(c(
-    1,2,4,
-    128,0,8,
-    64,32,16
-  ), nrow = 3, byrow = TRUE)
-  
-  iter <- 0L
-  
-  repeat {
-    iter <- iter + 1L
-    if (iter > max_iter) break
-    
-    changed <- FALSE
-    
-    m <- matrix(v, nrow = nr, ncol = nc, byrow = TRUE)
-    
+  # 3x3 neighbourhood -> 256-LUT code for every current foreground pixel.
+  # Weight layout (must match the `lut` encoding):
+  #   TL=1   T=2   TR=4
+  #   L=128        R=8
+  #   BL=64  B=32  BR=16
+  lut_codes <- function(v) {
+    m  <- matrix(v, nrow = nr, ncol = nc, byrow = TRUE)
     mp <- matrix(0L, nr + 2, nc + 2)
     mp[2:(nr+1), 2:(nc+1)] <- m
-
-    # vectorized neighborhood code (replaces the per-pixel double loop)
     nw<-mp[1:nr,1:nc];      nn<-mp[1:nr,2:(nc+1)];      ne<-mp[1:nr,3:(nc+2)]
     ww<-mp[2:(nr+1),1:nc];                              ee<-mp[2:(nr+1),3:(nc+2)]
     sw<-mp[3:(nr+2),1:nc];  ss<-mp[3:(nr+2),2:(nc+1)];  se<-mp[3:(nr+2),3:(nc+2)]
     Cmat <- 1L*nw + 2L*nn + 4L*ne + 128L*ww + 8L*ee + 64L*sw + 32L*ss + 16L*se
     Cmat[m != 1L] <- 0L
-    code <- as.vector(t(Cmat))
-    lut_code <- lut[code + 1L]
-    
-    rm1 <- lut_code %in% c(1L, 3L)
-    rm2 <- lut_code %in% c(2L, 3L)
-    
+    lut[as.vector(t(Cmat)) + 1L]
+  }
+
+  iter <- 0L
+
+  repeat {
+    iter <- iter + 1L
+    if (iter > max_iter) break
+
+    changed <- FALSE
+
+    # Zhang-Suen requires two *sequential* sub-iterations per pass. The
+    # neighbourhood MUST be recomputed between them: evaluating both deletion
+    # sets from a single snapshot erodes a structure from both sides at once
+    # and destroys connectivity (a 2-px line or a loop disappears entirely).
+
+    # sub-iteration 1: remove pixels flagged 1 or 3
+    lc  <- lut_codes(v)
+    rm1 <- lc %in% c(1L, 3L)
     if (any(rm1)) { v[rm1] <- 0L; changed <- TRUE }
+
+    # sub-iteration 2: recompute on the updated image, remove pixels flagged 2 or 3
+    lc  <- lut_codes(v)
+    rm2 <- lc %in% c(2L, 3L)
     if (any(rm2)) { v[rm2] <- 0L; changed <- TRUE }
-    
+
     if (!changed) break
   }
   
