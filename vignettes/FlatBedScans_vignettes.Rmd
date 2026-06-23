@@ -19,14 +19,6 @@ library(Rootopia)
 library(terra)
 ```
 
-> **A note on figures.** The bundled scan is several thousand pixels wide.
-> Shrinking it to fit an html_vignette figure forces the graphics device to
-> drop one-pixel-wide roots and skeletons, so they look broken or disappear.
-> The figures below use `zoom_plot()` (a Rootopia function): a full-image
-> **overview** with the magnified region outlined, plus a **native-resolution
-> inset** where thin features survive at ~1:1. `frac` sets the fraction of each
-> axis kept in the inset (magnification `1/frac`), and `center` controls which
-> part is magnified (`"center"`, `"densest"`, or relative `c(fx, fy)`).
 
 # Analyzing Root Systems from Flatbed Scans
 
@@ -112,7 +104,8 @@ removes artifacts in one pass.
 Inspect the actual pixel counts first so the thresholds aren't guesswork:
 
 ```{r}
-report_image_components(seg)
+image_components = report_image_components(seg)
+
 ```
 
 Use those numbers to set `max_hole_size` (largest gap to fill) and
@@ -123,11 +116,11 @@ roots leaving the frame that you must keep.
 
 ```{r}
 seg_clean <- clean_image(seg,
-                         max_hole_size     = 10,
-                         max_artifact_size = 400,
+                         max_hole_size     = 50, # too small = not filling all the holes; too large = inflates area when roots overlap in a circle
+                         max_artifact_size = 50, # too small = includes dirt; too large = removes genuine roots
                          protect_border    = FALSE)
-
-zoom_plot(seg_clean, main = "Cleaned segmentation")
+zoom_plot(seg, main = "Before Cleaning", center = c(0.6,0.7))
+zoom_plot(seg_clean, main = "After Cleaning",center = c(0.6,0.7), overview = F)
 ```
 
 > `clean_image()` expects a binary mask. If your input is a raw probability or
@@ -145,7 +138,8 @@ required for root length (Kimura method) and diameter estimation.
 # `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg_clean, verbose = FALSE)
 
-zoom_plot(skl, main = "Skeleton", frac = 0.2, center = c(0.5,0.5))
+# ! remember that 1 px skeletons may look less connected from far away
+zoom_plot(skl, main = "Skeleton", frac = 0.25, center = c(0.7,0.625))
 ```
 
 `skeletonize_image()` uses a LUT-based Zhang-Suen thinning algorithm to
@@ -164,12 +158,14 @@ segmentation: each surviving skeleton pixel is regrown by its local radius
 body is removed from the segmentation too.
 
 ```{r}
-skl <- prune_skeleton(skl, mask = seg_clean, min_length = 15, iter = 2)
-zoom_plot(skl, main = "Skeleton (spurs pruned)", frac = 0.125)
+skl_pruned <- prune_skeleton(skl, mask = seg_clean, min_length = 50, iter = 1)
+zoom_plot(skl_pruned, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = F )
+
 
 # To clean the segmentation itself instead of the skeleton:
-# seg_clean <- prune_skeleton(skl, mask = seg_clean, min_length = 15,
-#                             output = "mask")
+seg_clean <- prune_skeleton(skl, mask = seg_clean, min_length = 50,
+                             output = "mask")
+zoom_plot(seg_clean, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = T )
 ```
 
 ---
@@ -180,8 +176,9 @@ zoom_plot(skl, main = "Skeleton (spurs pruned)", frac = 0.125)
 skeleton segments differently to approximate true path length.
 
 ```{r}
-rl <- root_length(skl, unit = "cm", dpi = 300, select_layer = NULL,
-                  show_messages = FALSE)
+rl <- root_length(skl_pruned, unit = "cm", dpi = 1200, select_layer = NULL, 
+                  method = "kimura2",
+                  show_messages = TRUE)
 cat("Total root length:", round(rl, 2), "cm\n")
 ```
 
@@ -194,11 +191,12 @@ returns a diameter raster and the raw diameter values.
 
 ```{r}
 diam_result <- root_diameter(
-  seg,
+  seg_clean,
   skeleton_img    = skl,
   skeleton_method = "MAT",
   select_layer    = NULL,
-  unit            = "cm"
+  unit            = "cm",
+  dpi = 1200
 )
 
 # Summary statistics
@@ -210,7 +208,7 @@ cat(sprintf(
 
 # Distribution
 hist(diam_vals,
-     breaks = 40,
+     breaks = 24,
      xlab   = "Diameter (cm)",
      main   = "Root diameter distribution",
      col    = "steelblue4")
@@ -223,10 +221,14 @@ the distribution:
 peaks <- modal_peaks(
   diam_vals,
   display_type         = "density",
-  prominence_threshold = length(diam_vals) / sqrt(length(diam_vals)),
-  mclust               = FALSE
+  prominence_threshold = 2,
+  adjust = 1,
+  mclust               = T, # mclust = TRUE uses gaussian mixture models to delineate clusters
+  G = 1:2                   # either 1 or 2 cluster, BIC decides; can be NULL
 )
-cat("Diameter peaks at (cm):", paste(round(peaks$peak_x, 3), collapse = ", "), "\n")
+
+
+
 ```
 
 ---
@@ -284,7 +286,7 @@ order_res <- branch_order_map(
   mask  = seg,    # filled root mask, same grid — used for diameters
   order = "branch_order",
   unit  = "cm",
-  dpi   = 300
+  dpi   = 150
 )
 
 # One row per order class: total length, mean diameter, tips, branch points

@@ -5,7 +5,7 @@ output:
         toc: true
         toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover}
+  %\VignetteIndexEntry{Special Topics: RGB classifier, Soil Texture, Rhizosphere Halos, and Turnover}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

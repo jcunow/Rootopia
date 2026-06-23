@@ -53,7 +53,7 @@ compared using a D8 neighborhood scheme.
 \examples{
 data(skl_Oulanka2023_Session01_T067)
 im <- ceiling(terra::rast(skl_Oulanka2023_Session01_T067) / 255)
-DepthMap <- terra::t(create_depthmap(im, center_offset = 0, tube_thicc = 3.5))
+DepthMap <- create_depthmap(im, center_offset = 0, tube_thicc = 3.5)
 
 # Just the deep drive score
 deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2)

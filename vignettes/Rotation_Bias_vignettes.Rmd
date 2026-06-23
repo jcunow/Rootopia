@@ -92,7 +92,7 @@ or phase correlation (`"phase"`) on a shared depth window to find the pixel
 offset. Phase correlation is generally more robust to brightness differences
 between sessions.
 
-```{r, fig.width=14, fig.height=8, dpi=300}
+```{r, fig.width=16, fig.height=8, dpi=300}
 data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 
@@ -106,7 +106,11 @@ shift <- estimate_rotation_shift(
 cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
 
 # Visual inspection
-estimate_rotation_shift(seg_Oulanka2023_Session01_T067, seg_Oulanka2023_Session03_T067, cor_type = "phase", select_layer = 2, overlay = T)
+estimate_rotation_shift(seg_Oulanka2023_Session01_T067, 
+                        seg_Oulanka2023_Session03_T067, 
+                        cor_type = "phase", 
+                        select_layer = 2, 
+                        overlay = T)
 ```
 
 The returned vector is `c(x.lag, y.lag)` — the horizontal (depth axis) and
@@ -133,7 +137,7 @@ Two modes are available:
 - **`fixed_rotation = TRUE`** — centers the crop on a specified row and forces
   a fixed output width; recommended when comparing multiple sessions
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 data(seg_Oulanka2023_Session01_T067)
 img <- load_flexible_image(seg_Oulanka2023_Session01_T067, "spatrast")
 
@@ -183,7 +187,7 @@ face of the installation, or an installation-angle artifact).
 
 ### Extract a root trait per circumferential slice
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 data(seg_Oulanka2023_Session01_T067)
 
 root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binary", select_layer = 2,
@@ -219,7 +223,7 @@ slice_traits$rld <- slice_traits$rootlen /
 
 ### Test for a circumferential (top-down) pattern
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 res <- rhythmicity(
   x          = slice_traits$slice,
   y          = slice_traits$rld,
@@ -241,7 +245,7 @@ material on one side of the tube than the other. `res$phase` (and
 
 ### Visualize the fit
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 slice_seq <- seq(1, n_slices, length.out = 200)
 fit_seq   <- res$amplitude *
               sin(2 * pi / n_slices * (slice_seq + res$phase)) +

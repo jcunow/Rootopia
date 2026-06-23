@@ -232,7 +232,7 @@ slice_rotation <- function(img, n) {
 #' mask <- img[[1]] - img[[2]]; mask[mask == 255] <- NA
 #' depth_map  <- create_depthmap(img, mask, start_soil = 2.9, dpi = 150 )
 #' depth_bins <- binning(depth_map, nn = 5)
-#' depth_bins <- terra::flip(terra::t(depth_bins))
+#' # depth_bins is already aligned with img -- no transpose/flip needed
 #' # Keep only the root layer pixels that fall in the 10 cm depth bin
 #' slice_10cm <- depth_zoning(img[[2]], depth_map = depth_bins, depth = 10)
 depth_zoning <- function(

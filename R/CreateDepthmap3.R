@@ -91,9 +91,15 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     tube_thicc_tilted = round(tube_thicc * tilt.factor, 3)
     px.to.cm.h = (2.54/dpi)
 
-    target.col = dim(img)[1]
-    target.row = dim(img)[2]
+    # Image geometry. Depth increases along the image WIDTH (columns); the
+    # sinusoidal tube-curvature offset varies along the HEIGHT (rows). The map
+    # is built directly in `img` orientation so the result is aligned with
+    # `img` (same extent/resolution/CRS) -- no transpose/flip is needed
+    # downstream.
+    nr = dim(img)[1]   # height -> tube circumference (sinusoid axis)
+    nc = dim(img)[2]   # width  -> depth axis
 
+    # Sinusoidal curvature offset, one value per circumference pixel (row).
     if (sinoid) {
       df1 = seq(0*pi, 2*pi, length =  (round(tube_thicc*pi*dpi/2.54, 0)-1))
       if (length(df1) < 2)
@@ -102,30 +108,25 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
       df00 = (cos(df1+(pi*(center_offset))))*(tube_thicc_tilted/2) + (tube_thicc_tilted/2)
 
       # Safely handle vector subsetting
-      if (target.col > length(df00))
-        stop("Calculated sine wave shorter than image width. Wrong Tube Diameter")
-      df11 = df00[1:target.col]
+      if (nr > length(df00))
+        stop("Calculated sine wave shorter than image height. Wrong Tube Diameter")
+      circ = df00[1:nr]
     } else {
-      df11 = rep(0, target.col)
+      circ = rep(0, nr)
     }
 
-    # Safe array allocation
-    df = try(array(dim = c(target.row, target.col)))
-    if (inherits(df, "try-error"))
-      stop("Failed to allocate memory for depth map array")
+    # Depth term per column (deeper to the right); curvature term per row.
+    # M[row, col] = curvature(row) + depth(col) - start_soil, in img orientation.
+    depth_term = seq_len(nc) * px.to.cm.h * tilt.factor
+    M = outer(rev(circ), depth_term, FUN = "+") - start_soil   # dims [nr, nc]
 
-    # Row processing with progress monitoring
-    for (ii in 1:target.row) {
-      df[ii,] = df11 + (ii*px.to.cm.h * tilt.factor)
-      if (progress && ii %% 100 == 0)
-        message(sprintf("Processing row %d of %d", ii, target.row))
-    }
+    # Write onto a raster that copies img's geometry so extent/res/CRS match.
+    masked.depthmap = terra::rast(img[[1]])
+    terra::values(masked.depthmap) = as.vector(t(M))           # row-major for terra
 
-    df.depthmap = df - (start_soil)
-    masked.depthmap = terra::rast(df.depthmap)
-
-    # Final mask application with error checking
-    terra::values(masked.depthmap)[terra::values(mask) == 1] <- NA
+    # Mask foreign objects -- now correctly aligned cell-for-cell with img.
+    mv = as.vector(terra::values(mask))
+    terra::values(masked.depthmap)[which(mv == 1)] <- NA
 
     return(masked.depthmap)
 

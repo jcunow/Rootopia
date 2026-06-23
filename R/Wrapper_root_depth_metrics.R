@@ -557,7 +557,7 @@ root_depth_metrics <- function(
         tilt        = angle,
         tube_thicc  = tube_diameter_cm
       )
-      dm <- terra::flip(terra::t(dm))
+      # create_depthmap() now returns a map aligned with `im` (no transpose).
       terra::ext(dm) <- terra::ext(im)
       dm
     })
@@ -612,7 +612,8 @@ root_depth_metrics <- function(
           tilt          = angle,
           tube_thicc    = tube_diameter_cm
         )
-        dem_flat <- terra::flip(terra::t(dm_flat))
+        # create_depthmap() is already aligned with `im` (no transpose).
+        dem_flat <- dm_flat
         terra::ext(dem_flat) <- terra::ext(im)
         dem_flat[im.skeleton != 1] <- NA
         

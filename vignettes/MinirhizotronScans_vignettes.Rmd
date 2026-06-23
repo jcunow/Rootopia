@@ -205,10 +205,9 @@ depth_map <- create_depthmap(
   center_offset = 0.5      # 0 = top of tube, 1 = bottom
 )
 
-# create_depthmap() returns the map on its own grid; align it to the segmented
-# image so depth and root rasters share extent/resolution (required for
-# terra::zonal() and depth_zoning() below).
-depth_map <- terra::flip(terra::t(depth_map))
+# create_depthmap() returns the map already aligned with the input image, so it
+# shares extent/resolution with the segmented raster (required for terra::zonal()
+# and depth_zoning() below). No transpose/flip needed.
 terra::ext(depth_map) <- terra::ext(root_layer)
 
 terra::plot(depth_map, main = "Depth map (cm)")
