@@ -33,6 +33,7 @@
 <url><loc>https://jcunow.github.io/Rootopia/reference/deep_drive.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/depth_zoning.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.html</loc></url>
+<url><loc>https://jcunow.github.io/Rootopia/reference/dot-densest_window.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.html</loc></url>
@@ -51,6 +52,7 @@
 <url><loc>https://jcunow.github.io/Rootopia/reference/order_metrics.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/plot_order_window.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/plot_soil_classification.html</loc></url>
+<url><loc>https://jcunow.github.io/Rootopia/reference/prune_skeleton.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/prune_terminal_segments.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/remove_small_objects.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/render_order_overlay.html</loc></url>
@@ -97,5 +99,6 @@
 <url><loc>https://jcunow.github.io/Rootopia/reference/turnover_dpc.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/turnover_tc.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/validate_conversion_params.html</loc></url>
+<url><loc>https://jcunow.github.io/Rootopia/reference/zoom_plot.html</loc></url>
 </urlset>
 

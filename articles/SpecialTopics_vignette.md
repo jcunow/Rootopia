@@ -1,5 +1,14 @@
 # Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover
 
+> **A note on figures.** These rasters are large; shrinking them to fit
+> a vignette figure makes the graphics device drop one-pixel-wide
+> features. The figures below use
+> [`zoom_plot()`](https://jcunow.github.io/Rootopia/reference/zoom_plot.md)
+> (a Rootopia function): a full-image overview with the magnified region
+> outlined, plus a native-resolution inset where thin features survive
+> at ~1:1. `frac` sets the inset size (magnification `1/frac`) and
+> `center` controls which part is magnified.
+
 This article collects a few less-obvious capabilities of **Rootopia**
 that do not fit the main step-by-step tutorials but are useful for
 specific questions: classifying soil/soil material by color, quantifying
@@ -25,7 +34,7 @@ img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
-show_scan(result$map, main = "Soil classification")
+zoom_plot(result$map, main = "Soil classification")
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)![](SpecialTopics_vignette_files/figure-html/soil-classify-2.png)
@@ -105,7 +114,7 @@ max_dist <- c(region1 = 14, region2 = 14, region3 = 26,
 
 cents  <- build_soil_centroids(picks, max_dist)   # prints diagnostics
 result <- classify_soil_rgb(img, centroids = cents)
-show_scan(result$map, main = "Soil classification")
+zoom_plot(result$map, main = "Soil classification")
 ```
 
 Note: provide a class for **every** material in your scans. Because
@@ -165,7 +174,7 @@ returns only the ring around the roots (excluding the roots themselves).
 
 seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select_layer = 2)
 halo <- create_root_buffer(seg, width = 3, halo_only = TRUE, kernel = "circle")
-show_scan(halo, main = "Rhizosphere halo (width 3)")
+zoom_plot(halo, main = "Rhizosphere halo (width 3)")
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/root-buffer-1.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-2.png)
@@ -174,7 +183,7 @@ show_scan(halo, main = "Rhizosphere halo (width 3)")
 
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = TRUE, kernel = "circle")
-show_scan(halo10, main = "Halo only (width 10)")
+zoom_plot(halo10, main = "Halo only (width 10)")
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-4.png)
@@ -182,7 +191,7 @@ show_scan(halo10, main = "Halo only (width 10)")
 ``` r
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = FALSE, kernel = "circle")
-show_scan(halo10, main = "Roots + halo (width 10)")
+zoom_plot(halo10, main = "Roots + halo (width 10)")
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/root-buffer-5.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-6.png)

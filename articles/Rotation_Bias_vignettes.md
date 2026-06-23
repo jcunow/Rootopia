@@ -122,7 +122,11 @@ cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
 ``` r
 
 # Visual inspection
-estimate_rotation_shift(seg_Oulanka2023_Session01_T067, seg_Oulanka2023_Session03_T067, cor_type = "phase", select_layer = 2, overlay = T)
+estimate_rotation_shift(seg_Oulanka2023_Session01_T067, 
+                        seg_Oulanka2023_Session03_T067, 
+                        cor_type = "phase", 
+                        select_layer = 2, 
+                        overlay = T)
 ```
 
     ## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size
@@ -180,6 +184,8 @@ censored <- rotation_censor(
 )
 ```
 
+![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-4-1.png)
+
 > **Note on tube geometry.** The inner and outer tube diameters differ,
 > so the observed root length slightly underestimates the true root
 > length in the soil. A resize coefficient may be applied separately;
@@ -226,6 +232,12 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binar
 e <- terra::ext(root_layer)
 root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
 terra::plot(root_layer, maxcell = Inf)
+```
+
+![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png)
+
+``` r
+
 # --> the trimming avoids noisy deep layer and tape artifacts at the top
 
 # create circumferential zones
@@ -242,6 +254,105 @@ slice_traits <- data.frame(
   rootpx  = sapply(slices, n_root),
   soilpx  = sapply(slices, n_soil)
 )
+```
+
+    ## Diagonal: 539 | Orthogonal: 655
+
+    ## Diagonal: 1001 | Orthogonal: 1242
+
+    ## Diagonal: 1266 | Orthogonal: 1552
+
+    ## Diagonal: 1125 | Orthogonal: 1436
+
+    ## Diagonal: 1254 | Orthogonal: 1545
+
+    ## Diagonal: 1366 | Orthogonal: 1606
+
+    ## Diagonal: 1290 | Orthogonal: 1516
+
+    ## Diagonal: 1116 | Orthogonal: 1380
+
+    ## Diagonal: 1543 | Orthogonal: 1873
+
+    ## Diagonal: 1361 | Orthogonal: 1732
+
+    ## Diagonal: 1765 | Orthogonal: 1883
+
+    ## Diagonal: 2158 | Orthogonal: 2282
+
+    ## Diagonal: 1666 | Orthogonal: 1738
+
+    ## Diagonal: 1913 | Orthogonal: 2041
+
+    ## Diagonal: 2333 | Orthogonal: 2597
+
+    ## Diagonal: 2963 | Orthogonal: 3306
+
+    ## Diagonal: 2361 | Orthogonal: 2845
+
+    ## Diagonal: 2362 | Orthogonal: 2801
+
+    ## Diagonal: 2265 | Orthogonal: 2483
+
+    ## Diagonal: 2539 | Orthogonal: 2757
+
+    ## Diagonal: 2547 | Orthogonal: 2875
+
+    ## Diagonal: 3009 | Orthogonal: 3339
+
+    ## Diagonal: 2260 | Orthogonal: 2654
+
+    ## Diagonal: 2932 | Orthogonal: 3418
+
+    ## Diagonal: 1936 | Orthogonal: 2234
+
+    ## Diagonal: 2642 | Orthogonal: 3073
+
+    ## Diagonal: 2362 | Orthogonal: 2847
+
+    ## Diagonal: 2988 | Orthogonal: 3400
+
+    ## Diagonal: 2584 | Orthogonal: 3010
+
+    ## Diagonal: 2292 | Orthogonal: 2686
+
+    ## Diagonal: 1713 | Orthogonal: 2028
+
+    ## Diagonal: 2044 | Orthogonal: 2479
+
+    ## Diagonal: 2298 | Orthogonal: 2772
+
+    ## Diagonal: 1715 | Orthogonal: 1976
+
+    ## Diagonal: 1145 | Orthogonal: 1433
+
+    ## Diagonal: 1107 | Orthogonal: 1345
+
+    ## Diagonal: 1041 | Orthogonal: 1243
+
+    ## Diagonal: 846 | Orthogonal: 998
+
+    ## Diagonal: 769 | Orthogonal: 937
+
+    ## Diagonal: 472 | Orthogonal: 528
+
+    ## Diagonal: 533 | Orthogonal: 621
+
+    ## Diagonal: 639 | Orthogonal: 844
+
+    ## Diagonal: 740 | Orthogonal: 959
+
+    ## Diagonal: 648 | Orthogonal: 814
+
+    ## Diagonal: 647 | Orthogonal: 803
+
+    ## Diagonal: 1098 | Orthogonal: 1378
+
+    ## Diagonal: 1522 | Orthogonal: 1898
+
+    ## Diagonal: 866 | Orthogonal: 1433
+
+``` r
 
 # root length per observed area (root + soil pixels)
 slice_traits$rld <- slice_traits$rootlen /
@@ -264,8 +375,16 @@ res <- rhythmicity(
 
 cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
+```
+
+    ## Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000
+
+``` r
+
 cat("The top-down difference is", round((res$amplitude*2) / res$offset,2), " -> circa twice as large as the mean"    )
 ```
+
+    ## The top-down difference is 1.13  -> circa twice as large as the mean
 
 A significant, non-trivial amplitude indicates that root abundance
 varies systematically with circumferential position — i.e. there is more
@@ -304,7 +423,11 @@ legend("topright",
        legend = sprintf("A = %.4f, R² = %.3f, p = %.4f",
                         res$amplitude, res$R2, res$p_value),
        bty = "n")
+```
 
+![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png)
+
+``` r
 
 # cross section view
 library(ggplot2)
@@ -320,6 +443,8 @@ ggplot(slice_traits, aes(slice, rld + inner)) +
            ymin = 0, ymax = inner,
            fill = "white", color = NA)
 ```
+
+![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png)
 
 > **Going further**: the same slice loop can be combined with
 > `slice_rotation(mode = "both")` to additionally split each

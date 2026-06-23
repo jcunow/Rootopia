@@ -77,11 +77,11 @@ It uses a depth raster (\`DepthMap\`) and a root direction raster
 ``` r
 data(skl_Oulanka2023_Session01_T067)
 im <- ceiling(terra::rast(skl_Oulanka2023_Session01_T067) / 255)
-DepthMap <- terra::t(create_depthmap(im, center_offset = 0, tube_thicc = 3.5))
+DepthMap <- create_depthmap(im, center_offset = 0, tube_thicc = 3.5)
 
 # Just the deep drive score
 deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2)
-#> [1] 0.2440492
+#> [1] 0.2733019
 
 # Get spatial outputs too
 res <- deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2, return = "all")

@@ -58,7 +58,7 @@ image border.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">remove_small_objects</span><span class="op">(</span><span class="va">img</span>, max_size <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">remove_small_objects</span><span class="op">(</span><span class="va">img</span>, max_size <span class="op">=</span> <span class="cn">NULL</span>, protect_border <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -70,8 +70,16 @@ image border.</p>
 
 
 <dt id="arg-max-size">max_size<a class="anchor" aria-label="anchor" href="#arg-max-size"></a></dt>
-<dd><p>Maximum artifact size in pixels to remove.  If `NULL`
-(default), all isolated white regions are removed.</p></dd>
+<dd><p>Maximum artifact size in pixels to remove.  If `NULL`,
+all candidate white regions are removed.</p></dd>
+
+
+<dt id="arg-protect-border">protect_border<a class="anchor" aria-label="anchor" href="#arg-protect-border"></a></dt>
+<dd><p>Logical.  If `TRUE`, white regions touching the image
+border are never removed (they are assumed to be roots leaving the frame).
+If `FALSE` (default), border-touching regions are subject to the same
+`max_size` test as any other region, so edge specks are removed too.
+Border location confers no protection on its own.</p></dd>
 
 </dl></div>
     <div class="section level2">

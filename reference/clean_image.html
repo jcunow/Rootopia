@@ -75,11 +75,9 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">clean_image</span><span class="op">(</span></span>
 <span>  <span class="va">img</span>,</span>
-<span>  pre_threshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  pre_threshold_method <span class="op">=</span> <span class="st">"global"</span>,</span>
-<span>  pre_threshold_window_size <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  max_hole_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_artifact_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_border <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  edge_smooth <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  kernel_shape <span class="op">=</span> <span class="st">"disk"</span>,</span>
 <span>  kernel_size <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -95,24 +93,7 @@
 
 
 <dl><dt id="arg-img">img<a class="anchor" aria-label="anchor" href="#arg-img"></a></dt>
-<dd><p>A `cimg` object, `SpatRaster`, matrix, or file path.</p></dd>
-
-
-<dt id="arg-pre-threshold">pre_threshold<a class="anchor" aria-label="anchor" href="#arg-pre-threshold"></a></dt>
-<dd><p>Numeric (0-1) or `NULL` (default). If not `NULL`,
-[image_threshold()] is applied to `img` first, using this value as its
-`threshold` argument, before any hole-filling or artifact removal.</p></dd>
-
-
-<dt id="arg-pre-threshold-method">pre_threshold_method<a class="anchor" aria-label="anchor" href="#arg-pre-threshold-method"></a></dt>
-<dd><p>Thresholding method passed to
-[image_threshold()] when `pre_threshold` is set: `"global"` (default) or
-`"adaptive"`.</p></dd>
-
-
-<dt id="arg-pre-threshold-window-size">pre_threshold_window_size<a class="anchor" aria-label="anchor" href="#arg-pre-threshold-window-size"></a></dt>
-<dd><p>Window size passed to [image_threshold()]
-when `pre_threshold_method = "adaptive"`. Default `15`.</p></dd>
+<dd><p>A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).</p></dd>
 
 
 <dt id="arg-max-hole-size">max_hole_size<a class="anchor" aria-label="anchor" href="#arg-max-hole-size"></a></dt>
@@ -122,7 +103,15 @@ enclosed holes are filled.  See **Choosing thresholds** above.</p></dd>
 
 <dt id="arg-max-artifact-size">max_artifact_size<a class="anchor" aria-label="anchor" href="#arg-max-artifact-size"></a></dt>
 <dd><p>Maximum artifact size in pixels to remove.  If
-`NULL`, all isolated white regions are removed.</p></dd>
+`NULL`, all candidate white regions are removed.</p></dd>
+
+
+<dt id="arg-protect-border">protect_border<a class="anchor" aria-label="anchor" href="#arg-protect-border"></a></dt>
+<dd><p>Logical.  If `TRUE`, white regions touching the image
+border are kept regardless of size (roots leaving the frame).  If `FALSE`
+(default), border-touching specks are removed by the same
+`max_artifact_size` test as anything else — being at the edge does not
+protect an artifact.</p></dd>
 
 
 <dt id="arg-edge-smooth">edge_smooth<a class="anchor" aria-label="anchor" href="#arg-edge-smooth"></a></dt>
@@ -198,15 +187,12 @@ root diameter measurements.  Only use it when the segmentation output has
 very jagged edges; leave it off (`FALSE`, the default) otherwise.</p>
     </div>
     <div class="section level2">
-    <h2 id="optional-pre-thresholding">Optional pre-thresholding<a class="anchor" aria-label="anchor" href="#optional-pre-thresholding"></a></h2>
+    <h2 id="input-must-be-binary">Input must be binary<a class="anchor" aria-label="anchor" href="#input-must-be-binary"></a></h2>
 
 
-<p>If the input is not yet a clean binary mask (e.g. a raw probability /
-grayscale image from a segmentation model), set `pre_threshold` to binarize
-it via [image_threshold()] *before* hole-filling and artifact removal. This
-runs first because [image_threshold()] expects a non-binary `SpatRaster`;
-once thresholded, the result feeds into the same hole-filling /
-artifact-removal / edge-smoothing steps as a normal binary mask.</p>
+<p>`clean_image()` operates on a binary mask (root = 1, background = 0). If your
+input is a raw probability / grayscale image from a segmentation model,
+binarize it first with [image_threshold()] and pass the result here.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

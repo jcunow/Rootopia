@@ -123,13 +123,13 @@ result <- root_diameter(img = seg_Oulanka2023_Session01_T067,
   skeleton_method = "MAT", select_layer = 2, unit = "px",
   diagnostics = TRUE)
 #> Processing complete. Summary statistics:
-#> Mean diameter: 2.23
+#> Mean diameter: 2.19
 #> Median diameter: 2.00
-#> Number of valid measurements: 78956
+#> Number of valid measurements: 106606
 
 # Access results:
 print(result$mean_diameter)
-#> [1] 2.233119
+#> [1] 2.190024
 terra::plot(result$skeleton_rast, maxcell = Inf)
 
 ```

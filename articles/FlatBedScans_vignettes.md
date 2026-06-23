@@ -73,25 +73,66 @@ data(flatbed_scan_example)
 seg <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
                            scale = "binary", select_layer = 2)
 
-show_scan(seg, main = "Segmented flatbed scan")
+zoom_plot(seg, main = "Segmented flatbed scan")
 ```
 
 ![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
 
 ------------------------------------------------------------------------
 
-#### 2. Clean-image
+#### 2. Clean the segmentation
+
+Segmentation output usually carries two defect types: small **holes**
+inside roots (gaps the model missed) and isolated **artifacts**
+(false-positive specks). Both distort the skeleton — a hole forces the
+medial axis to fork around it, a speck adds a phantom branch.
+[`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+fills holes and removes artifacts in one pass.
+
+Inspect the actual pixel counts first so the thresholds aren’t
+guesswork:
 
 ``` r
 
-seg_clean = clean_image(seg,
-                        max_hole_size = 10, 
-                        max_artifact_size = 400)
-
-show_scan(seg_clean)
+image_components = report_image_components(seg)
+#> === Enclosed holes  (background 0 surrounded by root 1) ===
+#>   n = 57 | min = 1 | median = 3 | mean = 3.8 | max = 45  (px)
+#> 
+#> === Root components (connected root-1 regions) ===
+#>   n = 65 | min = 1 | median = 3 | mean = 9207.7 | max = 391995  (px)
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-2.png)
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)
+
+Use those numbers to set `max_hole_size` (largest gap to fill) and
+`max_artifact_size` (largest speck to delete). Specks touching the image
+edge are removed by the same size test as anywhere else — being at the
+border no longer protects an artifact. Set `protect_border = TRUE` only
+if you have real roots leaving the frame that you must keep.
+
+``` r
+
+seg_clean <- clean_image(seg,
+                         max_hole_size     = 50, # too small = not filling all the holes; too large = inflates area when roots overlap in a circle
+                         max_artifact_size = 50, # too small = includes dirt; too large = removes genuine roots
+                         protect_border    = FALSE)
+zoom_plot(seg, main = "Before Cleaning", center = c(0.6,0.7))
+```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png)
+
+``` r
+
+zoom_plot(seg_clean, main = "After Cleaning",center = c(0.6,0.7), overview = F)
+```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png)
+
+> [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+> expects a binary mask. If your input is a raw probability or grayscale
+> image, binarize it with
+> [`image_threshold()`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
+> first.
 
 ------------------------------------------------------------------------
 
@@ -104,16 +145,51 @@ root length (Kimura method) and diameter estimation.
 ``` r
 
 # `seg` is already the single root layer, so no select_layer needed here
-skl <- skeletonize_image(seg, verbose = FALSE)
+skl <- skeletonize_image(seg_clean, verbose = FALSE)
 
-show_scan(skl, main = "Skeleton", frac = 2)
+# ! remember that 1 px skeletons may look less connected from far away
+zoom_plot(skl, main = "Skeleton", frac = 0.25, center = c(0.7,0.625))
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png)
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png)
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
 mask to one-pixel-wide centerlines.
+
+------------------------------------------------------------------------
+
+#### 3b. Remove spurs (optional)
+
+Thinning can leave short terminal “spurs” — stubs hanging off real roots
+that inflate tip counts and branching.
+[`prune_skeleton()`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md)
+removes terminal branches below a length (or diameter) threshold. It
+operates on the skeleton graph but can return either the cleaned
+skeleton or, with `output = "mask"`, a cleaned segmentation: each
+surviving skeleton pixel is regrown by its local radius (from the
+distance transform of `mask`) and clipped to `mask`, so the spur’s body
+is removed from the segmentation too.
+
+``` r
+
+skl_pruned <- prune_skeleton(skl, mask = seg_clean, min_length = 50, iter = 1)
+zoom_plot(skl_pruned, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = F )
+```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)
+
+``` r
+
+
+
+# To clean the segmentation itself instead of the skeleton:
+seg_clean <- prune_skeleton(skl, mask = seg_clean, min_length = 50,
+                             output = "mask")
+zoom_plot(seg_clean, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = T )
+```
+
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png)
 
 ------------------------------------------------------------------------
 
@@ -125,10 +201,12 @@ segments differently to approximate true path length.
 
 ``` r
 
-rl <- root_length(skl, unit = "cm", dpi = 300, select_layer = NULL,
-                  show_messages = FALSE)
+rl <- root_length(skl_pruned, unit = "cm", dpi = 1200, select_layer = NULL, 
+                  method = "kimura2",
+                  show_messages = TRUE)
+#> Diagonal: 2461 | Orthogonal: 3507
 cat("Total root length:", round(rl, 2), "cm\n")
-#> Total root length: 56.46 cm
+#> Total root length: 14.04 cm
 ```
 
 ------------------------------------------------------------------------
@@ -142,11 +220,12 @@ diameter raster and the raw diameter values.
 ``` r
 
 diam_result <- root_diameter(
-  seg,
+  seg_clean,
   skeleton_img    = skl,
   skeleton_method = "MAT",
   select_layer    = NULL,
-  unit            = "cm"
+  unit            = "cm",
+  dpi = 1200
 )
 
 # Summary statistics
@@ -155,17 +234,17 @@ cat(sprintf(
   "Diameter — mean: %.3f cm  SD: %.3f cm  max: %.3f cm\n",
   mean(diam_vals), sd(diam_vals), max(diam_vals)
 ))
-#> Diameter — mean: 0.201 cm  SD: 0.084 cm  max: 0.432 cm
+#> Diameter — mean: 0.058 cm  SD: 0.019 cm  max: 0.110 cm
 
 # Distribution
 hist(diam_vals,
-     breaks = 40,
+     breaks = 24,
      xlab   = "Diameter (cm)",
      main   = "Root diameter distribution",
      col    = "steelblue4")
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)
+![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png)
 
 For fine/coarse root separation,
 [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
@@ -176,10 +255,11 @@ can find diameter modes in the distribution:
 peaks <- modal_peaks(
   diam_vals,
   display_type         = "density",
-  prominence_threshold = length(diam_vals) / sqrt(length(diam_vals)),
-  mclust               = FALSE
+  prominence_threshold = 2,
+  adjust = 1,
+  mclust               = T, # mclust = TRUE uses gaussian mixture models to delineate clusters
+  G = 1:2                   # either 1 or 2 cluster, BIC decides; can be NULL
 )
-cat("Diameter peaks at (cm):", paste(round(peaks$peak_x, 3), collapse = ", "), "\n")
 ```
 
 ------------------------------------------------------------------------
@@ -199,7 +279,7 @@ cat(sprintf("Root area coverage: %.2f %%\n", root_area_pct))
 scan_area_cm2 <- (root_px + void_px) / (300 / 2.54)^2
 rl_density    <- rl / scan_area_cm2
 cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
-#> Root length density: 0.1969 cm / cm²
+#> Root length density: 0.0490 cm / cm²
 ```
 
 ------------------------------------------------------------------------
@@ -221,11 +301,11 @@ branch_freq <- n_forks / rl * 100   # branching points per 100 cm
 
 # count_pixels() returns a numeric, so coerce to integer for %d formatting
 cat(sprintf("Root tips: %d\n", as.integer(n_tips)))
-#> Root tips: 1285
+#> Root tips: 67
 cat(sprintf("Branching points: %d\n", as.integer(n_forks)))
-#> Branching points: 273
+#> Branching points: 155
 cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
-#> Branching frequency: 483.5 per 100 cm
+#> Branching frequency: 1103.8 per 100 cm
 ```
 
 ------------------------------------------------------------------------
@@ -248,14 +328,14 @@ order_res <- branch_order_map(
   mask  = seg,    # filled root mask, same grid — used for diameters
   order = "branch_order",
   unit  = "cm",
-  dpi   = 300
+  dpi   = 150
 )
 
 # One row per order class: total length, mean diameter, tips, branch points
 order_res$summary
 
 # Rasterised branch-order classes, aligned to the skeleton
-show_scan(order_res$class_map, main = "Branch order")
+zoom_plot(order_res$class_map, main = "Branch order")
 ```
 
 [`order_metrics()`](https://jcunow.github.io/Rootopia/reference/order_metrics.md)

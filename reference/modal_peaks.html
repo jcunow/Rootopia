@@ -66,7 +66,8 @@ using `mclust` to estimate the number and characteristics of distributional comp
 <span>  prominence_threshold <span class="op">=</span> <span class="fl">0.005</span>,</span>
 <span>  display_type <span class="op">=</span> <span class="st">"density"</span>,</span>
 <span>  adjust <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  mclust <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  mclust <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  G <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -92,6 +93,14 @@ using `mclust` to estimate the number and characteristics of distributional comp
 
 <dt id="arg-mclust">mclust<a class="anchor" aria-label="anchor" href="#arg-mclust"></a></dt>
 <dd><p>Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.</p></dd>
+
+
+<dt id="arg-g">G<a class="anchor" aria-label="anchor" href="#arg-g"></a></dt>
+<dd><p>Number of mixture components (clusters) for `mclust::Mclust`, used only
+when <code>mclust = TRUE</code>. <code>NULL</code> (default) lets Mclust select the number
+of components automatically over <code>G = 1:9</code> by BIC. Supply an integer to
+fix the count (e.g. <code>G = 2</code> for fine vs coarse roots) or an integer
+vector to restrict the BIC search (e.g. <code>G = 1:4</code>).</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -124,7 +133,9 @@ using `mclust` to estimate the number and characteristics of distributional comp
     <p>Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
 This helps identify meaningful peaks while filtering out spurious noise-driven ones.
 When <code>mclust = TRUE</code>, model-based clustering is performed using Gaussian mixture models (<code>V</code> variance structure),
-and the results are returned along with a classification vector.</p>
+and the results are returned along with a classification vector. By default the
+number of components is chosen automatically by BIC (<code>G = NULL</code>); set
+<code>G</code> to constrain or fix it.</p>
 <p>The classification strategy depends on <code>mclust</code>:
 - If <code>TRUE</code>, it returns cluster assignments from <code><a href="https://mclust-org.github.io/mclust/reference/Mclust.html" class="external-link">mclust::Mclust()</a></code>.
 - If <code>FALSE</code>, it classifies each observation by its nearest peak in the kernel density estimate.</p>

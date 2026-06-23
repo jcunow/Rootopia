@@ -1,5 +1,16 @@
 # Minirhizotron Scans Analysis with Rootopia in R
 
+> **A note on figures.** Minirhizotron scans are several thousand pixels
+> wide. Shrinking one to fit an html_vignette figure forces the graphics
+> device to drop one-pixel-wide roots and skeletons, so they appear
+> broken or vanish. The figures below therefore use
+> [`zoom_plot()`](https://jcunow.github.io/Rootopia/reference/zoom_plot.md)
+> (a Rootopia function): it draws a full-image **overview** with the
+> magnified region outlined, plus a **native-resolution inset** where
+> thin features survive at ~1:1. `frac` sets the fraction of each axis
+> kept in the inset (magnification `1/frac`); `center` controls which
+> part is magnified (`"center"`, `"densest"`, or relative `c(fx, fy)`).
+
 ## Minirhizotron Scans Analysis with Rootopia
 
 ### Introduction
@@ -120,7 +131,7 @@ data(rgb_Oulanka2023_Session03_T067)
 rgb <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
                            output_format = "spatrast", scale = "none")
 
-show_scan(root_layer, main = "Root layer (binary)", frac = 0.1)
+zoom_plot(root_layer, main = "Root layer (binary)", frac = 0.1)
 ```
 
 ![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
@@ -197,10 +208,9 @@ depth_map <- create_depthmap(
   center_offset = 0.5      # 0 = top of tube, 1 = bottom
 )
 
-# create_depthmap() returns the map on its own grid; align it to the segmented
-# image so depth and root rasters share extent/resolution (required for
-# terra::zonal() and depth_zoning() below).
-depth_map <- terra::flip(terra::t(depth_map))
+# create_depthmap() returns the map already aligned with the input image, so it
+# shares extent/resolution with the segmented raster (required for terra::zonal()
+# and depth_zoning() below). No transpose/flip needed.
 terra::ext(depth_map) <- terra::ext(root_layer)
 
 terra::plot(depth_map, main = "Depth map (cm)")
@@ -289,7 +299,7 @@ skl <- skeletonize_image(root_layer, verbose = FALSE)
 skl_10cm <- depth_zoning(skl, depth_map = depth_bins, depth = 10)
 len_10cm <- root_length(skl_10cm, unit = "cm", dpi = 150, show_messages = FALSE)
 len_10cm
-#> [1] 208.3697
+#> [1] 349.9786
 ```
 
 ##### 5c. Scale to the whole profile — loop the single-slice computation
@@ -317,12 +327,12 @@ depth_data$rootlength.density <- depth_data$rootlength /
   ((depth_data$rootpx + depth_data$voidpx) / (150 / 2.54)^2)
 head(depth_data)
 #>   depth rootpx voidpx rootpx.density rootlength rootlength.density
-#> 1    -5      0   5158       0.000000    0.00000          0.0000000
-#> 2     0   7959 277009       2.792945   54.37009          0.6653943
-#> 3     5  24281 453463       5.082429  136.48109          0.9963051
-#> 4    10  38748 438949       8.111418  208.36966          1.5212376
-#> 5    15  36590 441143       7.659090  211.75244          1.5458176
-#> 6    20  24861 452872       5.203953  128.68449          0.9394119
+#> 1    -5      0   5158       0.000000     0.0000          0.0000000
+#> 2     0   7959 277009       2.792945    80.4278          0.9842947
+#> 3     5  24281 453463       5.082429   228.3995          1.6673045
+#> 4    10  38748 438949       8.111418   349.9786          2.5550775
+#> 5    15  36590 441143       7.659090   349.7077          2.5529076
+#> 6    20  24861 452872       5.203953   231.8116          1.6922517
 ```
 
 ##### 5d. Root diameter — whole profile with `zonal()`
@@ -350,14 +360,14 @@ colnames(diam_by_depth) <- c("depth", "avg.diameter")
 depth_data <- merge(depth_data, diam_by_depth, by = "depth")
 head(depth_data)
 #>   depth rootpx voidpx rootpx.density rootlength rootlength.density avg.diameter
-#> 1    -5      0   5158       0.000000    0.00000          0.0000000          NaN
-#> 2     0   7959 277009       2.792945   54.37009          0.6653943   0.01899533
-#> 3     5  24281 453463       5.082429  136.48109          0.9963051   0.01946714
-#> 4    10  38748 438949       8.111418  208.36966          1.5212376   0.01948757
-#> 5    15  36590 441143       7.659090  211.75244          1.5458176   0.01883529
-#> 6    20  24861 452872       5.203953  128.68449          0.9394119   0.01866563
+#> 1    -5      0   5158       0.000000     0.0000          0.0000000          NaN
+#> 2     0   7959 277009       2.792945    80.4278          0.9842947   0.01867031
+#> 3     5  24281 453463       5.082429   228.3995          1.6673045   0.01887662
+#> 4    10  38748 438949       8.111418   349.9786          2.5550775   0.01910169
+#> 5    15  36590 441143       7.659090   349.7077          2.5529076   0.01851391
+#> 6    20  24861 452872       5.203953   231.8116          1.6922517   0.01822515
 # root thickness
-show_scan(diam_result$distance_map_rast, frac = 0.1)
+zoom_plot(diam_result$distance_map_rast, frac = 0.1)
 ```
 
 ![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png)![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png)
@@ -455,7 +465,7 @@ total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
 
 cat(sprintf("MRD: %.2f  RPI: %.3f  Total length density: %.4f\n",
             mrd_val, rpi_val, total_ld))
-#> MRD: 19.47  RPI: 0.899  Total length density: 43.6782
+#> MRD: 19.41  RPI: 0.899  Total length density: 72.0588
 ```
 
 [`root_accumulation()`](https://jcunow.github.io/Rootopia/reference/root_accumulation.md)

@@ -13,7 +13,8 @@ modal_peaks(
   prominence_threshold = 0.005,
   display_type = "density",
   adjust = 1,
-  mclust = FALSE
+  mclust = FALSE,
+  G = NULL
 )
 ```
 
@@ -42,6 +43,14 @@ modal_peaks(
 
   Logical. If \`TRUE\`, performs model-based clustering using
   \`mclust::Mclust\`.
+
+- G:
+
+  Number of mixture components (clusters) for \`mclust::Mclust\`, used
+  only when `mclust = TRUE`. `NULL` (default) lets Mclust select the
+  number of components automatically over `G = 1:9` by BIC. Supply an
+  integer to fix the count (e.g. `G = 2` for fine vs coarse roots) or an
+  integer vector to restrict the BIC search (e.g. `G = 1:4`).
 
 ## Value
 
@@ -85,7 +94,9 @@ maximum and the nearest local minimum (valley). This helps identify
 meaningful peaks while filtering out spurious noise-driven ones. When
 `mclust = TRUE`, model-based clustering is performed using Gaussian
 mixture models (`V` variance structure), and the results are returned
-along with a classification vector.
+along with a classification vector. By default the number of components
+is chosen automatically by BIC (`G = NULL`); set `G` to constrain or fix
+it.
 
 The classification strategy depends on `mclust`: - If `TRUE`, it returns
 cluster assignments from

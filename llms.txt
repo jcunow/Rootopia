@@ -130,11 +130,15 @@ images.
   : Load an image flexibly from file or convert from memory
 - [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
   : Clean a binary root image
+- [`report_image_components()`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
+  : Summarise the component-size distribution of a binary image
 - [`image_threshold()`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
   : Threshold or deblur an image to binarize features
 - [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md)
   : Convert RGB image to grayscale with optimized memory management and
   parallel processing
+- [`prune_skeleton()`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md)
+  : Prune short or thin spurs from a skeleton or segmentation image
 - [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
   : Censor image edges based on rotation
 - [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
@@ -256,6 +260,13 @@ Detect and correct for rotational artefacts in minirhizotron tube scans.
   : Fit a sine curve to data with optional fixed period
 - [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
   : Assess rhythmicity via sine curve fitting and model comparison
+
+## Visualization
+
+Helper to zoom into an image.
+
+- [`zoom_plot()`](https://jcunow.github.io/Rootopia/reference/zoom_plot.md)
+  : Plot a SpatRaster with a magnified native-resolution inset
 
 ## Example data
 

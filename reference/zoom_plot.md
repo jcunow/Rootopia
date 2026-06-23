@@ -1,0 +1,101 @@
+# Plot a SpatRaster with a magnified native-resolution inset
+
+Displays a high-resolution \`SpatRaster\` without losing thin features
+to device down-sampling. By default it draws two panels: a full-image
+\*\*overview\*\* with the zoomed region outlined, and a \*\*magnified
+inset\*\* of that region rendered at (near) 1:1 (\`maxcell = Inf\`).
+
+## Usage
+
+``` r
+zoom_plot(
+  x,
+  frac = 0.3,
+  center = "center",
+  overview = TRUE,
+  layer = NULL,
+  box_col = "red",
+  main = "",
+  maxcell = Inf,
+  ...
+)
+```
+
+## Arguments
+
+- x:
+
+  A \`SpatRaster\`.
+
+- frac:
+
+  Fraction of each axis kept in the magnified inset (0-1). Magnification
+  is \`1 / frac\`. Default \`0.3\`.
+
+- center:
+
+  Where to centre the inset. One of:
+
+  - \`"center"\` (default) — geometric centre of the image;
+
+  - \`"densest"\` — the \`frac\`-sized window containing the most
+    non-zero / non-\`NA\` pixels (i.e. the most root material);
+
+  - a length-2 numeric \`c(fx, fy)\` of \*relative\* coordinates in
+    \`\[0, 1\]\`, where \`c(0, 0)\` is bottom-left and \`c(1, 1)\`
+    top-right.
+
+- overview:
+
+  Logical. Draw the full-image overview panel with the zoom box
+  outlined. Default \`TRUE\`. Set \`FALSE\` to draw only the inset.
+
+- layer:
+
+  Integer or \`NULL\`. For multi-layer rasters, which layer the
+  \`"densest"\` search uses. Default \`NULL\` (first layer). Does not
+  subset what is plotted — RGB rasters still plot as RGB.
+
+- box_col:
+
+  Colour of the zoom-box rectangle on the overview. Default \`"red"\`.
+
+- main:
+
+  Title stem. Panels are titled \`"\<main\> - overview"\` and
+  \`"\<main\> - inset (Nx)"\`.
+
+- maxcell:
+
+  Passed to \[terra::plot()\]/\[terra::plotRGB()\]. Default \`Inf\` (no
+  down-sampling) so thin features survive.
+
+- ...:
+
+  Further arguments passed to the underlying terra plot call.
+
+## Value
+
+Invisibly, the \`terra::ext()\` of the inset region.
+
+## Why this exists
+
+Root masks and skeletons are often one pixel wide. Fitting a
+multi-thousand pixel scan into a small figure forces the graphics device
+to drop those pixels, so roots vanish or look broken. The magnified
+inset keeps a fraction of the image at full pixel resolution; the
+effective magnification is \`1 / frac\` (e.g. \`frac = 0.25\` magnifies
+4x).
+
+## Examples
+
+``` r
+data(seg_Oulanka2023_Session01_T067)
+r <- terra::rast(seg_Oulanka2023_Session01_T067)
+if (FALSE) { # \dontrun{
+zoom_plot(r, frac = 0.25)                 # 4x inset, centred
+zoom_plot(r, center = "densest")          # zoom where the roots are
+zoom_plot(r, center = c(0.2, 0.8))        # upper-left region
+zoom_plot(r, overview = FALSE)            # inset only
+} # }
+```

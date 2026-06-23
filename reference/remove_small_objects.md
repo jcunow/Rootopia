@@ -6,7 +6,7 @@ image border.
 ## Usage
 
 ``` r
-remove_small_objects(img, max_size = NULL)
+remove_small_objects(img, max_size = NULL, protect_border = FALSE)
 ```
 
 ## Arguments
@@ -17,8 +17,16 @@ remove_small_objects(img, max_size = NULL)
 
 - max_size:
 
-  Maximum artifact size in pixels to remove. If \`NULL\` (default), all
-  isolated white regions are removed.
+  Maximum artifact size in pixels to remove. If \`NULL\`, all candidate
+  white regions are removed.
+
+- protect_border:
+
+  Logical. If \`TRUE\`, white regions touching the image border are
+  never removed (they are assumed to be roots leaving the frame). If
+  \`FALSE\` (default), border-touching regions are subject to the same
+  \`max_size\` test as any other region, so edge specks are removed too.
+  Border location confers no protection on its own.
 
 ## Value
 
