@@ -58,6 +58,7 @@ reference:
     contents:
       - load_flexible_image
       - clean_image
+      - report_image_components
       - image_threshold
       - rgb2gray
       - prune_skeleton
