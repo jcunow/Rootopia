@@ -146,10 +146,9 @@
 #'   imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
 #'   \code{calc_root_length}.  Default \code{TRUE}.
 #' @param calc_distribution_indices Logical. Compute tube-level indices:
-#'   \code{mrd} (mean rooting depth), \code{rpi} (root
-#'   penetration index), and \code{total.length.density} (summed length
-#'   density over all bins, in cm root per cm^2 per cm depth).  Auto-enables
-#'   \code{calc_density_metrics}.  Default \code{TRUE}.
+#'   \code{mrd} (mean rooting depth) and \code{total.length.density} (summed
+#'   length density over all bins, in cm root per cm^2 per cm depth).
+#'   Auto-enables \code{calc_density_metrics}.  Default \code{TRUE}.
 #' @param calc_advanced_metrics Logical. Compute per-bin derived metrics:
 #'   \code{rootlength.fraction} (each bin's length density as a fraction of the
 #'   tube total) and \code{mean.var.diameter} (mean of within-bin diameter
@@ -1035,7 +1034,6 @@ root_depth_metrics <- function(
         dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
         dplyr::summarize(
           mrd   = Rootopia::MRD(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
-          rpi   = Rootopia::RPI(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
           # total.length.density: sum of (length density x bin size) across all bins
           # units: cm root per cm^2 (integrated over the full depth profile)
           total.length.density = sum(dplyr::.data$rootlength.density * depth_interval_cm, na.rm = TRUE),

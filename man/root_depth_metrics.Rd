@@ -163,10 +163,9 @@ imaged area) per bin.  Auto-enables \code{calc_root_pixels} and
 \code{calc_root_length}.  Default \code{TRUE}.}
 
 \item{calc_distribution_indices}{Logical. Compute tube-level indices:
-\code{mrd} (mean rooting depth), \code{rpi} (root
-penetration index), and \code{total.length.density} (summed length
-density over all bins, in cm root per cm^2 per cm depth).  Auto-enables
-\code{calc_density_metrics}.  Default \code{TRUE}.}
+\code{mrd} (mean rooting depth) and \code{total.length.density} (summed
+length density over all bins, in cm root per cm^2 per cm depth).
+Auto-enables \code{calc_density_metrics}.  Default \code{TRUE}.}
 
 \item{calc_advanced_metrics}{Logical. Compute per-bin derived metrics:
 \code{rootlength.fraction} (each bin's length density as a fraction of the
