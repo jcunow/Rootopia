@@ -21,12 +21,14 @@ and extracting root traits step by step. It is aimed at users who want
 full control over each processing stage or who are working on a specific
 subset of functions.
 
-> **New to Rootopia?** If you want to process a whole set of images in
-> one go, the [Batch
+> **New to Rootopia?** You are in the right place — this step-by-step
+> workflow is the recommended starting point. Once you are comfortable
+> with the individual functions and want to process a whole folder of
+> images at once, the [Batch
 > Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
 > vignette wraps this entire workflow into a single
 > [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
-> call. Start there.
+> call.
 
 > **Prerequisite**: Rootopia works with already-segmented images.
 > Segmentation must be done beforehand using
@@ -208,9 +210,8 @@ depth_map <- create_depthmap(
   center_offset = 0.5      # 0 = top of tube, 1 = bottom
 )
 
-# create_depthmap() returns the map already aligned with the input image, so it
-# shares extent/resolution with the segmented raster (required for terra::zonal()
-# and depth_zoning() below). No transpose/flip needed.
+# terra::zonal() and depth_zoning() require rasters to share an extent; snap the
+# depth map onto the root-layer grid once here.
 terra::ext(depth_map) <- terra::ext(root_layer)
 
 terra::plot(depth_map, main = "Depth map (cm)")
@@ -337,10 +338,12 @@ head(depth_data)
 
 ##### 5d. Root diameter — whole profile with `zonal()`
 
-Diameter is a per-pixel value, so once you have the diameter raster you
-are back in
-[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
-territory.
+[`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
+estimates a diameter at every skeleton pixel (in the `unit` you specify)
+and returns it as a raster. Because it is a per-pixel value, the profile
+reduces with
+[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html) just
+like the pixel counts in 5a.
 
 ``` r
 
@@ -350,7 +353,6 @@ diam_result <- root_diameter(
   unit         = "cm",
   select_layer = NULL
 )
-# Align the diameter raster to the depth grid before zonal aggregation
 terra::ext(diam_result$diameter_rast) <- terra::ext(depth_bins)
 
 diam_by_depth <- terra::zonal(diam_result$diameter_rast, depth_bins,
@@ -440,9 +442,10 @@ color_list <- lapply(depths, function(d) {
 color_df <- do.call(rbind, color_list)   # NULLs from empty bins are dropped
 ```
 
-> Looking for **root branching order** (main axis vs. laterals)? That
-> analysis has no depth dimension, so it lives in the [Flatbed
-> Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html#6b-branch-order-main-axis-vs-laterals)
+> Looking for **root branching order** (segments grouped by branching
+> order)? That analysis has no depth dimension, so it lives in the
+> [Flatbed
+> Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html#7b-branch-order)
 > vignette. You can still run it on a minirhizotron skeleton — just
 > compute it once for the whole image rather than per depth bin.
 
@@ -454,18 +457,15 @@ These tube-level summary metrics require a complete depth profile.
 
 ``` r
 
-# Mean rooting depth — depth-weighted mean
+# Mean rooting depth — depth-weighted mean (a robust centre-of-root-mass estimate)
 mrd_val <- MRD(w = depth_data$depth, roots = depth_data$rootlength.density)
-
-# Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)
-rpi_val  <- RPI(roots = depth_data$rootlength.density, w = depth_data$depth)
 
 # Total length density — sum over the full profile
 total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
 
-cat(sprintf("MRD: %.2f  RPI: %.3f  Total length density: %.4f\n",
-            mrd_val, rpi_val, total_ld))
-#> MRD: 19.41  RPI: 0.899  Total length density: 72.0588
+cat(sprintf("MRD: %.2f  Total length density: %.4f\n",
+            mrd_val, total_ld))
+#> MRD: 19.41  Total length density: 72.0588
 ```
 
 [`root_accumulation()`](https://jcunow.github.io/Rootopia/reference/root_accumulation.md)
@@ -486,9 +486,13 @@ depth_data$rootpx.cumulative <- root_accumulation(
   stdrz    = "additive"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
 )
 
-plot(depth_data$depth, depth_data$rootpx.cumulative, type = "l",
-     xlab = "Depth (cm)", ylab = "Cumulative root pixel fraction",
-     main = "Root accumulation with depth")
+library(ggplot2)
+ggplot(depth_data, aes(x = depth, y = rootpx.cumulative)) +
+  geom_line(color = "steelblue4") +
+  geom_point(color = "steelblue4") +
+  theme_minimal() +
+  labs(x = "Depth (cm)", y = "Cumulative root pixel fraction",
+       title = "Root accumulation with depth")
 ```
 
 ![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png)
@@ -506,8 +510,8 @@ compared.
 
 data(skl_Oulanka2023_Session01_T067)
 data(skl_Oulanka2023_Session03_T067)
-t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
-t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
+t1 <- load_flexible_image(skl_Oulanka2023_Session01_T067, output_format = "spatrast")
+t2 <- load_flexible_image(skl_Oulanka2023_Session03_T067, output_format = "spatrast")
 
 turnover <- root_turnover(
   img1      = t1,
@@ -517,8 +521,6 @@ turnover <- root_turnover(
   dpi       = 150,
   unit      = "cm"
 )
-#> Diagonal: 457958 | Orthogonal: 459143
-#> Diagonal: 431284 | Orthogonal: 432437
 print(turnover)
 #>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2
 #> 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618

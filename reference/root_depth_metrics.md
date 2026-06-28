@@ -224,10 +224,10 @@ root_depth_metrics(
 
 - calc_distribution_indices:
 
-  Logical. Compute tube-level indices: `mrd` (mean rooting depth), `rpi`
-  (root penetration index), and `total.length.density` (summed length
-  density over all bins, in cm root per cm^2 per cm depth). Auto-enables
-  `calc_density_metrics`. Default `TRUE`.
+  Logical. Compute tube-level indices: `mrd` (mean rooting depth) and
+  `total.length.density` (summed length density over all bins, in cm
+  root per cm^2 per cm depth). Auto-enables `calc_density_metrics`.
+  Default `TRUE`.
 
 - calc_advanced_metrics:
 

@@ -109,10 +109,12 @@ and extracting root traits step by step. It is aimed at users who want
 full control over each processing stage or who are working on a specific
 subset of functions.</p>
 <blockquote>
-<p><strong>New to Rootopia?</strong> If you want to process a whole set
-of images in one go, the <a href="BatchProcessing_vignette.html">Batch
-Processing</a> vignette wraps this entire workflow into a single
-<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> call. Start there.</p>
+<p><strong>New to Rootopia?</strong> You are in the right place — this
+step-by-step workflow is the recommended starting point. Once you are
+comfortable with the individual functions and want to process a whole
+folder of images at once, the <a href="BatchProcessing_vignette.html">Batch Processing</a> vignette wraps
+this entire workflow into a single <code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code>
+call.</p>
 </blockquote>
 <blockquote>
 <p><strong>Prerequisite</strong>: Rootopia works with already-segmented
@@ -311,9 +313,8 @@ centered.</td>
 <span>  center_offset <span class="op">=</span> <span class="fl">0.5</span>      <span class="co"># 0 = top of tube, 1 = bottom</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># create_depthmap() returns the map already aligned with the input image, so it</span></span>
-<span><span class="co"># shares extent/resolution with the segmented raster (required for terra::zonal()</span></span>
-<span><span class="co"># and depth_zoning() below). No transpose/flip needed.</span></span>
+<span><span class="co"># terra::zonal() and depth_zoning() require rasters to share an extent; snap the</span></span>
+<span><span class="co"># depth map onto the root-layer grid once here.</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">depth_map</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">root_layer</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_map</span>, main <span class="op">=</span> <span class="st">"Depth map (cm)"</span><span class="op">)</span></span></code></pre></div>
@@ -432,8 +433,10 @@ that takes a whole image.</p>
 <div class="section level5">
 <h5 id="d--root-diameter-whole-profile-with-zonal">5d. Root diameter — whole profile with <code>zonal()</code><a class="anchor" aria-label="anchor" href="#d--root-diameter-whole-profile-with-zonal"></a>
 </h5>
-<p>Diameter is a per-pixel value, so once you have the diameter raster
-you are back in <code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal()</a></code> territory.</p>
+<p><code><a href="../reference/root_diameter.html">root_diameter()</a></code> estimates a diameter at every skeleton
+pixel (in the <code>unit</code> you specify) and returns it as a raster.
+Because it is a per-pixel value, the profile reduces with
+<code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal()</a></code> just like the pixel counts in 5a.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diam_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_diameter.html">root_diameter</a></span><span class="op">(</span></span>
 <span>  <span class="va">root_layer</span>,</span>
@@ -441,7 +444,6 @@ you are back in <code><a href="https://rspatial.github.io/terra/reference/zonal.
 <span>  unit         <span class="op">=</span> <span class="st">"cm"</span>,</span>
 <span>  select_layer <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># Align the diameter raster to the depth grid before zonal aggregation</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">diam_result</span><span class="op">$</span><span class="va">diameter_rast</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">depth_bins</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">diam_by_depth</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal</a></span><span class="op">(</span><span class="va">diam_result</span><span class="op">$</span><span class="va">diameter_rast</span>, <span class="va">depth_bins</span>,</span>
@@ -524,9 +526,9 @@ if your RGB and segmentation already share a grid you can skip it.</p>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">color_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">color_list</span><span class="op">)</span>   <span class="co"># NULLs from empty bins are dropped</span></span></code></pre></div>
 <blockquote>
-<p>Looking for <strong>root branching order</strong> (main axis
-vs. laterals)? That analysis has no depth dimension, so it lives in the
-<a href="FlatBedScans_vignettes.html#6b-branch-order-main-axis-vs-laterals">Flatbed
+<p>Looking for <strong>root branching order</strong> (segments grouped
+by branching order)? That analysis has no depth dimension, so it lives
+in the <a href="FlatBedScans_vignettes.html#7b-branch-order">Flatbed
 Scans</a> vignette. You can still run it on a minirhizotron skeleton —
 just compute it once for the whole image rather than per depth bin.</p>
 </blockquote>
@@ -539,18 +541,15 @@ just compute it once for the whole image rather than per depth bin.</p>
 <p>These tube-level summary metrics require a complete depth
 profile.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Mean rooting depth — depth-weighted mean</span></span>
+<code class="sourceCode R"><span><span class="co"># Mean rooting depth — depth-weighted mean (a robust centre-of-root-mass estimate)</span></span>
 <span><span class="va">mrd_val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MRD.html">MRD</a></span><span class="op">(</span>w <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, roots <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Root Penetration Index — how evenly roots are distributed with depth (-1 to 1)</span></span>
-<span><span class="va">rpi_val</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/RPI.html">RPI</a></span><span class="op">(</span>roots <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span>, w <span class="op">=</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Total length density — sum over the full profile</span></span>
 <span><span class="va">total_ld</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span> <span class="op">*</span> <span class="fl">5</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"MRD: %.2f  RPI: %.3f  Total length density: %.4f\n"</span>,</span>
-<span>            <span class="va">mrd_val</span>, <span class="va">rpi_val</span>, <span class="va">total_ld</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; MRD: 19.41  RPI: 0.899  Total length density: 72.0588</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"MRD: %.2f  Total length density: %.4f\n"</span>,</span>
+<span>            <span class="va">mrd_val</span>, <span class="va">total_ld</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; MRD: 19.41  Total length density: 72.0588</span></span></code></pre></div>
 <p><code><a href="../reference/root_accumulation.html">root_accumulation()</a></code> complements these by returning the
 cumulative profile itself — useful for plotting how root mass/length
 accumulates with depth, or for comparing the <em>shape</em> of
@@ -567,9 +566,13 @@ accumulation curves between tubes/plots.</p>
 <span>  stdrz    <span class="op">=</span> <span class="st">"additive"</span>   <span class="co"># "counts" (raw), "additive" (/max), or "relative" (/sum)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">depth</span>, <span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx.cumulative</span>, type <span class="op">=</span> <span class="st">"l"</span>,</span>
-<span>     xlab <span class="op">=</span> <span class="st">"Depth (cm)"</span>, ylab <span class="op">=</span> <span class="st">"Cumulative root pixel fraction"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Root accumulation with depth"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">rootpx.cumulative</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"steelblue4"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Depth (cm)"</span>, y <span class="op">=</span> <span class="st">"Cumulative root pixel fraction"</span>,</span>
+<span>       title <span class="op">=</span> <span class="st">"Root accumulation with depth"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="700"></p>
 <p><code>stdrz = "relative"</code> rescales the cumulative curve to end
 at 1, which makes accumulation curves directly comparable between tubes
@@ -583,8 +586,8 @@ depth distribution is compared.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
-<span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
-<span><span class="va">t2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
+<span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
+<span><span class="va">t2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">turnover</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span></span>
 <span>  img1      <span class="op">=</span> <span class="va">t1</span>,</span>
@@ -594,8 +597,6 @@ depth distribution is compared.</p>
 <span>  dpi       <span class="op">=</span> <span class="fl">150</span>,</span>
 <span>  unit      <span class="op">=</span> <span class="st">"cm"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Diagonal: 457958 | Orthogonal: 459143</span></span>
-<span><span class="co">#&gt; Diagonal: 431284 | Orthogonal: 432437</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">turnover</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2</span></span>
 <span><span class="co">#&gt; 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618</span></span></code></pre></div>
