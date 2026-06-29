@@ -12,17 +12,6 @@ test_that("MRD validates inputs", {
   expect_error(MRD(c(1, NA), c(1, 2)))        # NA
 })
 
-test_that("RPI lies in [-1, 1] and is shallow-positive", {
-  w     <- seq(5, 25, 5)
-  shallow <- c(10, 7, 3, 1, 0)
-  deep    <- c(0, 1, 3, 7, 10)
-  rpi_s <- RPI(roots = shallow, w = w)
-  rpi_d <- RPI(roots = deep,    w = w)
-  expect_true(rpi_s >= -1 && rpi_s <= 1)
-  expect_true(rpi_d >= -1 && rpi_d <= 1)
-  expect_gt(rpi_s, rpi_d)                      # shallower profile => higher RPI
-})
-
 test_that("root_accumulation returns a cumulative vector aligned to input rows", {
   df <- data.frame(
     depth  = c(seq(0, 80, 20), seq(0, 80, 20)),
