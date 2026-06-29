@@ -155,15 +155,26 @@ load_flexible_image <- function(input, output_format = "cimg",
 
   arr <- NULL
 
+  # imager stores images as (x = width, y = height) while terra, tiff and plain
+  # arrays use (row = height, col = width). Swap the first two axes to move an
+  # array between the two conventions, so every input branch below lands in a
+  # single canonical (H, W[, C]) layout regardless of source format.
+  swap_xy <- function(a) {
+    d <- dim(a)
+    if (is.null(d) || length(d) < 2) return(a)
+    if (length(d) == 2) return(t(a))
+    aperm(a, c(2, 1, seq.int(3, length(d))))
+  }
+
   # Handle file input (image or raster)
   if (is.character(input) && file.exists(input)) {
     ext <- tolower(tools::file_ext(input))
     if (ext %in% c("tif", "tiff")) {
-      arr <- as.array(tiff::readTIFF(input))  # 3D array
+      arr <- as.array(tiff::readTIFF(input))  # 3D array, already (H, W, C)
     } else {
-      # imager loads as 4D (x, y, depth, channel); drop the depth axis so the
-      # result is a 2D (grayscale) or 3D (RGB) array, matching the cimg branch.
-      arr <- as.array(imager::load.image(input))[, , 1, ]
+      # imager loads as 4D (x, y, depth, channel); drop the depth axis, then
+      # swap x/y so the result is (H, W, C) like the tiff/raster branches.
+      arr <- swap_xy(as.array(imager::load.image(input))[, , 1, ])
     }
   }
   else if (inherits(input,"matrix")) {
@@ -176,11 +187,11 @@ load_flexible_image <- function(input, output_format = "cimg",
     arr <- terra::as.array(input)
   }
   else if (inherits(input, c("cimg"))) {
-    arr <- as.array(input)[,,1,]
+    arr <- swap_xy(as.array(input)[,,1,])         # imager (W,H,C) -> (H,W,C)
   }
   else if (inherits(input, c("magick-image"))) {
     arr <- imager::magick2cimg(input)
-    arr <- as.array(arr)[,,1,]
+    arr <- swap_xy(as.array(arr)[,,1,])           # imager (W,H,C) -> (H,W,C)
   }
   else if(!inherits(input, c("RasterLayer", "RasterBrick", "SpatRaster","magick-image", "cimg","array","matrix","character"))) {
     stop("Unsupported input format.\n", supported_formats_string(type = "Input"))
@@ -242,10 +253,11 @@ load_flexible_image <- function(input, output_format = "cimg",
     return(matrix(arr, dims))
   }
   else if (ofmt == "cimg") {
-    return(suppressWarnings(imager::as.cimg(arr)))
+    # arr is canonical (H, W, C); imager wants (x = W, y = H), so swap back.
+    return(suppressWarnings(imager::as.cimg(swap_xy(arr))))
   }
   else if (ofmt == "magick-image") {
-    return(imager::cimg2magick(suppressWarnings(imager::as.cimg(arr))))
+    return(imager::cimg2magick(suppressWarnings(imager::as.cimg(swap_xy(arr)))))
   }
   else {
     stop("Unsupported output format.\n", supported_formats_string(type = "Output"))

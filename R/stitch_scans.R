@@ -681,29 +681,17 @@ stitch_discover_files <- function(input, pattern = NULL) {
 #' @return A numeric \code{(H, W, C)} array scaled to 0-255.
 #' @keywords internal
 stitch_to_hwc <- function(input) {
+  # load_flexible_image() returns a canonical (H, W, C) array for every source
+  # (including imager-read PNG/JPG files), so no orientation correction is
+  # needed here -- just normalise the number of dimensions.
   a <- load_flexible_image(input, output_format = "array", scale = "none")
   d <- dim(a)
-  # Non-TIFF image files are read through imager, which returns the array in
-  # (W, H, C) order (X before Y). load_flexible_image already drops imager's
-  # depth axis, so those come back 3D (W, H, C) -- they still need a transpose
-  # to reach the (H, W, C) layout the stitching math assumes. TIFF, SpatRaster
-  # and in-memory arrays are already (H, W, C) and must be left alone.
-  imager_file <- is.character(input) && length(input) == 1L &&
-    file.exists(input) &&
-    !tolower(tools::file_ext(input)) %in% c("tif", "tiff")
-  if (length(d) == 4) {
-    a <- a[, , 1, , drop = TRUE]
-    if (length(dim(a)) == 2) a <- array(a, c(dim(a), 1))
-    a <- aperm(a, c(2, 1, 3))            # (W, H, C) -> (H, W, C)
-  } else if (length(d) == 3) {
-    if (imager_file) a <- aperm(a, c(2, 1, 3))   # (W, H, C) -> (H, W, C)
-  } else if (length(d) == 2) {
-    a <- array(a, c(d, 1))               # grayscale -> single channel
-    if (imager_file) a <- aperm(a, c(2, 1, 3))   # (W, H, 1) -> (H, W, 1)
-  } else {
+  if (length(d) == 2) {
+    a <- array(a, c(d, 1))               # grayscale (H, W) -> (H, W, 1)
+  } else if (length(d) != 3) {
     stop("Unsupported image dimensions for stitching: ", paste(d, collapse = "x"))
   }
-  # everything else (tiff, SpatRaster, plain arrays) is assumed (H, W, C)
+  # everything is (H, W, C) at this point
   mx <- suppressWarnings(max(a, na.rm = TRUE))
   if (is.finite(mx) && mx <= 1) a <- a * 255    # bring 0-1 sources to 0-255
   storage.mode(a) <- "double"
