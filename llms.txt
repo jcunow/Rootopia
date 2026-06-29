@@ -28,21 +28,22 @@ like root length & diameter, depth mapping, and distribution tools.
 
 ## 📘 Tutorials
 
-New to Rootopia? Start with the batch-processing tutorial — it runs the
-whole pipeline (loading, depth mapping, trait extraction) over a folder
-of images with a single function call. The step-by-step tutorials below
-are for when you need full control over an individual processing stage.
+New to Rootopia? Start with one of the step-by-step tutorials — they
+walk through loading, depth mapping, and trait extraction one function
+at a time, so you learn what each stage does. Once you are comfortable,
+the batch-processing tutorial wraps the whole minirhizotron pipeline
+over a folder of images into a single function call.
 
-- 🚀 [Start here: Batch
-  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
-- 📄 [Minirhizotron Workflow
+- 📄 [Start here: Minirhizotron Workflow
   (step-by-step)](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
 - 📄 [Flatbed Scan Workflow
   (step-by-step)](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
-- 📄 [Rotation Bias
-  Correction](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
 - 🧵 [Stitching Scan Sequences into
   Mosaics](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
+- 📄 [Rotation Bias
+  Correction](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
+- 🚀 [Batch Processing (whole folders at
+  once)](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
 
 Each tutorial includes code, images, overlays, and tips for
 interpretation.
@@ -236,8 +237,6 @@ Statistical indices summarising root distribution with depth.
 
 - [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) :
   Calculate Mean Rooting Depth
-- [`RPI()`](https://jcunow.github.io/Rootopia/reference/RPI.md) :
-  Calculate Root Penetration Index
 - [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
   : Assess rhythmicity via sine curve fitting and model comparison
 - [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)

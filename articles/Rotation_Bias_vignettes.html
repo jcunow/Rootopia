@@ -35,13 +35,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Stitching_vignette.html">Image Stitching (quick access)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -134,7 +135,6 @@ and rhythmicity</a> section below.</p>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/Rootopia" class="external-link">Rootopia</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## terra 1.9.34</span></span></code></pre>
 <hr>
 </div>
 <div class="section level3">
@@ -149,9 +149,9 @@ visible on one side, the function infers where the top of the tube
 (rotational zero) lies. It returns a pixel row index.</p>
 <p>Since a tube has a fixed geometry, this only needs to be done once
 per tube — the rotational center does not change between sessions.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
-<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">r0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_rotation_center.html">estimate_rotation_center</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Estimated rotation center (row):"</span>, <span class="va">r0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -195,7 +195,7 @@ cross-correlation (<code>"ccf"</code>) or phase correlation
 (<code>"phase"</code>) on a shared depth window to find the pixel
 offset. Phase correlation is generally more robust to brightness
 differences between sessions.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span></span>
@@ -204,22 +204,18 @@ differences between sessions.</p>
 <span>  <span class="va">seg_Oulanka2023_Session03_T067</span>,</span>
 <span>  cor_type          <span class="op">=</span> <span class="st">"phase"</span>,</span>
 <span>  fixed_depth_pixel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">4000</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size</span></span>
-<span><span class="co">## mismatch detected; cropping to common extent</span></span></code></pre>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rotation shift (depth px, rotation px): "</span>, <span class="va">shift</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Rotation shift (depth px, rotation px):  -18 -9</span></span></code></pre>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Visual inspection</span></span>
-<span><span class="fu"><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>, </span>
-<span>                        <span class="va">seg_Oulanka2023_Session03_T067</span>, </span>
-<span>                        cor_type <span class="op">=</span> <span class="st">"phase"</span>, </span>
-<span>                        select_layer <span class="op">=</span> <span class="fl">2</span>, </span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rotation shift (depth px, rotation px): "</span>, <span class="va">shift</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Rotation shift (depth px, rotation px):  -18 -9</span></span>
+<span></span>
+<span><span class="co"># Visual inspection</span></span>
+<span><span class="fu"><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>,</span>
+<span>                        <span class="va">seg_Oulanka2023_Session03_T067</span>,</span>
+<span>                        cor_type <span class="op">=</span> <span class="st">"phase"</span>,</span>
+<span>                        select_layer <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>                        overlay <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size</span></span>
-<span><span class="co">## mismatch detected; cropping to common extent</span></span></code></pre>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="4800"></p>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="100%"></p>
 <p>The returned vector is <code>c(x.lag, y.lag)</code> — the horizontal
 (depth axis) and vertical (rotation axis) pixel shifts. A large vertical
 shift means the tube rotated substantially between sessions.</p>
@@ -249,7 +245,7 @@ proportionally based on the measured offset; output width varies</li>
 crop on a specified row and forces a fixed output width; recommended
 when comparing multiple sessions</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>, <span class="st">"spatrast"</span><span class="op">)</span></span>
 <span></span>
@@ -267,7 +263,7 @@ when comparing multiple sessions</li>
 <span>  overlay        <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  main <span class="op">=</span> <span class="st">"Rotation censor: kept window (green) vs cut (red)"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="100%"></p>
 <blockquote>
 <p><strong>Note on tube geometry.</strong> The inner and outer tube
 diameters differ, so the observed root length slightly underestimates
@@ -304,7 +300,7 @@ or an installation-angle artifact).</p>
 <div class="section level4">
 <h4 id="extract-a-root-trait-per-circumferential-slice">Extract a root trait per circumferential slice<a class="anchor" aria-label="anchor" href="#extract-a-root-trait-per-circumferential-slice"></a>
 </h4>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>, scale <span class="op">=</span> <span class="st">"binary"</span>, select_layer <span class="op">=</span> <span class="fl">2</span>,</span>
@@ -315,8 +311,8 @@ or an installation-angle artifact).</p>
 <span><span class="va">e</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">root_layer</span><span class="op">)</span></span>
 <span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">root_layer</span>, <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">e</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">+</span> <span class="va">e</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">/</span> <span class="fl">4</span>, <span class="va">e</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">e</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="va">e</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> </span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">root_layer</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="100%"></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># --&gt; the trimming avoids noisy deep layer and tape artifacts at the top</span></span>
 <span></span>
 <span><span class="co"># create circumferential zones</span></span>
@@ -329,60 +325,13 @@ or an installation-angle artifact).</p>
 <span></span>
 <span><span class="va">slice_traits</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  slice   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_slices</span><span class="op">)</span>,</span>
-<span>  rootlen <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">root_length</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span>,  <span class="co"># cm</span></span>
+<span>  rootlen <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">root_length</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>                   show_messages <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,  <span class="co"># cm</span></span>
 <span>  rootpx  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">n_root</span><span class="op">)</span>,</span>
 <span>  soilpx  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">slices</span>, <span class="va">n_soil</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Diagonal: 539 | Orthogonal: 655</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1001 | Orthogonal: 1242</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1266 | Orthogonal: 1552</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1125 | Orthogonal: 1436</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1254 | Orthogonal: 1545</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1366 | Orthogonal: 1606</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1290 | Orthogonal: 1516</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1116 | Orthogonal: 1380</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1543 | Orthogonal: 1873</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1361 | Orthogonal: 1732</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1765 | Orthogonal: 1883</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2158 | Orthogonal: 2282</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1666 | Orthogonal: 1738</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1913 | Orthogonal: 2041</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2333 | Orthogonal: 2597</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2963 | Orthogonal: 3306</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2361 | Orthogonal: 2845</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2362 | Orthogonal: 2801</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2265 | Orthogonal: 2483</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2539 | Orthogonal: 2757</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2547 | Orthogonal: 2875</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 3009 | Orthogonal: 3339</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2260 | Orthogonal: 2654</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2932 | Orthogonal: 3418</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1936 | Orthogonal: 2234</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2642 | Orthogonal: 3073</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2362 | Orthogonal: 2847</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2988 | Orthogonal: 3400</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2584 | Orthogonal: 3010</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2292 | Orthogonal: 2686</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1713 | Orthogonal: 2028</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2044 | Orthogonal: 2479</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 2298 | Orthogonal: 2772</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1715 | Orthogonal: 1976</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1145 | Orthogonal: 1433</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1107 | Orthogonal: 1345</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1041 | Orthogonal: 1243</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 846 | Orthogonal: 998</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 769 | Orthogonal: 937</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 472 | Orthogonal: 528</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 533 | Orthogonal: 621</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 639 | Orthogonal: 844</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 740 | Orthogonal: 959</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 648 | Orthogonal: 814</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 647 | Orthogonal: 803</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1098 | Orthogonal: 1378</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 1522 | Orthogonal: 1898</span></span></code></pre>
-<pre><code><span><span class="co">## Diagonal: 866 | Orthogonal: 1433</span></span></code></pre>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># root length per observed area (root + soil pixels)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># root length per observed area (root + soil pixels)</span></span>
 <span><span class="va">slice_traits</span><span class="op">$</span><span class="va">rld</span> <span class="op">&lt;-</span> <span class="va">slice_traits</span><span class="op">$</span><span class="va">rootlen</span> <span class="op">/</span></span>
 <span>                    <span class="op">(</span><span class="op">(</span><span class="va">slice_traits</span><span class="op">$</span><span class="va">rootpx</span> <span class="op">+</span> <span class="va">slice_traits</span><span class="op">$</span><span class="va">soilpx</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="fl">2.54</span><span class="op">/</span><span class="fl">150</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#slice_traits$rld.fraction &lt;- slice_traits$rld / sum(slice_traits$rld, na.rm = TRUE)</span></span></code></pre></div>
@@ -390,7 +339,7 @@ or an installation-angle artifact).</p>
 <div class="section level4">
 <h4 id="test-for-a-circumferential-top-down-pattern">Test for a circumferential (top-down) pattern<a class="anchor" aria-label="anchor" href="#test-for-a-circumferential-top-down-pattern"></a>
 </h4>
-<div class="sourceCode" id="cb62"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span></span>
 <span>  x          <span class="op">=</span> <span class="va">slice_traits</span><span class="op">$</span><span class="va">slice</span>,</span>
 <span>  y          <span class="op">=</span> <span class="va">slice_traits</span><span class="op">$</span><span class="va">rld</span>,</span>
@@ -401,11 +350,10 @@ or an installation-angle artifact).</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n"</span>,</span>
-<span>            <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000</span></span></code></pre>
-<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"The top-down difference is"</span>, <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">amplitude</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>,<span class="fl">2</span><span class="op">)</span>, <span class="st">" -&gt; circa twice as large as the mean"</span>    <span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## The top-down difference is 1.13  -&gt; circa twice as large as the mean</span></span></code></pre>
+<span>            <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"The top-down difference is"</span>, <span class="fu"><a href="https://rspatial.github.io/terra/reference/math-generics.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">amplitude</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>,<span class="fl">2</span><span class="op">)</span>, <span class="st">" -&gt; circa twice as large as the mean"</span>    <span class="op">)</span></span>
+<span><span class="co">#&gt; The top-down difference is 1.13  -&gt; circa twice as large as the mean</span></span></code></pre></div>
 <p>A significant, non-trivial amplitude indicates that root abundance
 varies systematically with circumferential position — i.e. there is more
 root material on one side of the tube than the other.
@@ -415,39 +363,39 @@ root material on one side of the tube than the other.
 <div class="section level4">
 <h4 id="visualize-the-fit">Visualize the fit<a class="anchor" aria-label="anchor" href="#visualize-the-fit"></a>
 </h4>
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">slice_seq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n_slices</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
-<span><span class="va">fit_seq</span>   <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span></span>
-<span>              <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">n_slices</span> <span class="op">*</span> <span class="op">(</span><span class="va">slice_seq</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Smooth fitted sine over the slice index</span></span>
+<span><span class="va">fit_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>slice <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n_slices</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit_df</span><span class="op">$</span><span class="va">rld</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span></span>
+<span>              <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="va">n_slices</span> <span class="op">*</span> <span class="op">(</span><span class="va">fit_df</span><span class="op">$</span><span class="va">slice</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">phase</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>              <span class="va">res</span><span class="op">$</span><span class="va">offset</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">slice_traits</span><span class="op">$</span><span class="va">slice</span>, <span class="va">slice_traits</span><span class="op">$</span><span class="va">rld</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"gray50"</span>,</span>
-<span>     xlab <span class="op">=</span> <span class="st">"Circumferential slice (1 = top, going around the tube)"</span>,</span>
-<span>     ylab <span class="op">=</span> <span class="st">"Root Length Density (cm / cm2)"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"Root distribution around tube circumference"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">slice_seq</span>, <span class="va">fit_seq</span>, col <span class="op">=</span> <span class="st">"coral"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span> a <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, b <span class="op">=</span> <span class="fl">0</span>, col  <span class="op">=</span> <span class="st">"gray40"</span>, lty <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">slice_traits</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">slice</span>, <span class="va">rld</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"gray50"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">fit_df</span>, color <span class="op">=</span> <span class="st">"coral"</span>, linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, color <span class="op">=</span> <span class="st">"gray40"</span>, linetype <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span><span class="st">"segment"</span>, x <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span>, xend <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span>,</span>
+<span>           y <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, yend <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>,</span>
+<span>           linetype <span class="op">=</span> <span class="fl">2</span>, color <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span><span class="st">"segment"</span>,</span>
+<span>           x <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">period</span> <span class="op">/</span> <span class="fl">2</span>, xend <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">period</span> <span class="op">/</span> <span class="fl">2</span>,</span>
+<span>           y <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, yend <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span> <span class="op">-</span> <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>,</span>
+<span>           linetype <span class="op">=</span> <span class="fl">2</span>, color <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate</a></span><span class="op">(</span><span class="st">"text"</span>, x <span class="op">=</span> <span class="cn">Inf</span>, y <span class="op">=</span> <span class="cn">Inf</span>, hjust <span class="op">=</span> <span class="fl">1.05</span>, vjust <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>           label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"A = %.4f, R² = %.3f, p = %.4f"</span>,</span>
+<span>                           <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Circumferential slice (1 = top, going around the tube)"</span>,</span>
+<span>       y <span class="op">=</span> <span class="st">"Root Length Density (cm / cm2)"</span>,</span>
+<span>       title <span class="op">=</span> <span class="st">"Root distribution around tube circumference"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="100%"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/segments.html" class="external-link">segments</a></span><span class="op">(</span>x0 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span>,</span>
-<span>         x1 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span>,</span>
-<span>         y0 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>,</span>
-<span>         y1 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>,</span>
-<span>         lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>         col <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/segments.html" class="external-link">segments</a></span><span class="op">(</span>x0 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span> <span class="op">+</span> <span class="va">res</span><span class="op">$</span><span class="va">period</span><span class="op">/</span><span class="fl">2</span>,</span>
-<span>         x1 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">peakTime</span> <span class="op">+</span>  <span class="va">res</span><span class="op">$</span><span class="va">period</span><span class="op">/</span><span class="fl">2</span>,</span>
-<span>         y0 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span>,</span>
-<span>         y1 <span class="op">=</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span> <span class="op">-</span>  <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>,</span>
-<span>         lwd <span class="op">=</span> <span class="fl">2</span>, lty <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>         col <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topright"</span>,</span>
-<span>       legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"A = %.4f, R² = %.3f, p = %.4f"</span>,</span>
-<span>                        <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span>,</span>
-<span>       bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># cross section view</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="co"># cross section view</span></span>
+<span><span class="va">inner</span> <span class="op">&lt;-</span> <span class="fl">6</span></span>
 <span><span class="va">inner</span> <span class="op">&lt;-</span> <span class="fl">6</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">slice_traits</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">slice</span>, <span class="va">rld</span> <span class="op">+</span> <span class="va">inner</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -459,7 +407,7 @@ root material on one side of the tube than the other.
 <span>           xmin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, xmax <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>           ymin <span class="op">=</span> <span class="fl">0</span>, ymax <span class="op">=</span> <span class="va">inner</span>,</span>
 <span>           fill <span class="op">=</span> <span class="st">"white"</span>, color <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="" width="700"></p>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="" width="100%"></p>
 <blockquote>
 <p><strong>Going further</strong>: the same slice loop can be combined
 with <code>slice_rotation(mode = "both")</code> to additionally split

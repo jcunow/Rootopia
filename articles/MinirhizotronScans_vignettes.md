@@ -1,16 +1,5 @@
 # Minirhizotron Scans Analysis with Rootopia in R
 
-> **A note on figures.** Minirhizotron scans are several thousand pixels
-> wide. Shrinking one to fit an html_vignette figure forces the graphics
-> device to drop one-pixel-wide roots and skeletons, so they appear
-> broken or vanish. The figures below therefore use
-> [`zoom_plot()`](https://jcunow.github.io/Rootopia/reference/zoom_plot.md)
-> (a Rootopia function): it draws a full-image **overview** with the
-> magnified region outlined, plus a **native-resolution inset** where
-> thin features survive at ~1:1. `frac` sets the fraction of each axis
-> kept in the inset (magnification `1/frac`); `center` controls which
-> part is magnified (`"center"`, `"densest"`, or relative `c(fx, fy)`).
-
 ## Minirhizotron Scans Analysis with Rootopia
 
 ### Introduction
@@ -231,7 +220,8 @@ terra::plot(depth_map, main = "Depth map (cm)")
 
 [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md)
 rounds continuous depth values to discrete intervals. The bin width
-(`nn`) should match your analysis scale — 5 cm is a common choice.
+(`nn`) should match your analysis scale — 5 cm is a common choice. You
+may want to adjust this depending on your root prevalence.
 
 ``` r
 
@@ -313,12 +303,11 @@ whole image.
 
 length_by_depth <- do.call(rbind, lapply(depths, function(d) {
   skl_d <- depth_zoning(skl, depth_map = depth_bins, depth = d)
-  # Empty bins have no skeleton to measure, so their length is 0
-  has_root <- terra::global(skl_d, "sum", na.rm = TRUE)[1, 1] > 0
+
   data.frame(
     depth      = d,
-    rootlength = if (has_root) root_length(skl_d, unit = "cm", dpi = 150,
-                                           show_messages = FALSE) else 0
+    rootlength = root_length(skl_d, unit = "cm", dpi = 150,
+                                           show_messages = FALSE)
   )
 }))
 
@@ -388,8 +377,7 @@ loop introduced in 5c.
 
 lsm_list <- lapply(depths, function(d) {
   slice <- depth_zoning(root_layer, depth_map = depth_bins, depth = d)
-  # Skip depth bins that contain no roots
-  if (terra::global(slice, "sum", na.rm = TRUE)[1, 1] == 0) return(NULL)
+
   root_scape_metrics(
     img     = slice,
     index_d  = d,
@@ -397,6 +385,13 @@ lsm_list <- lapply(depths, function(d) {
   )
 })
 lsm_df <- do.call(rbind, lsm_list)
+
+## Alternatively, you can replace 'do.call' with:
+# purrr::map_dfr(depths, function(d) {
+#   root_scape_metrics(img = depth_zoning(root_layer, depth_map = depth_bins, depth = d),
+#                      index_d = d, 
+#                      metrics = c("lsm_c_np", "lsm_c_enn_mn", "lsm_l_ent"))
+# })
 ```
 
 > **Note**: landscape metrics are slow (one call per depth bin per
@@ -496,6 +491,11 @@ ggplot(depth_data, aes(x = depth, y = rootpx.cumulative)) +
 ```
 
 ![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png)
+
+``` r
+
+# remember, Depth 0 is rounded and contains -2.5 to +2.5 cm depth. You can change this in `binning()` with the argument: rounding = "ceiling" 
+```
 
 `stdrz = "relative"` rescales the cumulative curve to end at 1, which
 makes accumulation curves directly comparable between tubes that differ

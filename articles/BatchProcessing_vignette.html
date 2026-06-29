@@ -35,13 +35,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Stitching_vignette.html">Image Stitching (quick access)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -190,7 +191,7 @@ metric columns: <code>rootpx</code>, <code>voidpx</code>,
 <code>max.diameter</code>, <code>var.diameter</code>,
 <code>root.surface.area</code>, <code>root.volume</code>,
 <code>rootpx.density</code>, <code>rootlength.density</code>,
-<code>mrd</code>, <code>rpi</code>, <code>total.length.density</code>,
+<code>mrd</code>, <code>total.length.density</code>,
 <code>rootlength.fraction</code>, <code>mean.var.diameter</code>,
 <code>rootsurface_rootvolume_ratio</code>.</p>
 <hr>
@@ -248,7 +249,7 @@ computed.</p>
 <span>  calc_diameter_quantiles <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># 90th/95th/99th percentile + modal peaks</span></span>
 <span>  calc_color_metrics      <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># RGB color per root vs background pixels</span></span>
 <span>  calc_root_angles        <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># deep_drive + steepness angle distribution</span></span>
-<span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># branching order (main vs lateral roots)</span></span>
+<span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">TRUE</span>,   <span class="co"># branching order per segment</span></span>
 <span>  calc_landscape_metrics  <span class="op">=</span> <span class="cn">FALSE</span>   <span class="co"># slow — enable only when needed</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="section level4">
@@ -351,8 +352,7 @@ the image-visible area. Ratio is the length-weighted mean of local 2/r
 <tr class="even">
 <td><code>calc_distribution_indices</code></td>
 <td>
-<code>mrd</code>, <code>rpi</code>,
-<code>total.length.density</code>
+<code>mrd</code>, <code>total.length.density</code>
 </td>
 <td>Tube-level summary</td>
 </tr>
@@ -387,15 +387,15 @@ roots:</p>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="root-branching-order-main-vs--lateral-roots">Root branching order (main vs. lateral roots)<a class="anchor" aria-label="anchor" href="#root-branching-order-main-vs--lateral-roots"></a>
+<h3 id="root-branching-order">Root branching order<a class="anchor" aria-label="anchor" href="#root-branching-order"></a>
 </h3>
 <p><code>calc_root_order_metrics = TRUE</code> builds a segment graph
 from the skeleton of each image (via <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code>)
-and classifies every root segment by its <strong>branch order</strong> —
-the thickest, most central root in each connected component is order 1
-(the “main” axis), its laterals are order 2, their laterals order 3, and
-so on. See the <a href="MinirhizotronScans_vignettes.html#6-root-branching-order">Minirhizotron
-Scans</a> vignette for a worked example of the underlying pipeline.</p>
+and assigns every root segment a <strong>branching order</strong>:
+segments on the thickest, most central path of each connected component
+are order 1, the branches coming off them are order 2, their branches
+order 3, and so on. See the <a href="FlatBedScans_vignettes.html#7b-branch-order">Flatbed Scans</a>
+vignette for a worked example of the underlying pipeline.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg                <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
@@ -435,8 +435,8 @@ depth:</p>
 </tr>
 </tbody>
 </table>
-<p><strong>Per tube</strong> (repeated on every row of that tube) — main
-root vs. lateral roots, split by
+<p><strong>Per tube</strong> (repeated on every row of that tube) — the
+thickest order-1 path vs. all higher-order branches, split by
 <code>order_metrics(..., focal = "thickest")</code>:</p>
 <table class="table">
 <colgroup>
@@ -641,7 +641,7 @@ entirely and listed in a warning at the end.</p>
 <span>  calc_diameter_quantiles <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_color_metrics      <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_root_angles        <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">TRUE</span>,    <span class="co"># main vs. lateral root architecture</span></span>
+<span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">TRUE</span>,    <span class="co"># per-segment branching-order architecture</span></span>
 <span>  calc_landscape_metrics  <span class="op">=</span> <span class="cn">FALSE</span>,   <span class="co"># enable if you need patch metrics</span></span>
 <span></span>
 <span>  <span class="co"># Derived metrics</span></span>

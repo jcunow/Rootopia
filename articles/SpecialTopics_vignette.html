@@ -35,13 +35,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Stitching_vignette.html">Image Stitching (quick access)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -108,7 +109,8 @@ to a class (e.g., dark soil, red soil, root, silver tape, coarse debris,
 …) by nearest-centroid matching in CIE LAB color space. Pixels too far
 from any centroid are left “unclassified”.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span>,</span>
+<span>                           output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># downsample_fact speeds up the demo; drop it for full resolution</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span>, downsample_fact <span class="op">=</span> <span class="fl">4</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -212,7 +214,6 @@ informative on the spatial heterogeneity within a scan.</p>
 luminance value) is available via <code><a href="../reference/tube_coloration.html">tube_coloration()</a></code>:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Some pixels have zero intensity, which may affect color calculations</span></span>
 <span><span class="co">#&gt;      rcc    gcc   bcc        hue saturation luminosity      red    green</span></span>
 <span><span class="co">#&gt; 1 0.4117 0.3192 0.269 0.06635659  0.1982295  0.2660763 67.84946 59.75458</span></span>
 <span><span class="co">#&gt;      blue</span></span>
@@ -264,15 +265,15 @@ produced, and unchanged root fractions.</li>
 </ul>
 <p>The bundled <code>TurnoverDPC_data</code> is a DPC-style image:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dpc</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">dpc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">dpc</span>, method <span class="op">=</span> <span class="st">"dpc"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio</span></span>
 <span><span class="co">#&gt; 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668</span></span></code></pre></div>
 <p>For the two-timepoint comparison you would instead pass both
 sessions:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">s1</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
-<span><span class="va">s3</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">s1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="va">s3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">s1</span>, <span class="va">s3</span>, method <span class="op">=</span> <span class="st">"tc"</span>, tc_method <span class="op">=</span> <span class="st">"rootpx"</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">

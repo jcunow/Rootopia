@@ -28,7 +28,8 @@ in CIE LAB color space. Pixels too far from any centroid are left
 
 ``` r
 
-img <- terra::rast(rgb_Oulanka2023_Session03_T067)
+img <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
+                           output_format = "spatrast", scale = "none")
 
 # downsample_fact speeds up the demo; drop it for full resolution
 result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
@@ -156,7 +157,6 @@ value) is available via
 ``` r
 
 tube_coloration(img)
-#> Some pixels have zero intensity, which may affect color calculations
 #>      rcc    gcc   bcc        hue saturation luminosity      red    green
 #> 1 0.4117 0.3192 0.269 0.06635659  0.1982295  0.2660763 67.84946 59.75458
 #>      blue
@@ -218,7 +218,7 @@ The bundled `TurnoverDPC_data` is a DPC-style image:
 
 ``` r
 
-dpc <- terra::rast(TurnoverDPC_data)
+dpc <- load_flexible_image(TurnoverDPC_data, output_format = "spatrast", scale = "none")
 root_turnover(dpc, method = "dpc")
 #>     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio
 #> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
@@ -228,8 +228,8 @@ For the two-timepoint comparison you would instead pass both sessions:
 
 ``` r
 
-s1 <- terra::rast(skl_Oulanka2023_Session01_T067)
-s3 <- terra::rast(skl_Oulanka2023_Session03_T067)
+s1 <- load_flexible_image(skl_Oulanka2023_Session01_T067, output_format = "spatrast", scale = "none")
+s3 <- load_flexible_image(skl_Oulanka2023_Session03_T067, output_format = "spatrast", scale = "none")
 root_turnover(s1, s3, method = "tc", tc_method = "rootpx", unit = "cm", dpi = 150, select_layer = 2)
 ```
 

@@ -51,8 +51,6 @@ library(Rootopia)
 library(terra)
 ```
 
-    ## terra 1.9.34
-
 ------------------------------------------------------------------------
 
 ### Workflow
@@ -70,7 +68,7 @@ tube — the rotational center does not change between sessions.
 ``` r
 
 data(seg_Oulanka2023_Session01_T067)
-img <- terra::rast(seg_Oulanka2023_Session01_T067)
+img <- load_flexible_image(seg_Oulanka2023_Session01_T067, output_format = "spatrast")
 
 r0 <- estimate_rotation_center(img)
 print(paste("Estimated rotation center (row):", r0))
@@ -107,30 +105,17 @@ shift <- estimate_rotation_shift(
   cor_type          = "phase",
   fixed_depth_pixel = c(1000, 4000)
 )
-```
-
-    ## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size
-    ## mismatch detected; cropping to common extent
-
-``` r
 
 cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
-```
-
-    ## Rotation shift (depth px, rotation px):  -18 -9
-
-``` r
+#> Rotation shift (depth px, rotation px):  -18 -9
 
 # Visual inspection
-estimate_rotation_shift(seg_Oulanka2023_Session01_T067, 
-                        seg_Oulanka2023_Session03_T067, 
-                        cor_type = "phase", 
-                        select_layer = 2, 
+estimate_rotation_shift(seg_Oulanka2023_Session01_T067,
+                        seg_Oulanka2023_Session03_T067,
+                        cor_type = "phase",
+                        select_layer = 2,
                         overlay = T)
 ```
-
-    ## Warning in doTryCatch(return(expr), name, parentenv, handler): Image size
-    ## mismatch detected; cropping to common extent
 
 ![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-3-1.png)
 
@@ -250,109 +235,11 @@ n_soil <- function(s) { v <- terra::values(s, mat = FALSE); sum(v == 0, na.rm = 
 
 slice_traits <- data.frame(
   slice   = seq_len(n_slices),
-  rootlen = sapply(slices, root_length, unit = "cm", dpi = 150),  # cm
+  rootlen = sapply(slices, root_length, unit = "cm", dpi = 150,
+                   show_messages = FALSE),  # cm
   rootpx  = sapply(slices, n_root),
   soilpx  = sapply(slices, n_soil)
 )
-```
-
-    ## Diagonal: 539 | Orthogonal: 655
-
-    ## Diagonal: 1001 | Orthogonal: 1242
-
-    ## Diagonal: 1266 | Orthogonal: 1552
-
-    ## Diagonal: 1125 | Orthogonal: 1436
-
-    ## Diagonal: 1254 | Orthogonal: 1545
-
-    ## Diagonal: 1366 | Orthogonal: 1606
-
-    ## Diagonal: 1290 | Orthogonal: 1516
-
-    ## Diagonal: 1116 | Orthogonal: 1380
-
-    ## Diagonal: 1543 | Orthogonal: 1873
-
-    ## Diagonal: 1361 | Orthogonal: 1732
-
-    ## Diagonal: 1765 | Orthogonal: 1883
-
-    ## Diagonal: 2158 | Orthogonal: 2282
-
-    ## Diagonal: 1666 | Orthogonal: 1738
-
-    ## Diagonal: 1913 | Orthogonal: 2041
-
-    ## Diagonal: 2333 | Orthogonal: 2597
-
-    ## Diagonal: 2963 | Orthogonal: 3306
-
-    ## Diagonal: 2361 | Orthogonal: 2845
-
-    ## Diagonal: 2362 | Orthogonal: 2801
-
-    ## Diagonal: 2265 | Orthogonal: 2483
-
-    ## Diagonal: 2539 | Orthogonal: 2757
-
-    ## Diagonal: 2547 | Orthogonal: 2875
-
-    ## Diagonal: 3009 | Orthogonal: 3339
-
-    ## Diagonal: 2260 | Orthogonal: 2654
-
-    ## Diagonal: 2932 | Orthogonal: 3418
-
-    ## Diagonal: 1936 | Orthogonal: 2234
-
-    ## Diagonal: 2642 | Orthogonal: 3073
-
-    ## Diagonal: 2362 | Orthogonal: 2847
-
-    ## Diagonal: 2988 | Orthogonal: 3400
-
-    ## Diagonal: 2584 | Orthogonal: 3010
-
-    ## Diagonal: 2292 | Orthogonal: 2686
-
-    ## Diagonal: 1713 | Orthogonal: 2028
-
-    ## Diagonal: 2044 | Orthogonal: 2479
-
-    ## Diagonal: 2298 | Orthogonal: 2772
-
-    ## Diagonal: 1715 | Orthogonal: 1976
-
-    ## Diagonal: 1145 | Orthogonal: 1433
-
-    ## Diagonal: 1107 | Orthogonal: 1345
-
-    ## Diagonal: 1041 | Orthogonal: 1243
-
-    ## Diagonal: 846 | Orthogonal: 998
-
-    ## Diagonal: 769 | Orthogonal: 937
-
-    ## Diagonal: 472 | Orthogonal: 528
-
-    ## Diagonal: 533 | Orthogonal: 621
-
-    ## Diagonal: 639 | Orthogonal: 844
-
-    ## Diagonal: 740 | Orthogonal: 959
-
-    ## Diagonal: 648 | Orthogonal: 814
-
-    ## Diagonal: 647 | Orthogonal: 803
-
-    ## Diagonal: 1098 | Orthogonal: 1378
-
-    ## Diagonal: 1522 | Orthogonal: 1898
-
-    ## Diagonal: 866 | Orthogonal: 1433
-
-``` r
 
 # root length per observed area (root + soil pixels)
 slice_traits$rld <- slice_traits$rootlen /
@@ -375,16 +262,10 @@ res <- rhythmicity(
 
 cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
-```
-
-    ## Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000
-
-``` r
-
+#> Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000
 cat("The top-down difference is", round((res$amplitude*2) / res$offset,2), " -> circa twice as large as the mean"    )
+#> The top-down difference is 1.13  -> circa twice as large as the mean
 ```
-
-    ## The top-down difference is 1.13  -> circa twice as large as the mean
 
 A significant, non-trivial amplitude indicates that root abundance
 varies systematically with circumferential position — i.e. there is more
@@ -395,42 +276,42 @@ root material on one side of the tube than the other. `res$phase` (and
 
 ``` r
 
-slice_seq <- seq(1, n_slices, length.out = 200)
-fit_seq   <- res$amplitude *
-              sin(2 * pi / n_slices * (slice_seq + res$phase)) +
+library(ggplot2)
+
+# Smooth fitted sine over the slice index
+fit_df <- data.frame(slice = seq(1, n_slices, length.out = 200))
+fit_df$rld <- res$amplitude *
+              sin(2 * pi / n_slices * (fit_df$slice + res$phase)) +
               res$offset
 
-plot(slice_traits$slice, slice_traits$rld, pch = 16, col = "gray50",
-     xlab = "Circumferential slice (1 = top, going around the tube)",
-     ylab = "Root Length Density (cm / cm2)",
-     main = "Root distribution around tube circumference")
-lines(slice_seq, fit_seq, col = "coral", lwd = 2)
-abline( a = res$offset, b = 0, col  = "gray40", lty = 3)
-
-segments(x0 = res$peakTime,
-         x1 = res$peakTime,
-         y0 = res$offset,
-         y1 = res$offset + res$amplitude,
-         lwd = 2, lty = 2,
-         col = "gray40")
-segments(x0 = res$peakTime + res$period/2,
-         x1 = res$peakTime +  res$period/2,
-         y0 = res$offset,
-         y1 = res$offset -  res$amplitude,
-         lwd = 2, lty = 2,
-         col = "gray40")
-legend("topright",
-       legend = sprintf("A = %.4f, R² = %.3f, p = %.4f",
-                        res$amplitude, res$R2, res$p_value),
-       bty = "n")
+ggplot(slice_traits, aes(slice, rld)) +
+  geom_point(color = "gray50") +
+  geom_line(data = fit_df, color = "coral", linewidth = 1) +
+  geom_hline(yintercept = res$offset, color = "gray40", linetype = 3) +
+  annotate("segment", x = res$peakTime, xend = res$peakTime,
+           y = res$offset, yend = res$offset + res$amplitude,
+           linetype = 2, color = "gray40") +
+  annotate("segment",
+           x = res$peakTime + res$period / 2, xend = res$peakTime + res$period / 2,
+           y = res$offset, yend = res$offset - res$amplitude,
+           linetype = 2, color = "gray40") +
+  annotate("text", x = Inf, y = Inf, hjust = 1.05, vjust = 1.5,
+           label = sprintf("A = %.4f, R² = %.3f, p = %.4f",
+                           res$amplitude, res$R2, res$p_value)) +
+  theme_minimal() +
+  labs(x = "Circumferential slice (1 = top, going around the tube)",
+       y = "Root Length Density (cm / cm2)",
+       title = "Root distribution around tube circumference")
 ```
 
 ![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png)
 
 ``` r
 
+
+
 # cross section view
-library(ggplot2)
+inner <- 6
 inner <- 6
 ggplot(slice_traits, aes(slice, rld + inner)) +
     geom_col(fill = "steelblue") +

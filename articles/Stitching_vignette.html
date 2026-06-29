@@ -32,16 +32,17 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item dropdown">
+<li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Stitching_vignette.html">Image Stitching (quick access)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -162,7 +163,7 @@ path your own scans take.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"rgb_Oulanka2023_Session03_T067"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># load to an (H, W, C) array; downsampled here only to keep the vignette light</span></span>
-<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span><span class="op">)</span>,</span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">rgb_Oulanka2023_Session03_T067</span>,</span>
 <span>                           output_format <span class="op">=</span> <span class="st">"array"</span>, normalize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: `normalize`, `binarize`, and `denormalize` are deprecated; use `scale`</span></span>
 <span><span class="co">#&gt; ("to_01", "to_255", "binary", "none") instead.</span></span>

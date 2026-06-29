@@ -132,8 +132,6 @@ Statistical indices summarising root distribution with depth.
 
 - [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) :
   Calculate Mean Rooting Depth
-- [`RPI()`](https://jcunow.github.io/Rootopia/reference/RPI.md) :
-  Calculate Root Penetration Index
 - [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
   : Assess rhythmicity via sine curve fitting and model comparison
 - [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)

@@ -201,10 +201,9 @@ segments differently to approximate true path length.
 
 ``` r
 
-rl <- root_length(skl_pruned, unit = "cm", dpi = 1200, select_layer = NULL, 
+rl <- root_length(skl_pruned, unit = "cm", dpi = 1200, select_layer = NULL,
                   method = "kimura2",
-                  show_messages = TRUE)
-#> Diagonal: 2461 | Orthogonal: 3507
+                  show_messages = FALSE)
 cat("Total root length:", round(rl, 2), "cm\n")
 #> Total root length: 14.04 cm
 ```
@@ -237,11 +236,12 @@ cat(sprintf(
 #> Diameter — mean: 0.058 cm  SD: 0.019 cm  max: 0.110 cm
 
 # Distribution
-hist(diam_vals,
-     breaks = 24,
-     xlab   = "Diameter (cm)",
-     main   = "Root diameter distribution",
-     col    = "steelblue4")
+library(ggplot2)
+ggplot(data.frame(diameter = as.numeric(diam_vals)), aes(x = diameter)) +
+  geom_histogram(bins = 24, fill = "steelblue4", color = "white") +
+  theme_minimal() +
+  labs(x = "Diameter (cm)", y = "Count",
+       title = "Root diameter distribution")
 ```
 
 ![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png)
@@ -310,16 +310,19 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 ------------------------------------------------------------------------
 
-#### 7b. Branch order (main axis vs. laterals)
+#### 7b. Branch order
 
 [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 goes one step further than
 [`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md):
-it builds a full segment graph from the skeleton and classifies every
-segment by **branch order** — the thickest, most central root is order 1
-(the main axis), its laterals are order 2, their laterals order 3, and
-so on. Because flatbed scans have no depth dimension, this is computed
-once for the whole image.
+it builds a full segment graph from the skeleton and assigns every
+segment a **branching order**. Segments on the thickest, most central
+path of each connected component are order 1; the branches coming off
+them are order 2, their branches order 3, and so on — so the order
+simply counts how many branching events separate a segment from the
+root’s main path, rather than labelling roots as “main” or “lateral”.
+Because flatbed scans have no depth dimension, this is computed once for
+the whole image.
 
 ``` r
 
@@ -339,16 +342,16 @@ zoom_plot(order_res$class_map, main = "Branch order")
 ```
 
 [`order_metrics()`](https://jcunow.github.io/Rootopia/reference/order_metrics.md)
-can split the architecture into the main root(s) versus all laterals
-(selected by diameter, so it works regardless of how many order classes
-were found):
+can split the architecture into the thickest order-1 path(s) versus all
+higher-order branches (selected by diameter, so it works regardless of
+how many order classes were found):
 
 ``` r
 
 main_vs_lateral <- order_metrics(order_res, focal = "thickest")
 print(main_vs_lateral)
 
-# Fraction of total root length that is lateral (order >= 2)
+# Fraction of total root length in higher-order branches (order >= 2)
 lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
 ```
 
@@ -361,7 +364,7 @@ from the rest:
 # Per-order-class table (same as order_res$summary)
 order_metrics(order_res)
 
-# Order 1 (main root) vs. everything else
+# Order 1 (thickest central path) vs. everything else
 order_metrics(order_res, focal = 1)
 ```
 
@@ -396,27 +399,7 @@ plot_order_window(
 
 ------------------------------------------------------------------------
 
-#### 8. Root-level landscape metrics
-
-[`root_scape_metrics()`](https://jcunow.github.io/Rootopia/reference/root_scape_metrics.md)
-applies landscape ecology metrics to the binary root image, treating
-roots as “patches”. Useful for characterising spatial complexity and
-connectivity.
-
-``` r
-
-lsm <- root_scape_metrics(
-  img     = seg,
-  index_d  = NA,          # no depth index for flatbed scans
-  metrics = c("lsm_c_ca", "lsm_c_np", "lsm_c_enn_mn",
-              "lsm_c_area_mn", "lsm_l_ent")
-)
-print(lsm)
-```
-
-------------------------------------------------------------------------
-
-#### 9. Color analysis
+#### 8. Color analysis
 
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
 extracts mean chromatic coordinates and HSV values from an RGB image. On
@@ -439,7 +422,7 @@ print(bg_color)
 
 ------------------------------------------------------------------------
 
-#### 10. Collecting results
+#### 9. Collecting results
 
 ``` r
 

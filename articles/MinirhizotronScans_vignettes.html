@@ -35,13 +35,14 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
-<li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Start here: Batch Processing</a></li>
-    <li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
     <li><a class="dropdown-item" href="../articles/FlatBedScans_vignettes.html">Flatbed Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Minirhizotron Scans (step-by-step)</a></li>
-    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/Stitching_vignette.html">Image Stitching (quick access)</a></li>
+    <li><a class="dropdown-item" href="../articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -84,19 +85,6 @@ Cunow</h4>
 
     
     
-<blockquote>
-<p><strong>A note on figures.</strong> Minirhizotron scans are several
-thousand pixels wide. Shrinking one to fit an html_vignette figure
-forces the graphics device to drop one-pixel-wide roots and skeletons,
-so they appear broken or vanish. The figures below therefore use
-<code><a href="../reference/zoom_plot.html">zoom_plot()</a></code> (a Rootopia function): it draws a full-image
-<strong>overview</strong> with the magnified region outlined, plus a
-<strong>native-resolution inset</strong> where thin features survive at
-~1:1. <code>frac</code> sets the fraction of each axis kept in the inset
-(magnification <code>1/frac</code>); <code>center</code> controls which
-part is magnified (<code>"center"</code>, <code>"densest"</code>, or
-relative <code>c(fx, fy)</code>).</p>
-</blockquote>
 <div class="section level2">
 <h2 id="minirhizotron-scans-analysis-with-rootopia">Minirhizotron Scans Analysis with Rootopia<a class="anchor" aria-label="anchor" href="#minirhizotron-scans-analysis-with-rootopia"></a>
 </h2>
@@ -334,7 +322,8 @@ of the scan.</p>
 </h4>
 <p><code><a href="../reference/binning.html">binning()</a></code> rounds continuous depth values to discrete
 intervals. The bin width (<code>nn</code>) should match your analysis
-scale — 5 cm is a common choice.</p>
+scale — 5 cm is a common choice. You may want to adjust this depending
+on your root prevalence.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">depth_bins</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span>depthmap <span class="op">=</span> <span class="va">depth_map</span>, nn <span class="op">=</span> <span class="fl">5</span>, round_option <span class="op">=</span> <span class="st">"rounding"</span><span class="op">)</span></span>
 <span></span>
@@ -408,12 +397,11 @@ that takes a whole image.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">length_by_depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">depths</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">skl_d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/depth_zoning.html">depth_zoning</a></span><span class="op">(</span><span class="va">skl</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
-<span>  <span class="co"># Empty bins have no skeleton to measure, so their length is 0</span></span>
-<span>  <span class="va">has_root</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/global.html" class="external-link">global</a></span><span class="op">(</span><span class="va">skl_d</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span></span>
+<span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    depth      <span class="op">=</span> <span class="va">d</span>,</span>
-<span>    rootlength <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="va">has_root</span><span class="op">)</span> <span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skl_d</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>,</span>
-<span>                                           show_messages <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="kw">else</span> <span class="fl">0</span></span>
+<span>    rootlength <span class="op">=</span> <span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skl_d</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>                                           show_messages <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -476,15 +464,21 @@ same <code><a href="../reference/depth_zoning.html">depth_zoning()</a></code> lo
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lsm_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">depths</span>, <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">slice</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/depth_zoning.html">depth_zoning</a></span><span class="op">(</span><span class="va">root_layer</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
-<span>  <span class="co"># Skip depth bins that contain no roots</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/global.html" class="external-link">global</a></span><span class="op">(</span><span class="va">slice</span>, <span class="st">"sum"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
 <span>  <span class="fu"><a href="../reference/root_scape_metrics.html">root_scape_metrics</a></span><span class="op">(</span></span>
 <span>    img     <span class="op">=</span> <span class="va">slice</span>,</span>
 <span>    index_d  <span class="op">=</span> <span class="va">d</span>,</span>
 <span>    metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lsm_c_np"</span>, <span class="st">"lsm_c_enn_mn"</span>, <span class="st">"lsm_l_ent"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="va">lsm_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">lsm_list</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">lsm_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">lsm_list</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Alternatively, you can replace 'do.call' with:</span></span>
+<span><span class="co"># purrr::map_dfr(depths, function(d) {</span></span>
+<span><span class="co">#   root_scape_metrics(img = depth_zoning(root_layer, depth_map = depth_bins, depth = d),</span></span>
+<span><span class="co">#                      index_d = d, </span></span>
+<span><span class="co">#                      metrics = c("lsm_c_np", "lsm_c_enn_mn", "lsm_l_ent"))</span></span>
+<span><span class="co"># })</span></span></code></pre></div>
 <blockquote>
 <p><strong>Note</strong>: landscape metrics are slow (one call per depth
 bin per image) and require the suggested <code>landscapemetrics</code>
@@ -574,6 +568,8 @@ accumulation curves between tubes/plots.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Depth (cm)"</span>, y <span class="op">=</span> <span class="st">"Cumulative root pixel fraction"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root accumulation with depth"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># remember, Depth 0 is rounded and contains -2.5 to +2.5 cm depth. You can change this in `binning()` with the argument: rounding = "ceiling" </span></span></code></pre></div>
 <p><code>stdrz = "relative"</code> rescales the cumulative curve to end
 at 1, which makes accumulation curves directly comparable between tubes
 that differ in total root abundance — only the <em>shape</em> of the
@@ -583,7 +579,7 @@ depth distribution is compared.</p>
 <div class="section level4">
 <h4 id="root-turnover-two-timepoint-comparison">8. Root turnover (two-timepoint comparison)<a class="anchor" aria-label="anchor" href="#root-turnover-two-timepoint-comparison"></a>
 </h4>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span>
 <span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
@@ -605,7 +601,7 @@ depth distribution is compared.</p>
 <div class="section level4">
 <h4 id="visualize">9. Visualize<a class="anchor" aria-label="anchor" href="#visualize"></a>
 </h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">rootlength.density</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>

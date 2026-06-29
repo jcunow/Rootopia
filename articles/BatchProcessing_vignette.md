@@ -76,7 +76,7 @@ The result is a data frame with one row per tube × depth-bin
 combination. Always-present columns: `Tube`, `Session`, `Plot`, `depth`.
 Default metric columns: `rootpx`, `voidpx`, `rootlength`,
 `avg.diameter`, `max.diameter`, `var.diameter`, `root.surface.area`,
-`root.volume`, `rootpx.density`, `rootlength.density`, `mrd`, `rpi`,
+`root.volume`, `rootpx.density`, `rootlength.density`, `mrd`,
 `total.length.density`, `rootlength.fraction`, `mean.var.diameter`,
 `rootsurface_rootvolume_ratio`.
 
@@ -139,7 +139,7 @@ result <- root_depth_metrics(
   calc_diameter_quantiles = TRUE,   # 90th/95th/99th percentile + modal peaks
   calc_color_metrics      = TRUE,   # RGB color per root vs background pixels
   calc_root_angles        = TRUE,   # deep_drive + steepness angle distribution
-  calc_root_order_metrics = TRUE,   # branching order (main vs lateral roots)
+  calc_root_order_metrics = TRUE,   # branching order per segment
   calc_landscape_metrics  = FALSE   # slow — enable only when needed
 )
 ```
@@ -157,7 +157,7 @@ result <- root_depth_metrics(
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |
 | `calc_root_order_metrics` | Per bin: `mean.branch_order`, `max.branch_order`, `mean.root_order`, `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, …), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length` |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
-| `calc_distribution_indices` | `mrd`, `rpi`, `total.length.density` | Tube-level summary |
+| `calc_distribution_indices` | `mrd`, `total.length.density` | Tube-level summary |
 | `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter` | Auto-enables distribution indices + diameter stats |
 
 ------------------------------------------------------------------------
@@ -181,16 +181,16 @@ result <- root_depth_metrics(
 
 ------------------------------------------------------------------------
 
-### Root branching order (main vs. lateral roots)
+### Root branching order
 
 `calc_root_order_metrics = TRUE` builds a segment graph from the
 skeleton of each image (via
 [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md))
-and classifies every root segment by its **branch order** — the
-thickest, most central root in each connected component is order 1 (the
-“main” axis), its laterals are order 2, their laterals order 3, and so
-on. See the [Minirhizotron
-Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.html#6-root-branching-order)
+and assigns every root segment a **branching order**: segments on the
+thickest, most central path of each connected component are order 1, the
+branches coming off them are order 2, their branches order 3, and so on.
+See the [Flatbed
+Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html#7b-branch-order)
 vignette for a worked example of the underlying pipeline.
 
 ``` r
@@ -214,8 +214,9 @@ This adds two kinds of columns:
 | `mean.root_order` | Mean root order (max tip-order along each root) in the bin |
 | `lateral_root_fraction` | Fraction of skeleton pixels belonging to branch order \> 1 (laterals) |
 
-**Per tube** (repeated on every row of that tube) — main root
-vs. lateral roots, split by `order_metrics(..., focal = "thickest")`:
+**Per tube** (repeated on every row of that tube) — the thickest order-1
+path vs. all higher-order branches, split by
+`order_metrics(..., focal = "thickest")`:
 
 | Column prefix | Meaning |
 |----|----|
@@ -412,7 +413,7 @@ result <- root_depth_metrics(
   calc_diameter_quantiles = TRUE,
   calc_color_metrics      = TRUE,
   calc_root_angles        = TRUE,
-  calc_root_order_metrics = TRUE,    # main vs. lateral root architecture
+  calc_root_order_metrics = TRUE,    # per-segment branching-order architecture
   calc_landscape_metrics  = FALSE,   # enable if you need patch metrics
 
   # Derived metrics
