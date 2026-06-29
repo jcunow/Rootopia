@@ -91,6 +91,15 @@ root_length <- function(img,
     if (terra::nlyr(img) > 1) {
       img <- img[[1]]
     }
+    
+    # -----------------------------
+    # Early exit: no roots present
+    # -----------------------------
+    rmax <- terra::global(img, "max", na.rm = TRUE)[1, 1]
+    
+    if (is.na(rmax) || rmax == 0) {
+      return(0)
+    }
 
     # -----------------------------
     # Skeletonize if a segmented (non-skeleton) mask was supplied
@@ -275,8 +284,16 @@ root_scape_metrics <- function(img, index_d = NA, select_layer = NULL,
     rsm$class <- NULL
     rsm$level <- NULL
     rsm$layer <- NULL
+    
+    # wide format
+    rsm_wide <- tidyr::pivot_wider(
+      rsm,
+      names_from = metric,
+      values_from = value,
+      values_fill = NA_real_
+    )
 
-    return(rsm)
+    return(rsm_wide)
 
   }, error = function(e) {
     stop("Error in root_scape_metrics: ", e$message)
