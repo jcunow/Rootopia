@@ -473,6 +473,8 @@ same <code><a href="../reference/depth_zoning.html">depth_zoning()</a></code> lo
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="va">lsm_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">lsm_list</span><span class="op">)</span></span>
 <span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lsm_df</span>, <span class="fl">5</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co">## Alternatively, you can replace 'do.call' with:</span></span>
 <span><span class="co"># purrr::map_dfr(depths, function(d) {</span></span>
 <span><span class="co">#   root_scape_metrics(img = depth_zoning(root_layer, depth_map = depth_bins, depth = d),</span></span>
@@ -557,7 +559,7 @@ accumulation curves between tubes/plots.</p>
 <span>  group    <span class="op">=</span> <span class="st">"Tube"</span>,</span>
 <span>  depth    <span class="op">=</span> <span class="st">"depth"</span>,</span>
 <span>  variable <span class="op">=</span> <span class="st">"rootpx"</span>,</span>
-<span>  stdrz    <span class="op">=</span> <span class="st">"additive"</span>   <span class="co"># "counts" (raw), "additive" (/max), or "relative" (/sum)</span></span>
+<span>  stdrz    <span class="op">=</span> <span class="st">"relative"</span>   <span class="co"># "counts" (raw), "additive" (/max), or "relative" (/sum)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>

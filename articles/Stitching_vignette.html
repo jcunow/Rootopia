@@ -196,11 +196,11 @@ path your own scans take.</p>
 <span>                         report <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">mosaic</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">mosaics</span><span class="op">[[</span><span class="st">"T067"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">mosaic</span><span class="op">)</span>            <span class="co"># reconstructed length</span></span>
-<span><span class="co">#&gt; [1] 723 926   3</span></span>
+<span><span class="co">#&gt; [1]  387 1360    3</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">report</span>             <span class="co"># per-join dx, dy, peak (confidence), overlap</span></span>
-<span><span class="co">#&gt;   tube step dx   dy         peak overlap</span></span>
-<span><span class="co">#&gt; 1 T067    1 -7 -137 9.802271e-05     143</span></span>
-<span><span class="co">#&gt; 2 T067    2 44  179 1.129344e-04      92</span></span></code></pre></div>
+<span><span class="co">#&gt;   tube step dx dy peak overlap</span></span>
+<span><span class="co">#&gt; 1 T067    1  0  0    1     136</span></span>
+<span><span class="co">#&gt; 2 T067    2  0  0    1     136</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">norm01</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="va">a</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">a</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>         <span class="co"># display only</span></span>
 <span><span class="va">span</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">mosaic</span><span class="op">)</span></span>

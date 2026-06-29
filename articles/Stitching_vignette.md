@@ -122,11 +122,11 @@ res <- stitch_root_scans(d, pattern = ".png", edge_width = ov,
                          report = TRUE, verbose = FALSE)
 mosaic <- res$mosaics[["T067"]]
 dim(mosaic)            # reconstructed length
-#> [1] 723 926   3
+#> [1]  387 1360    3
 res$report             # per-join dx, dy, peak (confidence), overlap
-#>   tube step dx   dy         peak overlap
-#> 1 T067    1 -7 -137 9.802271e-05     143
-#> 2 T067    2 44  179 1.129344e-04      92
+#>   tube step dx dy peak overlap
+#> 1 T067    1  0  0    1     136
+#> 2 T067    2  0  0    1     136
 ```
 
 ``` r
