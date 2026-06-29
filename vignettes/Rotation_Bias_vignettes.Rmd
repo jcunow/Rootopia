@@ -8,6 +8,18 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  warning    = FALSE,
+  message    = FALSE,
+  fig.width  = 9,
+  fig.height = 5.5,
+  out.width  = "100%"
+)
+```
+
 # Rotation Bias Analysis
 
 ## Introduction
@@ -67,7 +79,7 @@ the rotational center does not change between sessions.
 
 ```{r, eval=FALSE}
 data(seg_Oulanka2023_Session01_T067)
-img <- terra::rast(seg_Oulanka2023_Session01_T067)
+img <- load_flexible_image(seg_Oulanka2023_Session01_T067, output_format = "spatrast")
 
 r0 <- estimate_rotation_center(img)
 print(paste("Estimated rotation center (row):", r0))
@@ -92,7 +104,7 @@ or phase correlation (`"phase"`) on a shared depth window to find the pixel
 offset. Phase correlation is generally more robust to brightness differences
 between sessions.
 
-```{r, fig.width=16, fig.height=8, dpi=300}
+```{r, fig.width=16, fig.height=9, dpi=200, out.width="100%"}
 data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 
@@ -106,10 +118,10 @@ shift <- estimate_rotation_shift(
 cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
 
 # Visual inspection
-estimate_rotation_shift(seg_Oulanka2023_Session01_T067, 
-                        seg_Oulanka2023_Session03_T067, 
-                        cor_type = "phase", 
-                        select_layer = 2, 
+estimate_rotation_shift(seg_Oulanka2023_Session01_T067,
+                        seg_Oulanka2023_Session03_T067,
+                        cor_type = "phase",
+                        select_layer = 2,
                         overlay = T)
 ```
 
@@ -210,7 +222,8 @@ n_soil <- function(s) { v <- terra::values(s, mat = FALSE); sum(v == 0, na.rm = 
 
 slice_traits <- data.frame(
   slice   = seq_len(n_slices),
-  rootlen = sapply(slices, root_length, unit = "cm", dpi = 150),  # cm
+  rootlen = sapply(slices, root_length, unit = "cm", dpi = 150,
+                   show_messages = FALSE),  # cm
   rootpx  = sapply(slices, n_root),
   soilpx  = sapply(slices, n_soil)
 )
@@ -246,38 +259,36 @@ material on one side of the tube than the other. `res$phase` (and
 ### Visualize the fit
 
 ```{r, eval=TRUE}
-slice_seq <- seq(1, n_slices, length.out = 200)
-fit_seq   <- res$amplitude *
-              sin(2 * pi / n_slices * (slice_seq + res$phase)) +
+library(ggplot2)
+
+# Smooth fitted sine over the slice index
+fit_df <- data.frame(slice = seq(1, n_slices, length.out = 200))
+fit_df$rld <- res$amplitude *
+              sin(2 * pi / n_slices * (fit_df$slice + res$phase)) +
               res$offset
 
-plot(slice_traits$slice, slice_traits$rld, pch = 16, col = "gray50",
-     xlab = "Circumferential slice (1 = top, going around the tube)",
-     ylab = "Root Length Density (cm / cm2)",
-     main = "Root distribution around tube circumference")
-lines(slice_seq, fit_seq, col = "coral", lwd = 2)
-abline( a = res$offset, b = 0, col  = "gray40", lty = 3)
-
-segments(x0 = res$peakTime,
-         x1 = res$peakTime,
-         y0 = res$offset,
-         y1 = res$offset + res$amplitude,
-         lwd = 2, lty = 2,
-         col = "gray40")
-segments(x0 = res$peakTime + res$period/2,
-         x1 = res$peakTime +  res$period/2,
-         y0 = res$offset,
-         y1 = res$offset -  res$amplitude,
-         lwd = 2, lty = 2,
-         col = "gray40")
-legend("topright",
-       legend = sprintf("A = %.4f, R² = %.3f, p = %.4f",
-                        res$amplitude, res$R2, res$p_value),
-       bty = "n")
+ggplot(slice_traits, aes(slice, rld)) +
+  geom_point(color = "gray50") +
+  geom_line(data = fit_df, color = "coral", linewidth = 1) +
+  geom_hline(yintercept = res$offset, color = "gray40", linetype = 3) +
+  annotate("segment", x = res$peakTime, xend = res$peakTime,
+           y = res$offset, yend = res$offset + res$amplitude,
+           linetype = 2, color = "gray40") +
+  annotate("segment",
+           x = res$peakTime + res$period / 2, xend = res$peakTime + res$period / 2,
+           y = res$offset, yend = res$offset - res$amplitude,
+           linetype = 2, color = "gray40") +
+  annotate("text", x = Inf, y = Inf, hjust = 1.05, vjust = 1.5,
+           label = sprintf("A = %.4f, R² = %.3f, p = %.4f",
+                           res$amplitude, res$R2, res$p_value)) +
+  theme_minimal() +
+  labs(x = "Circumferential slice (1 = top, going around the tube)",
+       y = "Root Length Density (cm / cm2)",
+       title = "Root distribution around tube circumference")
 
 
 # cross section view
-library(ggplot2)
+inner <- 6
 inner <- 6
 ggplot(slice_traits, aes(slice, rld + inner)) +
     geom_col(fill = "steelblue") +

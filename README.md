@@ -28,16 +28,17 @@ Welcome to **Rootopia**, an R package designed to extract quantitative belowgrou
 
 ## 📘 Tutorials
 
-New to Rootopia? Start with the batch-processing tutorial — it runs the
-whole pipeline (loading, depth mapping, trait extraction) over a folder of
-images with a single function call. The step-by-step tutorials below are for
-when you need full control over an individual processing stage.
+New to Rootopia? Start with one of the step-by-step tutorials — they walk
+through loading, depth mapping, and trait extraction one function at a time,
+so you learn what each stage does. Once you are comfortable, the
+batch-processing tutorial wraps the whole minirhizotron pipeline over a
+folder of images into a single function call.
 
-* 🚀 [Start here: Batch Processing](articles/BatchProcessing_vignette.html)
-* 📄 [Minirhizotron Workflow (step-by-step)](articles/MinirhizotronScans_vignettes.html)
+* 📄 [Start here: Minirhizotron Workflow (step-by-step)](articles/MinirhizotronScans_vignettes.html)
 * 📄 [Flatbed Scan Workflow (step-by-step)](articles/FlatBedScans_vignettes.html)
-* 📄 [Rotation Bias Correction](articles/Rotation_Bias_vignettes.html)
 * 🧵 [Stitching Scan Sequences into Mosaics](articles/Stitching_vignette.html)
+* 📄 [Rotation Bias Correction](articles/Rotation_Bias_vignettes.html)
+* 🚀 [Batch Processing (whole folders at once)](articles/BatchProcessing_vignette.html)
 
 Each tutorial includes code, images, overlays, and tips for interpretation.
 

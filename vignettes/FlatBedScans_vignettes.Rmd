@@ -9,7 +9,8 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      warning = FALSE, message = FALSE)
 
 # Rootopia + terra are hard dependencies, so the segmentation-based workflow
 # below runs at build time against the bundled `flatbed_scan_example`. The
@@ -176,9 +177,9 @@ zoom_plot(seg_clean, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0
 skeleton segments differently to approximate true path length.
 
 ```{r}
-rl <- root_length(skl_pruned, unit = "cm", dpi = 1200, select_layer = NULL, 
+rl <- root_length(skl_pruned, unit = "cm", dpi = 1200, select_layer = NULL,
                   method = "kimura2",
-                  show_messages = TRUE)
+                  show_messages = FALSE)
 cat("Total root length:", round(rl, 2), "cm\n")
 ```
 
@@ -207,11 +208,12 @@ cat(sprintf(
 ))
 
 # Distribution
-hist(diam_vals,
-     breaks = 24,
-     xlab   = "Diameter (cm)",
-     main   = "Root diameter distribution",
-     col    = "steelblue4")
+library(ggplot2)
+ggplot(data.frame(diameter = as.numeric(diam_vals)), aes(x = diameter)) +
+  geom_histogram(bins = 24, fill = "steelblue4", color = "white") +
+  theme_minimal() +
+  labs(x = "Diameter (cm)", y = "Count",
+       title = "Root diameter distribution")
 ```
 
 For fine/coarse root separation, `modal_peaks()` can find diameter modes in
@@ -271,14 +273,16 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 ---
 
-### 7b. Branch order (main axis vs. laterals)
+### 7b. Branch order
 
 `branch_order_map()` goes one step further than `detect_skeleton_points()`:
-it builds a full segment graph from the skeleton and classifies every
-segment by **branch order** — the thickest, most central root is order 1
-(the main axis), its laterals are order 2, their laterals order 3, and so
-on. Because flatbed scans have no depth dimension, this is computed once for
-the whole image.
+it builds a full segment graph from the skeleton and assigns every segment a
+**branching order**. Segments on the thickest, most central path of each
+connected component are order 1; the branches coming off them are order 2,
+their branches order 3, and so on — so the order simply counts how many
+branching events separate a segment from the root's main path, rather than
+labelling roots as "main" or "lateral". Because flatbed scans have no depth
+dimension, this is computed once for the whole image.
 
 ```{r, eval=FALSE}
 order_res <- branch_order_map(
@@ -296,15 +300,15 @@ order_res$summary
 zoom_plot(order_res$class_map, main = "Branch order")
 ```
 
-`order_metrics()` can split the architecture into the main root(s) versus
-all laterals (selected by diameter, so it works regardless of how many order
-classes were found):
+`order_metrics()` can split the architecture into the thickest order-1
+path(s) versus all higher-order branches (selected by diameter, so it works
+regardless of how many order classes were found):
 
 ```{r, eval=FALSE}
 main_vs_lateral <- order_metrics(order_res, focal = "thickest")
 print(main_vs_lateral)
 
-# Fraction of total root length that is lateral (order >= 2)
+# Fraction of total root length in higher-order branches (order >= 2)
 lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
 ```
 
@@ -315,7 +319,7 @@ class off from the rest:
 # Per-order-class table (same as order_res$summary)
 order_metrics(order_res)
 
-# Order 1 (main root) vs. everything else
+# Order 1 (thickest central path) vs. everything else
 order_metrics(order_res, focal = 1)
 ```
 
@@ -347,25 +351,7 @@ plot_order_window(
 
 ---
 
-### 8. Root-level landscape metrics
-
-`root_scape_metrics()` applies landscape ecology metrics to the binary root
-image, treating roots as "patches". Useful for characterising spatial
-complexity and connectivity.
-
-```{r, eval=FALSE}
-lsm <- root_scape_metrics(
-  img     = seg,
-  index_d  = NA,          # no depth index for flatbed scans
-  metrics = c("lsm_c_ca", "lsm_c_np", "lsm_c_enn_mn",
-              "lsm_c_area_mn", "lsm_l_ent")
-)
-print(lsm)
-```
-
----
-
-### 9. Color analysis
+### 8. Color analysis
 
 `tube_coloration()` extracts mean chromatic coordinates and HSV values from
 an RGB image. On flatbed scans this characterises overall root pigmentation.
@@ -386,7 +372,7 @@ print(bg_color)
 
 ---
 
-### 10. Collecting results
+### 9. Collecting results
 
 ```{r, eval=FALSE}
 results <- data.frame(

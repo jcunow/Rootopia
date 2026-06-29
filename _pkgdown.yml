@@ -22,18 +22,20 @@ navbar:
   left:
     - text: Tutorial
       menu:
-        - text: "Start here: Batch Processing"
-          href: articles/BatchProcessing_vignette.html
-        - text: "-------"
-        - text: Flatbed Scans (step-by-step)
-          href: articles/FlatBedScans_vignettes.html
-        - text: Minirhizotron Scans (step-by-step)
+        - text: "Start here: Minirhizotron Scans (step-by-step)"
           href: articles/MinirhizotronScans_vignettes.html
-        - text: Rotation Bias Correction
-          href: articles/Rotation_Bias_vignettes.html
+        - text: "Flatbed Scans (step-by-step)"
+          href: articles/FlatBedScans_vignettes.html
         - text: "-------"
+        - text: "Image Stitching (quick access)"
+          href: articles/Stitching_vignette.html
+        - text: "Rotation Bias Correction"
+          href: articles/Rotation_Bias_vignettes.html
         - text: "Special Topics (soil colour, texture, halos, turnover)"
           href: articles/SpecialTopics_vignette.html
+        - text: "-------"
+        - text: "Batch Processing (whole folders at once, one function)"
+          href: articles/BatchProcessing_vignette.html
     - text: News
       href: news/index.html
     - text: Function Index
@@ -121,7 +123,6 @@ reference:
     desc: "Statistical indices summarising root distribution with depth."
     contents:
       - MRD
-      - RPI
       - rhythmicity
       - modal_peaks
       - circular_mean

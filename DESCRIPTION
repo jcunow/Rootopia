@@ -35,6 +35,7 @@ Imports:
     transport,
     utils
 Suggests:
+    ggplot2,
     knitr,
     landscapemetrics,
     nloptr,

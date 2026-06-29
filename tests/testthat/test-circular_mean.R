@@ -1,6 +1,6 @@
 # Pure-numeric leaf function: demonstrates parameter + edge-case testing with
 # no image dependencies. Good template for the other math helpers
-# (MRD, RPI, root_accumulation, count_pixels, ...).
+# (MRD, root_accumulation, count_pixels, ...).
 
 test_that("known circular means are correct", {
   expect_equal(circular_mean(c(0, 90), input_units = "degrees",
