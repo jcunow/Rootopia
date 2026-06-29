@@ -340,6 +340,8 @@ lsm_list <- lapply(depths, function(d) {
 })
 lsm_df <- do.call(rbind, lsm_list)
 
+head(lsm_df, 5)
+
 ## Alternatively, you can replace 'do.call' with:
 # purrr::map_dfr(depths, function(d) {
 #   root_scape_metrics(img = depth_zoning(root_layer, depth_map = depth_bins, depth = d),
@@ -422,7 +424,7 @@ depth_data$rootpx.cumulative <- root_accumulation(
   group    = "Tube",
   depth    = "depth",
   variable = "rootpx",
-  stdrz    = "additive"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
+  stdrz    = "relative"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
 )
 
 library(ggplot2)
