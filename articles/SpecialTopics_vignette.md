@@ -30,6 +30,14 @@ in CIE LAB color space. Pixels too far from any centroid are left
 
 img <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
                            output_format = "spatrast", scale = "none")
+# original image
+zoom_plot(img, main = "Soil classification")
+```
+
+![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)![](SpecialTopics_vignette_files/figure-html/soil-classify-2.png)
+
+``` r
+
 
 # downsample_fact speeds up the demo; drop it for full resolution
 result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
@@ -38,7 +46,12 @@ result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 zoom_plot(result$map, main = "Soil classification")
 ```
 
-![](SpecialTopics_vignette_files/figure-html/soil-classify-1.png)![](SpecialTopics_vignette_files/figure-html/soil-classify-2.png)
+![](SpecialTopics_vignette_files/figure-html/soil-classify-3.png)![](SpecialTopics_vignette_files/figure-html/soil-classify-4.png)
+
+``` r
+
+## As ou can see, some classes can be retrieved decntly well, others not so much. You can try to fiddle and see if a class of interest can be reliably identified with this simple approach. Classes and their parameters (center and distance) can be modified to fit your needs.
+```
 
 The returned list also carries per-class statistics – pixel counts, area
 fractions, mean LAB/RGB colors, and the mean distance to the centroid:
@@ -74,6 +87,12 @@ plot_soil_classification(result)
 ```
 
 ![](SpecialTopics_vignette_files/figure-html/soil-plot-1.png)
+
+``` r
+
+
+# You can see that classes like roots and coarse debris are not well separated on the image - owing to their color similarity. In this image, coarse debris is suppose to show fibrous woody or rhizome structures which appears weakly distinguishable to roots in this example. 
+```
 
 ### Calibrating your own centroids
 
@@ -183,18 +202,18 @@ zoom_plot(halo, main = "Rhizosphere halo (width 3)")
 
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = TRUE, kernel = "circle")
-zoom_plot(halo10, main = "Halo only (width 10)")
+zoom_plot(halo10, main = "Halo only (width 10)", overview = F)
 ```
 
-![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-4.png)
+![](SpecialTopics_vignette_files/figure-html/root-buffer-3.png)
 
 ``` r
 
 halo10 <- create_root_buffer(seg, width = 10, halo_only = FALSE, kernel = "circle")
-zoom_plot(halo10, main = "Roots + halo (width 10)")
+zoom_plot(halo10, main = "Roots + halo (width 10)", overview = F)
 ```
 
-![](SpecialTopics_vignette_files/figure-html/root-buffer-5.png)![](SpecialTopics_vignette_files/figure-html/root-buffer-6.png)
+![](SpecialTopics_vignette_files/figure-html/root-buffer-4.png)
 
 The `kernel` argument switches between a `"circle"` (8-neighbor) and a
 `"diamond"` (4-neighbor) growth shape, and `width` controls how many
