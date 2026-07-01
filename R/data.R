@@ -19,7 +19,9 @@
 #'     \item 3 layers (RGB channels)
 #'   }
 #' @usage data(rgb_Oulanka2023_Session03_T067)
-#' @source Images by J.Cunow
+#' @source
+#' Original minirhizotron images acquired by Johannes Cunow and Gesche Blume-Werry
+#' at Oulanka Research Station, Finland, in October 2023.
 #' @examples
 #' \dontrun{
 #'   data(rgb_Oulanka2023_Session03_T067)
@@ -51,7 +53,9 @@
 #'     \item 3 layers (channels)
 #'   }
 #' @usage data(seg_Oulanka2023_Session01_T067)
-#' @source Images by J.Cunow
+#' @source
+#' Original minirhizotron images acquired by Johannes Cunow and Gesche Blume-Werry
+#' at Oulanka Research Station, Finland, in June 2023.
 #' @examples
 #' \dontrun{
 #'   data(seg_Oulanka2023_Session01_T067)
@@ -75,7 +79,6 @@
 #' Spatial dimensions correspond to physical tube measurements:
 #' columns = tube length, rows = tube rotation.
 #'
-#' @author Johannes Cunow \email{johannes.cunow@gmail.com}
 #' @format A RasterBrick object with dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
@@ -83,7 +86,16 @@
 #'     \item 3 layers (channels)
 #'   }
 #' @usage data(seg_Oulanka2023_Session03_T067)
-#' @source Images by J.Cunow
+#' @author Johannes Cunow
+#' @source
+#' Original minirhizotron images acquired by Johannes Cunow
+#' and Gesche Blume-Werry at Oulanka Research Station, Finland (October 2023).
+#' Images were processed using RootDetector.
+
+#' @references
+#' Peters B, Blume-Werry G, Gillert A, et al. (2023)
+#' RootDetector: a convolutional neural network for root detection.
+#' Scientific Reports 13:1399. https://doi.org/10.1038/s41598-023-28400-x
 #' @examples
 #' \dontrun{
 #'   data(seg_Oulanka2023_Session03_T067)
@@ -107,7 +119,6 @@
 #' Skeletonization reduces root width to single-pixel lines while preserving
 #' the root system topology.
 #'
-#' @author Johannes Cunow \email{johannes.cunow@gmail.com}
 #' @format A RasterBrick object with dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
@@ -115,7 +126,16 @@
 #'     \item 3 layers (channels)
 #'   }
 #' @usage data(skl_Oulanka2023_Session01_T067)
-#' @source Images by J.Cunow
+#' @author Johannes Cunow
+#' @source
+#' Original minirhizotron images acquired by Johannes Cunow
+#' and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
+#' Images were processed using RootDetector.
+
+#' @references
+#' Peters B, Blume-Werry G, Gillert A, et al. (2023)
+#' RootDetector: a convolutional neural network for root detection.
+#' Scientific Reports 13:1399. https://doi.org/10.1038/s41598-023-28400-x
 #' @examples
 #' \dontrun{
 #'   data(skl_Oulanka2023_Session01_T067)
@@ -139,7 +159,6 @@
 #' Skeletonization reduces root width to single-pixel lines while preserving
 #' the root system topology.
 #'
-#' @author Johannes Cunow \email{johannes.cunow@gmail.com}
 #' @format A RasterBrick object with dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
@@ -147,7 +166,16 @@
 #'     \item 3 layers (channels)
 #'   }
 #' @usage data(skl_Oulanka2023_Session03_T067)
-#' @source Images by J.Cunow
+#' @author Johannes Cunow
+#' @source
+#' Original minirhizotron images acquired by Johannes Cunow
+#' and Gesche Blume-Werry at Oulanka Research Station, Finland (October 2023).
+#' Images were processed using RootDetector.
+
+#' @references
+#' Peters B, Blume-Werry G, Gillert A, et al. (2023)
+#' RootDetector: a convolutional neural network for root detection.
+#' Scientific Reports 13:1399. https://doi.org/10.1038/s41598-023-28400-x
 #' @examples
 #' \dontrun{
 #'   data(skl_Oulanka2023_Session03_T067)
@@ -183,7 +211,6 @@
 #' }
 #' Background is represented as 0 in all layers.
 #'
-#' @author Johannes Cunow \email{johannes.cunow@gmail.com}
 #' @format A RasterBrick object with dimensions:
 #'   \itemize{
 #'     \item 2550 columns (width)
@@ -191,7 +218,16 @@
 #'     \item 3 layers (decay, growth, persistent)
 #'   }
 #' @usage data(TurnoverDPC_data)
-#' @source Images by J.Cunow
+#' @author Johannes Cunow
+#' @source
+#' Original minirhizotron images acquired by Johannes Cunow
+#' and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
+#' Images were processed using RootDetector.
+
+#' @references
+#' Peters B, Blume-Werry G, Gillert A, et al. (2023)
+#' RootDetector: a convolutional neural network for root detection.
+#' Scientific Reports 13:1399. https://doi.org/10.1038/s41598-023-28400-x
 #' @examples
 #' \dontrun{
 #'   data(TurnoverDPC_data)
@@ -227,7 +263,16 @@
 #'     \item 3 layers (segmentation channels)
 #'   }
 #' @usage data(flatbed_scan_example)
-#' @source Image by J.Cunow
+#' @author Johannes Cunow
+#' Original flatbed scans from boreal pine forests in northern Finland, acquired by
+#' Johannes Cunow and others (field campaign 2022).
+
+#' @references
+#' Cunow J, Pijcke F, Olofsson J, Väisänen M, Blume-Werry G (accepted, 2026).
+#' Reindeer grazing induces spatial and functional shifts in root systems
+#' of boreal pine forests. Oikos. https://doi.org/10.1002/oik.12211
+#' 
+#' 
 #' @examples
 #' \dontrun{
 #'   data(flatbed_scan_example)
