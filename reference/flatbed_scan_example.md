@@ -23,10 +23,6 @@ Dimensions:
 
 - 3 layers (segmentation channels)
 
-## Source
-
-Image by J.Cunow
-
 ## Details
 
 Flatbed scans capture the full root system in a 2D plane, so traits are
@@ -34,9 +30,19 @@ computed globally rather than per depth bin. The image is a binary
 segmentation (root vs. background) stored across three channels; layer 2
 is used as the root channel in the vignette.
 
+## References
+
+Cunow J, Pijcke F, Olofsson J, Väisänen M, Blume-Werry G (accepted,
+2026). Reindeer grazing induces spatial and functional shifts in root
+systems of boreal pine forests. Oikos. https://doi.org/10.1002/oik.12211
+
 ## Author
 
 Johannes Cunow <johannes.cunow@gmail.com>
+
+Johannes Cunow Original flatbed scans from boreal pine forests in
+northern Finland, acquired by Johannes Cunow and others (field campaign
+2022).
 
 ## Examples
 

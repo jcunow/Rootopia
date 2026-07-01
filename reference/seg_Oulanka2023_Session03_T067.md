@@ -21,7 +21,9 @@ A RasterBrick object with dimensions:
 
 ## Source
 
-Images by J.Cunow
+Original minirhizotron images acquired by Johannes Cunow and Gesche
+Blume-Werry at Oulanka Research Station, Finland (October 2023). Images
+were processed using RootDetector.
 
 ## Details
 
@@ -36,9 +38,15 @@ Binary mask representation where:
 Spatial dimensions correspond to physical tube measurements: columns =
 tube length, rows = tube rotation.
 
+## References
+
+Peters B, Blume-Werry G, Gillert A, et al. (2023) RootDetector: a
+convolutional neural network for root detection. Scientific Reports
+13:1399. https://doi.org/10.1038/s41598-023-28400-x
+
 ## Author
 
-Johannes Cunow <johannes.cunow@gmail.com>
+Johannes Cunow
 
 ## Examples
 

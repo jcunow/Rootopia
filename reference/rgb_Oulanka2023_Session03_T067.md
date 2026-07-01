@@ -22,7 +22,8 @@ A RasterBrick object with dimensions:
 
 ## Source
 
-Images by J.Cunow
+Original minirhizotron images acquired by Johannes Cunow and Gesche
+Blume-Werry at Oulanka Research Station, Finland, in October 2023.
 
 ## Details
 
