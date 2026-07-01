@@ -203,7 +203,7 @@ runs:</p>
 <span>                           output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">root_layer</span>, main <span class="op">=</span> <span class="st">"Root layer (binary)"</span>, frac <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" alt="" width="700"></p>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="2700"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" alt="" width="2700"></p>
 <hr>
 </div>
 <div class="section level4">
@@ -306,7 +306,7 @@ centered.</td>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">depth_map</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">root_layer</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_map</span>, main <span class="op">=</span> <span class="st">"Depth map (cm)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="2700"></p>
 <blockquote>
 <p><strong>On <code>start_soil</code></strong>: accurate depth
 attribution requires knowing where the soil surface is in the image.
@@ -333,7 +333,7 @@ on your root prevalence.</p>
 <span><span class="va">depths</span></span>
 <span><span class="co">#&gt;  [1] -5  0  5 10 15 20 25 30 35 40 45 50 55 60</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_bins</span>, main <span class="op">=</span> <span class="st">"Depth bins"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="2700"></p>
 <hr>
 </div>
 <div class="section level4">
@@ -449,7 +449,7 @@ Because it is a per-pixel value, the profile reduces with
 <span><span class="co">#&gt; 6    20  24861 452872       5.203953   231.8116          1.6922517   0.01822515</span></span>
 <span><span class="co"># root thickness</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">diam_result</span><span class="op">$</span><span class="va">distance_map_rast</span>, frac <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
-<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="" width="700"></p>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="2700"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="" width="2700"></p>
 <hr>
 </div>
 </div>
@@ -569,7 +569,7 @@ accumulation curves between tubes/plots.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Depth (cm)"</span>, y <span class="op">=</span> <span class="st">"Cumulative root pixel fraction"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root accumulation with depth"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="2700"></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># remember, Depth 0 is rounded and contains -2.5 to +2.5 cm depth. You can change this in `binning()` with the argument: rounding = "ceiling" </span></span></code></pre></div>
 <p><code>stdrz = "relative"</code> rescales the cumulative curve to end

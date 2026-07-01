@@ -156,7 +156,7 @@ channel.</p>
 <span>                           scale <span class="op">=</span> <span class="st">"binary"</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg</span>, main <span class="op">=</span> <span class="st">"Segmented flatbed scan"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="2700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-2.png" class="r-plt" alt="" width="2700"></p>
 <hr>
 </div>
 <div class="section level4">
@@ -177,7 +177,7 @@ guesswork:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; === Root components (connected root-1 regions) ===</span></span>
 <span><span class="co">#&gt;   n = 65 | min = 1 | median = 3 | mean = 9207.7 | max = 391995  (px)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="2700"></p>
 <p>Use those numbers to set <code>max_hole_size</code> (largest gap to
 fill) and <code>max_artifact_size</code> (largest speck to delete).
 Specks touching the image edge are removed by the same size test as
@@ -190,10 +190,10 @@ the frame that you must keep.</p>
 <span>                         max_artifact_size <span class="op">=</span> <span class="fl">50</span>, <span class="co"># too small = includes dirt; too large = removes genuine roots</span></span>
 <span>                         protect_border    <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg</span>, main <span class="op">=</span> <span class="st">"Before Cleaning"</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>,<span class="fl">0.7</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="2700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png" class="r-plt" alt="" width="2700"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg_clean</span>, main <span class="op">=</span> <span class="st">"After Cleaning"</span>,center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>,<span class="fl">0.7</span><span class="op">)</span>, overview <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png" class="r-plt" alt="" width="2700"></p>
 <blockquote>
 <p><code><a href="../reference/clean_image.html">clean_image()</a></code> expects a binary mask. If your input is a
 raw probability or grayscale image, binarize it with
@@ -213,7 +213,7 @@ diameter estimation.</p>
 <span></span>
 <span><span class="co"># ! remember that 1 px skeletons may look less connected from far away</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">skl</span>, main <span class="op">=</span> <span class="st">"Skeleton"</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.625</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="2700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png" class="r-plt" alt="" width="2700"></p>
 <p><code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> uses a LUT-based Zhang-Suen thinning
 algorithm to reduce the segmented mask to one-pixel-wide
 centerlines.</p>
@@ -234,7 +234,7 @@ spur’s body is removed from the segmentation too.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">skl_pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prune_skeleton.html">prune_skeleton</a></span><span class="op">(</span><span class="va">skl</span>, mask <span class="op">=</span> <span class="va">seg_clean</span>, min_length <span class="op">=</span> <span class="fl">50</span>, iter <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">skl_pruned</span>, main <span class="op">=</span> <span class="st">"Skeleton (spurs pruned)"</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.625</span><span class="op">)</span>, overview <span class="op">=</span> <span class="cn">F</span> <span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="2700"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
@@ -242,7 +242,7 @@ spur’s body is removed from the segmentation too.</p>
 <span><span class="va">seg_clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prune_skeleton.html">prune_skeleton</a></span><span class="op">(</span><span class="va">skl</span>, mask <span class="op">=</span> <span class="va">seg_clean</span>, min_length <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>                             output <span class="op">=</span> <span class="st">"mask"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg_clean</span>, main <span class="op">=</span> <span class="st">"Skeleton (spurs pruned)"</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.625</span><span class="op">)</span>, overview <span class="op">=</span> <span class="cn">T</span> <span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="" width="700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="" width="2700"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png" class="r-plt" alt="" width="2700"></p>
 <hr>
 </div>
 <div class="section level4">
@@ -290,7 +290,7 @@ values.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Diameter (cm)"</span>, y <span class="op">=</span> <span class="st">"Count"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root diameter distribution"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="2700"></p>
 <p>For fine/coarse root separation, <code><a href="../reference/modal_peaks.html">modal_peaks()</a></code> can find
 diameter modes in the distribution:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
