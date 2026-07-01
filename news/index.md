@@ -1,5 +1,5 @@
 # Changelog
 
-## Rootopia 1.0.0
+## Rootopia 1.1.0
 
-- Initial CRAN submission.
+- Beta Version, Github repo only.
