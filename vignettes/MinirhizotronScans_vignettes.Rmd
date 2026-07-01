@@ -11,7 +11,8 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
-                      warning = FALSE, message = FALSE)
+                      warning = FALSE, message = FALSE,
+                      dpi= 300, fig.width = 9)
 
 # Rootopia + terra are hard dependencies, so the workflow below can run at
 # build time against the bundled example data. The displayed

@@ -12,8 +12,9 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment  = "#>",
-  fig.width = 7,
-  fig.align = "center"
+  fig.width = 9,
+  fig.align = "center",
+  dpi=300
 )
 has_png <- requireNamespace("png", quietly = TRUE)   # demo writes temp PNGs
 ```
