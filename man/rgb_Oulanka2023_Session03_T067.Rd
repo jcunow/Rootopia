@@ -13,7 +13,8 @@ A RasterBrick object with dimensions:
   }
 }
 \source{
-Images by J.Cunow
+Original minirhizotron images acquired by Johannes Cunow and Gesche Blume-Werry
+at Oulanka Research Station, Finland, in October 2023.
 }
 \usage{
 data(rgb_Oulanka2023_Session03_T067)

@@ -13,7 +13,9 @@ A RasterBrick object with dimensions:
   }
 }
 \source{
-Images by J.Cunow
+Original minirhizotron images acquired by Johannes Cunow
+and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
+Images were processed using RootDetector.
 }
 \usage{
 data(TurnoverDPC_data)
@@ -56,7 +58,12 @@ Background is represented as 0 in all layers.
   persistent <- sum(terra::values(img[[3]]) == 1)
 }
 }
+\references{
+Peters B, Blume-Werry G, Gillert A, et al. (2023)
+RootDetector: a convolutional neural network for root detection.
+Scientific Reports 13:1399. https://doi.org/10.1038/s41598-023-28400-x
+}
 \author{
-Johannes Cunow \email{johannes.cunow@gmail.com}
+Johannes Cunow
 }
 \keyword{datasets}

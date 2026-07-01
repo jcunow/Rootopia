@@ -14,9 +14,6 @@ A 3-dimensional numeric array (rows x columns x layers), matching the
     \item 3 layers (segmentation channels)
   }
 }
-\source{
-Image by J.Cunow
-}
 \usage{
 data(flatbed_scan_example)
 }
@@ -39,7 +36,16 @@ used as the root channel in the vignette.
   terra::plot(seg, maxcell = Inf)
 }
 }
+\references{
+Cunow J, Pijcke F, Olofsson J, Väisänen M, Blume-Werry G (accepted, 2026).
+Reindeer grazing induces spatial and functional shifts in root systems
+of boreal pine forests. Oikos. https://doi.org/10.1002/oik.12211
+}
 \author{
 Johannes Cunow \email{johannes.cunow@gmail.com}
+
+Johannes Cunow
+Original flatbed scans from boreal pine forests in northern Finland, acquired by
+Johannes Cunow and others (field campaign 2022).
 }
 \keyword{datasets}
