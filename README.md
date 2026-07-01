@@ -16,13 +16,12 @@ Welcome to **Rootopia**, an R package designed to extract quantitative belowgrou
 
 ## 💡 What can Rootopia do?
 
-- 🖼️ Clean and process root scans from (mini)rhizotrons and flatbed scanners
-- 🌱 Estimate root length, depth profiles, and turnover between sessions
-- 📏 Measure root diameters and diameter distributions
-- 🕸️ Analyze root architecture: branching points, root tips, branch/root order
-  (main axis vs. laterals), and root angle distribution
-- 🥕 Spatial indices (root distribution with depth, rotation bias)
-- 🧵 Stitch overlapping scan sequences into one mosaic per tube
+- ️ Clean and process root scans from (mini)rhizotrons and flatbed scanners
+-  Estimate root length, depth profiles, and turnover between sessions
+-  Measure root diameters and diameter distributions
+- ️ Analyze root architecture: branching points, root tips, branch/root order, and root angle distribution
+-  Spatial indices (root distribution with depth, rotation bias)
+-  Stitch overlapping scan sequences into one mosaic per tube
 
 ---
 
@@ -31,14 +30,13 @@ Welcome to **Rootopia**, an R package designed to extract quantitative belowgrou
 New to Rootopia? Start with one of the step-by-step tutorials — they walk
 through loading, depth mapping, and trait extraction one function at a time,
 so you learn what each stage does. Once you are comfortable, the
-batch-processing tutorial wraps the whole minirhizotron pipeline over a
-folder of images into a single function call.
+batch-processing tutorial wraps the whole minirhizotron pipeline and flatbed scan analysis over a folder of images into a single function call.
 
 * 📄 [Start here: Minirhizotron Workflow (step-by-step)](articles/MinirhizotronScans_vignettes.html)
 * 📄 [Flatbed Scan Workflow (step-by-step)](articles/FlatBedScans_vignettes.html)
-* 🧵 [Stitching Scan Sequences into Mosaics](articles/Stitching_vignette.html)
+* 📄 [Stitching Scan Sequences into Mosaics](articles/Stitching_vignette.html)
 * 📄 [Rotation Bias Correction](articles/Rotation_Bias_vignettes.html)
-* 🚀 [Batch Processing (whole folders at once)](articles/BatchProcessing_vignette.html)
+* 📄 [Batch Processing (whole folders at once)](articles/BatchProcessing_vignette.html)
 
 Each tutorial includes code, images, overlays, and tips for interpretation.
 
@@ -49,34 +47,39 @@ Each tutorial includes code, images, overlays, and tips for interpretation.
 ## 🚀 Quick Start
 
 ```r
-# Load example flatbed scan
+# Load example (segmented) minirhizotron scan
 library(Rootopia)
 library(terra)
 data("seg_Oulanka2023_Session01_T067")
-img <- seg_Oulanka2023_Session01_T067
+img <- load_flexible_image(img, output_format = "spatrast", scale = "binary")
 
 # Preprocess and extract traits
-binary <- load_flexible_image(img)
-cleaned <- clean_image(binary, max_artifact_size = 5, max_hole_size = 5, select.layer = 2)
-skel <- skeletonize_image(cleaned,  methods = "GuoHall", verbose = F)
+tape_mask <- img[[2]] - img[[1]] 
+terra::values(tape_mask)[terra::values(tape_mask) != -1] <- NA
+binary <- load_flexible_image(img, select_layer = 2)
+cleaned <- clean_image(binary, max_artifact_size = 5, max_hole_size = 5)
+skel <- skeletonize_image(cleaned, verbose = F)
 
 # Length and diameter
 root_length(skel, unit = "cm", dpi = 150)
-diam_map <- root_diameter(cleaned, unit = "cm", dpi = 150, select.layer = NULL )
-modal_peaks(diam_map$diameters, prominence_threshold = 10, mclust = F, adjust = 5, display_type = "density")
+diam_map <- root_diameter(cleaned, unit = "cm", dpi = 150 )
+hist(diam_map$diameters)
 
 
 # Architecture
 metrics <- detect_skeleton_points(skel)
-print(metrics)
+root_tips = count_pixels(metrics$endpoints)
+root_branches = count_pixels(metrics$branching_points)
 
-# Branch order: main axis (order 1) vs. lateral roots (order >= 2)
-order_res <- branch_order_map(skel, mask = cleaned, order = "branch_order", unit = "cm", dpi = 150)
-order_metrics(order_res, focal = "thickest")
+
+# Branch order (more useful for flatbed scans):
+order_res <- branch_order_map(skel, mask = cleaned, order = "root_order", unit = "cm", dpi = 150)
+order_metrics(order_res, focal = "thinnest")
 
 # Visualize
-terra::plot(diam_map$diameter_rast)
-terra::plot(skel)
+zoom_plot(diam_map$diameter_rast)
+zoom_plot(skel)
+zoom_plot(order_res$class_map)
 ```
 
 ---
