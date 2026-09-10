@@ -261,6 +261,73 @@ trace_segments <- function(skel) {
 }
 
 
+#' Distance from a segment's terminal pixel to its junction-cluster centre
+#'
+#' Junction contraction stops the traced arms on the cluster rim, so this stub is
+#' the piece of root length the contraction removed. Tip nodes are not in
+#' \code{node_xy} (the pixel already is the node) and contribute nothing.
+#'
+#' @param lab Node label of that segment end.
+#' @param px Length-2 (row, col) of the segment's terminal pixel.
+#' @param node_xy Junction-cluster centroids, as attached by \code{trace_segments}.
+#' @return A single non-negative length in pixels.
+#' @keywords internal
+#' @noRd
+.stub_length <- function(lab, px, node_xy) {
+  if (is.null(node_xy) || nrow(node_xy) == 0L) return(0)
+  k <- match(lab, rownames(node_xy))
+  if (is.na(k)) return(0)                         # tip node: the pixel is the node
+  sqrt((node_xy[k, 1L] - px[1L])^2 + (node_xy[k, 2L] - px[2L])^2)
+}
+
+
+#' Polyline length of one segment, junction stubs included
+#'
+#' The same definition \code{build_edge_table()} reports as \code{length}, so
+#' anything that thresholds on length (pruning) and the table the user reads
+#' cannot drift apart.
+#'
+#' @param s One segment, \code{list(coords, from, to)}.
+#' @param node_xy Junction-cluster centroids.
+#' @return Length in pixels.
+#' @keywords internal
+#' @noRd
+.segment_length <- function(s, node_xy) {
+  p <- s$coords
+  sum(sqrt(rowSums(diff(p)^2))) +
+    .stub_length(s$from, p[1L, ], node_xy) +
+    .stub_length(s$to,   p[nrow(p), ], node_xy)
+}
+
+
+#' Map each node label to the (segment, side) pairs incident on it
+#'
+#' Three passes of the pipeline need this table. Building it by \code{rbind()}
+#' into a growing list slot re-allocated on every segment end; \code{split()}
+#' builds it in one pass.
+#'
+#' Label order is the order of first occurrence, not sorted: the union-find in
+#' \code{assign_root_order()} merges roots in the order it walks the nodes, so a
+#' different order would renumber \code{root_id}.
+#'
+#' @param segs Segment list.
+#' @return Named list; each element an Nx2 matrix of \code{(segment, side)} rows,
+#'   side 1 = \code{from}, side 2 = \code{to}.
+#' @keywords internal
+#' @noRd
+.node_incidence <- function(segs) {
+  ns <- length(segs)
+  if (ns == 0L) return(list())
+  ends <- character(2L * ns)
+  ends[seq(1L, 2L * ns, by = 2L)] <- vapply(segs, function(s) s$from, character(1))
+  ends[seq(2L, 2L * ns, by = 2L)] <- vapply(segs, function(s) s$to,   character(1))
+  seg  <- rep(seq_len(ns), each = 2L)
+  side <- rep(c(1L, 2L), times = ns)
+  idx  <- split(seq_len(2L * ns), factor(ends, levels = unique(ends)))
+  lapply(idx, function(k) cbind(seg[k], side[k]))
+}
+
+
 #' Per-segment measurements from traced segments
 #'
 #' @param segs Output of \code{trace_segments} / \code{\link{resolve_crossings}}.
@@ -277,16 +344,19 @@ trace_segments <- function(skel) {
 #' @keywords internal
 #' @noRd
 build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
-  if (length(segs) == 0L) return(NULL)
-  has_xy <- !is.null(node_xy) && nrow(node_xy) > 0L
-  stub <- function(lab, px) {
-    # distance from a segment's terminal pixel to its junction-cluster centre
-    if (!has_xy) return(0)
-    k <- match(lab, rownames(node_xy))
-    if (is.na(k)) return(0)                       # tip node: the pixel is the node
-    sqrt((node_xy[k, 1L] - px[1L])^2 + (node_xy[k, 2L] - px[2L])^2)
-  }
-  rows <- lapply(seq_along(segs), function(i) {
+  n <- length(segs)
+  if (n == 0L) return(NULL)
+
+  # Filling plain vectors and calling data.frame() once at the end, rather than
+  # building one data.frame per segment and rbind()-ing them, is what keeps this
+  # from dominating the pipeline: on a root system of a few thousand segments the
+  # per-segment version cost more than the tracing it summarises.
+  from <- character(n); to <- character(n)
+  n_px <- integer(n); n_orth <- integer(n); n_diag <- integer(n)
+  len_poly <- numeric(n); len_kimura <- numeric(n)
+  d_mean <- numeric(n); d_median <- numeric(n); d_min <- numeric(n)
+
+  for (i in seq_len(n)) {
     s <- segs[[i]]; p <- s$coords
     dr <- diff(p[, 1]); dc <- diff(p[, 2]); seglen <- sqrt(dr*dr + dc*dc)
     adr <- abs(dr); adc <- abs(dc)
@@ -294,17 +364,24 @@ build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
     diag <- (adr == 1L & adc == 1L)      # diagonal unit step
     no <- sum(orth); nd <- sum(diag)
     gap <- sum(seglen[!(orth | diag)])   # jumps across contracted-junction gaps
-    ends <- stub(s$from, p[1L, ]) + stub(s$to, p[nrow(p), ])
-    len_poly   <- sum(seglen) + ends                            # sqrt(2) chain code
-    len_kimura <- sqrt(nd^2 + (nd + no/2)^2) + no/2 + gap + ends  # Kimura per segment
+    ends <- .stub_length(s$from, p[1L, ], node_xy) +
+            .stub_length(s$to,   p[nrow(p), ], node_xy)
     rad <- DT[p]
-    data.frame(edge_id = i, from = s$from, to = s$to, n_px = nrow(p),
-               n_orth = no, n_diag = nd,
-               length = len_poly, length_kimura = len_kimura,
-               mean_diameter = mean(2*rad), median_diameter = stats::median(2*rad),
-               min_diameter = min(2*rad), stringsAsFactors = FALSE)
-  })
-  do.call(rbind, rows)
+
+    from[i] <- s$from; to[i] <- s$to
+    n_px[i] <- nrow(p); n_orth[i] <- no; n_diag[i] <- nd
+    len_poly[i]   <- sum(seglen) + ends                              # sqrt(2) chain code
+    len_kimura[i] <- sqrt(nd^2 + (nd + no/2)^2) + no/2 + gap + ends  # Kimura per segment
+    d_mean[i]   <- mean(2*rad)
+    d_median[i] <- stats::median(2*rad)
+    d_min[i]    <- min(2*rad)
+  }
+
+  data.frame(edge_id = seq_len(n), from = from, to = to, n_px = n_px,
+             n_orth = n_orth, n_diag = n_diag,
+             length = len_poly, length_kimura = len_kimura,
+             mean_diameter = d_mean, median_diameter = d_median,
+             min_diameter = d_min, stringsAsFactors = FALSE)
 }
 
 
@@ -503,7 +580,7 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
   if (resolve_overlaps) {
     n0 <- length(segs)
     segs <- resolve_crossings(segs, DT = DT, straight_dot = crossing_straight,
-                              diam_ratio = crossing_diam_ratio)
+                              diam_ratio = crossing_diam_ratio, verbose = verbose)
     if (verbose) cat(sprintf("  resolved crossings: %d -> %d segment(s)\n", n0, length(segs)))
   }
   
@@ -635,15 +712,17 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
 #'   axis in opposite directions look exactly like an X in outline, and so does
 #'   a thin root crossing a thick one; no threshold gets both right, which is
 #'   why this is off unless the caller asks for it.
+#' @param verbose Report nodes with more than four arms, which this function
+#'   cannot resolve and \code{assign_root_order()} will read as one continuation
+#'   plus laterals.
 #' @return A segment list with crossings spliced; \code{attr(., "dims")} preserved.
 #' @keywords internal
 #' @noRd
 resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
-                              diam_ratio = 0) {
+                              diam_ratio = 0, verbose = FALSE) {
   ns <- length(segs)
   if (ns < 2L) return(segs)
   
-  side_lab <- function(i, s) if (s == 1L) segs[[i]]$from else segs[[i]]$to
   tang <- lapply(seq_len(ns), function(i) {
     p <- segs[[i]]$coords
     list(.endpoint_tangent(p, 1L, look), .endpoint_tangent(p, 2L, look))
@@ -655,18 +734,15 @@ resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
   seg_rad <- if (is.null(DT) || diam_ratio <= 0) NULL else
     vapply(seq_len(ns), function(i) stats::median(DT[segs[[i]]$coords]), numeric(1))
   
-  # node -> incident (seg, side) rows
-  node_inc <- list()
-  for (i in seq_len(ns)) for (s in 1:2) {
-    lab <- side_lab(i, s)
-    node_inc[[lab]] <- rbind(node_inc[[lab]], c(i, s))
-  }
-  
+  node_inc <- .node_incidence(segs)
+
   partner_seg  <- matrix(0L, ns, 2)
   partner_side <- matrix(0L, ns, 2)
   
+  n_highdeg <- 0L
   for (lab in names(node_inc)) {
     inc <- node_inc[[lab]]
+    if (nrow(inc) > 4L) n_highdeg <- n_highdeg + 1L
     if (nrow(inc) != 4L) next                       # only clean X crossings
     tg  <- lapply(seq_len(4), function(m) side_tan(inc[m, 1], inc[m, 2]))
     dot <- function(a, b) sum(tg[[a]] * tg[[b]])
@@ -693,6 +769,10 @@ resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
     }
   }
   
+  if (verbose && n_highdeg > 0L)
+    cat(sprintf(paste0("  %d node(s) with >4 arms left unresolved; each is read as ",
+                       "one continuation plus laterals, not as a crossing\n"), n_highdeg))
+
   if (!any(partner_seg > 0L)) return(segs)
   .stitch_chains(segs, partner_seg, partner_side)
 }
@@ -769,11 +849,7 @@ resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
 .splice_passthrough <- function(segs) {
   ns <- length(segs)
   if (ns < 2L) return(segs)
-  side_lab <- function(i, s) if (s == 1L) segs[[i]]$from else segs[[i]]$to
-  node_inc <- list()
-  for (i in seq_len(ns)) for (s in 1:2) {
-    lab <- side_lab(i, s); node_inc[[lab]] <- rbind(node_inc[[lab]], c(i, s))
-  }
+  node_inc <- .node_incidence(segs)
   partner_seg  <- matrix(0L, ns, 2)
   partner_side <- matrix(0L, ns, 2)
   for (lab in names(node_inc)) {
@@ -811,17 +887,13 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
   ns <- length(segs)
   if (ns == 0L) return(edge_tbl)
   diam <- edge_tbl$mean_diameter
-  side_lab <- function(i, s) if (s == 1L) segs[[i]]$from else segs[[i]]$to
   tang <- lapply(seq_len(ns), function(i) {
     p <- segs[[i]]$coords
     list(.endpoint_tangent(p, 1L, look), .endpoint_tangent(p, 2L, look))
   })
   
-  node_inc <- list()
-  for (i in seq_len(ns)) for (s in 1:2) {
-    lab <- side_lab(i, s); node_inc[[lab]] <- rbind(node_inc[[lab]], c(i, s))
-  }
-  
+  node_inc <- .node_incidence(segs)
+
   ufr <- seq_len(ns)
   find <- function(x) { r <- x; while (ufr[r] != r) r <- ufr[r]
   while (ufr[x] != r) { nx <- ufr[x]; ufr[x] <<- r; x <- nx }; r }
@@ -965,13 +1037,16 @@ prune_terminal_segments <- function(segs, DT, min_length = 0, min_diameter = 0,
     if (splice && it > 1L) segs <- .splice_passthrough(segs)
     labs <- unlist(lapply(segs, function(s) c(s$from, s$to)))
     deg <- table(labs)
+    node_xy <- attr(segs, "node_xy")
     drop <- logical(length(segs))
     for (i in seq_along(segs)) {
       s <- segs[[i]]
       if (deg[s$from] != 1L && deg[s$to] != 1L) next        # only terminal segments
-      p <- s$coords
-      L  <- sum(sqrt(rowSums(diff(p)^2)))
-      dm <- 2 * min(DT[p])
+      # Measured the same way build_edge_table() reports it, junction stub
+      # included -- otherwise a segment can be pruned at a min_length it clears
+      # in the table the user reads.
+      L  <- .segment_length(s, node_xy)
+      dm <- 2 * min(DT[s$coords])
       if (L < min_length || dm < min_diameter) drop[i] <- TRUE
     }
     if (!any(drop)) break
@@ -1090,6 +1165,14 @@ prune_skeleton <- function(skel, mask = NULL,
 #' Writes any per-segment column (default the order class) back onto the full
 #' image grid, aligned to \code{template}, for masking and zonal statistics.
 #' Background pixels are \code{NA}.
+#'
+#' @details
+#' Only pixels that belong to a segment are painted. Junction contraction
+#' dissolves the interior of each branch-point cluster, so the map carries one
+#' unpainted pixel per branch point and a pixel count taken off the map runs
+#' that much below the skeleton. Read lengths from \code{et$length}, which
+#' accounts for the contracted pixels; the map is for masking and zonal
+#' statistics, not for measuring.
 #'
 #' @param et An \code{edges} table carrying \code{attr(., "segments")} and
 #'   \code{attr(., "crop_offset")} (run with \code{keep_segments = TRUE}).
@@ -1231,10 +1314,13 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' All three order schemes are always computed and stored on \code{$edges};
 #' \code{order} only selects which labels \code{$class_map} and \code{$summary}.
 #' \describe{
-#'   \item{\code{tip_order} (per segment)}{Topological leaf-peeling (Strahler-like).
-#'     Every terminal segment is order 1; peeling terminals away round by round, a
+#'   \item{\code{tip_order} (per segment)}{Topological leaf-peeling depth. Every
+#'     terminal segment is order 1; peeling terminals away round by round, a
 #'     segment's order is \code{1 + max(child orders)}. Order rises toward the
-#'     interior, so the distal end of even a thick root is 1.}
+#'     interior, so the distal end of even a thick root is 1. This is centrifugal
+#'     depth, not strict Strahler ordering: Strahler only increments where two
+#'     children share the highest order, while this increments at every junction,
+#'     so a long chain of single laterals keeps climbing.}
 #'   \item{\code{root_order} (per root)}{Segments are grouped into continuous roots
 #'     (continuation rule below); each root takes the \emph{maximum} \code{tip_order}
 #'     along it, so a thick main axis keeps its high order out to its tip. Sensitive
@@ -1392,7 +1478,7 @@ order_metrics <- function(x, order_col = NULL, focal = NULL) {
         total_length        = L,
         length_fraction     = L / total_len,
         mean_segment_length = mean(w),
-        branching_frequency = sum(nbp[ix]) / L,
+        branching_frequency = if (L > 0) sum(nbp[ix]) / L else NA_real_,
         mean_diameter       = if (L > 0) sum(dia[ix] * w) / L else mean(dia[ix]),
         median_diameter     = stats::median(mdn[ix]),
         stringsAsFactors = FALSE
