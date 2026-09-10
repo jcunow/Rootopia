@@ -610,6 +610,12 @@ root_depth_metrics <- function(
         # Flat depth map (sinoid = FALSE) used to derive flow directions for
         # length calculation -- the sinusoidal correction is for the depth axis
         # only, not for path-length geometry.
+        #
+        # This builds a per-pixel length map rather than calling root_length()
+        # per depth bin, and that is deliberate: root_length() uses the Kimura2
+        # estimator, which is not additive -- the sum over bins does not equal
+        # the whole. A per-pixel Freeman length can be zonal-summed, which is
+        # what a depth profile needs, at the cost of Kimura's correction.
         dm_flat <- create_depthmap(
           img           = im,
           sinoid        = FALSE,

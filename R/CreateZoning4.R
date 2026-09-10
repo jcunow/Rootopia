@@ -34,13 +34,8 @@ create_root_buffer = function(img, width=2, halo_only=TRUE, kernel="circle") {
       stop("kernel must be either 'circle' or 'diamond'")
     }
     
-    # Load and validate image
-    im <- tryCatch({
-      load_flexible_image(img, output_format="SpatRaster", scale = "binary")
-    }, error = function(e) {
-      stop("Failed to load image: ", e$message)
-    })
-    
+    im <- load_flexible_image(img, output_format="SpatRaster", scale = "binary")
+
     if (terra::ncell(im) == 0) {
       stop("Input image has no valid cells")
     }
@@ -70,7 +65,6 @@ create_root_buffer = function(img, width=2, halo_only=TRUE, kernel="circle") {
       out.im = terra::subst(out.im, from=-1, to=0)
     }
     
-    # Validate output
     if (terra::ncell(out.im) == 0) {
       warning("Output image has no valid cells")
     }
@@ -120,13 +114,8 @@ binning = function(depthmap, nn, round_option="rounding") {
       stop("round_option must be one of: 'rounding', 'ceiling', 'floor'")
     }
     
-    # Load and validate image
-    img <- tryCatch({
-      load_flexible_image(depthmap, output_format="spatrast", scale = "none")
-    }, error = function(e) {
-      stop("Failed to load depthmap: ", e$message)
-    })
-    
+    img <- load_flexible_image(depthmap, output_format="spatrast", scale = "none")
+
     if (terra::ncell(img) == 0) {
       stop("Depthmap has no valid cells")
     }
@@ -149,7 +138,6 @@ binning = function(depthmap, nn, round_option="rounding") {
       stop("Binning operation failed: ", e$message)
     })
     
-    # Validate output
     if (terra::ncell(im) == 0) {
       warning("Output has no valid cells")
     }
@@ -331,12 +319,7 @@ depth_zoning <- function(
   img <- terra::ifel(mask_condition, img, NA)
 
   if (!is.null(select_layer)) {
-    if (!is.numeric(select_layer) || length(select_layer) != 1 || select_layer < 1) {
-      stop("select_layer must be a single positive integer.")
-    }
-    if (terra::nlyr(img) < select_layer) {
-      stop("select_layer exceeds number of layers in img.")
-    }
+    .validate_select_layer(select_layer, n_layers = terra::nlyr(img))
     img <- terra::subset(img, select_layer)
   }
 

@@ -21,7 +21,7 @@ deep_drive(
 
 \item{AngleMap}{Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from `RootMap` and `DepthMap`.}
 
-\item{select_layer_rm}{Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `2`.}
+\item{select_layer_rm}{Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.}
 
 \item{select_layer_dm}{Integer. Which layer to use from `DepthMap`. Default is `NULL`.}
 

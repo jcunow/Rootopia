@@ -13,7 +13,7 @@
 #' @param DepthMap A SpatRast object representing local depth (e.g., distance from surface or tube wall).
 #' @param RootMap Optional. A binary SpatRast indicating root presence. Used to infer `AngleMap` if not provided.
 #' @param AngleMap Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from `RootMap` and `DepthMap`.
-#' @param select_layer_rm Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `2`.
+#' @param select_layer_rm Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.
 #' @param select_layer_dm Integer. Which layer to use from `DepthMap`. Default is `NULL`.
 #' @param select_layer_am Integer. Which layer to use from `AngleMap`. Default is `NULL`.
 #' @param return Character. `"value"` (default) returns a single numeric proportion. `"all"` returns a list with spatial outputs for visualization.
@@ -87,14 +87,9 @@ deep_drive <- function(DepthMap,
       stop("Either AngleMap or RootMap must be provided")
     }
     
-    # Load and validate DepthMap
     DepthMap <- load_flexible_image(DepthMap, select_layer=select_layer_dm,
                                     output_format="spatrast", scale = "none")
-    if (is.null(DepthMap)) {
-      stop("Failed to load DepthMap")
-    }
-    
-    # Ensure DepthMap has valid values
+
     if (terra::global(DepthMap, "isNA", na.rm=TRUE)[1] == terra::ncell(DepthMap)) {
       stop("DepthMap contains only NA values")
     }
@@ -108,10 +103,7 @@ deep_drive <- function(DepthMap,
     if(is.null(AngleMap)){
       RootMap <- load_flexible_image(RootMap, select_layer=select_layer_rm,
                                      output_format="spatrast", scale = "binary")
-      if (is.null(RootMap)) {
-        stop("Failed to load RootMap")
-      }
-      
+
       # align extents
       terra::ext(RootMap) <- terra::ext(DepthMap)
       
@@ -129,9 +121,6 @@ deep_drive <- function(DepthMap,
     } else {
       AngleMap <- load_flexible_image(AngleMap, select_layer=select_layer_am,
                                       output_format="spatrast", scale = "none")
-      if (is.null(AngleMap)) {
-        stop("Failed to load AngleMap")
-      }
     }
     
     # align orientation with AngleMap

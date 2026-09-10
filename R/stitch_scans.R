@@ -469,6 +469,9 @@ align_phase_correlation <- function(img1, img2, edge_width = 250,
 
     # Placement-ready shifts: img2 at (w1 - edge_width + dx, dy). The horizontal
     # peak is negated, the vertical is not - this reproduces the validated stitch.
+    # estimate_rotation_shift() solves the same problem (FFT phase correlation)
+    # but returns c(depth, rotation) with neither axis negated, so the two are
+    # not interchangeable despite the shared method.
     c(dx = -dx_raw, dy = dy_raw, peak = max(corr) / sum(corr))
   }, error = function(e) stop("align_phase_correlation failed: ", e$message, call. = FALSE))
 }

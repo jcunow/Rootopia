@@ -55,10 +55,7 @@ root_length <- function(img,
   method <- match.arg(method)
   
   tryCatch({
-    
-    # -----------------------------
-    # Input validation
-    # -----------------------------
+
     if (missing(img)) {
       stop("Image input is required")
     }
@@ -252,11 +249,7 @@ root_scape_metrics <- function(img, index_d = NA, select_layer = NULL,
       stop("Invalid metrics specified: ", paste(invalid_metrics, collapse = ", "))
     }
 
-    if (!is.null(select_layer)) {
-      if (!is.numeric(select_layer) || select_layer < 1) {
-        stop("select_layer must be a positive integer")
-      }
-    }
+    .validate_select_layer(select_layer)
 
     img <- load_flexible_image(img, select_layer = select_layer,
                                output_format = "spatrast", scale = "none")
@@ -354,6 +347,10 @@ count_pixels <- function(img) {
 #' img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 #' colorvector <- tube_coloration(img)
 tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
+  # These are the exact Rec. 709 luma coefficients, deliberately NOT the rounded
+  # 0.21/0.72/0.07 that rgb2gray() defaults to. Routing this through rgb2gray()
+  # would shift every colour value this function has ever reported, so the two
+  # stay separate even though the arithmetic is the same.
   tryCatch({
     if (missing(img)) stop("Image input is required")
 
@@ -481,6 +478,9 @@ analyze_soil_texture <- function(img.color, grays = 7, window = c(9, 9),
       stop("Input must be a valid three-band (RGB) image")
     }
 
+    # Same weights as rgb2gray(), but inlined: this operates on a raster::brick
+    # and divides by the value range, which rgb2gray()'s SpatRaster path does
+    # not do. glcm::glcm() needs the [0, 1] input, hence the /mx.
     mx      <- max(raster::values(img.color), na.rm = TRUE)
     mx      <- if (mx > 1) 255 else 1
     img.gray <- (img.color[[1]] * 0.21 + img.color[[2]] * 0.72 +

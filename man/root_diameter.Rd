@@ -24,7 +24,7 @@ compatibility. Will be skipped if skeleton `SpatRaster` is provided.}
 
 \item{skeleton_img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.}
 
-\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.}
 
 \item{diagnostics}{Logical. If `TRUE`, enables diagnostic plots and logging. Default is `FALSE`.}
 
