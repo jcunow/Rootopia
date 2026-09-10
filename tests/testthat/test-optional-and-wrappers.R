@@ -68,7 +68,7 @@ test_that("root_depth_metrics runs on a one-image directory", {
   terra::writeRaster(terra::rast(seg_Oulanka2023_Session01_T067),
                      file.path(dir, "T067.tif"), overwrite = TRUE)
   res <- suppressWarnings(root_depth_metrics(
-    path_seg         = paste0(dir, "/"),   # root_depth_metrics expects a trailing slash
+    path_seg         = dir,       # a plain directory, no trailing separator
     tube_names       = "T067",
     session          = "test",
     insertion_angles = 45,        # non-zero -> valid depth-map geometry
@@ -83,6 +83,32 @@ test_that("root_depth_metrics runs on a one-image directory", {
   ))
   expect_s3_class(res, "data.frame")
   expect_gt(nrow(res), 0)
+  expect_true(any(res$rootpx > 0))          # images were actually read, not skipped
+})
+
+
+test_that("the default-on derived metric groups produce values", {
+  # Both blocks used dplyr::.data$col, which raises "Can't subset .data outside
+  # of a data mask context". The wrapper's own fault tolerance caught it and
+  # NA'd the columns, so every user silently got an empty mrd and
+  # total.length.density from a run that reported success.
+  skip_if_not_installed("terra")
+  data(seg_Oulanka2023_Session01_T067)
+  dir <- tempfile("seg"); dir.create(dir)
+  terra::writeRaster(terra::rast(seg_Oulanka2023_Session01_T067),
+                     file.path(dir, "T067.tif"), overwrite = TRUE)
+  res <- suppressWarnings(root_depth_metrics(
+    path_seg            = dir,
+    tube_names          = "T067",
+    insertion_angles    = 45,
+    dpi                 = 150,
+    depth_interval_cm   = 10,
+    calc_diameter_stats = FALSE,   # needs imager
+    verbose             = FALSE
+  ))
+  expect_true(all(c("mrd", "total.length.density") %in% names(res)))
+  expect_false(all(is.na(res$mrd)))
+  expect_false(all(is.na(res$total.length.density)))
 })
 
 # stitch_root_scans needs an overlapping scan SEQUENCE, which the bundled

@@ -39,7 +39,7 @@ Rootopia addresses this through four functions:
 - `estimate_rotation_shift()` — quantifies the pixel offset between two sessions
   using image correlation
 - `rotation_censor()` — crops images to the shared, overlap region
-- `zoning(mode = "rotation")` — splits the tube surface into slices along the
+- `slice_rotation()` — splits the tube surface into slices along the
   rotation axis (circumference), so that root traits can be summarized
   separately for each slice
 
@@ -183,16 +183,16 @@ censored <- rotation_censor(
 
 A minirhizotron image is a long, narrow strip that represents a slice of the
 tube's circumference, with depth running along one axis and the rotation
-(circumferential) position running along the other. `zoning(mode = "rotation")`
-divides the image along this rotation axis into `rotation_total_slices` equal
-slices, and `rotation_slices = c(i, i)` extracts a single slice `i`.
+(circumferential) position running along the other. `slice_rotation(img, n)`
+divides the image along this rotation axis into `n` equal slices and returns
+them as a list of rasters, in rotation order.
 
 Looping over slices gives a sequence of root-trait values indexed by
 circumferential position. The `rhythmicity()` / `fit_sine_curve()` functions —
 which fit $y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c$ and test
 whether $A \neq 0$ — are agnostic to what `x` represents. Applied to this
-sequence with `x` = slice index and the period `P` fixed to
-`rotation_total_slices` (one full turn around the tube), they test whether
+sequence with `x` = slice index and the period `P` fixed to the number of
+slices `n` (one full turn around the tube), they test whether
 roots are distributed **evenly around the tube** or concentrated on one side
 (e.g. a systematic top-down bias from gravitropism, light incidence on one
 face of the installation, or an installation-angle artifact).
@@ -288,7 +288,6 @@ ggplot(slice_traits, aes(slice, rld)) +
 
 
 # cross section view
-inner <- 6
 inner <- 6
 ggplot(slice_traits, aes(slice, rld + inner)) +
     geom_col(fill = "steelblue") +

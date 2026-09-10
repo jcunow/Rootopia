@@ -59,7 +59,7 @@ result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
 zoom_plot(result$map, main = "Soil classification")
-## As ou can see, some classes can be retrieved decntly well, others not so much. You can try to fiddle and see if a class of interest can be reliably identified with this simple approach. Classes and their parameters (center and distance) can be modified to fit your needs.
+## As you can see, some classes can be retrieved decently well, others not so much. You can try to fiddle and see if a class of interest can be reliably identified with this simple approach. Classes and their parameters (center and distance) can be modified to fit your needs.
 ```
 
 The returned list also carries per-class statistics -- pixel counts, area
@@ -77,7 +77,7 @@ actual mean colors of each class:
 ```{r soil-plot}
 plot_soil_classification(result)
 
-# You can see that classes like roots and coarse debris are not well separated on the image - owing to their color similarity. In this image, coarse debris is suppose to show fibrous woody or rhizome structures which appears weakly distinguishable to roots in this example. 
+# You can see that classes like roots and coarse debris are not well separated on the image - owing to their color similarity. In this image, coarse debris is supposed to show fibrous woody or rhizome structures which appears weakly distinguishable to roots in this example. 
 ```
 
 ## Calibrating your own centroids

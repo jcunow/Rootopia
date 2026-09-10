@@ -44,7 +44,7 @@ processing stage or who are working on a specific subset of functions.
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
 
-> If a tube constitues of multiple overlapping images, consider stitching [Image Stitching](Stitching_vignette.html)
+> If a tube consists of multiple overlapping images, consider stitching [Image Stitching](Stitching_vignette.html)
 
 
 ## Installation
