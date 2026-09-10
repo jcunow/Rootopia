@@ -80,6 +80,13 @@
 #' @param depth_interval_cm Numeric. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
 #'   Default \code{5}.
+#' @param rotation_fixed_width Numeric. Width in \strong{rows} that each image is
+#'   cropped to along the rotation axis, centred on the middle row, before any
+#'   trait is measured (see \code{rotation_censor()}).  This trims the tube
+#'   edges, where the curvature of the tube distorts what the scanner sees.  An
+#'   image with fewer rows than this cannot be cropped symmetrically, so
+#'   \code{rotation_censor()} clamps to the image bounds and says so -- the
+#'   image is then used at full width.  Default \code{1800}.
 #' @param flat_geometry Logical.  If \code{FALSE} (default), images are treated
 #'   as cylindrical minirhizotron tubes and a sinusoidal depth correction is
 #'   applied (\code{sinoid = TRUE} in \code{create_depthmap()}).  Set to
@@ -276,6 +283,7 @@ root_depth_metrics <- function(
   tube_diameter_cm        = 7,
   depth_interval_cm       = 5,
   flat_geometry           = FALSE,
+  rotation_fixed_width    = 1800,
   
   # ---------- core metrics (on by default) -----------------------------------
   calc_root_pixels        = TRUE,
@@ -533,17 +541,20 @@ root_depth_metrics <- function(
     r0 <- round(dim(im)[1] / 2, 0)
     
     im <- .safe("rotation_censor (seg)",
-                rotation_censor(im, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
+                rotation_censor(im, center_offset = r0, fixed_rotation = TRUE,
+                                fixed_width = rotation_fixed_width),
                 fallback = im)
     
     if (!is.null(im.skeleton))
       im.skeleton <- .safe("rotation_censor (skl)",
-                           rotation_censor(im.skeleton, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
+                           rotation_censor(im.skeleton, center_offset = r0, fixed_rotation = TRUE,
+                                           fixed_width = rotation_fixed_width),
                            fallback = im.skeleton)
     
     if (!is.null(im.rgb))
       im.rgb <- .safe("rotation_censor (rgb)",
-                      rotation_censor(im.rgb, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
+                      rotation_censor(im.rgb, center_offset = r0, fixed_rotation = TRUE,
+                                      fixed_width = rotation_fixed_width),
                       fallback = im.rgb)
     
     # Keep only the segmentation layer; align extents

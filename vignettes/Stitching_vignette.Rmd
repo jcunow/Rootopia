@@ -31,11 +31,12 @@ stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output"
 
 It discovers the files, groups them into one sequence per tube, sorts each
 group, aligns and blends the frames, and (optionally) writes one PNG per tube.
-That is the only function you need to call. `list_tubes()` and
-`list_scan_files()` preview what a folder contains before you commit to a run.
-The per-pair and per-sequence engines underneath are internal, but their help
-pages (`?stitch_image_pair`, `?stitch_image_sequence`) document them for
-advanced use.
+That is the only function you need to call. To see what a folder holds before
+committing to a run, pass `tubes = "ask"`: it prints the tube names and frame
+counts, then lets you pick a range in the same call. Everything underneath --
+the folder scan, the per-pair and per-sequence engines -- is internal, though
+the help pages (`?stitch_image_pair`, `?stitch_image_sequence`) document them
+if you want to know what happens inside.
 
 ```{r lib, eval = FALSE}
 # install.packages("remotes")
@@ -209,8 +210,8 @@ Only how you *supply* frames changes with format; the settings behave the same.
 ## Working with a real folder
 
 ```{r folder, eval = FALSE}
-# preview first
-list_tubes("path/to/scans", pattern = ".tiff")        # index | tube | n_frames
+# see the tubes (index | tube | n_frames) and pick a range in one call
+stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
 
 # stitch every tube, one PNG each
 stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output")
@@ -249,7 +250,9 @@ group_regex = NULL             # no grouping -> one mosaic
 
 **Selecting — `select` vs `tubes`.** `select` indexes the sorted *file* list
 *before* grouping; `tubes` selects whole *tubes* by index, name, or
-interactively. Use `list_scan_files()` / `list_tubes()` to see the indices.
+interactively. `tubes = "ask"` prints the available tubes with their indices;
+if you pass an index that is out of range, the error names how many there are
+and what they are called.
 
 ```{r sel, eval = FALSE}
 stitch_root_scans("scans", pattern = ".tiff", select = 1:36)              # first 36 files

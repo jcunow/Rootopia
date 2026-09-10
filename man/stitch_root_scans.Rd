@@ -37,11 +37,10 @@ path. Default \code{"T0\\d{2}"} matches tube labels such as \code{T067}.
 Use \code{NULL} to stitch every file into a single mosaic.}
 
 \item{select}{Optional integer vector of indices into the (sorted) \emph{file}
-list, e.g. \code{1:36}. See \code{\link{list_scan_files}}. \code{NULL} uses
-all files. Applied before grouping.}
+list, e.g. \code{1:36}. \code{NULL} uses all files. Applied before grouping.}
 
 \item{tubes}{Optional \emph{tube} selection: integer indices into the sorted
-tube list (e.g. \code{1:36}, see \code{\link{list_tubes}}), a character
+tube list (e.g. \code{1:36}), a character
 vector of tube names (e.g. \code{c("T037", "T040")}), or the string
 \code{"ask"} to print the tubes and choose a range interactively in one
 call (interactive sessions only). \code{NULL} keeps all tubes.}
@@ -116,13 +115,14 @@ one mosaic per group. Single-frame groups are passed through unchanged.
 Mosaics are returned and, optionally, written to disk as PNGs.
 }
 \details{
-Call \code{\link{list_tubes}} first to see the tube names, then pass a range
-to \code{tubes} (e.g. \code{tubes = 1:36}) to stitch just those tubes.
+Pass \code{tubes = "ask"} to print the tube names and choose a range in the
+same call, or pass a range directly (e.g. \code{tubes = 1:36}) once you know
+which tubes you want.
 }
 \examples{
 \dontrun{
-# 1) See the tubes (names + frame counts)
-list_tubes("path/to/scans", pattern = ".tiff")
+# 1) See the tubes and pick a range in the same call
+stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
 
 # 2) Stitch the first 36 tubes, with a performance report and a preprocess
 res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
@@ -136,6 +136,5 @@ stitch_root_scans("path/to/scans", pattern = ".tiff",
 }
 }
 \seealso{
-\code{\link{list_tubes}}, \code{\link{list_scan_files}},
   \code{\link{stitch_image_sequence}}
 }

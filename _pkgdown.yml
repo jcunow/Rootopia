@@ -54,8 +54,6 @@ reference:
       single large mosaic image, plus helpers to preview what a folder contains."
     contents:
       - stitch_root_scans
-      - list_tubes
-      - list_scan_files
 
       
   - title: "Image loading and preprocessing"

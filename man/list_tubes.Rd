@@ -29,3 +29,4 @@ would build, so you can see the tube names and pick a range to stitch
 \seealso{
 \code{\link{stitch_root_scans}}, \code{\link{list_scan_files}}
 }
+\keyword{internal}

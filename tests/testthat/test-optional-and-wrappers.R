@@ -94,9 +94,12 @@ test_that("the default-on derived metric groups produce values", {
   # total.length.density from a run that reported success.
   skip_if_not_installed("terra")
   data(seg_Oulanka2023_Session01_T067)
+  # Downsampled 4x purely for speed; the assertions are about which columns get
+  # computed, which does not depend on image size.
+  small <- terra::aggregate(terra::rast(seg_Oulanka2023_Session01_T067),
+                            fact = 4, fun = "max")
   dir <- tempfile("seg"); dir.create(dir)
-  terra::writeRaster(terra::rast(seg_Oulanka2023_Session01_T067),
-                     file.path(dir, "T067.tif"), overwrite = TRUE)
+  terra::writeRaster(small, file.path(dir, "T067.tif"), overwrite = TRUE)
   res <- suppressWarnings(root_depth_metrics(
     path_seg            = dir,
     tube_names          = "T067",
@@ -109,6 +112,29 @@ test_that("the default-on derived metric groups produce values", {
   expect_true(all(c("mrd", "total.length.density") %in% names(res)))
   expect_false(all(is.na(res$mrd)))
   expect_false(all(is.na(res$total.length.density)))
+})
+
+
+test_that("rotation_fixed_width controls the rotation-axis crop", {
+  # It used to be hardcoded to 1800, which is wider than any tube in the
+  # bundled data, so the crop silently clamped to the full image every time.
+  skip_if_not_installed("terra")
+  data(seg_Oulanka2023_Session01_T067)
+  # Downsampled 4x: this test runs the whole wrapper twice, and at full size
+  # that alone doubled the runtime of this file. The crop is a row count, so a
+  # smaller image tests it just as well.
+  small <- terra::aggregate(terra::rast(seg_Oulanka2023_Session01_T067),
+                            fact = 4, fun = "max")
+  dir <- tempfile("seg"); dir.create(dir)
+  terra::writeRaster(small, file.path(dir, "T067.tif"), overwrite = TRUE)
+  run <- function(...) suppressWarnings(root_depth_metrics(
+    path_seg = dir, dpi = 150, insertion_angles = 45, depth_interval_cm = 10,
+    calc_diameter_stats = FALSE, verbose = FALSE, ...))
+
+  wide   <- run()                             # default 1800 > image height -> clamps
+  narrow <- run(rotation_fixed_width = 150)   # fits, so it really crops
+
+  expect_lt(sum(narrow$rootpx, na.rm = TRUE), sum(wide$rootpx, na.rm = TRUE))
 })
 
 # stitch_root_scans needs an overlapping scan SEQUENCE, which the bundled

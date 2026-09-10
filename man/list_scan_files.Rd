@@ -30,3 +30,4 @@ as \code{stitch_root_scans}, so the indices line up.
 \seealso{
 \code{\link{list_tubes}}, \code{\link{stitch_root_scans}}
 }
+\keyword{internal}
