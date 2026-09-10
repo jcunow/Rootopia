@@ -82,7 +82,7 @@ rgb <- load_flexible_image(
 For this vignette we use the bundled example flatbed scan so every step below
 runs. It is a 3-band segmentation; layer 2 is the root channel.
 
-```{r}
+```{r fig.alt=c("Segmented flatbed scan, roots in white on black, with the magnified region outlined.", "The same scan magnified to native resolution.")}
 data(flatbed_scan_example)
 # Same call as above, but pointed at the bundled object instead of a file path:
 # select_layer = 2 takes the root channel, scale = "binary" maps it to 0/1.
@@ -116,7 +116,7 @@ are removed by the same size test as anywhere else — being at the border no
 longer protects an artifact. Set `protect_border = TRUE` only if you have real
 roots leaving the frame that you must keep.
 
-```{r}
+```{r fig.alt=c("Segmented scan before cleaning, with speckle artifacts and holes.", "The same scan after cleaning, with speckle and holes removed.")}
 seg_clean <- clean_image(seg,
                          max_hole_size     = 50, # too small = not filling all the holes; too large = inflates area when roots overlap in a circle
                          max_artifact_size = 50, # too small = includes dirt; too large = removes genuine roots
@@ -136,7 +136,7 @@ zoom_plot(seg_clean, main = "After Cleaning",center = c(0.6,0.7), overview = F)
 `skeletonize_image()` reduces roots to single-pixel-wide centerlines. This is
 required for root length (Kimura method) and diameter estimation.
 
-```{r}
+```{r fig.alt="One-pixel-wide skeleton traced through the centre of every root."}
 # `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg_clean, verbose = FALSE)
 
@@ -159,7 +159,7 @@ segmentation: each surviving skeleton pixel is regrown by its local radius
 (from the distance transform of `mask`) and clipped to `mask`, so the spur's
 body is removed from the segmentation too.
 
-```{r}
+```{r fig.alt=c("Skeleton with short spurs still attached.", "The same skeleton after pruning the short terminal spurs.")}
 skl_pruned <- prune_skeleton(skl, mask = seg_clean, min_length = 50, iter = 1)
 zoom_plot(skl_pruned, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = F )
 
@@ -191,7 +191,7 @@ cat("Total root length:", round(rl, 2), "cm\n")
 `root_diameter()` estimates local root width from the distance transform. It
 returns a diameter raster and the raw diameter values.
 
-```{r}
+```{r fig.alt="Histogram of root diameters across the scan."}
 diam_result <- root_diameter(
   seg_clean,
   skeleton_img    = skl,
@@ -401,5 +401,9 @@ write.csv(results, "flatbed_results.csv", row.names = FALSE)
   mapping and per-bin analysis to the individual-function workflow
 - [Batch Processing](BatchProcessing_vignette.html) — wraps depth-resolved
   analysis into a single function call
+- [Image Stitching](Stitching_vignette.html) — combine overlapping frames into
+  one mosaic before analysis
+- [Special Topics](SpecialTopics_vignette.html) — soil colour, texture, halos
+  and turnover
 - [Function reference](../reference/index.html) — full documentation for
   every exported function

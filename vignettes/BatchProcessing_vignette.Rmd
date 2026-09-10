@@ -3,7 +3,6 @@ title: "Batch Processing with root_depth_metrics()"
 author: "Johannes Cunow"
 output:
   rmarkdown::html_vignette: default
-  pdf_document: default
 vignette: >
   %\VignetteIndexEntry{Batch Processing with root_depth_metrics()}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,6 +10,9 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+# Every chunk here operates on a directory of the reader's own images, so none
+# of them can run at build time and eval = FALSE is the default throughout.
+# The other vignettes work on the bundled example rasters and do run.
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE, dpi = 300, fig.width = 9)
 ```
 
@@ -221,7 +223,7 @@ path vs. all higher-order branches, split by
 | `lateral_roots.*` | The same set of statistics for everything else (order >= 2) |
 | `n_root_orders` | Highest branch order found in the image |
 
-```{r order-plot}
+```{r order-plot, fig.alt="Bar chart of lateral root length fraction against depth."}
 library(ggplot2)
 
 ggplot(result, aes(x = depth, y = lateral_root_fraction, color = Tube)) +
@@ -330,7 +332,7 @@ result <- root_depth_metrics(
 
 ## Example: visualizing depth profiles
 
-```{r plot}
+```{r plot, fig.alt=c("Root length density against depth, one line per tube.", "Mean root diameter against depth.", "Mean root depth per tube.")}
 library(ggplot2)
 
 # Root length density by depth, one line per tube

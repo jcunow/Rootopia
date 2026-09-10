@@ -199,7 +199,7 @@ face of the installation, or an installation-angle artifact).
 
 ### Extract a root trait per circumferential slice
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.alt="Segmented scan cropped to the circumferential slices used below."}
 data(seg_Oulanka2023_Session01_T067)
 
 root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binary", select_layer = 2,
@@ -258,7 +258,7 @@ material on one side of the tube than the other. `res$phase` (and
 
 ### Visualize the fit
 
-```{r, eval=TRUE}
+```{r, eval=TRUE, fig.alt=c("Root length density against position around the tube circumference.", "The same distribution drawn on polar axes as a cross-section through the tube.")}
 library(ggplot2)
 
 # Smooth fitted sine over the slice index
@@ -328,11 +328,15 @@ Two extensions are planned and not yet implemented:
 
 ---
 
-## Further reading
+## What to read next
 
-- [Batch Processing](BatchProcessing_vignette.html) — the recommended starting
-  point for processing multiple images
 - [Minirhizotron Scans](MinirhizotronScans_vignettes.html) — step-by-step
   depth analysis workflow
-- [Function reference](../reference/index.html)
-- Source and issues: <https://github.com/jcunow/Rootopia>
+- [Batch Processing](BatchProcessing_vignette.html) — processing multiple
+  images in one call
+- [Image Stitching](Stitching_vignette.html) — combine overlapping frames from
+  one tube before correcting rotation
+- [Special Topics](SpecialTopics_vignette.html) — soil colour, texture, halos
+  and turnover
+- [Function reference](../reference/index.html) — full documentation for
+  every exported function
