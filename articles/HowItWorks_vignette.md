@@ -29,35 +29,236 @@ textbook.
 Most analyses run left to right through this chain. You can enter at any
 point and stop at any point; nothing forces you through the whole thing.
 
-    segmented image
-          |
-          v
-      [1] clean  --------> [7] size traits (length, diameter, pixel counts)
-          |
-          v
-      [2] skeletonise ---> [3] branching order
-          |                      ^
-          |                      | validated by [4]
-          v
-      [5] depth map -----> [8] root angle
-          |
-          v
-      [9] distribution indices
+     stitch  ->  clean  ->  (rotation censor)
+                    |
+                    v
+               skeletonise  ---->  branching order
+                    |
+                    +-------->  size traits (length, diameter, pixels)
+                    |
+                    v
+                depth map  ---->  root angle
+                    |
+                    v
+            distribution indices
 
-Modules \[6\] rotation bias, \[10\] soil & colour, \[11\] turnover and
-\[12\] stitching attach to this chain at specific points and are
-described in their own sections.
+Turnover and soil & colour sit outside this chain: turnover compares two
+images, soil & colour works on the colour channels rather than the root
+shape.
 
 [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
-is not a module. It is a batch wrapper that runs \[3\], \[5\], \[7\],
-\[8\] and \[9\] over a folder of images. Read the modules to understand
-what it reports.
+is not a module. It is a batch wrapper that runs branching order, size
+traits, depth mapping, root angle and the distribution indices over a
+folder of images. Read those sections to understand what it reports.
 
 ------------------------------------------------------------------------
 
-## \[2\] Skeletonisation
+### Preparing images
 
-### What it is for
+Optional steps that happen before any measurement.
+
+#### Stitching
+
+##### What it is for
+
+A tube is often imaged as several overlapping frames. This module joins
+them back into one long mosaic before analysis, so a root crossing a
+frame boundary is measured once rather than twice.
+
+##### The flow
+
+``` r
+
+stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
+res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
+                         out_dir = "out", report = TRUE)
+res$report          # per-join dx, dy, peak, overlap
+```
+
+##### The rules
+
+**Files are grouped into tubes by a pattern in the filename.**
+`group_regex` (default `"T0\\d{2}"`, matching labels like `T067`) pulls
+a tube id from each path; files sharing an id form one sequence, sorted
+by filename.
+
+**Consecutive frames are aligned by FFT phase correlation** on a band
+along the overlapping edge, then composited with a linear feather blend
+across the overlap so the seam does not show.
+
+**Frames are joined along the image width** by default. For sequences
+acquired along the tube, set `direction = "vertical"`; frames are
+transposed internally, stitched the same way, and transposed back.
+
+**Check the `peak` column before trusting a mosaic.** It is the
+normalised correlation height at each join — low values mean the
+alignment was uncertain. Sorting the report by `peak` surfaces the weak
+joins first.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| A tube has only one frame | Passed through unchanged |
+| No file matches `group_regex` | Stops |
+| `tubes` index out of range | Stops, naming how many tubes exist and what they are called |
+| `tubes = "ask"` in a non-interactive session | Stops, suggesting indices or names instead |
+| Poor alignment | Bring `edge_width` closer to the true overlap, raise `vertical_offset` past a header strip, or try `preprocess = "grad"` for uneven lighting |
+
+#### Image input and cleaning
+
+##### What it is for
+
+Getting any image into a form the rest of the package can use, and
+removing the speckles and pinholes that segmentation leaves behind. Both
+matter more than they sound: a hole in a root becomes a fake loop in the
+skeleton, and a speck becomes a fake root.
+
+##### The flow
+
+``` r
+
+img     <- load_flexible_image(path, output_format = "spatrast",
+                               scale = "binary", select_layer = 2)
+cleaned <- clean_image(img, max_hole_size = 5, max_artifact_size = 5)
+report_image_components(img)      # how big are the specks, before deciding
+```
+
+[`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
+is called internally by nearly every other function, so you rarely call
+it yourself except when loading from a file path.
+
+##### The rules
+
+**One entry point, many input types.** File paths, `SpatRaster`,
+`RasterBrick`, matrices, arrays, `cimg` and magick images all converge
+to one internal representation. `scale` controls the value range:
+`"binary"` maps to 0/1, `"to_01"` divides by 255, `"to_255"` multiplies,
+`"none"` leaves values alone. Conversions use fixed factors, never a
+per-image maximum, so two images stay comparable.
+
+**A hole is not the same as a gap.**
+[`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+fills a background region only if it is fully enclosed — a background
+region touching the image border is the outside world, not a hole, and
+is never filled regardless of size.
+
+**An artifact is a small connected foreground region.** By default
+*every* foreground region is a candidate, including ones touching the
+border. Set `protect_border = TRUE` to exempt border-touching regions,
+on the assumption that they are roots leaving the frame rather than
+specks.
+
+**Size is in pixels**, counted as connected components. Use
+[`report_image_components()`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
+first to see the actual size distribution rather than guessing a
+threshold.
+
+**Under the hood**
+
+Connected-component labelling and the optional edge smoothing are
+standard morphology, done by `imager` (`label`, `dilate`, `erode`).
+Rootopia adds the hole-versus-outside rule and the size thresholds; it
+does not reimplement the morphology. See
+[`?clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+for the kernel options.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| Image has no cells | Stops |
+| `max_hole_size` / `max_artifact_size` left `NULL` | That cleaning step is skipped entirely |
+| Non-binary input to [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md) | Binarised on load |
+| Unsupported file extension | Stops, listing the supported ones |
+
+#### Rotation bias
+
+##### What it is for
+
+A minirhizotron tube can rotate slightly between sessions, and the
+scanner does not cover the full 360°. Left alone, this means roots near
+the edge of the scan are visible in one session and not the next — a
+systematic bias that looks like root growth or death. This module
+measures the rotation and crops it away.
+
+The same slicing machinery also answers a different question: are roots
+distributed evenly around the tube, or concentrated on one side?
+
+##### The flow
+
+``` r
+
+r0    <- estimate_rotation_center(img)                 # once per tube
+shift <- estimate_rotation_shift(img1, img2,           # per session pair
+                                 cor_type = "phase")
+kept  <- rotation_censor(img, center_offset = r0,
+                         fixed_width = 800, fixed_rotation = TRUE)
+
+slices <- slice_rotation(img, n = 48)                  # circumferential zones
+```
+
+##### The rules
+
+**Finding the top of the tube.**
+[`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
+looks for the white adhesive tape on the tube’s upper side. It builds a
+bright reference band from a high quantile of the image, clusters the
+result, and picks the cluster whose brightness exceeds `tape_brightness`
+relative to the image. It returns a pixel **row** index. Tube geometry
+is fixed, so this is done once per tube, not once per session.
+
+**Measuring the shift.**
+[`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
+compares two sessions by correlation over a shared depth window — either
+cross-correlation (`"ccf"`) or phase correlation (`"phase"`, more robust
+to brightness differences). It returns the depth-axis and rotation-axis
+pixel offsets plus a peak height you can use as a confidence score.
+
+**Cropping.**
+[`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
+keeps a window of rows and discards the rest. Two modes:
+
+- `fixed_rotation = FALSE` cuts proportionally to the measured offset,
+  so the output width varies between images.
+- `fixed_rotation = TRUE` centres a window of exactly `fixed_width` rows
+  on a given row. Use this when comparing multiple sessions, because
+  equal width is what makes counts comparable.
+
+`center_offset` is read as a fraction of image height when between 0 and
+1, and as an absolute row number when above 1.
+
+**Slicing the circumference.** `slice_rotation(img, n)` cuts the image
+into `n` equal bands of rows and returns them as a list, in rotation
+order. Feeding a per-slice trait into
+[`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
+(see Distribution indices) then tests whether roots favour one side of
+the tube.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| `fixed_width` wider than the image allows | A message reports the maximum symmetric width and the crop is clamped to the image bounds — the output is then *not* the width you asked for |
+| Cut would remove the whole image | Stops |
+| Resulting window is empty | Warning, returns `NULL` |
+| `n` greater than the number of rows | [`slice_rotation()`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md) stops |
+| Clustering fails in [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md) | Falls back to a direct brightness threshold |
+
+> **Note on tube geometry.** Inner and outer tube diameters differ, so
+> observed root length slightly underestimates true length in soil. No
+> function here corrects for that; apply a resize coefficient yourself
+> if you need it.
+
+------------------------------------------------------------------------
+
+### Core measurements
+
+The shape of the root system, from a segmented image.
+
+#### Skeletonisation
+
+##### What it is for
 
 A segmented root image is a solid shape. To measure architecture — where
 roots branch, how they connect, which is a parent and which is a lateral
@@ -65,7 +266,7 @@ roots branch, how they connect, which is a parent and which is a lateral
 each root down to a line one pixel wide that runs along its middle,
 keeping the connections intact.
 
-### The flow
+##### The flow
 
 ``` r
 
@@ -76,10 +277,10 @@ clean  <- prune_skeleton(skel, mask,         # optional: remove short spurs
 ```
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
-is the entry point for everything downstream. The branching module
-(\[3\]) will call it for you if you pass a mask instead of a skeleton.
+is the entry point for everything downstream. The branching module will
+call it for you if you pass a mask instead of a skeleton.
 
-### The rules
+##### The rules
 
 **Thinning.** Pixels are deleted from the outside inward, repeatedly,
 until nothing more can go. Whether a pixel may be deleted depends only
@@ -133,11 +334,9 @@ gone.
 | Thinning does not converge | Stops after `max_iter` (default 200) passes |
 | [`prune_skeleton()`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md) given no mask | Runs, but diameters collapse to ~1 px, so `min_diameter` is meaningless |
 
-------------------------------------------------------------------------
+#### Branching order
 
-## \[3\] Branching order
-
-### What it is for
+##### What it is for
 
 This module answers architectural questions: how many roots are there,
 which are main axes and which are laterals, how often do they branch,
@@ -148,7 +347,7 @@ segment.
 This is the most involved module in the package, and the one where a
 misunderstanding is most likely to produce a number you cannot explain.
 
-### The flow
+##### The flow
 
 One call does everything:
 
@@ -194,7 +393,7 @@ and, if you want the segment table in pixels without the unit conversion
 and summary,
 [`root_graph_pipeline()`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md).
 
-### The rules
+##### The rules
 
 **Building the network.** Every skeleton pixel is classified by how many
 neighbours it has: one means a tip, two means an ordinary line pixel,
@@ -293,355 +492,14 @@ with it.
 | `class_map` pixel counts below the skeleton | Expected: merged junction interiors belong to no segment, leaving one unpainted pixel per branch point. Read lengths from `res$edges$length` |
 | Pruning enabled | Thresholds use the same length definition the table reports, stub included |
 
-------------------------------------------------------------------------
+#### Size traits
 
-## \[5\] Depth mapping
-
-### What it is for
-
-A minirhizotron tube goes into the soil at an angle, and the scanner
-unrolls its curved surface into a flat rectangle. A pixel’s position in
-that rectangle therefore does not equal its depth in the soil. This
-module builds a map that gives every pixel its true soil depth in
-centimetres, so traits can be reported per depth interval rather than
-per pixel row.
-
-### The flow
-
-``` r
-
-dmap  <- create_depthmap(img, tilt = 45, dpi = 300,
-                         tube_thicc = 7, start_soil = 0)
-bins  <- binning(dmap, nn = 5)               # continuous cm -> 5 cm bins
-slice <- depth_zoning(img, bins, depth = 20) # keep one bin
-```
-
-From there, two patterns cover everything downstream:
-
-- **Whole profile at once** with
-  [`terra::zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
-  — for traits that reduce to a per-zone sum or mean, such as pixel
-  counts.
-- **One slice at a time** with
-  [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
-  — for traits whose function needs a whole image, such as root length.
-  Compute for one depth, then loop.
-
-### The rules
-
-**Two axes, two corrections.** Depth increases along the image **width**
-(columns). The tube’s curvature varies along the image **height**
-(rows). The map is built in the image’s own orientation, so the result
-lines up with the input cell for cell — no transposing needed
-downstream.
-
-**Depth along the tube.** Each column is converted from pixels to
-centimetres by `2.54 / dpi`, then multiplied by `sin(tilt)`, because a
-tube inserted at an angle covers less vertical depth than its length.
-Finally `start_soil` is subtracted so that zero sits at the soil surface
-rather than at the top of the image.
-
-**Curvature across the tube.** With `sinoid = TRUE`, a cosine wave
-spanning one full tube circumference is added across the rows: pixels
-imaged from the upper side of the tube are nearer the surface than those
-from the lower side. Its amplitude is the tilted tube diameter, and
-`center_offset` rotates the wave to match where the top of your tube
-actually sits. With `sinoid = FALSE` this term is zero — the right
-choice for flat rhizotron windows.
-
-**Masking.** Any pixel marked `1` in the optional `mask` becomes `NA` in
-the depth map, which is how tape and other foreign objects are excluded
-from every depth-resolved statistic.
-
-**Edge cases**
-
-| Situation | What happens |
-|----|----|
-| `tilt` outside 0–90°, exclusive | Stops. A tube at 0° or 90° has no defined depth gradient here |
-| `center_offset` outside 0–1 | Stops |
-| Image 1×1 or smaller | Stops |
-| Mask dimensions differ from image | Stops |
-| Image taller than one tube circumference | Stops with “Wrong Tube Diameter” — the sine wave cannot cover the image, which means `tube_thicc` or `dpi` is wrong |
-| No mask supplied | An all-zero mask is used, so nothing is excluded |
-
-------------------------------------------------------------------------
-
-## \[8\] Root angle
-
-### What it is for
-
-[`deep_drive()`](https://jcunow.github.io/Rootopia/reference/deep_drive.md)
-asks a single question: of all the root pixels in an image, what
-fraction are growing in the direction that would take them deeper
-fastest? It returns one number between 0 and 1 — a compact measure of
-how directly a root system dives rather than spreading sideways.
-
-### The flow
-
-``` r
-
-dd <- deep_drive(DepthMap = dmap, RootMap = skel)          # just the number
-dd <- deep_drive(DepthMap = dmap, RootMap = skel,
-                 return = "all")                            # plus the maps
-```
-
-You can supply your own `AngleMap` instead of `RootMap` if you have
-measured growth directions by another route.
-
-### The rules
-
-**Two direction maps are compared, pixel by pixel.**
-
-1.  The **actual** direction each root pixel is heading. When you supply
-    a `RootMap`, this is derived by running a standard D8 flow-direction
-    algorithm (`terra::terrain(v = "flowdir")`) over the depth map
-    restricted to root pixels — water flowing downhill is the same
-    problem as a root heading deeper. The eight D8 codes are relabelled
-    as compass bearings, with 0° pointing up the image and angles
-    increasing clockwise.
-
-2.  The **optimal** direction: for each pixel, which of its eight
-    neighbours lies deepest. This is computed directly from the depth
-    map, and diagonal neighbours are divided by √2 so that a diagonal
-    step is not unfairly favoured over an orthogonal one.
-
-**The score** is simply the count of pixels where the two agree exactly,
-divided by the number of root pixels with a defined direction. There is
-no partial credit: a pixel heading 45° away from optimal counts the same
-as one heading 180° away.
-
-**Edge cases**
-
-| Situation | What happens |
-|----|----|
-| Neither `AngleMap` nor `RootMap` supplied | Stops |
-| Depth map is entirely `NA` | Stops |
-| No root pixels with a defined direction | Warning, returns `NA` |
-| D8 code 0 (a pixel with no downhill neighbour) | Becomes `NA` and is excluded from both counts |
-| Depth values negative | The absolute value is used, so sign conventions do not matter |
-
-------------------------------------------------------------------------
-
-## \[1\] Image input and cleaning
-
-### What it is for
-
-Getting any image into a form the rest of the package can use, and
-removing the speckles and pinholes that segmentation leaves behind. Both
-matter more than they sound: a hole in a root becomes a fake loop in the
-skeleton, and a speck becomes a fake root.
-
-### The flow
-
-``` r
-
-img     <- load_flexible_image(path, output_format = "spatrast",
-                               scale = "binary", select_layer = 2)
-cleaned <- clean_image(img, max_hole_size = 5, max_artifact_size = 5)
-report_image_components(img)      # how big are the specks, before deciding
-```
-
-[`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
-is called internally by nearly every other function, so you rarely call
-it yourself except when loading from a file path.
-
-### The rules
-
-**One entry point, many input types.** File paths, `SpatRaster`,
-`RasterBrick`, matrices, arrays, `cimg` and magick images all converge
-to one internal representation. `scale` controls the value range:
-`"binary"` maps to 0/1, `"to_01"` divides by 255, `"to_255"` multiplies,
-`"none"` leaves values alone. Conversions use fixed factors, never a
-per-image maximum, so two images stay comparable.
-
-**A hole is not the same as a gap.**
-[`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
-fills a background region only if it is fully enclosed — a background
-region touching the image border is the outside world, not a hole, and
-is never filled regardless of size.
-
-**An artifact is a small connected foreground region.** By default
-*every* foreground region is a candidate, including ones touching the
-border. Set `protect_border = TRUE` to exempt border-touching regions,
-on the assumption that they are roots leaving the frame rather than
-specks.
-
-**Size is in pixels**, counted as connected components. Use
-[`report_image_components()`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
-first to see the actual size distribution rather than guessing a
-threshold.
-
-**Under the hood**
-
-Connected-component labelling and the optional edge smoothing are
-standard morphology, done by `imager` (`label`, `dilate`, `erode`).
-Rootopia adds the hole-versus-outside rule and the size thresholds; it
-does not reimplement the morphology. See
-[`?clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
-for the kernel options.
-
-**Edge cases**
-
-| Situation | What happens |
-|----|----|
-| Image has no cells | Stops |
-| `max_hole_size` / `max_artifact_size` left `NULL` | That cleaning step is skipped entirely |
-| Non-binary input to [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md) | Binarised on load |
-| Unsupported file extension | Stops, listing the supported ones |
-
-------------------------------------------------------------------------
-
-## \[4\] Validation
-
-### What it is for
-
-Checking that the branching module is right. Synthetic root images are
-drawn with known length, width and topology, then put through the whole
-pipeline; the result is scored against what was drawn. This is how you
-know a change to the tracing or ordering code did not quietly shift a
-number.
-
-### The flow
-
-``` r
-
-ph <- root_phantom("comb", size = 400)     # image + ground truth
-v  <- validate_branching("comb", from = "skeleton")
-v[, c("metric", "expected", "observed", "pass")]
-attr(v, "passed")
-```
-
-Or run the whole matrix from the shell:
-
-    Rscript inst/validation/validate_branching.R
-
-which scores five designs by two routes and exits non-zero if anything
-fails.
-
-### The rules
-
-**Five designs**, each stressing something different: `comb` (laterals
-on one axis), `herringbone`, `hierarchical` (nested branching), `cross`
-(two roots crossing) and `fork`.
-
-**Two routes, answering two questions.** `from = "skeleton"` feeds the
-exact one-pixel centre line, so the score isolates the graph: tracing,
-junction handling, crossing resolution, ordering, length integration.
-`from = "mask"` skeletonises the filled image first and therefore also
-carries the thinning error — chiefly the erosion of about one root
-radius at every tip. Tolerances differ accordingly: 3% on length for the
-skeleton route, 6% for the mask route.
-
-**Counts must be exact.** Tips, branch points, root count, maximum order
-and the number of unordered segments are scored with zero tolerance.
-Lengths and diameters are scored as relative error; diameters allow 10%.
-
-**Diameter ground truth uses the package’s own convention.** The
-phantom’s expected diameter is measured by running a distance transform
-over the phantom it just drew, rather than from a formula, because a 45°
-stroke and a rounded tip genuinely differ from `2r + 1`.
-
-**Why `fork` is scored differently**
-
-In a symmetric fork, the two candidate continuation arms are equally
-straight and equally thick, so the continuation rule genuinely ties and
-no answer is more correct than the other.
-[`root_phantom()`](https://jcunow.github.io/Rootopia/reference/root_phantom.md)
-marks this design `continuation_defined = FALSE`, and
-[`validate_branching()`](https://jcunow.github.io/Rootopia/reference/validate_branching.md)
-then omits every per-root metric for it — root count, maximum order, and
-the per-order length and diameter rows. Total length, tip count and
-branch-point count are still scored.
-
-------------------------------------------------------------------------
-
-## \[6\] Rotation bias
-
-### What it is for
-
-A minirhizotron tube can rotate slightly between sessions, and the
-scanner does not cover the full 360°. Left alone, this means roots near
-the edge of the scan are visible in one session and not the next — a
-systematic bias that looks like root growth or death. This module
-measures the rotation and crops it away.
-
-The same slicing machinery also answers a different question: are roots
-distributed evenly around the tube, or concentrated on one side?
-
-### The flow
-
-``` r
-
-r0    <- estimate_rotation_center(img)                 # once per tube
-shift <- estimate_rotation_shift(img1, img2,           # per session pair
-                                 cor_type = "phase")
-kept  <- rotation_censor(img, center_offset = r0,
-                         fixed_width = 800, fixed_rotation = TRUE)
-
-slices <- slice_rotation(img, n = 48)                  # circumferential zones
-```
-
-### The rules
-
-**Finding the top of the tube.**
-[`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
-looks for the white adhesive tape on the tube’s upper side. It builds a
-bright reference band from a high quantile of the image, clusters the
-result, and picks the cluster whose brightness exceeds `tape_brightness`
-relative to the image. It returns a pixel **row** index. Tube geometry
-is fixed, so this is done once per tube, not once per session.
-
-**Measuring the shift.**
-[`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
-compares two sessions by correlation over a shared depth window — either
-cross-correlation (`"ccf"`) or phase correlation (`"phase"`, more robust
-to brightness differences). It returns the depth-axis and rotation-axis
-pixel offsets plus a peak height you can use as a confidence score.
-
-**Cropping.**
-[`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
-keeps a window of rows and discards the rest. Two modes:
-
-- `fixed_rotation = FALSE` cuts proportionally to the measured offset,
-  so the output width varies between images.
-- `fixed_rotation = TRUE` centres a window of exactly `fixed_width` rows
-  on a given row. Use this when comparing multiple sessions, because
-  equal width is what makes counts comparable.
-
-`center_offset` is read as a fraction of image height when between 0 and
-1, and as an absolute row number when above 1.
-
-**Slicing the circumference.** `slice_rotation(img, n)` cuts the image
-into `n` equal bands of rows and returns them as a list, in rotation
-order. Feeding a per-slice trait into
-[`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
-(module \[9\]) then tests whether roots favour one side of the tube.
-
-**Edge cases**
-
-| Situation | What happens |
-|----|----|
-| `fixed_width` wider than the image allows | A message reports the maximum symmetric width and the crop is clamped to the image bounds — the output is then *not* the width you asked for |
-| Cut would remove the whole image | Stops |
-| Resulting window is empty | Warning, returns `NULL` |
-| `n` greater than the number of rows | [`slice_rotation()`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md) stops |
-| Clustering fails in [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md) | Falls back to a direct brightness threshold |
-
-> **Note on tube geometry.** Inner and outer tube diameters differ, so
-> observed root length slightly underestimates true length in soil. No
-> function here corrects for that; apply a resize coefficient yourself
-> if you need it.
-
-------------------------------------------------------------------------
-
-## \[7\] Size traits
-
-### What it is for
+##### What it is for
 
 The three quantities most analyses end up reporting: how much root there
 is (pixels), how long it is (cm), and how thick it is (cm).
 
-### The flow
+##### The flow
 
 ``` r
 
@@ -655,7 +513,7 @@ Note which input each wants: **length from the skeleton, diameter from
 the solid mask.** Swapping them silently gives wrong answers rather than
 an error.
 
-### The rules
+##### The rules
 
 **Length is estimated, not counted.** Counting skeleton pixels
 underestimates length, because a diagonal step covers √2 pixels of
@@ -708,15 +566,142 @@ which does the actual work; see that package for what each metric means.
 
 ------------------------------------------------------------------------
 
-## \[9\] Distribution indices
+### Depth-resolved analysis
 
-### What it is for
+Placing those measurements on a real depth axis.
+
+#### Depth mapping
+
+##### What it is for
+
+A minirhizotron tube goes into the soil at an angle, and the scanner
+unrolls its curved surface into a flat rectangle. A pixel’s position in
+that rectangle therefore does not equal its depth in the soil. This
+module builds a map that gives every pixel its true soil depth in
+centimetres, so traits can be reported per depth interval rather than
+per pixel row.
+
+##### The flow
+
+``` r
+
+dmap  <- create_depthmap(img, tilt = 45, dpi = 300,
+                         tube_thicc = 7, start_soil = 0)
+bins  <- binning(dmap, nn = 5)               # continuous cm -> 5 cm bins
+slice <- depth_zoning(img, bins, depth = 20) # keep one bin
+```
+
+From there, two patterns cover everything downstream:
+
+- **Whole profile at once** with
+  [`terra::zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
+  — for traits that reduce to a per-zone sum or mean, such as pixel
+  counts.
+- **One slice at a time** with
+  [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
+  — for traits whose function needs a whole image, such as root length.
+  Compute for one depth, then loop.
+
+##### The rules
+
+**Two axes, two corrections.** Depth increases along the image **width**
+(columns). The tube’s curvature varies along the image **height**
+(rows). The map is built in the image’s own orientation, so the result
+lines up with the input cell for cell — no transposing needed
+downstream.
+
+**Depth along the tube.** Each column is converted from pixels to
+centimetres by `2.54 / dpi`, then multiplied by `sin(tilt)`, because a
+tube inserted at an angle covers less vertical depth than its length.
+Finally `start_soil` is subtracted so that zero sits at the soil surface
+rather than at the top of the image.
+
+**Curvature across the tube.** With `sinoid = TRUE`, a cosine wave
+spanning one full tube circumference is added across the rows: pixels
+imaged from the upper side of the tube are nearer the surface than those
+from the lower side. Its amplitude is the tilted tube diameter, and
+`center_offset` rotates the wave to match where the top of your tube
+actually sits. With `sinoid = FALSE` this term is zero — the right
+choice for flat rhizotron windows.
+
+**Masking.** Any pixel marked `1` in the optional `mask` becomes `NA` in
+the depth map, which is how tape and other foreign objects are excluded
+from every depth-resolved statistic.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| `tilt` outside 0–90°, exclusive | Stops. A tube at 0° or 90° has no defined depth gradient here |
+| `center_offset` outside 0–1 | Stops |
+| Image 1×1 or smaller | Stops |
+| Mask dimensions differ from image | Stops |
+| Image taller than one tube circumference | Stops with “Wrong Tube Diameter” — the sine wave cannot cover the image, which means `tube_thicc` or `dpi` is wrong |
+| No mask supplied | An all-zero mask is used, so nothing is excluded |
+
+#### Root angle
+
+##### What it is for
+
+[`deep_drive()`](https://jcunow.github.io/Rootopia/reference/deep_drive.md)
+asks a single question: of all the root pixels in an image, what
+fraction are growing in the direction that would take them deeper
+fastest? It returns one number between 0 and 1 — a compact measure of
+how directly a root system dives rather than spreading sideways.
+
+##### The flow
+
+``` r
+
+dd <- deep_drive(DepthMap = dmap, RootMap = skel)          # just the number
+dd <- deep_drive(DepthMap = dmap, RootMap = skel,
+                 return = "all")                            # plus the maps
+```
+
+You can supply your own `AngleMap` instead of `RootMap` if you have
+measured growth directions by another route.
+
+##### The rules
+
+**Two direction maps are compared, pixel by pixel.**
+
+1.  The **actual** direction each root pixel is heading. When you supply
+    a `RootMap`, this is derived by running a standard D8 flow-direction
+    algorithm (`terra::terrain(v = "flowdir")`) over the depth map
+    restricted to root pixels — water flowing downhill is the same
+    problem as a root heading deeper. The eight D8 codes are relabelled
+    as compass bearings, with 0° pointing up the image and angles
+    increasing clockwise.
+
+2.  The **optimal** direction: for each pixel, which of its eight
+    neighbours lies deepest. This is computed directly from the depth
+    map, and diagonal neighbours are divided by √2 so that a diagonal
+    step is not unfairly favoured over an orthogonal one.
+
+**The score** is simply the count of pixels where the two agree exactly,
+divided by the number of root pixels with a defined direction. There is
+no partial credit: a pixel heading 45° away from optimal counts the same
+as one heading 180° away.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| Neither `AngleMap` nor `RootMap` supplied | Stops |
+| Depth map is entirely `NA` | Stops |
+| No root pixels with a defined direction | Warning, returns `NA` |
+| D8 code 0 (a pixel with no downhill neighbour) | Becomes `NA` and is excluded from both counts |
+| Depth values negative | The absolute value is used, so sign conventions do not matter |
+
+#### Distribution indices
+
+##### What it is for
 
 Summarising *where* roots are rather than how many there are: how deep
 the centre of mass sits, whether two profiles differ, whether there is a
 repeating pattern around the tube.
 
-### The flow
+##### The flow
 
 These are ordinary numeric functions — they take vectors, not images, so
 they come after a depth profile has been built.
@@ -732,7 +717,7 @@ circular_mean(angles)
 modal_peaks(diameters)
 ```
 
-### The rules
+##### The rules
 
 **Mean rooting depth** is the depth average weighted by root amount:
 `sum(depth × roots) / sum(roots)`. One number, in the unit of `depth`.
@@ -780,15 +765,78 @@ model-based clustering via `mclust`.
 
 ------------------------------------------------------------------------
 
-## \[10\] Soil and colour
+### Specialised
 
-### What it is for
+Questions that need a second image or the colour channels.
+
+#### Turnover
+
+##### What it is for
+
+How much root was produced, how much died, and how much stayed, between
+two points in time.
+
+##### The flow
+
+Two methods, for two kinds of input:
+
+``` r
+
+# two separate sessions
+root_turnover(img1, img2, method = "tc", tc_method = "kimura",
+              unit = "cm", dpi = 300)
+
+# one multi-layer RootDetector image
+root_turnover(dpc_img, method = "dpc")
+```
+
+##### The rules
+
+**Temporal comparison (`"tc"`)** measures root amount in each image and
+takes the difference. `tc_method` chooses the measure: `"kimura"` (root
+length) or `"rootpx"` (pixel count). It reports standing root at each
+time point, production as the difference, and new root as a percentage
+of each time point. This method sees only the *net* change — root that
+grew and died between the two scans is invisible.
+
+**Decay–production–constant (`"dpc"`)** decomposes a single three-layer
+image in which a segmentation tool has already colour-coded each pixel
+as produced, decayed, or unchanged. This resolves gross change rather
+than net.
+
+The three layers are separated by thresholding each against the
+unchanged layer at `blur_capture` (default 0.95) of its maximum, which
+tolerates the soft edges that image compression leaves. A tape layer is
+identified and removed first.
+
+**Two ratio conventions**, and the choice changes the numbers:
+
+- `include_virtualroots = FALSE` (default) — new growth is production
+  divided by production plus constant; decay is decay divided by decay
+  plus constant.
+- `include_virtualroots = TRUE` — both are divided by the total of all
+  three, so they share one denominator and count roots present at *any*
+  time point.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| Fewer than 3 layers for `"dpc"` | Stops |
+| `product_layer` equals `decay_layer` | Stops |
+| Any layer entirely `NA` | Warning, returns `NULL` |
+| All three classes empty | Warning, ratios returned as `NA` |
+| `im_return = TRUE` | Returns the four classified rasters instead of the numbers, for visual checking |
+
+#### Soil and colour
+
+##### What it is for
 
 Everything that uses colour rather than shape: classifying what each
 pixel is made of, summarising tube colour, quantifying surface texture,
 and building a rhizosphere zone around roots.
 
-### The flow
+##### The flow
 
 ``` r
 
@@ -802,7 +850,7 @@ analyze_soil_texture(rgb_img)                        # GLCM texture
 halo <- create_root_buffer(seg, width = 3, halo_only = TRUE)
 ```
 
-### The rules
+##### The rules
 
 **Classification is nearest-centroid in CIE LAB.** Each pixel is
 converted from RGB to LAB — a colour space where Euclidean distance
@@ -858,129 +906,47 @@ both sites in the source.
 
 ------------------------------------------------------------------------
 
-## \[11\] Turnover
+### How the branching numbers are checked
 
-### What it is for
+On a real scan, nothing is known in advance, so a wrong length looks
+exactly like a right one. The test suite therefore draws synthetic root
+images whose length, width and topology are prescribed, runs the whole
+branching pipeline over them, and scores the output against what was
+drawn.
 
-How much root was produced, how much died, and how much stayed, between
-two points in time.
+Five designs are used, each stressing something different: laterals on
+one axis, 45° laterals, three generations of nested branching, two roots
+crossing without touching, and a symmetric fork. Each is scored twice.
+Feeding the exact one-pixel centre line isolates the graph — tracing,
+junction handling, crossing resolution, ordering, length integration.
+Feeding the filled image instead also carries the thinning error,
+chiefly the erosion of about one root radius at every tip, so it gets
+more room: 6% on length against 3% for the centre-line route. Tip,
+branch-point and root counts must be exact. Diameters allow 10%, scored
+against the package’s own `2 × EDT` convention rather than a formula.
 
-### The flow
+The fork is scored on totals only. Its two arms are equally straight and
+equally thick, so which one continues the parent is genuinely undefined,
+and a per-root answer would be arbitrary rather than wrong.
 
-Two methods, for two kinds of input:
-
-``` r
-
-# two separate sessions
-root_turnover(img1, img2, method = "tc", tc_method = "kimura",
-              unit = "cm", dpi = 300)
-
-# one multi-layer RootDetector image
-root_turnover(dpc_img, method = "dpc")
-```
-
-### The rules
-
-**Temporal comparison (`"tc"`)** measures root amount in each image and
-takes the difference. `tc_method` chooses the measure: `"kimura"` (root
-length) or `"rootpx"` (pixel count). It reports standing root at each
-time point, production as the difference, and new root as a percentage
-of each time point. This method sees only the *net* change — root that
-grew and died between the two scans is invisible.
-
-**Decay–production–constant (`"dpc"`)** decomposes a single three-layer
-image in which a segmentation tool has already colour-coded each pixel
-as produced, decayed, or unchanged. This resolves gross change rather
-than net.
-
-The three layers are separated by thresholding each against the
-unchanged layer at `blur_capture` (default 0.95) of its maximum, which
-tolerates the soft edges that image compression leaves. A tape layer is
-identified and removed first.
-
-**Two ratio conventions**, and the choice changes the numbers:
-
-- `include_virtualroots = FALSE` (default) — new growth is production
-  divided by production plus constant; decay is decay divided by decay
-  plus constant.
-- `include_virtualroots = TRUE` — both are divided by the total of all
-  three, so they share one denominator and count roots present at *any*
-  time point.
-
-**Edge cases**
-
-| Situation | What happens |
-|----|----|
-| Fewer than 3 layers for `"dpc"` | Stops |
-| `product_layer` equals `decay_layer` | Stops |
-| Any layer entirely `NA` | Warning, returns `NULL` |
-| All three classes empty | Warning, ratios returned as `NA` |
-| `im_return = TRUE` | Returns the four classified rasters instead of the numbers, for visual checking |
+There is nothing here for you to call: `devtools::test()` re-runs all of
+it, and a change that shifts a branching number fails a test instead of
+quietly landing in your results.
 
 ------------------------------------------------------------------------
 
-## \[12\] Stitching
-
-### What it is for
-
-A tube is often imaged as several overlapping frames. This module joins
-them back into one long mosaic before analysis, so a root crossing a
-frame boundary is measured once rather than twice.
-
-### The flow
-
-``` r
-
-stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
-res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
-                         out_dir = "out", report = TRUE)
-res$report          # per-join dx, dy, peak, overlap
-```
-
-### The rules
-
-**Files are grouped into tubes by a pattern in the filename.**
-`group_regex` (default `"T0\\d{2}"`, matching labels like `T067`) pulls
-a tube id from each path; files sharing an id form one sequence, sorted
-by filename.
-
-**Consecutive frames are aligned by FFT phase correlation** on a band
-along the overlapping edge, then composited with a linear feather blend
-across the overlap so the seam does not show.
-
-**Frames are joined along the image width** by default. For sequences
-acquired along the tube, set `direction = "vertical"`; frames are
-transposed internally, stitched the same way, and transposed back.
-
-**Check the `peak` column before trusting a mosaic.** It is the
-normalised correlation height at each join — low values mean the
-alignment was uncertain. Sorting the report by `peak` surfaces the weak
-joins first.
-
-**Edge cases**
-
-| Situation | What happens |
-|----|----|
-| A tube has only one frame | Passed through unchanged |
-| No file matches `group_regex` | Stops |
-| `tubes` index out of range | Stops, naming how many tubes exist and what they are called |
-| `tubes = "ask"` in a non-interactive session | Stops, suggesting indices or names instead |
-| Poor alignment | Bring `edge_width` closer to the true overlap, raise `vertical_offset` past a header strip, or try `preprocess = "grad"` for uneven lighting |
-
-------------------------------------------------------------------------
-
-## Where the numbers can surprise you
+### Where the numbers can surprise you
 
 A short index of the rules most likely to explain an unexpected result.
 
 | Symptom | Rule responsible | Module |
 |----|----|----|
-| Diameters are all about 1 px | A skeleton was passed where a mask was needed | \[3\], \[7\] |
-| Depth bins sum to less than the whole image | Kimura length estimators are not additive | \[7\] |
-| `class_map` has fewer pixels than the skeleton | Merged junction interiors belong to no segment | \[3\] |
-| A symmetric fork is ordered arbitrarily | The continuation score genuinely ties | \[3\] |
-| Tip and branch-point counts disagree with the graph | A four-way crossing is one branch point, not two | \[2\] |
-| Rotation crop is not the width requested | `fixed_width` did not fit and was clamped | \[6\] |
-| Many pixels come back unclassified | Every centroid was beyond its `MAX_DIST` | \[10\] |
-| Turnover ratios differ between runs | `include_virtualroots` changes the denominator | \[11\] |
-| [`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md) output will not overlay | Its rasters are rebuilt without the input’s extent | \[2\] |
+| Diameters are all about 1 px | A skeleton was passed where a mask was needed | Branching order, Size traits |
+| Depth bins sum to less than the whole image | Kimura length estimators are not additive | Size traits |
+| `class_map` has fewer pixels than the skeleton | Merged junction interiors belong to no segment | Branching order |
+| A symmetric fork is ordered arbitrarily | The continuation score genuinely ties | Branching order |
+| Tip and branch-point counts disagree with the graph | A four-way crossing is one branch point, not two | Skeletonisation |
+| Rotation crop is not the width requested | `fixed_width` did not fit and was clamped | Rotation bias |
+| Many pixels come back unclassified | Every centroid was beyond its `MAX_DIST` | Soil and colour |
+| Turnover ratios differ between runs | `include_virtualroots` changes the denominator | Turnover |
+| [`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md) output will not overlay | Its rasters are rebuilt without the input’s extent | Skeletonisation |

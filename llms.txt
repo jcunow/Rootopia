@@ -188,16 +188,6 @@ order, and summarise root architecture by order class.
 - [`plot_order_window()`](https://jcunow.github.io/Rootopia/reference/plot_order_window.md)
   : Native-resolution validation of a sub-window
 
-## Validation
-
-Synthetic root images with known length, width and topology, and a
-scorecard that checks the branching pipeline against them.
-
-- [`root_phantom()`](https://jcunow.github.io/Rootopia/reference/root_phantom.md)
-  : Synthetic root image with known geometry
-- [`validate_branching()`](https://jcunow.github.io/Rootopia/reference/validate_branching.md)
-  : Score the branching pipeline against a phantom with known properties
-
 ## Root turnover
 
 Estimate root production, decay, and turnover from temporal image
