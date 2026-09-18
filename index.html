@@ -13,7 +13,8 @@
 <link href="deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Rootopia: Extract Root Traits from Images">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><link href="extra.css" rel="stylesheet">
+<meta property="og:title" content="Rootopia: Extract Root Traits from Images">
 <meta name="description" content="R tools for extracting root traits from flatbed and minirhizotron images">
 <meta property="og:description" content="R tools for extracting root traits from flatbed and minirhizotron images">
 </head>
@@ -45,6 +46,8 @@
     <li><a class="dropdown-item" href="articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="articles/HowItWorks_vignette.html">How It Works (modules, pipelines and rules)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">News</a></li>
@@ -70,104 +73,93 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><hr>
-<div class="section level2">
-<h2 id="rootopia-r-tool-to-extract-root-traits-from-flatbed-and-minirhizotron-images">Rootopia: R Tool to Extract Root Traits from Flatbed and Minirhizotron Images<a class="anchor" aria-label="anchor" href="#rootopia-r-tool-to-extract-root-traits-from-flatbed-and-minirhizotron-images"></a>
-</h2>
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header"><h1 id="rootopia-extract-root-traits-from-flatbed-and-minirhizotron-images">Rootopia: Extract Root Traits from Flatbed and Minirhizotron Images<a class="anchor" aria-label="anchor" href="#rootopia-extract-root-traits-from-flatbed-and-minirhizotron-images"></a>
+</h1></div>
 <p><a href="https://jcunow.github.io/Rootopia/"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a></p>
-<p>Welcome to <strong>Rootopia</strong>, an R package designed to extract quantitative belowground traits from <strong>flatbed root scans</strong> and <strong>minirhizotron image sequences</strong>. It provides flexible image preprocessing, trait estimation like root length &amp; diameter, depth mapping, and distribution tools.</p>
-<ul>
-<li>some features are still experimental. This package is an insect’s playground and we love bugs here. Just call them out if their behaviour is undesirable.</li>
-</ul>
-</div>
+<p>Rootopia extracts quantitative belowground traits from <strong>flatbed root scans</strong> and <strong>minirhizotron image sequences</strong>. It provides flexible image preprocessing, trait estimation such as root length and diameter, depth mapping, and distribution tools.</p>
+<p>Some features are still experimental. This package is an insect’s playground and we love bugs here — please call them out if their behaviour is undesirable.</p>
 <div class="section level2">
-<h2 id="bulb-what-can-rootopia-do">💡 What can Rootopia do?<a class="anchor" aria-label="anchor" href="#bulb-what-can-rootopia-do"></a>
+<h2 id="what-rootopia-does">What Rootopia does<a class="anchor" aria-label="anchor" href="#what-rootopia-does"></a>
 </h2>
 <ul>
-<li>️ Clean and process root scans from (mini)rhizotrons and flatbed scanners</li>
-<li>Estimate root length, depth profiles, and turnover between sessions</li>
-<li>Measure root diameters and diameter distributions</li>
-<li>️ Analyze root architecture: branching points, root tips, branch/root order, and root angle distribution</li>
-<li>Spatial indices (root distribution with depth, rotation bias)</li>
-<li>Stitch overlapping scan sequences into one mosaic per tube</li>
+<li>Cleans and processes root scans from (mini)rhizotrons and flatbed scanners</li>
+<li>Estimates root length, depth profiles, and turnover between sessions</li>
+<li>Measures root diameters and diameter distributions</li>
+<li>Analyses root architecture: branching points, root tips, branch and root order, and root angle distribution</li>
+<li>Computes spatial indices for root distribution with depth and for rotation bias</li>
+<li>Stitches overlapping scan sequences into one mosaic per tube</li>
 </ul>
-<hr>
 </div>
 <div class="section level2">
-<h2 id="blue_book-tutorials">📘 Tutorials<a class="anchor" aria-label="anchor" href="#blue_book-tutorials"></a>
+<h2 id="tutorials">Tutorials<a class="anchor" aria-label="anchor" href="#tutorials"></a>
 </h2>
 <p>New to Rootopia? Start with one of the step-by-step tutorials — they walk through loading, depth mapping, and trait extraction one function at a time, so you learn what each stage does. Once you are comfortable, the batch-processing tutorial wraps the whole minirhizotron pipeline and flatbed scan analysis over a folder of images into a single function call.</p>
 <ul>
-<li>📄 <a href="articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Workflow (step-by-step)</a>
-</li>
-<li>📄 <a href="articles/FlatBedScans_vignettes.html">Flatbed Scan Workflow (step-by-step)</a>
-</li>
-<li>📄 <a href="articles/Stitching_vignette.html">Stitching Scan Sequences into Mosaics</a>
-</li>
-<li>📄 <a href="articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a>
-</li>
-<li>📄 <a href="articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once)</a>
-</li>
+<li><a href="articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Workflow (step-by-step)</a></li>
+<li><a href="articles/FlatBedScans_vignettes.html">Flatbed Scan Workflow (step-by-step)</a></li>
+<li><a href="articles/Stitching_vignette.html">Stitching Scan Sequences into Mosaics</a></li>
+<li><a href="articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
+<li><a href="articles/SpecialTopics_vignette.html">Special Topics: soil colour, texture, halos, turnover</a></li>
+<li><a href="articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once)</a></li>
 </ul>
 <p>Each tutorial includes code, images, overlays, and tips for interpretation.</p>
-<hr>
-<p><br></p>
 </div>
 <div class="section level2">
-<h2 id="rocket-quick-start">🚀 Quick Start<a class="anchor" aria-label="anchor" href="#rocket-quick-start"></a>
+<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Load example (segmented) minirhizotron scan</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/Rootopia" class="external-link">Rootopia</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/Rootopia" class="external-link">Rootopia</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"seg_Oulanka2023_Session01_T067"</span><span class="op">)</span></span>
-<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">img</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Preprocess and extract traits</span></span>
-<span><span class="va">tape_mask</span> <span class="op">&lt;-</span> <span class="va">img</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">img</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> </span>
-<span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">tape_mask</span><span class="op">)</span><span class="op">[</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">tape_mask</span><span class="op">)</span> <span class="op">!=</span> <span class="op">-</span><span class="fl">1</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
-<span><span class="va">binary</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">img</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">cleaned</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/clean_image.html">clean_image</a></span><span class="op">(</span><span class="va">binary</span>, max_artifact_size <span class="op">=</span> <span class="fl">5</span>, max_hole_size <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">skel</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">cleaned</span>, verbose <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
+<span><span class="co"># A segmented minirhizotron scan ships with the package.</span></span>
+<span><span class="co"># select_layer = 2 is the root channel; scale = "binary" maps it to 0/1.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"seg_Oulanka2023_Session01_T067"</span><span class="op">)</span></span>
+<span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>,</span>
+<span>                           output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
+<span>                           scale         <span class="op">=</span> <span class="st">"binary"</span>,</span>
+<span>                           select_layer  <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Preprocess and skeletonise</span></span>
+<span><span class="va">cleaned</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/clean_image.html">clean_image</a></span><span class="op">(</span><span class="va">img</span>, max_artifact_size <span class="op">=</span> <span class="fl">5</span>, max_hole_size <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span><span class="va">skel</span>    <span class="op">&lt;-</span> <span class="fu"><a href="reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">cleaned</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Length and diameter</span></span>
 <span><span class="fu"><a href="reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skel</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
-<span><span class="va">diam_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/root_diameter.html">root_diameter</a></span><span class="op">(</span><span class="va">cleaned</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span> <span class="op">)</span></span>
+<span><span class="va">diam_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/root_diameter.html">root_diameter</a></span><span class="op">(</span><span class="va">cleaned</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">diam_map</span><span class="op">$</span><span class="va">diameters</span><span class="op">)</span></span>
 <span></span>
-<span></span>
 <span><span class="co"># Architecture</span></span>
-<span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span></span>
-<span><span class="va">root_tips</span> <span class="op">=</span> <span class="fu"><a href="reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">metrics</span><span class="op">$</span><span class="va">endpoints</span><span class="op">)</span></span>
-<span><span class="va">root_branches</span> <span class="op">=</span> <span class="fu"><a href="reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">metrics</span><span class="op">$</span><span class="va">branching_points</span><span class="op">)</span></span>
+<span><span class="va">points</span>        <span class="op">&lt;-</span> <span class="fu"><a href="reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span></span>
+<span><span class="va">root_tips</span>     <span class="op">&lt;-</span> <span class="fu"><a href="reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">points</span><span class="op">$</span><span class="va">endpoints</span><span class="op">)</span></span>
+<span><span class="va">root_branches</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">points</span><span class="op">$</span><span class="va">branching_points</span><span class="op">)</span></span>
 <span></span>
-<span></span>
-<span><span class="co"># Branch order (more useful for flatbed scans):</span></span>
-<span><span class="va">order_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span><span class="va">skel</span>, mask <span class="op">=</span> <span class="va">cleaned</span>, order <span class="op">=</span> <span class="st">"root_order"</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span><span class="co"># Branch order (most informative for flatbed scans)</span></span>
+<span><span class="va">order_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span><span class="va">skel</span>, mask <span class="op">=</span> <span class="va">cleaned</span>, order <span class="op">=</span> <span class="st">"root_order"</span>,</span>
+<span>                              unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
+<span><span class="va">order_res</span><span class="op">$</span><span class="va">summary</span></span>
 <span><span class="fu"><a href="reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="st">"thinnest"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Visualize</span></span>
+<span><span class="co"># Visualise</span></span>
 <span><span class="fu"><a href="reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">diam_map</span><span class="op">$</span><span class="va">diameter_rast</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">class_map</span><span class="op">)</span></span></code></pre></div>
-<hr>
 </div>
 <div class="section level2">
-<h2 id="mag-documentation">🔍 Documentation<a class="anchor" aria-label="anchor" href="#mag-documentation"></a>
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
 <ul>
 <li><a href="reference/index.html">Function reference</a></li>
 <li><a href="articles/index.html">Vignettes</a></li>
 <li><a href="https://github.com/jcunow/Rootopia" class="external-link">Source code on GitHub</a></li>
 </ul>
-<hr>
-<div class="section level3">
-<h3 id="raised_hands-contributions--issues">🙌 Contributions &amp; Issues<a class="anchor" aria-label="anchor" href="#raised_hands-contributions--issues"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="contributions-and-issues">Contributions and issues<a class="anchor" aria-label="anchor" href="#contributions-and-issues"></a>
+</h2>
 <p>Found a bug or have a feature request? Please <a href="https://github.com/jcunow/Rootopia/issues" class="external-link">open an issue</a> or submit a pull request.</p>
 </div>
 </div>
-
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

@@ -14,8 +14,7 @@ create_depthmap(
   tilt = 45,
   dpi = 300,
   start_soil = 0,
-  center_offset = 0.5,
-  progress = FALSE
+  center_offset = 0.5
 )
 ```
 
@@ -54,10 +53,6 @@ create_depthmap(
 - center_offset:
 
   Numeric; rotational center offset (0 = centered, 1 = edge)
-
-- progress:
-
-  Message; indicates how mny rows have been processed
 
 ## Value
 

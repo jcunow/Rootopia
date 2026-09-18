@@ -23,9 +23,10 @@ Rootopia addresses this through four functions:
   correlation
 - [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
   — crops images to the shared, overlap region
-- `zoning(mode = "rotation")` — splits the tube surface into slices
-  along the rotation axis (circumference), so that root traits can be
-  summarized separately for each slice
+- [`slice_rotation()`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md)
+  — splits the tube surface into slices along the rotation axis
+  (circumference), so that root traits can be summarized separately for
+  each slice
 
 The last point matters beyond rotation correction itself: once the tube
 circumference is split into slices, the
@@ -109,12 +110,13 @@ shift <- estimate_rotation_shift(
 cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
 #> Rotation shift (depth px, rotation px):  -18 -9
 
-# Visual inspection
+# Visual inspection. Leave select_layer at its default: the correlation needs
+# all three channels. `overlay_layer` chooses which layer is drawn.
 estimate_rotation_shift(seg_Oulanka2023_Session01_T067,
                         seg_Oulanka2023_Session03_T067,
                         cor_type = "phase",
-                        select_layer = 2,
-                        overlay = T)
+                        overlay = TRUE,
+                        overlay_layer = 2)
 ```
 
 ![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-3-1.png)
@@ -184,9 +186,9 @@ censored <- rotation_censor(
 A minirhizotron image is a long, narrow strip that represents a slice of
 the tube’s circumference, with depth running along one axis and the
 rotation (circumferential) position running along the other.
-`zoning(mode = "rotation")` divides the image along this rotation axis
-into `rotation_total_slices` equal slices, and
-`rotation_slices = c(i, i)` extracts a single slice `i`.
+`slice_rotation(img, n)` divides the image along this rotation axis into
+`n` equal slices and returns them as a list of rasters, in rotation
+order.
 
 Looping over slices gives a sequence of root-trait values indexed by
 circumferential position. The
@@ -196,12 +198,11 @@ circumferential position. The
 functions — which fit
 $`y = A \sin\!\left(\frac{2\pi}{P}(x + \phi)\right) + c`$ and test
 whether $`A \neq 0`$ — are agnostic to what `x` represents. Applied to
-this sequence with `x` = slice index and the period `P` fixed to
-`rotation_total_slices` (one full turn around the tube), they test
-whether roots are distributed **evenly around the tube** or concentrated
-on one side (e.g. a systematic top-down bias from gravitropism, light
-incidence on one face of the installation, or an installation-angle
-artifact).
+this sequence with `x` = slice index and the period `P` fixed to the
+number of slices `n` (one full turn around the tube), they test whether
+roots are distributed **evenly around the tube** or concentrated on one
+side (e.g. a systematic top-down bias from gravitropism, light incidence
+on one face of the installation, or an installation-angle artifact).
 
 #### Extract a root trait per circumferential slice
 
@@ -219,7 +220,8 @@ root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4
 terra::plot(root_layer, maxcell = Inf)
 ```
 
-![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png)
+![Segmented scan cropped to the circumferential slices used
+below.](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png)
 
 ``` r
 
@@ -304,14 +306,14 @@ ggplot(slice_traits, aes(slice, rld)) +
        title = "Root distribution around tube circumference")
 ```
 
-![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png)
+![Root length density against position around the tube
+circumference.](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png)
 
 ``` r
 
 
 
 # cross section view
-inner <- 6
 inner <- 6
 ggplot(slice_traits, aes(slice, rld + inner)) +
     geom_col(fill = "steelblue") +
@@ -325,7 +327,9 @@ ggplot(slice_traits, aes(slice, rld + inner)) +
            fill = "white", color = NA)
 ```
 
-![](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png)
+![The same distribution drawn on polar axes as a cross-section through
+the
+tube.](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png)
 
 > **Going further**: the same slice loop can be combined with
 > `slice_rotation(mode = "both")` to additionally split each
@@ -360,14 +364,20 @@ Two extensions are planned and not yet implemented:
 
 ------------------------------------------------------------------------
 
-### Further reading
+### What to read next
 
-- [Batch
-  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
-  — the recommended starting point for processing multiple images
 - [Minirhizotron
   Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
   — step-by-step depth analysis workflow
+- [Batch
+  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
+  — processing multiple images in one call
+- [Image
+  Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
+  — combine overlapping frames from one tube before correcting rotation
+- [Special
+  Topics](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.md)
+  — soil colour, texture, halos and turnover
 - [Function
-  reference](https://jcunow.github.io/Rootopia/reference/index.md)
-- Source and issues: <https://github.com/jcunow/Rootopia>
+  reference](https://jcunow.github.io/Rootopia/reference/index.md) —
+  full documentation for every exported function

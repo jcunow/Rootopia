@@ -24,8 +24,8 @@ subset of functions.
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
 
-> If a tube constitues of multiple overlapping images, consider
-> stitching [Image
+> If a tube consists of multiple overlapping images, consider stitching
+> [Image
 > Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
 
 ### Installation
@@ -125,7 +125,11 @@ rgb <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
 zoom_plot(root_layer, main = "Root layer (binary)", frac = 0.1)
 ```
 
-![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
+![Binary root layer of a minirhizotron scan, roots in white, with the
+magnified region
+outlined.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![The
+same root layer magnified to native
+resolution.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
 
 ------------------------------------------------------------------------
 
@@ -206,7 +210,9 @@ terra::ext(depth_map) <- terra::ext(root_layer)
 terra::plot(depth_map, main = "Depth map (cm)")
 ```
 
-![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)
+![Depth map in centimetres, shading from shallow at one end to deep at
+the
+other.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)
 
 > **On `start_soil`**: accurate depth attribution requires knowing where
 > the soil surface is in the image. In-situ calibration (marking the
@@ -235,7 +241,9 @@ depths
 terra::plot(depth_bins, main = "Depth bins")
 ```
 
-![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
+![The depth map reduced to discrete depth bins, drawn as bands of
+constant
+colour.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
 
 ------------------------------------------------------------------------
 
@@ -361,7 +369,10 @@ head(depth_data)
 zoom_plot(diam_result$distance_map_rast, frac = 0.1)
 ```
 
-![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png)![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png)
+![Root trait plotted for each depth bin down the
+profile.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png)![Root
+trait plotted for each depth bin down the
+profile.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png)
 
 ------------------------------------------------------------------------
 
@@ -492,7 +503,8 @@ ggplot(depth_data, aes(x = depth, y = rootpx.cumulative)) +
        title = "Root accumulation with depth")
 ```
 
-![](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png)
+![Cumulative root accumulation against
+depth.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-14-1.png)
 
 ``` r
 

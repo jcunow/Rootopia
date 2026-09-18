@@ -13,16 +13,14 @@ stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output"
 
 It discovers the files, groups them into one sequence per tube, sorts
 each group, aligns and blends the frames, and (optionally) writes one
-PNG per tube. That is the only function you need to call. (The per-pair
-and per-sequence engines it uses are documented at
-[`?stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md)
-and
-[`?stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md)
-for advanced use;
-[`?list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)
-and
-[`?list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md)
-preview a folder.)
+PNG per tube. That is the only function you need to call. To see what a
+folder holds before committing to a run, pass `tubes = "ask"`: it prints
+the tube names and frame counts, then lets you pick a range in the same
+call. Everything underneath – the folder scan, the per-pair and
+per-sequence engines – is internal, though the help pages
+([`?stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md),
+[`?stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md))
+document them if you want to know what happens inside.
 
 ``` r
 
@@ -141,7 +139,8 @@ plot(grDevices::as.raster(norm01(mosaic)))
 graphics::title("re-stitched by stitch_root_scans()")
 ```
 
-![](Stitching_vignette_files/figure-html/show-real-1.png)
+![Overlapping frames stitched back into a single continuous
+mosaic.](Stitching_vignette_files/figure-html/show-real-1.png)
 
 ``` r
 
@@ -222,8 +221,8 @@ the same.
 
 ``` r
 
-# preview first
-list_tubes("path/to/scans", pattern = ".tiff")        # index | tube | n_frames
+# see the tubes (index | tube | n_frames) and pick a range in one call
+stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
 
 # stitch every tube, one PNG each
 stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output")
@@ -264,11 +263,9 @@ group_regex = NULL             # no grouping -> one mosaic
 
 **Selecting — `select` vs `tubes`.** `select` indexes the sorted *file*
 list *before* grouping; `tubes` selects whole *tubes* by index, name, or
-interactively. Use
-[`list_scan_files()`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md)
-/
-[`list_tubes()`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)
-to see the indices.
+interactively. `tubes = "ask"` prints the available tubes with their
+indices; if you pass an index that is out of range, the error names how
+many there are and what they are called.
 
 ``` r
 
@@ -326,3 +323,20 @@ If a tube aligns poorly: bring `edge_width` closer to the real overlap,
 raise `vertical_offset` past a header/tape strip, try
 `preprocess = "grad"` for uneven lighting, or confirm the frames are in
 the intended (filename) order.
+
+------------------------------------------------------------------------
+
+### What to read next
+
+- [Minirhizotron
+  Scans](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
+  — the step-by-step workflow to run on the mosaic once it is stitched
+- [Flatbed
+  Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
+  — the equivalent workflow for flatbed scanner images
+- [Batch
+  Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
+  — depth-resolved analysis over a whole folder in one call
+- [Function
+  reference](https://jcunow.github.io/Rootopia/reference/index.md) —
+  full documentation for every exported function

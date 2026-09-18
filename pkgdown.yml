@@ -4,11 +4,12 @@ pkgdown_sha: ~
 articles:
   BatchProcessing_vignette: BatchProcessing_vignette.html
   FlatBedScans_vignettes: FlatBedScans_vignettes.html
+  HowItWorks_vignette: HowItWorks_vignette.html
   MinirhizotronScans_vignettes: MinirhizotronScans_vignettes.html
   Rotation_Bias_vignettes: Rotation_Bias_vignettes.html
   SpecialTopics_vignette: SpecialTopics_vignette.html
   Stitching_vignette: Stitching_vignette.html
-last_built: 2026-08-02T06:42Z
+last_built: 2026-09-18T11:29Z
 urls:
   reference: https://jcunow.github.io/Rootopia/reference
   article: https://jcunow.github.io/Rootopia/articles

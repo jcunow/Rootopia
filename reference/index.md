@@ -9,10 +9,11 @@ directory of images.
   : Compute root traits over a depth profile from segmented
   (mini)rhizotron images
 
-## Stitching scans from the same Tube together
+## Stitching scans from the same tube together
 
-High-level wrapper that enables to combine multiple depths from a tube
-into a single large mosaic iamge
+High-level wrapper that combines multiple depths from a tube into a
+single large mosaic image, plus helpers to preview what a folder
+contains.
 
 - [`stitch_root_scans()`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
   : Batch-stitch grouped scan sequences (tubes) into mosaics
@@ -82,6 +83,16 @@ order, and summarise root architecture by order class.
   : Write an order-colored validation overlay (PNG)
 - [`plot_order_window()`](https://jcunow.github.io/Rootopia/reference/plot_order_window.md)
   : Native-resolution validation of a sub-window
+
+## Validation
+
+Synthetic root images with known length, width and topology, and a
+scorecard that checks the branching pipeline against them.
+
+- [`root_phantom()`](https://jcunow.github.io/Rootopia/reference/root_phantom.md)
+  : Synthetic root image with known geometry
+- [`validate_branching()`](https://jcunow.github.io/Rootopia/reference/validate_branching.md)
+  : Score the branching pipeline against a phantom with known properties
 
 ## Root turnover
 

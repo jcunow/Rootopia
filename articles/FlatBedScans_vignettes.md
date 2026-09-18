@@ -76,7 +76,11 @@ seg <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
 zoom_plot(seg, main = "Segmented flatbed scan")
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
+![Segmented flatbed scan, roots in white on black, with the magnified
+region
+outlined.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-1.png)![The
+same scan magnified to native
+resolution.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-3-2.png)
 
 ------------------------------------------------------------------------
 
@@ -119,14 +123,18 @@ seg_clean <- clean_image(seg,
 zoom_plot(seg, main = "Before Cleaning", center = c(0.6,0.7))
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png)
+![Segmented scan before cleaning, with speckle artifacts and
+holes.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png)![The
+same scan after cleaning, with speckle and holes
+removed.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png)
 
 ``` r
 
 zoom_plot(seg_clean, main = "After Cleaning",center = c(0.6,0.7), overview = F)
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png)
+![Segmented scan before cleaning, with speckle artifacts and
+holes.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png)
 
 > [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
 > expects a binary mask. If your input is a raw probability or grayscale
@@ -151,7 +159,10 @@ skl <- skeletonize_image(seg_clean, verbose = FALSE)
 zoom_plot(skl, main = "Skeleton", frac = 0.25, center = c(0.7,0.625))
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png)
+![One-pixel-wide skeleton traced through the centre of every
+root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)![One-pixel-wide
+skeleton traced through the centre of every
+root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png)
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
@@ -177,7 +188,8 @@ skl_pruned <- prune_skeleton(skl, mask = seg_clean, min_length = 50, iter = 1)
 zoom_plot(skl_pruned, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = F )
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)
+![Skeleton with short spurs still
+attached.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)
 
 ``` r
 
@@ -189,7 +201,10 @@ seg_clean <- prune_skeleton(skl, mask = seg_clean, min_length = 50,
 zoom_plot(seg_clean, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0.7,0.625), overview = T )
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png)![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png)
+![The same skeleton after pruning the short terminal
+spurs.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png)![Skeleton
+with short spurs still
+attached.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png)
 
 ------------------------------------------------------------------------
 
@@ -244,7 +259,8 @@ ggplot(data.frame(diameter = as.numeric(diam_vals)), aes(x = diameter)) +
        title = "Root diameter distribution")
 ```
 
-![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png)
+![Histogram of root diameters across the
+scan.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png)
 
 For fine/coarse root separation,
 [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
@@ -454,6 +470,12 @@ write.csv(results, "flatbed_results.csv", row.names = FALSE)
 - [Batch
   Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
   — wraps depth-resolved analysis into a single function call
+- [Image
+  Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
+  — combine overlapping frames into one mosaic before analysis
+- [Special
+  Topics](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.md)
+  — soil colour, texture, halos and turnover
 - [Function
   reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function

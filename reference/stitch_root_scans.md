@@ -53,18 +53,15 @@ stitch_root_scans(
 - select:
 
   Optional integer vector of indices into the (sorted) *file* list, e.g.
-  `1:36`. See
-  [`list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md).
-  `NULL` uses all files. Applied before grouping.
+  `1:36`. `NULL` uses all files. Applied before grouping.
 
 - tubes:
 
   Optional *tube* selection: integer indices into the sorted tube list
-  (e.g. `1:36`, see
-  [`list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)),
-  a character vector of tube names (e.g. `c("T037", "T040")`), or the
-  string `"ask"` to print the tubes and choose a range interactively in
-  one call (interactive sessions only). `NULL` keeps all tubes.
+  (e.g. `1:36`), a character vector of tube names (e.g.
+  `c("T037", "T040")`), or the string `"ask"` to print the tubes and
+  choose a range interactively in one call (interactive sessions only).
+  `NULL` keeps all tubes.
 
 - out_dir:
 
@@ -154,23 +151,20 @@ numeric `(H, W, C)` array per tube). If `report = TRUE`, a list
 
 ## Details
 
-Call
-[`list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md)
-first to see the tube names, then pass a range to `tubes` (e.g.
-`tubes = 1:36`) to stitch just those tubes.
+Pass `tubes = "ask"` to print the tube names and choose a range in the
+same call, or pass a range directly (e.g. `tubes = 1:36`) once you know
+which tubes you want.
 
 ## See also
 
-[`list_tubes`](https://jcunow.github.io/Rootopia/reference/list_tubes.md),
-[`list_scan_files`](https://jcunow.github.io/Rootopia/reference/list_scan_files.md),
 [`stitch_image_sequence`](https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# 1) See the tubes (names + frame counts)
-list_tubes("path/to/scans", pattern = ".tiff")
+# 1) See the tubes and pick a range in the same call
+stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
 
 # 2) Stitch the first 36 tubes, with a performance report and a preprocess
 res <- stitch_root_scans("path/to/scans", pattern = ".tiff",

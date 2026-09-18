@@ -13,7 +13,8 @@
 <link href="../deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Rotation Bias and Rhythmicity Analysis with Rootopia">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Rotation Bias and Rhythmicity Analysis with Rootopia">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -43,6 +44,8 @@
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/HowItWorks_vignette.html">How It Works (modules, pipelines and rules)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -111,9 +114,9 @@ between two sessions using image correlation</li>
 <code><a href="../reference/rotation_censor.html">rotation_censor()</a></code> — crops images to the shared, overlap
 region</li>
 <li>
-<code>zoning(mode = "rotation")</code> — splits the tube surface
-into slices along the rotation axis (circumference), so that root traits
-can be summarized separately for each slice</li>
+<code><a href="../reference/slice_rotation.html">slice_rotation()</a></code> — splits the tube surface into slices
+along the rotation axis (circumference), so that root traits can be
+summarized separately for each slice</li>
 </ul>
 <p>The last point matters beyond rotation correction itself: once the
 tube circumference is split into slices, the <code><a href="../reference/rhythmicity.html">rhythmicity()</a></code>
@@ -209,12 +212,13 @@ differences between sessions.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Rotation shift (depth px, rotation px): "</span>, <span class="va">shift</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Rotation shift (depth px, rotation px):  -18 -9</span></span>
 <span></span>
-<span><span class="co"># Visual inspection</span></span>
+<span><span class="co"># Visual inspection. Leave select_layer at its default: the correlation needs</span></span>
+<span><span class="co"># all three channels. `overlay_layer` chooses which layer is drawn.</span></span>
 <span><span class="fu"><a href="../reference/estimate_rotation_shift.html">estimate_rotation_shift</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span>,</span>
 <span>                        <span class="va">seg_Oulanka2023_Session03_T067</span>,</span>
 <span>                        cor_type <span class="op">=</span> <span class="st">"phase"</span>,</span>
-<span>                        select_layer <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                        overlay <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
+<span>                        overlay <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                        overlay_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="100%"></p>
 <p>The returned vector is <code>c(x.lag, y.lag)</code> — the horizontal
 (depth axis) and vertical (rotation axis) pixel shifts. A large vertical
@@ -280,10 +284,9 @@ correction.</p>
 <p>A minirhizotron image is a long, narrow strip that represents a slice
 of the tube’s circumference, with depth running along one axis and the
 rotation (circumferential) position running along the other.
-<code>zoning(mode = "rotation")</code> divides the image along this
-rotation axis into <code>rotation_total_slices</code> equal slices, and
-<code>rotation_slices = c(i, i)</code> extracts a single slice
-<code>i</code>.</p>
+<code>slice_rotation(img, n)</code> divides the image along this
+rotation axis into <code>n</code> equal slices and returns them as a
+list of rasters, in rotation order.</p>
 <p>Looping over slices gives a sequence of root-trait values indexed by
 circumferential position. The <code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> /
 <code><a href="../reference/fit_sine_curve.html">fit_sine_curve()</a></code> functions — which fit
@@ -292,7 +295,7 @@ and test whether
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A \neq 0</annotation></semantics></math>
 — are agnostic to what <code>x</code> represents. Applied to this
 sequence with <code>x</code> = slice index and the period <code>P</code>
-fixed to <code>rotation_total_slices</code> (one full turn around the
+fixed to the number of slices <code>n</code> (one full turn around the
 tube), they test whether roots are distributed <strong>evenly around the
 tube</strong> or concentrated on one side (e.g. a systematic top-down
 bias from gravitropism, light incidence on one face of the installation,
@@ -311,7 +314,7 @@ or an installation-angle artifact).</p>
 <span><span class="va">e</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">root_layer</span><span class="op">)</span></span>
 <span><span class="va">root_layer</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">root_layer</span>, <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">e</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">+</span> <span class="va">e</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">/</span> <span class="fl">4</span>, <span class="va">e</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">e</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="va">e</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> </span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">root_layer</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="Segmented scan cropped to the circumferential slices used below." width="100%"></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># --&gt; the trimming avoids noisy deep layer and tape artifacts at the top</span></span>
 <span></span>
@@ -390,12 +393,11 @@ root material on one side of the tube than the other.
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Circumferential slice (1 = top, going around the tube)"</span>,</span>
 <span>       y <span class="op">=</span> <span class="st">"Root Length Density (cm / cm2)"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root distribution around tube circumference"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="Root length density against position around the tube circumference." width="100%"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="co"># cross section view</span></span>
-<span><span class="va">inner</span> <span class="op">&lt;-</span> <span class="fl">6</span></span>
 <span><span class="va">inner</span> <span class="op">&lt;-</span> <span class="fl">6</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">slice_traits</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">slice</span>, <span class="va">rld</span> <span class="op">+</span> <span class="va">inner</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -407,7 +409,7 @@ root material on one side of the tube than the other.
 <span>           xmin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, xmax <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>           ymin <span class="op">=</span> <span class="fl">0</span>, ymax <span class="op">=</span> <span class="va">inner</span>,</span>
 <span>           fill <span class="op">=</span> <span class="st">"white"</span>, color <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="The same distribution drawn on polar axes as a cross-section through the tube." width="100%"></p>
 <blockquote>
 <p><strong>Going further</strong>: the same slice loop can be combined
 with <code>slice_rotation(mode = "both")</code> to additionally split
@@ -443,18 +445,24 @@ the preferred option.</li>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
+<h3 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
 </h3>
 <ul>
 <li>
-<a href="BatchProcessing_vignette.html">Batch Processing</a> — the
-recommended starting point for processing multiple images</li>
-<li>
 <a href="MinirhizotronScans_vignettes.html">Minirhizotron Scans</a>
 — step-by-step depth analysis workflow</li>
-<li><a href="../reference/index.html">Function reference</a></li>
-<li>Source and issues: <a href="https://github.com/jcunow/Rootopia" class="external-link uri">https://github.com/jcunow/Rootopia</a>
-</li>
+<li>
+<a href="BatchProcessing_vignette.html">Batch Processing</a> —
+processing multiple images in one call</li>
+<li>
+<a href="Stitching_vignette.html">Image Stitching</a> — combine
+overlapping frames from one tube before correcting rotation</li>
+<li>
+<a href="SpecialTopics_vignette.html">Special Topics</a> — soil
+colour, texture, halos and turnover</li>
+<li>
+<a href="../reference/index.html">Function reference</a> — full
+documentation for every exported function</li>
 </ul>
 </div>
 </div>

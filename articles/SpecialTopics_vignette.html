@@ -13,7 +13,8 @@
 <link href="../deps/Aleo-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
+<meta property="og:title" content="Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -43,6 +44,8 @@
     <li><a class="dropdown-item" href="../articles/SpecialTopics_vignette.html">Special Topics (soil colour, texture, halos, turnover)</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once, one function)</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/HowItWorks_vignette.html">How It Works (modules, pipelines and rules)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">News</a></li>
@@ -75,6 +78,8 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover</h1>
+                        <h4 data-toc-skip class="author">Johannes
+Cunow</h4>
             
       
       <small class="dont-index">Source: <a href="https://github.com/jcunow/Rootopia/blob/main/vignettes/SpecialTopics_vignette.Rmd" class="external-link"><code>vignettes/SpecialTopics_vignette.Rmd</code></a></small>
@@ -93,6 +98,9 @@ outlined, plus a native-resolution inset where thin features survive at
 <code>1/frac</code>) and <code>center</code> controls which part is
 magnified.</p>
 </blockquote>
+<div class="section level2">
+<h2 id="special-topics">Special Topics<a class="anchor" aria-label="anchor" href="#special-topics"></a>
+</h2>
 <p>This article collects a few less-obvious capabilities of
 <strong>Rootopia</strong> that do not fit the main step-by-step
 tutorials but are useful for specific questions: classifying soil/soil
@@ -101,9 +109,10 @@ rhizosphere “halo” zone around roots, and measuring root turnover
 between time points.</p>
 <p>All examples use the bundled Oulanka 2023 example rasters, so you can
 run them as-is.</p>
-<div class="section level2">
-<h2 id="soil-and-material-color-classification">1. Soil and material color classification<a class="anchor" aria-label="anchor" href="#soil-and-material-color-classification"></a>
-</h2>
+<hr>
+<div class="section level3">
+<h3 id="soil-and-material-color-classification">1. Soil and material color classification<a class="anchor" aria-label="anchor" href="#soil-and-material-color-classification"></a>
+</h3>
 <p><code><a href="../reference/classify_soil_rgb.html">classify_soil_rgb()</a></code> assigns every pixel of an RGB scan
 to a class (e.g., dark soil, red soil, root, silver tape, coarse debris,
 …) by nearest-centroid matching in CIE LAB color space. Pixels too far
@@ -113,7 +122,7 @@ from any centroid are left “unclassified”.</p>
 <span>                           output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="co"># original image</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">img</span>, main <span class="op">=</span> <span class="st">"Soil classification"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-1.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/soil-classify-2.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-1.png" class="r-plt" alt="RGB minirhizotron scan, full view with the magnified region outlined." width="100%"><img src="SpecialTopics_vignette_files/figure-html/soil-classify-2.png" class="r-plt" alt="The same scan magnified to native resolution." width="100%"></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># downsample_fact speeds up the demo; drop it for full resolution</span></span>
@@ -121,13 +130,15 @@ from any centroid are left “unclassified”.</p>
 <span></span>
 <span><span class="co"># A SpatRaster of class IDs (factor levels are the class names)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, main <span class="op">=</span> <span class="st">"Soil classification"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-3.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/soil-classify-4.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## As ou can see, some classes can be retrieved decntly well, others not so much. You can try to fiddle and see if a class of interest can be reliably identified with this simple approach. Classes and their parameters (center and distance) can be modified to fit your needs.</span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-classify-3.png" class="r-plt" alt="Class map: every pixel assigned to a soil or material class by colour." width="100%"><img src="SpecialTopics_vignette_files/figure-html/soil-classify-4.png" class="r-plt" alt="The class map magnified to native resolution." width="100%"></p>
+<p>Some classes come out well, others less so. It is worth experimenting
+to see whether the class you care about can be identified reliably by
+this fairly simple approach; each class’s centre and distance can be
+adjusted to fit your material.</p>
 <p>The returned list also carries per-class statistics – pixel counts,
 area fractions, mean LAB/RGB colors, and the mean distance to the
 centroid:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span></span>
 <span><span class="co">#&gt;           class n_pixels pct_pixels L_mean A_mean B_mean L_sd A_sd B_sd R_mean</span></span>
 <span><span class="co">#&gt; 1     dark_soil    40252     11.331    8.8    1.5    2.4 3.38 1.45 1.35   28.3</span></span>
@@ -143,21 +154,22 @@ centroid:</p>
 <span><span class="co">#&gt; 4  180.6      177.8                  7.67    #B0B5B2</span></span>
 <span><span class="co">#&gt; 5   49.1       36.5                  6.38    #473124</span></span>
 <span><span class="co">#&gt; 6   36.5       13.9                    NA    #50240F</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="visualizing-the-classification">Visualizing the classification<a class="anchor" aria-label="anchor" href="#visualizing-the-classification"></a>
-</h3>
+<div class="section level4">
+<h4 id="visualizing-the-classification">Visualizing the classification<a class="anchor" aria-label="anchor" href="#visualizing-the-classification"></a>
+</h4>
 <p><code><a href="../reference/plot_soil_classification.html">plot_soil_classification()</a></code> renders the class map with a
 legend and the actual mean colors of each class:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_soil_classification.html">plot_soil_classification</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/soil-plot-1.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># You can see that classes like roots and coarse debris are not well separated on the image - owing to their color similarity. In this image, coarse debris is suppose to show fibrous woody or rhizome structures which appears weakly distinguishable to roots in this example. </span></span></code></pre></div>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-plot-1.png" class="r-plt" alt="Soil classification map with a legend showing each class in its own mean colour." width="100%"></p>
+<p>Roots and coarse debris separate poorly here, because their colours
+are close. “Coarse debris” is meant to capture fibrous woody or rhizome
+structures, which in this scan are only weakly distinguishable from
+roots.</p>
 </div>
-<div class="section level3">
-<h3 id="calibrating-your-own-centroids">Calibrating your own centroids<a class="anchor" aria-label="anchor" href="#calibrating-your-own-centroids"></a>
-</h3>
+<div class="section level4">
+<h4 id="calibrating-your-own-centroids">Calibrating your own centroids<a class="anchor" aria-label="anchor" href="#calibrating-your-own-centroids"></a>
+</h4>
 <p>The default centroids were calibrated on one scanner and site. For
 other data, build your own with <code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code>. You
 supply <code>picks</code>: a named list with one element per material
@@ -170,7 +182,7 @@ built-in defaults, ready to pass back into
 <p>The simplest approach is to read representative RGB values off your
 scan with a color picker (e.g. in an image viewer or QGIS) and enter
 them directly:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># each row is one pixel with r,g,b values</span></span>
 <span><span class="va">picks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  region1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span> <span class="fl">28</span>,  <span class="fl">22</span>,  <span class="fl">18</span>,</span>
@@ -193,24 +205,27 @@ them directly:</p>
 <span><span class="va">cents</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_soil_centroids.html">build_soil_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span>   <span class="co"># prints diagnostics</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span>, centroids <span class="op">=</span> <span class="va">cents</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, main <span class="op">=</span> <span class="st">"Soil classification"</span><span class="op">)</span></span></code></pre></div>
-<p>Note: provide a class for <strong>every</strong> material in your
-scans. Because classification is nearest-centroid, any material without
-its own class is snapped into whichever defined class sits closest.
-<code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code> prints intra-class spread and
-inter-class distances to help you tune <code>MAX_DIST</code> before
-running the full classification.</p>
+<blockquote>
+<p><strong>Note</strong>: provide a class for <strong>every</strong>
+material in your scans. Because classification is nearest-centroid, any
+material without its own class is snapped into whichever defined class
+sits closest. <code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code> prints intra-class
+spread and inter-class distances to help you tune <code>MAX_DIST</code>
+before running the full classification.</p>
+</blockquote>
 <p>See <code><a href="../reference/classify_soil_rgb.html">?classify_soil_rgb</a></code> for the full description of the
 centroid table format and the <code>prior</code>/<code>alpha</code>
 blending workflow for iterative refinement.</p>
+<hr>
 </div>
 </div>
-<div class="section level2">
-<h2 id="soil-surface-texture-and-color">2. Soil surface texture and color<a class="anchor" aria-label="anchor" href="#soil-surface-texture-and-color"></a>
-</h2>
+<div class="section level3">
+<h3 id="soil-surface-texture-and-color">2. Soil surface texture and color<a class="anchor" aria-label="anchor" href="#soil-surface-texture-and-color"></a>
+</h3>
 <p><code><a href="../reference/analyze_soil_texture.html">analyze_soil_texture()</a></code> computes gray-level co-occurrence
 matrix (GLCM) texture metrics from a color image, which can be
 informative on the spatial heterogeneity within a scan.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_soil_texture.html">analyze_soil_texture</a></span><span class="op">(</span></span>
 <span>  <span class="va">img</span>,</span>
 <span>  grays   <span class="op">=</span> <span class="fl">12</span>,</span>
@@ -218,46 +233,48 @@ informative on the spatial heterogeneity within a scan.</p>
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"variance"</span>, <span class="st">"second_moment"</span>,<span class="st">"correlation"</span>,<span class="st">"entropy"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tex</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/soil-texture-1.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="SpecialTopics_vignette_files/figure-html/soil-texture-1.png" class="r-plt" alt="Four GLCM texture rasters of the scan: variance, second moment, correlation and entropy." width="100%"></p>
 <p>A simple summary of overall tube color (mean RGB and a single
 luminance value) is available via <code><a href="../reference/tube_coloration.html">tube_coloration()</a></code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      rcc    gcc   bcc        hue saturation luminosity      red    green</span></span>
-<span><span class="co">#&gt; 1 0.4117 0.3192 0.269 0.06635659  0.1982295  0.2660763 67.84946 59.75458</span></span>
+<span><span class="co">#&gt; 1 0.4117 0.3192 0.269 0.06635659  0.1982295    61.0889 67.84946 59.75458</span></span>
 <span><span class="co">#&gt;      blue</span></span>
 <span><span class="co">#&gt; 1 54.3997</span></span></code></pre></div>
+<hr>
 </div>
-<div class="section level2">
-<h2 id="rhizosphere-halo-root-buffer-zone">3. Rhizosphere halo (root buffer zone)<a class="anchor" aria-label="anchor" href="#rhizosphere-halo-root-buffer-zone"></a>
-</h2>
+<div class="section level3">
+<h3 id="rhizosphere-halo-root-buffer-zone">3. Rhizosphere halo (root buffer zone)<a class="anchor" aria-label="anchor" href="#rhizosphere-halo-root-buffer-zone"></a>
+</h3>
 <p><code><a href="../reference/create_root_buffer.html">create_root_buffer()</a></code> grows a buffer of a chosen width
 around every root pixel – a simple proxy for the rhizosphere / diffusion
 zone. With <code>halo_only = TRUE</code> it returns only the ring around
 the roots (excluding the roots themselves).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seg</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session03_T067</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">halo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">3</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span>, kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">halo</span>, main <span class="op">=</span> <span class="st">"Rhizosphere halo (width 3)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-1.png" class="r-plt" alt="" width="100%"><img src="SpecialTopics_vignette_files/figure-html/root-buffer-2.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-1.png" class="r-plt" alt="Rhizosphere halo of width 3 pixels around each root." width="100%"><img src="SpecialTopics_vignette_files/figure-html/root-buffer-2.png" class="r-plt" alt="Halo only, width 10 pixels." width="100%"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">halo10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">10</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span>, kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">halo10</span>, main <span class="op">=</span> <span class="st">"Halo only (width 10)"</span>, overview <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-3.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-3.png" class="r-plt" alt="Roots together with their width-10 halo." width="100%"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">halo10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">10</span>, halo_only <span class="op">=</span> <span class="cn">FALSE</span>, kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">halo10</span>, main <span class="op">=</span> <span class="st">"Roots + halo (width 10)"</span>, overview <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-4.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="SpecialTopics_vignette_files/figure-html/root-buffer-4.png" class="r-plt" alt="Rhizosphere halo of width 3 pixels around each root." width="100%"></p>
 <p>The <code>kernel</code> argument switches between a
 <code>"circle"</code> (8-neighbor) and a <code>"diamond"</code>
 (4-neighbor) growth shape, and <code>width</code> controls how many
 dilation iterations are applied. Set <code>halo_only = FALSE</code> to
 return the roots plus their buffer as a single filled mask.</p>
+<hr>
 </div>
-<div class="section level2">
-<h2 id="root-turnover-between-time-points">4. Root turnover between time points<a class="anchor" aria-label="anchor" href="#root-turnover-between-time-points"></a>
-</h2>
+<div class="section level3">
+<h3 id="root-turnover-between-time-points">4. Root turnover between time points<a class="anchor" aria-label="anchor" href="#root-turnover-between-time-points"></a>
+</h3>
 <p><code><a href="../reference/root_turnover.html">root_turnover()</a></code> quantifies how much root material was
 produced, lost, or retained. <code>method</code> selects one of two
 approaches:</p>
@@ -273,36 +290,39 @@ single multi-layer image produced by RootDetector into decayed, newly
 produced, and unchanged root fractions.</li>
 </ul>
 <p>The bundled <code>TurnoverDPC_data</code> is a DPC-style image:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dpc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">dpc</span>, method <span class="op">=</span> <span class="st">"dpc"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio</span></span>
 <span><span class="co">#&gt; 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668</span></span></code></pre></div>
 <p>For the two-timepoint comparison you would instead pass both
 sessions:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">s1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="va">s3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">s1</span>, <span class="va">s3</span>, method <span class="op">=</span> <span class="st">"tc"</span>, tc_method <span class="op">=</span> <span class="st">"rootpx"</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<hr>
 </div>
-<div class="section level2">
-<h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a>
-</h2>
+<div class="section level3">
+<h3 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
+</h3>
 <ul>
 <li>
-<code><a href="../articles/BatchProcessing_vignette.html">vignette("BatchProcessing_vignette")</a></code> – end-to-end depth
-profiling.</li>
+<a href="MinirhizotronScans_vignettes.html">Minirhizotron Scans</a>
+– the step-by-step workflow these topics sit alongside.</li>
 <li>
-<code><a href="../reference/classify_soil_rgb.html">?classify_soil_rgb</a></code>, <code><a href="../reference/build_soil_centroids.html">?build_soil_centroids</a></code>,
-<code><a href="../reference/plot_soil_classification.html">?plot_soil_classification</a></code>
-</li>
+<a href="BatchProcessing_vignette.html">Batch Processing</a> – run
+the whole depth profile over a folder in one call.</li>
 <li>
-<code><a href="../reference/analyze_soil_texture.html">?analyze_soil_texture</a></code>,
-<code><a href="../reference/tube_coloration.html">?tube_coloration</a></code>
-</li>
-<li><code><a href="../reference/create_root_buffer.html">?create_root_buffer</a></code></li>
-<li><code><a href="../reference/root_turnover.html">?root_turnover</a></code></li>
+<a href="FlatBedScans_vignettes.html">Flatbed Scans</a> – the
+equivalent workflow for flatbed scanner images.</li>
 </ul>
+<p>Function reference: <code><a href="../reference/classify_soil_rgb.html">?classify_soil_rgb</a></code>,
+<code><a href="../reference/build_soil_centroids.html">?build_soil_centroids</a></code>,
+<code><a href="../reference/plot_soil_classification.html">?plot_soil_classification</a></code>,
+<code><a href="../reference/analyze_soil_texture.html">?analyze_soil_texture</a></code>, <code><a href="../reference/tube_coloration.html">?tube_coloration</a></code>,
+<code><a href="../reference/create_root_buffer.html">?create_root_buffer</a></code>, <code><a href="../reference/root_turnover.html">?root_turnover</a></code>.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

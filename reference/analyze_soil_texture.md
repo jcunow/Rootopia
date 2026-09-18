@@ -54,6 +54,6 @@ analyze_soil_texture(img, grays = 7, window = c(9, 9),
 #> crs        : NA 
 #> source     : memory
 #> names      : glcm_second_moment 
-#> values     : 0.1111111, 1  (min, max)
+#> values     : 0.06691053, 1  (min, max)
 #> 
 ```

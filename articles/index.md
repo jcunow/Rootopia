@@ -6,6 +6,8 @@
   root_depth_metrics()](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md):
 - [Analyzing Root Traits from Flatbed Scans with Rootopia in
   R](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md):
+- [How It Works: Modules, Pipelines and
+  Rules](https://jcunow.github.io/Rootopia/articles/HowItWorks_vignette.md):
 - [Minirhizotron Scans Analysis with Rootopia in
   R](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md):
 - [Rotation Bias and Rhythmicity Analysis with

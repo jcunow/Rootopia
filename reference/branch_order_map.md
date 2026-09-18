@@ -90,10 +90,13 @@ All three order schemes are always computed and stored on `$edges`;
 
 - `tip_order` (per segment):
 
-  Topological leaf-peeling (Strahler-like). Every terminal segment is
-  order 1; peeling terminals away round by round, a segment's order is
+  Topological leaf-peeling depth. Every terminal segment is order 1;
+  peeling terminals away round by round, a segment's order is
   `1 + max(child orders)`. Order rises toward the interior, so the
-  distal end of even a thick root is 1.
+  distal end of even a thick root is 1. This is centrifugal depth, not
+  strict Strahler ordering: Strahler only increments where two children
+  share the highest order, while this increments at every junction, so a
+  long chain of single laterals keeps climbing.
 
 - `root_order` (per root):
 

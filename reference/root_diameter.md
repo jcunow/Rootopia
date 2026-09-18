@@ -42,7 +42,8 @@ root_diameter(
 - select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`2\`.
+  image. Default is \`NULL\`, which passes every layer to
+  \`load_flexible_image()\` rather than selecting one.
 
 - diagnostics:
 

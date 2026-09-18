@@ -28,6 +28,7 @@ root_depth_metrics(
   tube_diameter_cm = 7,
   depth_interval_cm = 5,
   flat_geometry = FALSE,
+  rotation_fixed_width = 1800,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -140,6 +141,19 @@ root_depth_metrics(
   Set to `TRUE` for flat rhizotron windows (e.g. glass-fronted boxes)
   where no sinusoidal correction is needed (`sinoid = FALSE`). Default
   `FALSE`.
+
+- rotation_fixed_width:
+
+  Numeric. Width in **rows** that each image is cropped to along the
+  rotation axis, centred on the middle row, before any trait is measured
+  (see
+  [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)).
+  This trims the tube edges, where the curvature of the tube distorts
+  what the scanner sees. An image with fewer rows than this cannot be
+  cropped symmetrically, so
+  [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
+  clamps to the image bounds and says so – the image is then used at
+  full width. Default `1800`.
 
 - calc_root_pixels:
 

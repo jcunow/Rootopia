@@ -38,7 +38,8 @@ deep_drive(
 - select_layer_rm:
 
   Integer. Which layer to use from \`RootMap\` if it has multiple bands.
-  Default is \`2\`.
+  Default is \`NULL\`, which passes every layer to
+  \`load_flexible_image()\` rather than selecting one.
 
 - select_layer_dm:
 

@@ -39,7 +39,9 @@ estimate_rotation_shift(
 
 - select_layer:
 
-  Layer to use for multi-band inputs.
+  Must stay `NULL`: the correlation uses the luma of all three channels,
+  so a single layer cannot be used. Use `overlay_layer` to choose what
+  the overlay draws.
 
 - window:
 
@@ -64,8 +66,8 @@ data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
 img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
-estimate_rotation_shift(img1, img2, cor_type = "phase", select_layer = 2)
+estimate_rotation_shift(img1, img2, cor_type = "phase")
 #> Warning: Image size mismatch detected; cropping to common extent
 #>        depth     rotation         peak 
-#> -18.00000000  -9.00000000   0.03476661 
+#> -18.00000000  -9.00000000   0.03476524 
 ```

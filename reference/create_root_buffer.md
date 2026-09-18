@@ -43,6 +43,6 @@ create_root_buffer(img, width = 2)
 #> coord. ref. : 
 #> source(s)   : memory
 #> names       : lyr.1, lyr.2, lyr.3
-#> min values  :  -254,  -254,  -254
+#> min values  :     0,     0,     0
 #> max values  :     1,     1,     1
 ```

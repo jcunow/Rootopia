@@ -31,6 +31,15 @@ order_classification_map(et, template, value = "branch_order")
 A `SpatRaster` (or matrix) of `value` per root pixel, `NA` elsewhere,
 aligned to `template`.
 
+## Details
+
+Only pixels that belong to a segment are painted. Junction contraction
+dissolves the interior of each branch-point cluster, so the map carries
+one unpainted pixel per branch point and a pixel count taken off the map
+runs that much below the skeleton. Read lengths from `et$length`, which
+accounts for the contracted pixels; the map is for masking and zonal
+statistics, not for measuring.
+
 ## Examples
 
 ``` r
