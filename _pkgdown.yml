@@ -36,6 +36,9 @@ navbar:
         - text: "-------"
         - text: "Batch Processing (whole folders at once, one function)"
           href: articles/BatchProcessing_vignette.html
+        - text: "-------"
+        - text: "How It Works (modules, pipelines and rules)"
+          href: articles/HowItWorks_vignette.html
     - text: News
       href: news/index.html
     - text: Function Index
@@ -49,8 +52,9 @@ reference:
     contents:
       - root_depth_metrics
 
-  - title: "Stitching scans from the same Tube together"
-    desc: "High-level wrapper that enables to combine multiple depths from a tube into a single large mosaic iamge"
+  - title: "Stitching scans from the same tube together"
+    desc: "High-level wrapper that combines multiple depths from a tube into a
+      single large mosaic image, plus helpers to preview what a folder contains."
     contents:
       - stitch_root_scans
 

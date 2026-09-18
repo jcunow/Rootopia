@@ -1,9 +1,10 @@
 ---
 title: "Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and Turnover"
+author: "Johannes Cunow"
 output:
-    rmarkdown::html_vignette:
-        toc: true
-        toc_depth: 2
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
 vignette: >
   %\VignetteIndexEntry{Special Topics: RGB classifier, Soil Texture, Rhizosphere Halos, and Turnover}
   %\VignetteEngine{knitr::rmarkdown}
@@ -32,6 +33,8 @@ library(terra)
 > features survive at ~1:1. `frac` sets the inset size (magnification `1/frac`)
 > and `center` controls which part is magnified.
 
+# Special Topics
+
 This article collects a few less-obvious capabilities of **Rootopia** that
 do not fit the main step-by-step tutorials but are useful for specific
 questions: classifying soil/soil material by color, quantifying soil
@@ -41,14 +44,16 @@ measuring root turnover between time points.
 All examples use the bundled Oulanka 2023 example rasters, so you can run
 them as-is.
 
-# 1. Soil and material color classification
+---
+
+## 1. Soil and material color classification
 
 `classify_soil_rgb()` assigns every pixel of an RGB scan to a
 class (e.g., dark soil, red soil, root, silver tape, coarse debris, ...) by
 nearest-centroid matching in CIE LAB color space. Pixels too far from any
 centroid are left "unclassified".
 
-```{r soil-classify}
+```{r soil-classify, fig.alt=c("RGB minirhizotron scan, full view with the magnified region outlined.", "The same scan magnified to native resolution.", "Class map: every pixel assigned to a soil or material class by colour.", "The class map magnified to native resolution.")}
 img <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
                            output_format = "spatrast", scale = "none")
 # original image
@@ -59,8 +64,12 @@ result <- classify_soil_rgb(img, downsample_fact = 4, verbose = FALSE)
 
 # A SpatRaster of class IDs (factor levels are the class names)
 zoom_plot(result$map, main = "Soil classification")
-## As ou can see, some classes can be retrieved decntly well, others not so much. You can try to fiddle and see if a class of interest can be reliably identified with this simple approach. Classes and their parameters (center and distance) can be modified to fit your needs.
 ```
+
+Some classes come out well, others less so. It is worth experimenting to see
+whether the class you care about can be identified reliably by this fairly
+simple approach; each class's centre and distance can be adjusted to fit your
+material.
 
 The returned list also carries per-class statistics -- pixel counts, area
 fractions, mean LAB/RGB colors, and the mean distance to the centroid:
@@ -69,18 +78,20 @@ fractions, mean LAB/RGB colors, and the mean distance to the centroid:
 result$metrics
 ```
 
-## Visualizing the classification
+### Visualizing the classification
 
 `plot_soil_classification()` renders the class map with a legend and the
 actual mean colors of each class:
 
-```{r soil-plot}
+```{r soil-plot, fig.alt="Soil classification map with a legend showing each class in its own mean colour."}
 plot_soil_classification(result)
-
-# You can see that classes like roots and coarse debris are not well separated on the image - owing to their color similarity. In this image, coarse debris is suppose to show fibrous woody or rhizome structures which appears weakly distinguishable to roots in this example. 
 ```
 
-## Calibrating your own centroids
+Roots and coarse debris separate poorly here, because their colours are close.
+"Coarse debris" is meant to capture fibrous woody or rhizome structures, which
+in this scan are only weakly distinguishable from roots.
+
+### Calibrating your own centroids
 
 The default centroids were calibrated on one scanner and site. For other
 data, build your own with `build_soil_centroids()`. You supply `picks`: a
@@ -120,21 +131,23 @@ result <- classify_soil_rgb(img, centroids = cents)
 zoom_plot(result$map, main = "Soil classification")
 ```
 
-Note: provide a class for **every** material in your scans. Because
-classification is nearest-centroid, any material without its own class is
-snapped into whichever defined class sits closest. `build_soil_centroids()`
-prints intra-class spread and inter-class distances to help you tune
-`MAX_DIST` before running the full classification.
+> **Note**: provide a class for **every** material in your scans. Because
+> classification is nearest-centroid, any material without its own class is
+> snapped into whichever defined class sits closest. `build_soil_centroids()`
+> prints intra-class spread and inter-class distances to help you tune
+> `MAX_DIST` before running the full classification.
 
 See `?classify_soil_rgb` for the full description of the centroid table
 format and the `prior`/`alpha` blending workflow for iterative refinement.
 
-# 2. Soil surface texture and color
+---
+
+## 2. Soil surface texture and color
 
 `analyze_soil_texture()` computes gray-level co-occurrence matrix (GLCM)
 texture metrics from a color image, which can be informative on the spatial heterogeneity within a scan.
 
-```{r soil-texture, eval = requireNamespace("glcm", quietly = TRUE)}
+```{r soil-texture, fig.alt="Four GLCM texture rasters of the scan: variance, second moment, correlation and entropy."}
 tex <- analyze_soil_texture(
   img,
   grays   = 12,
@@ -154,14 +167,16 @@ tube_coloration(img)
 
 
 
-# 3. Rhizosphere halo (root buffer zone)
+---
+
+## 3. Rhizosphere halo (root buffer zone)
 
 `create_root_buffer()` grows a buffer of a chosen width around every root
 pixel -- a simple proxy for the rhizosphere / diffusion zone. With
 `halo_only = TRUE` it returns only the ring around the roots (excluding the
 roots themselves).
 
-```{r root-buffer}
+```{r root-buffer, fig.alt=c("Rhizosphere halo of width 3 pixels around each root.", "Halo only, width 10 pixels.", "Roots together with their width-10 halo.")}
 seg  <- load_flexible_image(seg_Oulanka2023_Session03_T067, select_layer = 2)
 halo <- create_root_buffer(seg, width = 3, halo_only = TRUE, kernel = "circle")
 zoom_plot(halo, main = "Rhizosphere halo (width 3)")
@@ -177,7 +192,9 @@ The `kernel` argument switches between a `"circle"` (8-neighbor) and a
 dilation iterations are applied. Set `halo_only = FALSE` to return the
 roots plus their buffer as a single filled mask.
 
-# 4. Root turnover between time points
+---
+
+## 4. Root turnover between time points
 
 `root_turnover()` quantifies how much root material was produced, lost, or
 retained. `method` selects one of two approaches:
@@ -204,10 +221,17 @@ s3 <- load_flexible_image(skl_Oulanka2023_Session03_T067, output_format = "spatr
 root_turnover(s1, s3, method = "tc", tc_method = "rootpx", unit = "cm", dpi = 150, select_layer = 2)
 ```
 
-# See also
+---
 
-- `vignette("BatchProcessing_vignette")` -- end-to-end depth profiling.
-- `?classify_soil_rgb`, `?build_soil_centroids`, `?plot_soil_classification`
-- `?analyze_soil_texture`, `?tube_coloration`
-- `?create_root_buffer`
-- `?root_turnover`
+## What to read next
+
+- [Minirhizotron Scans](MinirhizotronScans_vignettes.html) -- the step-by-step
+  workflow these topics sit alongside.
+- [Batch Processing](BatchProcessing_vignette.html) -- run the whole depth
+  profile over a folder in one call.
+- [Flatbed Scans](FlatBedScans_vignettes.html) -- the equivalent workflow for
+  flatbed scanner images.
+
+Function reference: `?classify_soil_rgb`, `?build_soil_centroids`,
+`?plot_soil_classification`, `?analyze_soil_texture`, `?tube_coloration`,
+`?create_root_buffer`, `?root_turnover`.

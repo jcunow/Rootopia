@@ -31,10 +31,12 @@ stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output"
 
 It discovers the files, groups them into one sequence per tube, sorts each
 group, aligns and blends the frames, and (optionally) writes one PNG per tube.
-That is the only function you need to call. (The per-pair and per-sequence
-engines it uses are documented at `?stitch_image_pair` and
-`?stitch_image_sequence` for advanced use; `?list_tubes` and `?list_scan_files`
-preview a folder.)
+That is the only function you need to call. To see what a folder holds before
+committing to a run, pass `tubes = "ask"`: it prints the tube names and frame
+counts, then lets you pick a range in the same call. Everything underneath --
+the folder scan, the per-pair and per-sequence engines -- is internal, though
+the help pages (`?stitch_image_pair`, `?stitch_image_sequence`) document them
+if you want to know what happens inside.
 
 ```{r lib, eval = FALSE}
 # install.packages("remotes")
@@ -128,7 +130,7 @@ dim(mosaic)            # reconstructed length
 res$report             # per-join dx, dy, peak (confidence), overlap
 ```
 
-```{r show-real, eval = has_png, fig.height = 4.5}
+```{r show-real, eval = has_png, fig.height = 4.5, fig.alt="Overlapping frames stitched back into a single continuous mosaic."}
 norm01 <- function(a) a / max(a, na.rm = TRUE)         # display only
 span   <- ncol(mosaic)
 
@@ -208,8 +210,8 @@ Only how you *supply* frames changes with format; the settings behave the same.
 ## Working with a real folder
 
 ```{r folder, eval = FALSE}
-# preview first
-list_tubes("path/to/scans", pattern = ".tiff")        # index | tube | n_frames
+# see the tubes (index | tube | n_frames) and pick a range in one call
+stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
 
 # stitch every tube, one PNG each
 stitch_root_scans("path/to/scans", pattern = ".tiff", out_dir = "path/to/output")
@@ -248,7 +250,9 @@ group_regex = NULL             # no grouping -> one mosaic
 
 **Selecting — `select` vs `tubes`.** `select` indexes the sorted *file* list
 *before* grouping; `tubes` selects whole *tubes* by index, name, or
-interactively. Use `list_scan_files()` / `list_tubes()` to see the indices.
+interactively. `tubes = "ask"` prints the available tubes with their indices;
+if you pass an index that is out of range, the error names how many there are
+and what they are called.
 
 ```{r sel, eval = FALSE}
 stitch_root_scans("scans", pattern = ".tiff", select = 1:36)              # first 36 files
@@ -300,3 +304,16 @@ res$report[order(res$report$peak), ][1:10, ]   # least-confident joins first
 If a tube aligns poorly: bring `edge_width` closer to the real overlap, raise
 `vertical_offset` past a header/tape strip, try `preprocess = "grad"` for uneven
 lighting, or confirm the frames are in the intended (filename) order.
+
+---
+
+## What to read next
+
+- [Minirhizotron Scans](MinirhizotronScans_vignettes.html) — the step-by-step
+  workflow to run on the mosaic once it is stitched
+- [Flatbed Scans](FlatBedScans_vignettes.html) — the equivalent workflow for
+  flatbed scanner images
+- [Batch Processing](BatchProcessing_vignette.html) — depth-resolved analysis
+  over a whole folder in one call
+- [Function reference](../reference/index.html) — full documentation for
+  every exported function

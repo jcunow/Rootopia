@@ -44,7 +44,7 @@ processing stage or who are working on a specific subset of functions.
 > [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or
 > [RootPainter](https://github.com/Abe404/root_painter).
 
-> If a tube constitues of multiple overlapping images, consider stitching [Image Stitching](Stitching_vignette.html)
+> If a tube consists of multiple overlapping images, consider stitching [Image Stitching](Stitching_vignette.html)
 
 
 ## Installation
@@ -111,7 +111,7 @@ rgb <- load_flexible_image(
 
 For this vignette we use the bundled example data so every step below runs:
 
-```{r}
+```{r fig.alt=c("Binary root layer of a minirhizotron scan, roots in white, with the magnified region outlined.", "The same root layer magnified to native resolution.")}
 # 3-band RootDetector output; layer 2 is the root channel.
 data(seg_Oulanka2023_Session01_T067)
 
@@ -183,7 +183,7 @@ the curvature of cylindrical tubes.
 | `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
 | `center_offset` | Fractional position of the rotational center (0–1). 0.5 = centered. |
 
-```{r}
+```{r fig.alt="Depth map in centimetres, shading from shallow at one end to deep at the other."}
 # `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth
 # attribution. Here it is derived from the RootDetector layers.
 mask <- seg_img[[1]] - seg_img[[2]]
@@ -219,7 +219,7 @@ terra::plot(depth_map, main = "Depth map (cm)")
 `binning()` rounds continuous depth values to discrete intervals. The bin
 width (`nn`) should match your analysis scale — 5 cm is a common choice. You may want to adjust this depending on your root prevalence.  
 
-```{r}
+```{r fig.alt="The depth map reduced to discrete depth bins, drawn as bands of constant colour."}
 depth_bins <- binning(depthmap = depth_map, nn = 5, round_option = "rounding")
 
 # The set of depth bins we will iterate over for per-slice traits
@@ -301,7 +301,7 @@ head(depth_data)
 you specify) and returns it as a raster. Because it is a per-pixel value, the
 profile reduces with `zonal()` just like the pixel counts in 5a.
 
-```{r}
+```{r fig.alt="Root trait plotted for each depth bin down the profile."}
 diam_result <- root_diameter(
   root_layer,
   skeleton_img = skl,
@@ -416,7 +416,7 @@ cat(sprintf("MRD: %.2f  Total length density: %.4f\n",
 itself — useful for plotting how root mass/length accumulates with depth, or
 for comparing the *shape* of accumulation curves between tubes/plots.
 
-```{r}
+```{r fig.alt="Cumulative root accumulation against depth."}
 # Cumulative root pixel count with depth, per tube
 depth_data$Tube <- "T067"   # add a grouping column if not already present
 

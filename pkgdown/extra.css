@@ -1,0 +1,210 @@
+/* Rootopia — typographic refinements over the stock bslib "breeze-light" theme.
+ *
+ * pkgdown picks this file up automatically. Everything here is expressed in
+ * Bootstrap 5 custom properties (--bs-*) rather than literal colours, so the
+ * light/dark switch keeps working without a second set of rules. Two places
+ * genuinely need a colour of their own; both are defined for each theme below.
+ */
+
+:root {
+  --rt-measure: 72ch;        /* comfortable line length for running text */
+  --rt-callout-bg: rgba(13, 110, 253, 0.05);
+  --rt-callout-border: rgba(13, 110, 253, 0.35);
+}
+
+[data-bs-theme="dark"] {
+  --rt-callout-bg: rgba(110, 168, 254, 0.08);
+  --rt-callout-border: rgba(110, 168, 254, 0.40);
+}
+
+/* The --bs-* fallbacks written inline below are Bootstrap's light defaults, so
+ * that this file still degrades sensibly if it is ever loaded without them.
+ * Under the dark theme the fallbacks would be wrong, so give them dark values. */
+[data-bs-theme="dark"] {
+  --bs-border-color: #495057;
+  --bs-tertiary-bg: #2b3035;
+  --bs-secondary-color: rgba(222, 226, 230, 0.75);
+}
+
+
+/* ---- Measure -------------------------------------------------------------
+ * Long lines are the main thing that makes a documentation page tiring to
+ * read. The cap is applied to running text only: figures, tables and code
+ * keep the full column, because root scans are wide and shrinking them
+ * defeats the point.
+ */
+main p,
+main li,
+main dd {
+  max-width: var(--rt-measure);
+}
+
+
+/* ---- Vertical rhythm ---------------------------------------------------- */
+main h2,
+main h3,
+main h4 {
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+}
+
+main h2 {
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+main p {
+  line-height: 1.65;
+}
+
+/* The horizontal rules the vignettes use between sections. */
+main hr {
+  margin: 2.5rem 0;
+  opacity: 0.25;
+}
+
+/* A `---` immediately before a section heading would otherwise draw a second
+ * full-width rule a few lines under the first. One separator is enough, and
+ * the rule that carries the heading is the more useful of the two. */
+main hr + h2 {
+  margin-top: 1.25rem;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+
+/* ---- Tables --------------------------------------------------------------
+ * Horizontal rules only. Vertical borders and zebra striping add ink without
+ * adding information, and these tables are mostly two or three columns.
+ */
+main table {
+  width: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95em;
+}
+
+main table th,
+main table td {
+  padding: 0.5rem 0.9rem 0.5rem 0;
+  border: none;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  text-align: left;
+  vertical-align: top;
+}
+
+main table thead th {
+  border-bottom-width: 2px;
+  font-weight: 600;
+}
+
+main table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+main table tbody tr:hover {
+  background-color: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+
+/* ---- Callouts ------------------------------------------------------------
+ * The vignettes use "> **Note**: ..." blockquotes as callouts, not as
+ * quotations. Styling them as a tinted panel rather than an indented quote
+ * makes them read the way they were written.
+ */
+main blockquote {
+  max-width: var(--rt-measure);
+  margin: 1.5rem 0;
+  padding: 0.85rem 1.1rem;
+  border-left: 3px solid var(--rt-callout-border);
+  border-radius: 0 4px 4px 0;
+  background-color: var(--rt-callout-bg);
+  font-size: 0.95em;
+}
+
+main blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+main blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ---- Figures -------------------------------------------------------------
+ * Root scans are the substance of this package, so figures get room, and
+ * captions are set apart from body text so they are not misread as prose.
+ */
+main img,
+main .figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+main .figure,
+main figure {
+  margin: 1.75rem 0;
+}
+
+main figcaption,
+main p.caption {
+  max-width: var(--rt-measure);
+  margin-top: 0.6rem;
+  color: var(--bs-secondary-color, rgba(33, 37, 41, 0.75));
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+
+/* ---- Code ----------------------------------------------------------------
+ * Output blocks are printed results, not code to copy; muting them lets the
+ * eye find the input.
+ */
+main div.sourceCode {
+  margin: 1.25rem 0;
+  border-radius: 4px;
+}
+
+main pre {
+  padding: 0.9rem 1rem;
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+main pre.r-output code {
+  color: var(--bs-secondary-color, rgba(33, 37, 41, 0.75));
+}
+
+main p code,
+main li code,
+main td code {
+  font-size: 0.9em;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  background-color: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+
+/* ---- Reference index -----------------------------------------------------
+ * The function index is a lookup table, so the group headings need to be
+ * findable when scanning quickly.
+ */
+.template-reference-index main h2 {
+  margin-top: 2.75rem;
+}
+
+.template-reference-index main table td:first-child {
+  white-space: nowrap;
+  padding-right: 1.5rem;
+}
+
+
+/* ---- Small screens ------------------------------------------------------- */
+@media (max-width: 767px) {
+  main table {
+    display: block;
+    overflow-x: auto;
+  }
+}
