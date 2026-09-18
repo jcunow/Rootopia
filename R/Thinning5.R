@@ -4,6 +4,47 @@
 ##################################
 
 
+#' Deletion table for the 256 possible 3x3 foreground neighbourhoods
+#'
+#' Indexed by the weight layout documented at \code{lut_codes()} inside
+#' \code{lut_thin_fast()}:
+#' \preformatted{
+#'   TL=1   T=2   TR=4
+#'   L=128        R=8
+#'   BL=64  B=32  BR=16
+#' }
+#' Values: 0 = keep, 1 = delete in sub-iteration 1, 2 = in sub-iteration 2,
+#' 3 = in both.
+#'
+#' This is a Zhang-Suen \emph{variant}, not the published table, and the
+#' difference is deliberate: it disagrees with the textbook conditions at 25 of
+#' the 256 codes. Twelve are more conservative -- the textbook deletes in both
+#' sub-iterations, this deletes in only one. The other thirteen are the
+#' staircase corners: a pixel whose only neighbours are two orthogonal ones that
+#' already touch each other diagonally. Zhang-Suen's crossing-number test scores
+#' those as A = 2 and keeps them, leaving a redundant pixel on every 90-degree
+#' bend; deleting them gives a cleaner diagonal skeleton and cannot disconnect
+#' anything.
+#'
+#' The two properties the rest of the package depends on are checked in
+#' \code{tests/testthat/test-skeleton.R} rather than taken on trust: no entry
+#' deletes a pixel whose removal would disconnect its own neighbourhood, and no
+#' pixel with a single neighbour -- a root tip -- is ever deleted.
+#'
+#' @keywords internal
+#' @noRd
+.thinning_lut <- as.integer(c(
+  0,0,0,1,0,0,1,3,0,0,3,1,1,0,1,3,0,0,0,0,0,0,0,0,2,0,2,0,3,0,3,3,
+  0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,3,0,2,2,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  2,0,0,0,0,0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,3,0,2,0,
+  0,1,3,1,0,0,1,3,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+  3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  2,3,1,3,0,0,1,3,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  2,3,0,1,0,0,0,1,0,0,0,0,0,0,0,0,3,3,0,1,0,0,0,0,2,2,0,0,2,0,0,0
+))
+
+
 
 #' Zhang-Suen thinning using lookup table (LUT implementation)
 #'
@@ -46,19 +87,10 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
   v <- as.integer(terra::values(img))
   n_start <- sum(v == 1L, na.rm = TRUE)
   
-  lut <- as.integer(c(
-    0,0,0,1,0,0,1,3,0,0,3,1,1,0,1,3,0,0,0,0,0,0,0,0,2,0,2,0,3,0,3,3,
-    0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,2,0,0,0,3,0,2,2,
-    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    2,0,0,0,0,0,0,0,2,0,0,0,2,0,0,0,3,0,0,0,0,0,0,0,3,0,0,0,3,0,2,0,
-    0,1,3,1,0,0,1,3,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-    3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    2,3,1,3,0,0,1,3,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    2,3,0,1,0,0,0,1,0,0,0,0,0,0,0,0,3,3,0,1,0,0,0,0,2,2,0,0,2,0,0,0
-  ))
-  
+  lut <- .thinning_lut
+
   # 3x3 neighbourhood -> 256-LUT code for every current foreground pixel.
-  # Weight layout (must match the `lut` encoding):
+  # Weight layout (must match the `.thinning_lut` encoding):
   #   TL=1   T=2   TR=4
   #   L=128        R=8
   #   BL=64  B=32  BR=16
