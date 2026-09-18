@@ -28,7 +28,9 @@ test_that("the graph route reproduces length, diameter and topology", {
 
 test_that("the end-to-end route survives skeletonisation", {
   skip_if_not_installed("terra")
-  for (d in c("comb", "hierarchical", "cross")) {
+  # 'fork' is excluded on purpose: its continuation pair is a genuine tie, so
+  # the per-root metrics have no ground truth (see ?root_phantom).
+  for (d in c("comb", "herringbone", "hierarchical", "cross")) {
     v <- validate_branching(d, size = 200, from = "mask", verbose = FALSE)
     expect_true(attr(v, "passed"),
                 info = paste0("design '", d, "' failed: ",

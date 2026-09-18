@@ -24,6 +24,14 @@ Writes any per-segment column (default the order class) back onto the full
 image grid, aligned to \code{template}, for masking and zonal statistics.
 Background pixels are \code{NA}.
 }
+\details{
+Only pixels that belong to a segment are painted. Junction contraction
+dissolves the interior of each branch-point cluster, so the map carries one
+unpainted pixel per branch point and a pixel count taken off the map runs
+that much below the skeleton. Read lengths from \code{et$length}, which
+accounts for the contracted pixels; the map is for masking and zonal
+statistics, not for measuring.
+}
 \examples{
 \dontrun{
 res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")

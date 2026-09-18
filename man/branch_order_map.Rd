@@ -64,10 +64,13 @@ and diameters are reported in real units.
 All three order schemes are always computed and stored on \code{$edges};
 \code{order} only selects which labels \code{$class_map} and \code{$summary}.
 \describe{
-  \item{\code{tip_order} (per segment)}{Topological leaf-peeling (Strahler-like).
-    Every terminal segment is order 1; peeling terminals away round by round, a
+  \item{\code{tip_order} (per segment)}{Topological leaf-peeling depth. Every
+    terminal segment is order 1; peeling terminals away round by round, a
     segment's order is \code{1 + max(child orders)}. Order rises toward the
-    interior, so the distal end of even a thick root is 1.}
+    interior, so the distal end of even a thick root is 1. This is centrifugal
+    depth, not strict Strahler ordering: Strahler only increments where two
+    children share the highest order, while this increments at every junction,
+    so a long chain of single laterals keeps climbing.}
   \item{\code{root_order} (per root)}{Segments are grouped into continuous roots
     (continuation rule below); each root takes the \emph{maximum} \code{tip_order}
     along it, so a thick main axis keeps its high order out to its tip. Sensitive
