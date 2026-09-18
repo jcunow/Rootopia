@@ -39,8 +39,10 @@ create_depthmap(
 
 - tilt:
 
-  Numeric; minirhizotron tube insertion angle in degrees (typically
-  30-45)
+  Numeric; insertion angle in degrees measured from horizontal, in (0,
+  90\]. Typically 30-45 for a minirhizotron; 90 is the head-on case
+  (vertical tube, or a flatbed scan) where the depth axis is not
+  foreshortened
 
 - dpi:
 

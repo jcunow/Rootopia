@@ -1,9 +1,13 @@
-# Compute root traits over a depth profile from segmented (mini)rhizotron images
+# Compute root traits over a depth profile from root scans
 
-Processes a set of segmented rhizotron or minirhizotron images and
-returns a tidy data frame of root traits summarized per depth interval.
-Supports both cylindrical tube geometry (minirhizotrons) and flat window
-geometry (rhizotron panels).
+Processes a directory of root images and returns a tidy data frame of
+root traits summarized per depth interval. Handles flatbed scans and
+flat rhizotron windows by default, and cylindrical minirhizotron tubes
+when tube parameters are supplied (see **Geometry**). Input may be
+already segmented or a raw greyscale/RGB scan, which is binarized on the
+way in (see **Binarization**).
+
+`batch_root_traits()` is an alias for the same function.
 
 Each metric group is toggled independently. If a block fails for one
 image it is replaced with `NA` columns and a message is printed;
@@ -20,15 +24,56 @@ root_depth_metrics(
   seg_file_index = NULL,
   skl_file_index = NULL,
   rgb_file_index = NULL,
-  insertion_angles = 0,
+  insertion_angles = NULL,
   soil_starts = 0,
   tube_names = NULL,
   session = "",
   dpi = 300,
-  tube_diameter_cm = 7,
+  tube_diameter_cm = NULL,
   depth_interval_cm = 5,
-  flat_geometry = FALSE,
   rotation_fixed_width = 1800,
+  binarize = "auto",
+  binarize_threshold = 200,
+  dark_roots = TRUE,
+  seg_layer = NULL,
+  calc_root_pixels = TRUE,
+  calc_root_length = TRUE,
+  calc_diameter_stats = TRUE,
+  calc_diameter_quantiles = FALSE,
+  calc_modal_peaks = FALSE,
+  calc_landscape_metrics = FALSE,
+  calc_color_metrics = FALSE,
+  calc_root_angles = FALSE,
+  calc_root_order_metrics = FALSE,
+  calc_density_metrics = TRUE,
+  calc_distribution_indices = TRUE,
+  calc_advanced_metrics = TRUE,
+  diameter_thresholds = c(0.2, 0.5, 1),
+  diameter_threshold_unit = "mm",
+  diameter_quantiles = c(0.9, 0.95, 0.99),
+  output_path = NULL,
+  verbose = TRUE
+)
+
+batch_root_traits(
+  path_seg,
+  path_skl = NULL,
+  path_rgb = NULL,
+  seg_file_index = NULL,
+  skl_file_index = NULL,
+  rgb_file_index = NULL,
+  insertion_angles = NULL,
+  soil_starts = 0,
+  tube_names = NULL,
+  session = "",
+  dpi = 300,
+  tube_diameter_cm = NULL,
+  depth_interval_cm = 5,
+  rotation_fixed_width = 1800,
+  binarize = "auto",
+  binarize_threshold = 200,
+  dark_roots = TRUE,
+  seg_layer = NULL,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -87,11 +132,15 @@ root_depth_metrics(
 
 - insertion_angles:
 
-  Numeric. Insertion angle of the tube or window from vertical, in
-  **degrees**. `0` = perfectly vertical, `30` = tilted 30 degrees from
-  vertical (a common minirhizotron angle). Used by
+  Numeric or `NULL`. Insertion angle of the tube, in **degrees measured
+  from horizontal** – `90` is a vertical tube, `45` a tube pushed in at
+  45 degrees. This is the convention
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  to correct the depth scale. Default `0`.
+  uses for `tilt`, and it is the opposite of the "degrees from vertical"
+  wording used by some minirhizotron software, so convert before passing
+  it in. Values must be strictly between 0 and 90. Supplying this
+  argument switches the run to minirhizotron geometry (see
+  **Geometry**). Default `NULL` (flatbed).
 
 - soil_starts:
 
@@ -117,30 +166,19 @@ root_depth_metrics(
 
 - tube_diameter_cm:
 
-  Numeric. Inner diameter of the minirhizotron tube in **centimetres**.
-  Passed to
+  Numeric or `NULL`. Inner diameter of the minirhizotron tube in
+  **centimetres**. Passed to
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  as `tube_thicc`. Its role in flat-window geometry
-  (`flat_geometry = TRUE`) is uncertain; it likely has a default inside
-  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  and may be ignored – leave at the default unless you know it matters
-  for your setup. Default `7`.
+  as `tube_thicc`, where it sets the amplitude and wavelength of the
+  sinusoidal curvature correction. Supplying this argument switches the
+  run to minirhizotron geometry (see **Geometry**). Default `NULL`
+  (flatbed).
 
 - depth_interval_cm:
 
   Numeric. Size of each depth bin in **centimetres**. Passed as `nn` to
   [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md).
   Default `5`.
-
-- flat_geometry:
-
-  Logical. If `FALSE` (default), images are treated as cylindrical
-  minirhizotron tubes and a sinusoidal depth correction is applied
-  (`sinoid = TRUE` in
-  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)).
-  Set to `TRUE` for flat rhizotron windows (e.g. glass-fronted boxes)
-  where no sinusoidal correction is needed (`sinoid = FALSE`). Default
-  `FALSE`.
 
 - rotation_fixed_width:
 
@@ -153,7 +191,41 @@ root_depth_metrics(
   cropped symmetrically, so
   [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
   clamps to the image bounds and says so – the image is then used at
-  full width. Default `1800`.
+  full width. Only applied under minirhizotron geometry; a flatbed scan
+  is measured at full width. Default `1800`.
+
+- binarize:
+
+  Either `"auto"` (default), `TRUE`, or `FALSE`. `"auto"` thresholds an
+  image only if it has more than two distinct grey levels, so binary
+  masks are left alone and raw scans are binarized. `TRUE` always
+  thresholds, `FALSE` never does (any non-zero pixel is then taken as
+  root). Note that `TRUE` on an image already coded 0/1 will *invert*
+  it, because 0 counts as dark; this is what `"auto"` exists to prevent.
+
+- binarize_threshold:
+
+  Numeric. Grey level at which a scan is cut into root and background,
+  on the **0-255** scale (the RhizoVision Explorer convention). Images
+  that load on a 0-1 scale get the same cut-off rescaled, so the number
+  means the same thing either way. Default `200`.
+
+- dark_roots:
+
+  Logical. `TRUE` (default) means roots are *darker* than the
+  background, as on a flatbed scan of washed roots on a white tray:
+  pixels at or below `binarize_threshold` become root. `FALSE` inverts
+  this for bright-roots-on-dark-background images. If more than half the
+  pixels come out as root, the polarity is probably wrong and a warning
+  says so.
+
+- seg_layer:
+
+  Integer or `NULL`. Which layer of the segmented image to measure.
+  `NULL` (default) picks automatically: a single-layer image is used as
+  is, and a 3- or 4-layer image is converted to greyscale with
+  [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md).
+  Set this if your files carry the segmentation in one specific band.
 
 - calc_root_pixels:
 
@@ -359,15 +431,68 @@ those directories if necessary.
 All metadata arguments below accept either a single value (recycled to
 all images) or a vector of length equal to the number of images.
 
+## Geometry
+
+There is no geometry switch. The geometry follows from whether you
+supply tube parameters:
+
+- Flatbed (default):
+
+  Neither `insertion_angles` nor `tube_diameter_cm` is supplied. The
+  scan is treated as a flat surface imaged head-on: no sinusoidal
+  curvature correction (`sinoid = FALSE`), no foreshortening of the
+  depth axis (one pixel along the image width is one pixel of depth),
+  and no
+  [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
+  crop, since there is no tube interior to crop to.
+
+- Minirhizotron:
+
+  Either argument is supplied. The sinusoidal curvature correction is
+  switched on, the depth axis is foreshortened by
+  `sin(insertion_angles)`, and each image is cropped to
+  `rotation_fixed_width` rows about its centre. An argument you leave
+  out falls back to a neutral default: `tube_diameter_cm = 7` and
+  `insertion_angles = 90` (vertical tube), both announced in the run
+  log.
+
+In both cases depth runs along the image **width** (left to right),
+which is the orientation minirhizotron scanners produce. A flatbed scan
+with the soil surface at the top must be rotated 90 degrees before it is
+passed in, or the depth profile will be built across the wrong axis.
+
+## Binarization
+
+Flatbed scans are usually delivered as greyscale or RGB with the full
+0-255 range, not as a segmented mask. Such an image is reduced to a
+single greyscale layer
+([`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md)
+for RGB input) and cut at `binarize_threshold`, in the same way
+RhizoVision Explorer does it. Already-segmented input passes through
+untouched: with the default `binarize = "auto"` the cut is only applied
+when the image actually has more than two grey levels.
+
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Minimal -- fast default metrics only
+# Flatbed scans, not yet binarized -- the default path.
+# No tube arguments, so this is flat geometry: no curvature correction,
+# no foreshortening, no tube crop. Roots are dark on a bright tray, so
+# everything at or below grey level 200 is taken as root.
+result <- batch_root_traits(
+  path_seg           = "scans/flatbed/tray_01/",
+  dpi                = 600,
+  binarize_threshold = 200,
+  session            = "2024_spring"
+)
+
+# Minirhizotron -- supplying an insertion angle switches the geometry
 result <- root_depth_metrics(
   path_seg         = "scans/segmented/2022_02/",
   path_skl         = "scans/skeleton/2022_02/",
-  insertion_angles = tube_meta$angle,
+  insertion_angles = tube_meta$angle,   # degrees from horizontal
+  tube_diameter_cm = 7,
   session          = "2022_02"
 )
 
@@ -388,11 +513,11 @@ result <- root_depth_metrics(
   output_path             = "output/root_metrics_2022_02.RData"
 )
 
-# Flat rhizotron window (no sinusoidal tube correction)
+# Flat rhizotron window, already segmented. binarize = "auto" sees a
+# two-level image and leaves it alone.
 result <- root_depth_metrics(
-  path_seg      = "scans/segmented/rhizotron_A/",
-  path_skl      = "scans/skeleton/rhizotron_A/",
-  flat_geometry = TRUE
+  path_seg = "scans/segmented/rhizotron_A/",
+  path_skl = "scans/skeleton/rhizotron_A/"
 )
 } # }
 ```

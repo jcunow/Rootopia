@@ -6,8 +6,8 @@ High-level wrapper that runs a full depth-profile analysis over a
 directory of images.
 
 - [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
-  : Compute root traits over a depth profile from segmented
-  (mini)rhizotron images
+  [`batch_root_traits()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
+  : Compute root traits over a depth profile from root scans
 
 ## Stitching scans from the same tube together
 
