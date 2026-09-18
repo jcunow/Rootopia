@@ -25,7 +25,9 @@ images, specify band_index parameter}
 
 \item{tube_thicc}{Numeric; diameter of minirhizotron tube in cm}
 
-\item{tilt}{Numeric; minirhizotron tube insertion angle in degrees (typically 30-45)}
+\item{tilt}{Numeric; insertion angle in degrees measured from horizontal,
+in (0, 90]. Typically 30-45 for a minirhizotron; 90 is the head-on case
+(vertical tube, or a flatbed scan) where the depth axis is not foreshortened}
 
 \item{dpi}{Numeric; image resolution in dots per inch}
 

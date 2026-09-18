@@ -2,7 +2,8 @@
 % Please edit documentation in R/Wrapper_root_depth_metrics.R
 \name{root_depth_metrics}
 \alias{root_depth_metrics}
-\title{Compute root traits over a depth profile from segmented (mini)rhizotron images}
+\alias{batch_root_traits}
+\title{Compute root traits over a depth profile from root scans}
 \usage{
 root_depth_metrics(
   path_seg,
@@ -11,15 +12,56 @@ root_depth_metrics(
   seg_file_index = NULL,
   skl_file_index = NULL,
   rgb_file_index = NULL,
-  insertion_angles = 0,
+  insertion_angles = NULL,
   soil_starts = 0,
   tube_names = NULL,
   session = "",
   dpi = 300,
-  tube_diameter_cm = 7,
+  tube_diameter_cm = NULL,
   depth_interval_cm = 5,
-  flat_geometry = FALSE,
   rotation_fixed_width = 1800,
+  binarize = "auto",
+  binarize_threshold = 200,
+  dark_roots = TRUE,
+  seg_layer = NULL,
+  calc_root_pixels = TRUE,
+  calc_root_length = TRUE,
+  calc_diameter_stats = TRUE,
+  calc_diameter_quantiles = FALSE,
+  calc_modal_peaks = FALSE,
+  calc_landscape_metrics = FALSE,
+  calc_color_metrics = FALSE,
+  calc_root_angles = FALSE,
+  calc_root_order_metrics = FALSE,
+  calc_density_metrics = TRUE,
+  calc_distribution_indices = TRUE,
+  calc_advanced_metrics = TRUE,
+  diameter_thresholds = c(0.2, 0.5, 1),
+  diameter_threshold_unit = "mm",
+  diameter_quantiles = c(0.9, 0.95, 0.99),
+  output_path = NULL,
+  verbose = TRUE
+)
+
+batch_root_traits(
+  path_seg,
+  path_skl = NULL,
+  path_rgb = NULL,
+  seg_file_index = NULL,
+  skl_file_index = NULL,
+  rgb_file_index = NULL,
+  insertion_angles = NULL,
+  soil_starts = 0,
+  tube_names = NULL,
+  session = "",
+  dpi = 300,
+  tube_diameter_cm = NULL,
+  depth_interval_cm = 5,
+  rotation_fixed_width = 1800,
+  binarize = "auto",
+  binarize_threshold = 200,
+  dark_roots = TRUE,
+  seg_layer = NULL,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -63,11 +105,14 @@ applied to \code{list.files(path_skl)}.  Default \code{NULL}.}
 \item{rgb_file_index}{Integer vector or \code{NULL}. Optional subset index
 applied to \code{list.files(path_rgb)}.  Default \code{NULL}.}
 
-\item{insertion_angles}{Numeric. Insertion angle of the tube or window from
-vertical, in \strong{degrees}.  \code{0} = perfectly vertical,
-\code{30} = tilted 30 degrees from vertical (a common minirhizotron angle).
-Used by \code{create_depthmap()} to correct the depth scale.
-Default \code{0}.}
+\item{insertion_angles}{Numeric or \code{NULL}. Insertion angle of the tube,
+in \strong{degrees measured from horizontal} -- \code{90} is a vertical
+tube, \code{45} a tube pushed in at 45 degrees.  This is the convention
+\code{create_depthmap()} uses for \code{tilt}, and it is the opposite of
+the "degrees from vertical" wording used by some minirhizotron software,
+so convert before passing it in.  Values must be strictly between 0 and 90.
+Supplying this argument switches the run to minirhizotron geometry (see
+\strong{Geometry}).  Default \code{NULL} (flatbed).}
 
 \item{soil_starts}{Numeric. Pixel row (in the original, un-rotated image)
 at which the soil surface begins.  Used to set the zero-depth reference.
@@ -84,23 +129,16 @@ Default \code{NULL}.}
 
 \item{dpi}{Numeric; image resolution in dots per inch}
 
-\item{tube_diameter_cm}{Numeric. Inner diameter of the minirhizotron tube in
-\strong{centimetres}.  Passed to \code{create_depthmap()} as
-\code{tube_thicc}.  Its role in flat-window geometry (\code{flat_geometry
-= TRUE}) is uncertain; it likely has a default inside \code{create_depthmap()}
-and may be ignored -- leave at the default unless you know it matters for
-your setup.  Default \code{7}.}
+\item{tube_diameter_cm}{Numeric or \code{NULL}. Inner diameter of the
+minirhizotron tube in \strong{centimetres}.  Passed to
+\code{create_depthmap()} as \code{tube_thicc}, where it sets the amplitude
+and wavelength of the sinusoidal curvature correction.  Supplying this
+argument switches the run to minirhizotron geometry (see
+\strong{Geometry}).  Default \code{NULL} (flatbed).}
 
 \item{depth_interval_cm}{Numeric. Size of each depth bin in
 \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
 Default \code{5}.}
-
-\item{flat_geometry}{Logical.  If \code{FALSE} (default), images are treated
-as cylindrical minirhizotron tubes and a sinusoidal depth correction is
-applied (\code{sinoid = TRUE} in \code{create_depthmap()}).  Set to
-\code{TRUE} for flat rhizotron windows (e.g. glass-fronted boxes) where no
-sinusoidal correction is needed (\code{sinoid = FALSE}).  Default
-\code{FALSE}.}
 
 \item{rotation_fixed_width}{Numeric. Width in \strong{rows} that each image is
 cropped to along the rotation axis, centred on the middle row, before any
@@ -108,7 +146,36 @@ trait is measured (see \code{rotation_censor()}).  This trims the tube
 edges, where the curvature of the tube distorts what the scanner sees.  An
 image with fewer rows than this cannot be cropped symmetrically, so
 \code{rotation_censor()} clamps to the image bounds and says so -- the
-image is then used at full width.  Default \code{1800}.}
+image is then used at full width.
+Only applied under minirhizotron geometry; a flatbed scan is measured at
+full width.  Default \code{1800}.}
+
+\item{binarize}{Either \code{"auto"} (default), \code{TRUE}, or
+\code{FALSE}.  \code{"auto"} thresholds an image only if it has more
+than two distinct grey levels, so binary masks are left alone and raw scans
+are binarized.  \code{TRUE} always thresholds, \code{FALSE} never does
+(any non-zero pixel is then taken as root).  Note that \code{TRUE} on an
+image already coded 0/1 will \emph{invert} it, because 0 counts as dark;
+this is what \code{"auto"} exists to prevent.}
+
+\item{binarize_threshold}{Numeric. Grey level at which a scan is cut into
+root and background, on the \strong{0-255} scale (the RhizoVision Explorer
+convention).  Images that load on a 0-1 scale get the same cut-off
+rescaled, so the number means the same thing either way.  Default
+\code{200}.}
+
+\item{dark_roots}{Logical.  \code{TRUE} (default) means roots are
+\emph{darker} than the background, as on a flatbed scan of washed roots on
+a white tray: pixels at or below \code{binarize_threshold} become root.
+\code{FALSE} inverts this for bright-roots-on-dark-background images.  If
+more than half the pixels come out as root, the polarity is probably wrong
+and a warning says so.}
+
+\item{seg_layer}{Integer or \code{NULL}. Which layer of the segmented image
+to measure.  \code{NULL} (default) picks automatically: a single-layer
+image is used as is, and a 3- or 4-layer image is converted to greyscale
+with \code{rgb2gray()}.  Set this if your files carry the segmentation in
+one specific band.}
 
 \item{calc_root_pixels}{Logical. Count \code{rootpx} (foreground pixels) and
 \code{voidpx} (background pixels) per depth bin.  Required for density
@@ -218,10 +285,14 @@ A data frame with one row per tube x depth-bin combination.  Always
   \code{NULL} invisibly if every image failed.
 }
 \description{
-Processes a set of segmented rhizotron or minirhizotron images and returns a
-tidy data frame of root traits summarized per depth interval.  Supports both
-cylindrical tube geometry (minirhizotrons) and flat window geometry
-(rhizotron panels).
+Processes a directory of root images and returns a tidy data frame of root
+traits summarized per depth interval.  Handles flatbed scans and flat
+rhizotron windows by default, and cylindrical minirhizotron tubes when tube
+parameters are supplied (see \strong{Geometry}).  Input may be already
+segmented or a raw greyscale/RGB scan, which is binarized on the way in (see
+\strong{Binarization}).
+
+\code{batch_root_traits()} is an alias for the same function.
 
 Each metric group is toggled independently.  If a block fails for one image
 it is replaced with \code{NA} columns and a message is printed; processing
@@ -284,13 +355,62 @@ All metadata arguments below accept either a single value (recycled to all
 images) or a vector of length equal to the number of images.
 }
 
+\section{Geometry}{
+
+There is no geometry switch.  The geometry follows from whether you supply
+tube parameters:
+\describe{
+  \item{Flatbed (default)}{Neither \code{insertion_angles} nor
+    \code{tube_diameter_cm} is supplied.  The scan is treated as a flat
+    surface imaged head-on: no sinusoidal curvature correction
+    (\code{sinoid = FALSE}), no foreshortening of the depth axis (one pixel
+    along the image width is one pixel of depth), and no
+    \code{rotation_censor()} crop, since there is no tube interior to crop
+    to.}
+  \item{Minirhizotron}{Either argument is supplied.  The sinusoidal
+    curvature correction is switched on, the depth axis is foreshortened by
+    \code{sin(insertion_angles)}, and each image is cropped to
+    \code{rotation_fixed_width} rows about its centre.  An argument you
+    leave out falls back to a neutral default: \code{tube_diameter_cm = 7}
+    and \code{insertion_angles = 90} (vertical tube), both announced in the
+    run log.}
+}
+In both cases depth runs along the image \strong{width} (left to right),
+which is the orientation minirhizotron scanners produce.  A flatbed scan with
+the soil surface at the top must be rotated 90 degrees before it is passed
+in, or the depth profile will be built across the wrong axis.
+}
+
+\section{Binarization}{
+
+Flatbed scans are usually delivered as greyscale or RGB with the full 0-255
+range, not as a segmented mask.  Such an image is reduced to a single
+greyscale layer (\code{rgb2gray()} for RGB input) and cut at
+\code{binarize_threshold}, in the same way RhizoVision Explorer does it.
+Already-segmented input passes through untouched: with the default
+\code{binarize = "auto"} the cut is only applied when the image actually
+has more than two grey levels.
+}
+
 \examples{
 \dontrun{
-# Minimal -- fast default metrics only
+# Flatbed scans, not yet binarized -- the default path.
+# No tube arguments, so this is flat geometry: no curvature correction,
+# no foreshortening, no tube crop. Roots are dark on a bright tray, so
+# everything at or below grey level 200 is taken as root.
+result <- batch_root_traits(
+  path_seg           = "scans/flatbed/tray_01/",
+  dpi                = 600,
+  binarize_threshold = 200,
+  session            = "2024_spring"
+)
+
+# Minirhizotron -- supplying an insertion angle switches the geometry
 result <- root_depth_metrics(
   path_seg         = "scans/segmented/2022_02/",
   path_skl         = "scans/skeleton/2022_02/",
-  insertion_angles = tube_meta$angle,
+  insertion_angles = tube_meta$angle,   # degrees from horizontal
+  tube_diameter_cm = 7,
   session          = "2022_02"
 )
 
@@ -311,11 +431,11 @@ result <- root_depth_metrics(
   output_path             = "output/root_metrics_2022_02.RData"
 )
 
-# Flat rhizotron window (no sinusoidal tube correction)
+# Flat rhizotron window, already segmented. binarize = "auto" sees a
+# two-level image and leaves it alone.
 result <- root_depth_metrics(
-  path_seg      = "scans/segmented/rhizotron_A/",
-  path_skl      = "scans/skeleton/rhizotron_A/",
-  flat_geometry = TRUE
+  path_seg = "scans/segmented/rhizotron_A/",
+  path_skl = "scans/skeleton/rhizotron_A/"
 )
 }
 

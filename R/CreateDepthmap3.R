@@ -10,7 +10,9 @@
 #' @param mask Raster mask indicating foreign objects (1 = mask, 0 or NA = keep)
 #' @param sinoid Logical; if TRUE, accounts for tube curvature in depth calculation
 #' @param tube_thicc Numeric; diameter of minirhizotron tube in cm
-#' @param tilt Numeric; minirhizotron tube insertion angle in degrees (typically 30-45)
+#' @param tilt Numeric; insertion angle in degrees measured from horizontal,
+#'   in (0, 90]. Typically 30-45 for a minirhizotron; 90 is the head-on case
+#'   (vertical tube, or a flatbed scan) where the depth axis is not foreshortened
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start_soil Numeric; soil surface boundary in cm (0 = surface)
 #' @param center_offset Numeric; rotational center offset (0 = centered, 1 = edge)
@@ -40,8 +42,10 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # Validate numeric parameters
     if (!is.numeric(tube_thicc) || tube_thicc <= 0)
       stop("tube_thicc must be a positive number")
-    if (!is.numeric(tilt) || tilt <= 0 || tilt >= 90)
-      stop("tilt must be between 0 and 90 degrees")
+    # 90 is allowed: it is the head-on case (vertical tube, or a flatbed scan),
+    # where tilt.factor is 1 and the depth axis is not foreshortened at all.
+    if (!is.numeric(tilt) || tilt <= 0 || tilt > 90)
+      stop("tilt must be greater than 0 and at most 90 degrees")
     if (!is.numeric(dpi) || dpi <= 0)
       stop("dpi must be a positive number")
     if (!is.numeric(start_soil))
