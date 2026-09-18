@@ -85,6 +85,36 @@ validate_conversion_params <- function(input, scale, select_layer) {
   }
 }
 
+#' Validate a `select_layer` argument
+#'
+#' Every function taking `select_layer` hand-rolled this check, and the messages
+#' had drifted apart. The rules themselves genuinely differ between call sites --
+#' some accept `NULL` to mean "all layers", only some know the layer count at the
+#' point of checking -- so those stay explicit arguments rather than being
+#' flattened into one behaviour.
+#'
+#' @param select_layer The value to check.
+#' @param n_layers Layer count to bound against, or `NULL` to skip that test.
+#' @param allow_null Whether `NULL` is a valid value.
+#' @param arg Name to use in the error message.
+#' @return Invisibly `TRUE`; raises an error otherwise.
+#' @keywords internal
+#' @noRd
+.validate_select_layer <- function(select_layer, n_layers = NULL,
+                                   allow_null = TRUE, arg = "select_layer") {
+  if (is.null(select_layer)) {
+    if (allow_null) return(invisible(TRUE))
+    stop(arg, " must be a single positive integer.")
+  }
+  if (!is.numeric(select_layer) || length(select_layer) != 1L ||
+      is.na(select_layer) || select_layer < 1)
+    stop(arg, " must be a single positive integer.")
+  if (!is.null(n_layers) && select_layer > n_layers)
+    stop(arg, " (", select_layer, ") exceeds the number of layers in the image (",
+         n_layers, ").")
+  invisible(TRUE)
+}
+
 #' Rescale the array according to `scale`
 #'
 #' All conversions use fixed factors (255), never a per-image max, and are

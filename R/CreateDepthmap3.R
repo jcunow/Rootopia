@@ -36,7 +36,6 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
                            tube_thicc = 7, tilt = 45, dpi = 300,
                            start_soil = 0, center_offset = 0.5) {
 
-  # Input validation module
   tryCatch({
     # Validate numeric parameters
     if (!is.numeric(tube_thicc) || tube_thicc <= 0)
@@ -61,13 +60,8 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # all layers have the same dimensions, we select layer 1 to handle multi-layer and single-layer raster
     select_layer = 1
     
-    # Try loading the image with error handling
-    img <- tryCatch({
-      load_flexible_image(img, select_layer = select_layer,
-                          output_format = "spatrast", scale = "none")
-    }, error = function(e) {
-      stop(paste("Failed to load image:", e$message))
-    })
+    img <- load_flexible_image(img, select_layer = select_layer,
+                               output_format = "spatrast", scale = "none")
 
     # Validate image dimensions
     if (any(dim(img)[1:2] <= 1))

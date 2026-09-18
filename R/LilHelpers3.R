@@ -366,7 +366,6 @@ abind2 = function (..., along = N, rev.along = NULL, new.names = NULL,
 #'
 #' @examples circular_mean(angles = c(360,90,0), input_units = "degrees", output_units = "degrees")
 circular_mean <- function(angles, input_units = "degrees", output_units = "degrees") {
-  # Input validation
   tryCatch({
     if (missing(angles)) {
       stop("angles parameter is required")
@@ -569,7 +568,6 @@ image_threshold <- function(img, threshold = 0.4, method = "global", window_size
 #' accum_root = root_accumulation(df,group = "Plot", depth = "depth", variable = "rootpx")
 root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
   tryCatch({
-    # Input validation
     if (missing(x) || missing(group) || missing(depth) || missing(variable)) {
       stop("All parameters (x, group, depth, variable) are required")
     }
@@ -612,7 +610,6 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
     # Initialize an empty list to store results
     result_list <- list()
 
-    # Loop over each group
     for (grp in names(split_df)) {
       # Sort the data within the group by depth
       sorted_group <- split_df[[grp]][order(split_df[[grp]][[depth]]), ]
@@ -674,14 +671,14 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
 #' img = seg_Oulanka2023_Session01_T067
 #' gray.raster = rgb2gray(img)
 rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
+  # Checked before the load, not after: load_flexible_image() would otherwise
+  # raise R's generic missing-argument error first and this message never showed.
+  if (missing(img)) {
+    stop("img parameter is required")
+  }
 
   img <- load_flexible_image(img, scale = "none", output_format = "spatrast", select_layer = NULL)
   tryCatch({
-    # Input validation
-    if (missing(img)) {
-      stop("img parameter is required")
-    }
-
     if (!inherits(img, "SpatRaster")) {
       stop("img must be a SpatRaster object")
     }
@@ -691,7 +688,6 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
       stop("Input image must have exactly 3 layers (RGB)")
     }
 
-    # Validate weights
     if (!all(is.numeric(c(r, g, b)))) {
       stop("RGB weights must be numeric")
     }
@@ -700,15 +696,12 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
       warning("RGB weights do not sum to 1")
     }
 
-    # Check for NA values
     if (all(is.na(terra::values(img)))) {
       stop("Input image contains only NA values")
     }
 
-    # Convert to grayscale
     gray.im <- img[[1]] * r + img[[2]] * g + img[[3]] * b
 
-    # Validate output
     if (all(is.na(terra::values(gray.im)))) {
       warning("Resulting grayscale image contains only NA values")
     }
@@ -858,50 +851,44 @@ modal_peaks <- function(x, prominence_threshold = 0.005, display_type = "density
     classifications <- sapply(x, function(val) which.min(abs(val - dens$x[peaks])))
   }
   
+  # The density panel is identical with and without mclust; only the fitted-mean
+  # overlay and the extra legend entry differ, so `mc = NULL` draws the plain one.
+  density_panel <- function(mc = NULL) {
+    graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
+    graphics::abline(v = dens$x[peaks], col = "firebrick4", lty = 2)
+    if (!is.null(valleys)) {
+      graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
+    }
+    if (!is.null(mc)) {
+      graphics::abline(v = mc$means, col = "coral", lty = 2)
+      graphics::arrows(mc$means - mc$sd, 0, mc$means + mc$sd, 0,
+                       code = 3, angle = 90, length = 0.05, col = "coral", lwd = 1.5)
+    }
+    graphics::legend("topright",
+           legend = c("Peaks", if (!is.null(valleys)) "Valleys", if (!is.null(mc)) "Mclust & SD"),
+           col    = c("firebrick4", if (!is.null(valleys)) "blue", if (!is.null(mc)) "coral"),
+           lty = 2, cex = 0.8)
+  }
+
   if (display_type == "density") {
     if (mclust && !is.null(mclust_results)) {
       graphics::par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
-      
-      graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
-      graphics::abline(v = dens$x[peaks], col = "firebrick4", lty = 2)
-      if (!is.null(valleys)) {
-        graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
-      }
-      graphics::abline(v = mclust_results$means, col = "coral", lty = 2)
-      graphics::arrows(
-        mclust_results$means - mclust_results$sd, 0,
-        mclust_results$means + mclust_results$sd, 0,
-        code = 3, angle = 90, length = 0.05, col = "coral", lwd = 1.5
-      )
-      
-      graphics::legend("topright",
-             legend = c("Peaks", if (!is.null(valleys)) "Valleys", "Mclust & SD"),
-             col = c("firebrick4", if (!is.null(valleys)) "blue", "coral"),
-             lty = 2, cex = 0.8)
-      
+      density_panel(mclust_results)
+
       graphics::plot(x, model$uncertainty, pch = 16, type = "p",
                      col = model$classification,
                      main = "Mclust Classification Uncertainty",
                      xlab = "Observation", ylab = "Uncertainty",
                      xlim = xlim_range)
-      
+
       graphics::legend("topright",
              legend = paste("Cluster", sort(unique(model$classification))),
              col = sort(unique(model$classification)),
              pch = 16, cex = 0.8)
-      
+
       graphics::par(mfrow = c(1, 1))
     } else {
-      graphics::plot(dens, main = "Density with Peaks", xlim = xlim_range)
-      graphics::abline(v = dens$x[peaks], col = "firebrick4", lty = 2)
-      if (!is.null(valleys)) {
-        graphics::abline(v = dens$x[valleys], col = "blue", lty = 2)
-      }
-      
-      graphics::legend("topright",
-             legend = c("Peaks", if (!is.null(valleys)) "Valleys"),
-             col = c("firebrick4", if (!is.null(valleys)) "blue"),
-             lty = 2, cex = 0.8)
+      density_panel()
     }
   } else if (display_type == "raw") {
     cluster_ids <- classifications

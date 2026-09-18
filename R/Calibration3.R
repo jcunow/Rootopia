@@ -35,9 +35,13 @@ estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, s
     if (!is.null(select_layer) && (!is.numeric(select_layer) || select_layer < 1))
       stop("select_layer must be NULL or a positive integer")
     
+    # scale = "to_01" here, but estimate_soil_surface() loads with scale = "none".
+    # The two functions share most of this pipeline (reference band -> crop ->
+    # unsuperClass -> pick a cluster by brightness) yet their identically named
+    # tape_brightness argument therefore works against a ~255x different range.
+    # Do not factor the shared part out without carrying that difference with it.
     im <- load_flexible_image(img, select_layer=select_layer,
                               output_format="array", scale = "to_01")
-    if (is.null(im)) stop("Failed to load image")
     if (length(dim(im)) != 3) stop("Input image must be 3-dimensional array (RGB)")
     
     # bright reference band, then crop to the shallow-depth search area
@@ -145,7 +149,9 @@ estimate_rotation_shift <- function(
     if (length(dim(im1)) != 3 || length(dim(im2)) != 3)
       stop("Inputs must be 3D RGB arrays")
     
-    # luma projection (Rec. 709). rows = rotation axis, cols = depth axis.
+    # Luma projection (Rec. 709). rows = rotation axis, cols = depth axis.
+    # Same weights as rgb2gray(), inlined because that function returns a
+    # SpatRaster and the phase correlation below needs a plain matrix.
     g1 <- im1[, , 1] * 0.21 + im1[, , 2] * 0.72 + im1[, , 3] * 0.07
     g2 <- im2[, , 1] * 0.21 + im2[, , 2] * 0.72 + im2[, , 3] * 0.07
     
@@ -444,12 +450,11 @@ estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=15
       stop("select_layer must be NULL or positive integer")
     }
 
-    # Load and validate image
+    # scale = "none", unlike estimate_rotation_center()'s "to_01" -- so
+    # tape_brightness is read against the raw 0-255 range here. See the note at
+    # that function before merging the two pipelines.
     im <- load_flexible_image(img, select_layer=select_layer,
                               output_format="array", scale = "none")
-    if (is.null(im)) {
-      stop("Failed to load image")
-    }
     if (length(dim(im)) != 3) {
       stop("Input image must be 3-dimensional array (RGB)")
     }

@@ -10,7 +10,7 @@
 #'   only implements LUT-based Zhang-Suen thinning. Kept for backward
 #'   compatibility. Will be skipped if skeleton `SpatRaster` is provided.
 #' @param skeleton_img A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.
-#' @param select_layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `2`.
+#' @param select_layer Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.
 #' @param unit output in pixel 'px', 'inch' or in 'cm'
 #' @param dpi scan resolution. Only used if unit = 'cm' or 'inch'
 #'
@@ -56,7 +56,6 @@
 #' @export
 root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, select_layer = NULL, 
                           diagnostics = FALSE, unit = "cm", dpi = 300) {
-  # Input validation and error handling module
   tryCatch({
     # Validate input parameters
     if (missing(img)) {
@@ -86,7 +85,6 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, se
       }
     }
 
-    # Load and validate image
     tryCatch({
       img <- load_flexible_image(img,
                                         select_layer = select_layer,

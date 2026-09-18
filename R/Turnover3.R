@@ -30,7 +30,6 @@
 #'     }
 turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select_layer = 2) {
 
-  # Input validation module
   validate_inputs <- function(im.t1,im.t2) {
     # Check for missing required arguments
     if (missing(im.t1) || missing(im.t2)) {
@@ -144,7 +143,6 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
 #' }
 turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
                         im_return=FALSE, include_virtualroots=FALSE) {
-  # Input validation module
   validate_inputs <- function(img) {
     if (missing(img)) {
       stop("Input image must be provided")
@@ -190,7 +188,6 @@ turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
   tryCatch({
     validate_inputs(img)
 
-    # Load and validate image
     img <- load_flexible_image(img, output_format = "spatrast", scale = "to_01", select_layer = NULL)
     if (is.null(handle_edge_cases(img))) return(NULL)
 
