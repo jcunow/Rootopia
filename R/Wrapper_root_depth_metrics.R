@@ -80,6 +80,13 @@
 #' @param depth_interval_cm Numeric. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
 #'   Default \code{5}.
+#' @param rotation_fixed_width Numeric. Width in \strong{rows} that each image is
+#'   cropped to along the rotation axis, centred on the middle row, before any
+#'   trait is measured (see \code{rotation_censor()}).  This trims the tube
+#'   edges, where the curvature of the tube distorts what the scanner sees.  An
+#'   image with fewer rows than this cannot be cropped symmetrically, so
+#'   \code{rotation_censor()} clamps to the image bounds and says so -- the
+#'   image is then used at full width.  Default \code{1800}.
 #' @param flat_geometry Logical.  If \code{FALSE} (default), images are treated
 #'   as cylindrical minirhizotron tubes and a sinusoidal depth correction is
 #'   applied (\code{sinoid = TRUE} in \code{create_depthmap()}).  Set to
@@ -276,6 +283,7 @@ root_depth_metrics <- function(
   tube_diameter_cm        = 7,
   depth_interval_cm       = 5,
   flat_geometry           = FALSE,
+  rotation_fixed_width    = 1800,
   
   # ---------- core metrics (on by default) -----------------------------------
   calc_root_pixels        = TRUE,
@@ -479,7 +487,7 @@ root_depth_metrics <- function(
     # 3a. Load images
     # -------------------------------------------------------------------------
     im <- .safe(sprintf("load segmented [%s]", seg_file), {
-      img <- load_flexible_image(paste0(path_seg, seg_file),
+      img <- load_flexible_image(file.path(path_seg, seg_file),
                                  output_format = "spatrast",
                                  scale = "binary")
       if (dim(img)[3] > 3) img <- img[[1:3]]
@@ -497,7 +505,7 @@ root_depth_metrics <- function(
     if (do_length || do_diam_st || do_diam_q || do_angles || do_order) {
       if (!is.null(im.ls.skl) && l <= length(im.ls.skl)) {
         im.skeleton <- .safe(sprintf("load skeleton [%s]", im.ls.skl[l]), {
-          sk <- load_flexible_image(paste0(path_skl, im.ls.skl[l]),
+          sk <- load_flexible_image(file.path(path_skl, im.ls.skl[l]),
                                     output_format = "spatrast",
                                     scale = "binary", select_layer = 2)
           if (dim(sk)[3] > 3) sk <- sk[[1:3]]
@@ -519,7 +527,7 @@ root_depth_metrics <- function(
     if (do_color) {
       if (!is.null(im.ls.rgb) && l <= length(im.ls.rgb)) {
         im.rgb <- .safe(sprintf("load RGB [%s]", im.ls.rgb[l]),
-                        terra::rast(paste0(path_rgb, im.ls.rgb[l])))
+                        terra::rast(file.path(path_rgb, im.ls.rgb[l])))
       }
       if (is.null(im.rgb)) {
         message(sprintf("[Rootopia] %s: RGB image unavailable -- disabling calc_color_metrics.", tube))
@@ -533,17 +541,20 @@ root_depth_metrics <- function(
     r0 <- round(dim(im)[1] / 2, 0)
     
     im <- .safe("rotation_censor (seg)",
-                rotation_censor(im, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
+                rotation_censor(im, center_offset = r0, fixed_rotation = TRUE,
+                                fixed_width = rotation_fixed_width),
                 fallback = im)
     
     if (!is.null(im.skeleton))
       im.skeleton <- .safe("rotation_censor (skl)",
-                           rotation_censor(im.skeleton, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
+                           rotation_censor(im.skeleton, center_offset = r0, fixed_rotation = TRUE,
+                                           fixed_width = rotation_fixed_width),
                            fallback = im.skeleton)
     
     if (!is.null(im.rgb))
       im.rgb <- .safe("rotation_censor (rgb)",
-                      rotation_censor(im.rgb, center_offset = r0, fixed_rotation = TRUE, fixed_width = 1800),
+                      rotation_censor(im.rgb, center_offset = r0, fixed_rotation = TRUE,
+                                      fixed_width = rotation_fixed_width),
                       fallback = im.rgb)
     
     # Keep only the segmentation layer; align extents
@@ -610,6 +621,12 @@ root_depth_metrics <- function(
         # Flat depth map (sinoid = FALSE) used to derive flow directions for
         # length calculation -- the sinusoidal correction is for the depth axis
         # only, not for path-length geometry.
+        #
+        # This builds a per-pixel length map rather than calling root_length()
+        # per depth bin, and that is deliberate: root_length() uses the Kimura2
+        # estimator, which is not additive -- the sum over bins does not equal
+        # the whole. A per-pixel Freeman length can be zonal-summed, which is
+        # what a depth profile needs, at the cost of Kimura's correction.
         dm_flat <- create_depthmap(
           img           = im,
           sinoid        = FALSE,
@@ -1043,13 +1060,13 @@ root_depth_metrics <- function(
       "rootlength.density" %in% names(r)) {
     coag1 <- .safe("distribution indices", {
       r |>
-        dplyr::group_by(dplyr::.data$Tube) |>
-        dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
+        dplyr::group_by(Tube) |>
+        dplyr::filter(!is.na(depth) & !is.na(rootlength.density)) |>
         dplyr::summarize(
-          mrd   = Rootopia::MRD(w = dplyr::.data$depth, roots = dplyr::.data$rootlength.density),
+          mrd   = MRD(w = depth, roots = rootlength.density),
           # total.length.density: sum of (length density x bin size) across all bins
           # units: cm root per cm^2 (integrated over the full depth profile)
-          total.length.density = sum(dplyr::.data$rootlength.density * depth_interval_cm, na.rm = TRUE),
+          total.length.density = sum(rootlength.density * depth_interval_cm, na.rm = TRUE),
           .groups = "drop"
         )
     })
@@ -1065,27 +1082,31 @@ root_depth_metrics <- function(
 
     coag2 <- .safe("advanced metrics", {
 
+      # Which optional columns exist is a property of the whole frame, not of
+      # each group, so it is settled once here rather than re-tested per group.
+      has <- function(col) col %in% names(r)
+
       r |>
-        dplyr::group_by(dplyr::.data$Tube, dplyr::.data$depth) |>
-        dplyr::filter(!is.na(dplyr::.data$depth) & !is.na(dplyr::.data$rootlength.density)) |>
+        dplyr::group_by(Tube, depth) |>
+        dplyr::filter(!is.na(depth) & !is.na(rootlength.density)) |>
         dplyr::summarize(
 
           # Fraction of the tube's total length density contributed by this bin
-          rootlength.fraction = if (calc_density_metrics && "total.length.density" %in% names(dplyr::pick(dplyr::everything())))
-            dplyr::.data$rootlength.density / dplyr::.data$total.length.density else NA_real_,
+          rootlength.fraction = if (calc_density_metrics && has("total.length.density"))
+            rootlength.density / total.length.density else NA_real_,
 
           # Joint entropy per unit root pixel density
           # (meaningful only when landscape metrics are available)
-          ent_per_rootpx = if (calc_landscape_metrics && "joinent" %in% names(dplyr::pick(dplyr::everything())))
-            dplyr::.data$joinent / dplyr::.data$rootpx.density else NA_real_,
+          ent_per_rootpx = if (calc_landscape_metrics && has("joinent"))
+            joinent / rootpx.density else NA_real_,
 
           # Number of root patches per unit root pixel density
-          patch_density_norm = if ("np_density" %in% names(dplyr::pick(dplyr::everything())))
-            dplyr::.data$np_density / dplyr::.data$rootpx.density else NA_real_,
+          patch_density_norm = if (has("np_density"))
+            np_density / rootpx.density else NA_real_,
 
           # Mean within-bin diameter variance (averaged over any sub-grouping)
-          mean.var.diameter = if (calc_diameter_stats && "var.diameter" %in% names(dplyr::pick(dplyr::everything())))
-            mean(dplyr::.data$var.diameter, na.rm = TRUE) else NA_real_,
+          mean.var.diameter = if (calc_diameter_stats && has("var.diameter"))
+            mean(var.diameter, na.rm = TRUE) else NA_real_,
 
           # NB: rootsurface_rootvolume_ratio is computed per bin in section 3f
           # (directly on the diameter raster) so it is unbiased; see there.
@@ -1121,3 +1142,10 @@ root_depth_metrics <- function(
   
   invisible(root.depth.metrics)
 }
+
+# Column names referenced inside dplyr verbs above. Declaring them keeps
+# R CMD check from reading non-standard evaluation as undefined globals.
+utils::globalVariables(c(
+  "Tube", "depth", "rootlength.density", "total.length.density",
+  "joinent", "rootpx.density", "np_density", "var.diameter"
+))
