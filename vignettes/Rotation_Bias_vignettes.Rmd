@@ -117,12 +117,13 @@ shift <- estimate_rotation_shift(
 
 cat("Rotation shift (depth px, rotation px): ", shift[1:2], "\n")
 
-# Visual inspection
+# Visual inspection. Leave select_layer at its default: the correlation needs
+# all three channels. `overlay_layer` chooses which layer is drawn.
 estimate_rotation_shift(seg_Oulanka2023_Session01_T067,
                         seg_Oulanka2023_Session03_T067,
                         cor_type = "phase",
-                        select_layer = 2,
-                        overlay = T)
+                        overlay = TRUE,
+                        overlay_layer = 2)
 ```
 
 The returned vector is `c(x.lag, y.lag)` — the horizontal (depth axis) and

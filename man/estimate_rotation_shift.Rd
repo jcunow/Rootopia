@@ -26,7 +26,9 @@ longer = explicit column indices; NULL = use full width.}
 
 \item{fixed_width}{Optional: restrict the ROTATION axis (rows), centered.}
 
-\item{select_layer}{Layer to use for multi-band inputs.}
+\item{select_layer}{Must stay \code{NULL}: the correlation uses the luma of
+all three channels, so a single layer cannot be used. Use
+\code{overlay_layer} to choose what the overlay draws.}
 
 \item{window}{Demean + Hann-window before FFT to suppress edge artifacts.}
 
@@ -45,5 +47,5 @@ data(seg_Oulanka2023_Session01_T067)
 data(seg_Oulanka2023_Session03_T067)
 img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
 img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
-estimate_rotation_shift(img1, img2, cor_type = "phase", select_layer = 2)
+estimate_rotation_shift(img1, img2, cor_type = "phase")
 }

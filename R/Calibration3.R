@@ -115,7 +115,9 @@ estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, s
 #' @param fixed_depth_pixel Depth band along COLUMNS. Length-2 = range start:end;
 #'   longer = explicit column indices; NULL = use full width.
 #' @param fixed_width Optional: restrict the ROTATION axis (rows), centered.
-#' @param select_layer Layer to use for multi-band inputs.
+#' @param select_layer Must stay \code{NULL}: the correlation uses the luma of
+#'   all three channels, so a single layer cannot be used. Use
+#'   \code{overlay_layer} to choose what the overlay draws.
 #' @param window Demean + Hann-window before FFT to suppress edge artifacts.
 #' @param overlay If TRUE, also draw a before/after magenta-green overlay.
 #' @param overlay_layer Layer to display in the overlay (root mask, default 2).
@@ -126,7 +128,7 @@ estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, s
 #' data(seg_Oulanka2023_Session03_T067)
 #' img1 <- terra::rast(seg_Oulanka2023_Session01_T067)
 #' img2 <- terra::rast(seg_Oulanka2023_Session03_T067)
-#' estimate_rotation_shift(img1, img2, cor_type = "phase", select_layer = 2)
+#' estimate_rotation_shift(img1, img2, cor_type = "phase")
 estimate_rotation_shift <- function(
     img1, img2,
     cor_type = "phase",
@@ -146,8 +148,12 @@ estimate_rotation_shift <- function(
                                output_format = "array", scale = "none")
     im2 <- load_flexible_image(img2, select_layer = select_layer,
                                output_format = "array", scale = "none")
+    # The luma projection below needs all three channels, so select_layer must
+    # stay NULL here -- picking one layer yields a 2D array and lands here.
+    # Use overlay_layer to choose which layer the overlay draws.
     if (length(dim(im1)) != 3 || length(dim(im2)) != 3)
-      stop("Inputs must be 3D RGB arrays")
+      stop("Inputs must be 3D RGB arrays. If you passed select_layer, remove it: ",
+           "this function correlates the luma of all three channels.")
     
     # Luma projection (Rec. 709). rows = rotation axis, cols = depth axis.
     # Same weights as rgb2gray(), inlined because that function returns a
