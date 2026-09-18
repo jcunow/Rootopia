@@ -97,14 +97,6 @@ reference:
       - plot_order_window
 
 
-  - title: "Validation"
-    desc: "Synthetic root images with known length, width and topology, and a
-      scorecard that checks the branching pipeline against them."
-    contents:
-      - root_phantom
-      - validate_branching
-
-
   - title: "Root turnover"
     desc: "Estimate root production, decay, and turnover from temporal image
       comparison or RootDetector DPC images."
