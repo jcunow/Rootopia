@@ -17,9 +17,10 @@
 ## For sequences acquired ALONG the tube set direction = "vertical" (frames are
 ## transposed internally, stitched the same way, and transposed back).
 ##
-## The user-facing functions (list_tubes, list_scan_files, stitch_root_scans,
-## stitch_image_sequence, stitch_image_pair) are exported and documented with
-## examples; the alignment engine and helpers below them are @keywords internal.
+## stitch_root_scans() is the exported entry point. Everything else here --
+## the folder-listing helpers, the per-pair and per-sequence engines, and the
+## alignment code -- is @keywords internal: documented, but reached through
+## stitch_root_scans() rather than called directly.
 ## ---------------------------------------------------------------------------
 
 
@@ -89,8 +90,9 @@ list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #' one mosaic per group. Single-frame groups are passed through unchanged.
 #' Mosaics are returned and, optionally, written to disk as PNGs.
 #'
-#' Call \code{\link{list_tubes}} first to see the tube names, then pass a range
-#' to \code{tubes} (e.g. \code{tubes = 1:36}) to stitch just those tubes.
+#' Pass \code{tubes = "ask"} to print the tube names and choose a range in the
+#' same call, or pass a range directly (e.g. \code{tubes = 1:36}) once you know
+#' which tubes you want.
 #'
 #' @param input Either a directory (searched recursively) or a character vector
 #'   of image file paths.
@@ -100,10 +102,9 @@ list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #'   path. Default \code{"T0\\d{2}"} matches tube labels such as \code{T067}.
 #'   Use \code{NULL} to stitch every file into a single mosaic.
 #' @param select Optional integer vector of indices into the (sorted) \emph{file}
-#'   list, e.g. \code{1:36}. See \code{\link{list_scan_files}}. \code{NULL} uses
-#'   all files. Applied before grouping.
+#'   list, e.g. \code{1:36}. \code{NULL} uses all files. Applied before grouping.
 #' @param tubes Optional \emph{tube} selection: integer indices into the sorted
-#'   tube list (e.g. \code{1:36}, see \code{\link{list_tubes}}), a character
+#'   tube list (e.g. \code{1:36}), a character
 #'   vector of tube names (e.g. \code{c("T037", "T040")}), or the string
 #'   \code{"ask"} to print the tubes and choose a range interactively in one
 #'   call (interactive sessions only). \code{NULL} keeps all tubes.
@@ -123,13 +124,12 @@ list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #'   list \code{list(mosaics, report)} where \code{report} is a data frame with
 #'   columns \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak}
 #'   (confidence; higher is better) and \code{overlap} (\code{= edge_width - dx}).
-#' @seealso \code{\link{list_tubes}}, \code{\link{list_scan_files}},
-#'   \code{\link{stitch_image_sequence}}
+#' @seealso \code{\link{stitch_image_sequence}}
 #' @export
 #' @examples
 #' \dontrun{
-#' # 1) See the tubes (names + frame counts)
-#' list_tubes("path/to/scans", pattern = ".tiff")
+#' # 1) See the tubes and pick a range in the same call
+#' stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
 #'
 #' # 2) Stitch the first 36 tubes, with a performance report and a preprocess
 #' res <- stitch_root_scans("path/to/scans", pattern = ".tiff",
@@ -159,7 +159,7 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
       select <- as.integer(select)
       if (any(is.na(select)) || any(select < 1L) || any(select > length(files)))
         stop("'select' out of range: there are ", length(files),
-             " files. Use list_scan_files() to see valid indices.")
+             " file(s), so indices must lie in 1:", length(files), ".")
       files <- files[select]
     }
 
@@ -185,7 +185,7 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
         ti <- as.integer(tubes)
         if (any(is.na(ti)) || any(ti < 1L) || any(ti > length(unique_groups)))
           stop("'tubes' index out of range: ", length(unique_groups),
-               " tube(s) available. Use list_tubes() to see them.")
+               " tube(s) available (", paste(unique_groups, collapse = ", "), ").")
         unique_groups <- unique_groups[ti]
       } else if (is.character(tubes)) {
         miss <- setdiff(tubes, unique_groups)
@@ -469,6 +469,9 @@ align_phase_correlation <- function(img1, img2, edge_width = 250,
 
     # Placement-ready shifts: img2 at (w1 - edge_width + dx, dy). The horizontal
     # peak is negated, the vertical is not - this reproduces the validated stitch.
+    # estimate_rotation_shift() solves the same problem (FFT phase correlation)
+    # but returns c(depth, rotation) with neither axis negated, so the two are
+    # not interchangeable despite the shared method.
     c(dx = -dx_raw, dy = dy_raw, peak = max(corr) / sum(corr))
   }, error = function(e) stop("align_phase_correlation failed: ", e$message, call. = FALSE))
 }
