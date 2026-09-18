@@ -6,15 +6,25 @@
 # The functions here draw root systems whose geometry is prescribed -- exact
 # axis length, stroke width, tip count, branch-point count and branch order --
 # and score the pipeline's output against that ground truth.
+#
+# This is a test fixture, not package API: it tells you nothing about your own
+# images, only whether the package still measures a known image correctly.
+# test-branching-validation.R runs the whole matrix, so `devtools::test()`
+# re-scores every design. To look at a single case by hand:
+#
+#   devtools::load_all(".")
+#   testthat::source_test_helpers("tests/testthat")
+#   validate_branching("comb", from = "mask")                    # scored table
+#   validate_branching("comb", from = "mask", overlay_png = "comb.png")
+#
+# testthat sources helper-*.R with the package namespace as the parent
+# environment, which is what lets the code below call package internals
+# (.distance_transform_edt, .to_binary_matrix) directly.
 # ============================================================
 
 
-#' Rasterise a line between two pixels (Bresenham)
-#'
-#' @param p0,p1 Integer length-2 (row, col) endpoints.
-#' @return An Nx2 integer matrix of (row, col) pixels, 8-connected and 1 px wide.
-#' @keywords internal
-#' @noRd
+# Rasterise a line between two pixels (Bresenham). p0, p1 are integer length-2
+# (row, col) endpoints; the result is an Nx2 pixel matrix, 8-connected, 1 px wide.
 .bresenham <- function(p0, p1) {
   r0 <- as.integer(p0[1]); c0 <- as.integer(p0[2])
   r1 <- as.integer(p1[1]); c1 <- as.integer(p1[2])
@@ -32,26 +42,20 @@
   out[seq_len(k), , drop = FALSE]
 }
 
-#' Pixels of a polyline
-#' @keywords internal
-#' @noRd
+# Pixels of a polyline.
 .polyline_px <- function(v) {
   if (nrow(v) < 2L) return(v)
   do.call(rbind, lapply(seq_len(nrow(v) - 1L),
                         function(i) .bresenham(v[i, ], v[i + 1L, ])))
 }
 
-#' Exact Euclidean length of a polyline
-#' @keywords internal
-#' @noRd
+# Exact Euclidean length of a polyline.
 .polyline_length <- function(v) {
   if (nrow(v) < 2L) return(0)
   sum(sqrt(rowSums(diff(v)^2)))
 }
 
-#' Stamp a filled disk of radius r at every pixel of a polyline
-#' @keywords internal
-#' @noRd
+# Stamp a filled disk of radius r at every pixel of a polyline.
 .stamp_stroke <- function(m, px, radius) {
   rr <- max(0L, as.integer(round(radius)))
   g   <- expand.grid(dr = -rr:rr, dc = -rr:rr)
@@ -66,18 +70,13 @@
 }
 
 
-#' Stroke definitions for the built-in phantom designs
-#'
-#' Each stroke is \code{list(v, radius, order, parent)} where \code{v} is an Nx2
-#' matrix of (row, col) vertices and \code{parent} indexes the stroke this one
-#' attaches to (\code{NA} for a free-standing root). A child's first vertex is
-#' the attachment point and sits exactly on the parent's centre line, so the
-#' ground-truth length of the union is the sum of the stroke lengths.
-#'
-#' Stamping radius \code{r} yields a stroke \code{2r + 1} px wide.
-#'
-#' @keywords internal
-#' @noRd
+# Stroke definitions for the built-in phantom designs.
+#
+# Each stroke is list(v, radius, order, parent), where v is an Nx2 matrix of
+# (row, col) vertices and parent indexes the stroke this one attaches to (NA for
+# a free-standing root). A child's first vertex is the attachment point and sits
+# exactly on the parent's centre line, so the ground-truth length of the union is
+# the sum of the stroke lengths. Stamping radius r yields a stroke 2r + 1 px wide.
 .phantom_strokes <- function(design, size) {
   n <- size; mid <- round(n / 2)
   lo <- round(0.05 * n); hi <- round(0.95 * n)
@@ -150,15 +149,12 @@
 }
 
 
-#' Ground-truth topology implied by a set of strokes
-#'
-#' A child attaches at its own first vertex. That point is a branch junction; the
-#' parent end that coincides with it, if any, stops being a free end. Counting
-#' this way is design-agnostic: it is right for a T-attachment and for a
-#' symmetric fork alike.
-#'
-#' @keywords internal
-#' @noRd
+# Ground-truth topology implied by a set of strokes.
+#
+# A child attaches at its own first vertex. That point is a branch junction; the
+# parent end that coincides with it, if any, stops being a free end. Counting
+# this way is design-agnostic: it is right for a T-attachment and for a symmetric
+# fork alike.
 .phantom_topology <- function(strokes) {
   key <- function(p) paste(round(p[1]), round(p[2]), sep = "_")
   attach <- unique(vapply(strokes, function(s)
@@ -173,61 +169,47 @@
 }
 
 
-#' Synthetic root image with known geometry
-#'
-#' Draws a root system whose length, width and topology are prescribed, so the
-#' branching pipeline can be scored against ground truth. Returns both the
-#' filled mask (as a scanner would see it) and the exact one-pixel centre line,
-#' which lets graph errors be told apart from thinning errors.
-#'
-#' @details
-#' Every design is built from strokes -- polylines stamped with a disk of radius
-#' \code{r}, giving a root \code{2r + 1} px wide -- and each lateral starts
-#' exactly on its parent's centre line. The ground truth is therefore analytic:
-#' \describe{
-#'   \item{\code{total_length}}{Sum of the stroke centre-line lengths (px).}
-#'   \item{\code{n_tips}, \code{n_branch_points}}{Counted from the stroke
-#'     attachment graph, so they hold for T-attachments and forks alike.}
-#'   \item{\code{n_roots}, \code{max_branch_order}, \code{by_order}}{Per-root
-#'     truth, defined only where the continuation rule is unambiguous (see
-#'     \code{continuation_defined}).}
-#' }
-#' Two conventions are worth stating, because the truth is written to match the
-#' package and not the other way round:
-#' \itemize{
-#'   \item \strong{Diameter.} Rootopia reports \code{2 * EDT}, the inscribed
-#'     diameter measured to the nearest \emph{background} pixel, exactly as
-#'     \code{\link{root_diameter}} does. For a stroke \code{W} px wide that is
-#'     \code{W + 1}, so \code{by_order$mean_diameter} carries the \code{+1}.
-#'   \item \strong{Length.} The designs run along the axes or at 45 degrees, so
-#'     the drawn skeleton's chain-code length equals its Euclidean length. At
-#'     other angles the pipeline would \emph{correctly} report the well-known
-#'     chain-code overestimate, which is a property of the measure rather than a
-#'     defect.
-#' }
-#' \code{"fork"} is a symmetric dichotomous Y. Which arm continues the parent is
-#' genuinely undefined there, so \code{truth$continuation_defined} is
-#' \code{FALSE} and \code{\link{validate_branching}} scores only length and
-#' topology for it.
-#'
-#' @param design One of \code{"comb"} (main axis + 5 perpendicular laterals),
-#'   \code{"herringbone"} (45-degree laterals), \code{"hierarchical"} (three
-#'   generations of T-attachments), \code{"cross"} (two roots overlapping in an
-#'   X) or \code{"fork"} (symmetric dichotomous Y).
-#' @param size Image side length in pixels (square image).
-#' @param dpi Nominal scan resolution recorded in \code{$truth$dpi}; used to
-#'   express the ground truth in cm as well as pixels.
-#' @param as \code{"matrix"} (default) or \code{"spatraster"} for the returned
-#'   images.
-#' @return A list with \code{$mask} (filled binary root image), \code{$skeleton}
-#'   (exact 1-px centre line), \code{$truth} (ground-truth list, including
-#'   \code{$by_order}) and \code{$strokes} (the stroke definitions).
-#' @seealso \code{\link{validate_branching}}, \code{\link{branch_order_map}}
-#' @examples
-#' ph <- root_phantom("comb", size = 200)
-#' ph$truth$n_tips
-#' ph$truth$total_length
-#' @export
+# Synthetic root image with known geometry.
+#
+# Draws a root system whose length, width and topology are prescribed, and
+# returns both the filled mask (what a scanner would see) and the exact one-pixel
+# centre line. Having both is the point: feeding the centre line scores the graph
+# alone, feeding the mask also carries the thinning error, so the two routes tell
+# graph errors and thinning errors apart.
+#
+# Every design is built from strokes -- polylines stamped with a disk of radius r,
+# giving a root 2r + 1 px wide -- and each lateral starts exactly on its parent's
+# centre line. The ground truth is therefore analytic:
+#
+#   total_length              sum of the stroke centre-line lengths (px)
+#   n_tips, n_branch_points   counted from the stroke attachment graph, so they
+#                             hold for T-attachments and forks alike
+#   n_roots, max_branch_order, by_order
+#                             per-root truth, defined only where the continuation
+#                             rule is unambiguous (see continuation_defined)
+#
+# Two conventions are worth stating, because the truth here is written to match
+# the package rather than the other way round:
+#
+#   Diameter. Rootopia reports 2 * EDT, the inscribed diameter measured to the
+#   nearest BACKGROUND pixel, exactly as root_diameter() does. For a stroke W px
+#   wide that is W + 1, so by_order$mean_diameter carries the +1.
+#
+#   Length. The designs run along the axes or at 45 degrees, so the drawn
+#   skeleton's chain-code length equals its Euclidean length. At other angles the
+#   pipeline would CORRECTLY report the well-known chain-code overestimate, which
+#   is a property of the measure rather than a defect -- scoring such a design
+#   would test the phantom, not the package.
+#
+# "fork" is a symmetric dichotomous Y. Which arm continues the parent is
+# genuinely undefined there, so truth$continuation_defined is FALSE and
+# validate_branching() scores only length and topology for it.
+#
+# Arguments: design is one of "comb" (main axis + 5 perpendicular laterals),
+# "herringbone" (45-degree laterals), "hierarchical" (three generations of
+# T-attachments), "cross" (two roots overlapping in an X) or "fork". size is the
+# side length of the square image in px; dpi is recorded in $truth$dpi and used
+# to express the truth in cm as well as px; as is "matrix" or "spatraster".
 root_phantom <- function(design = c("comb", "herringbone", "hierarchical", "cross", "fork"),
                          size = 400, dpi = 300, as = c("matrix", "spatraster")) {
   design <- match.arg(design); as <- match.arg(as)
@@ -288,9 +270,7 @@ root_phantom <- function(design = c("comb", "herringbone", "hierarchical", "cros
 }
 
 
-#' Default tolerances for validate_branching()
-#' @keywords internal
-#' @noRd
+# Default tolerances for validate_branching().
 .branch_tolerance <- function(from) {
   # Counts must be exact. Lengths carry an unavoidable negative bias: junction
   # contraction dissolves a couple of pixels per branch point, and thinning
@@ -305,53 +285,29 @@ root_phantom <- function(design = c("comb", "herringbone", "hierarchical", "cros
 }
 
 
-#' Score the branching pipeline against a phantom with known properties
-#'
-#' Runs \code{\link{branch_order_map}} on a synthetic root image whose geometry
-#' is known exactly and reports, metric by metric, what was expected, what was
-#' measured and whether the difference is within tolerance. This is the check to
-#' run after touching the tracing, ordering or length code, and the one to cite
-#' when reporting what the package's numbers mean.
-#'
-#' @details
-#' \code{from = "skeleton"} feeds the exact one-pixel centre line, so the score
-#' isolates the graph: tracing, junction contraction, crossing resolution,
-#' ordering and length integration. \code{from = "mask"} skeletonises the filled
-#' image first and therefore also carries the thinning error -- chiefly the
-#' erosion of about one root radius at every tip, which shortens the total by a
-#' few percent. Both are legitimate; they answer different questions, and the
-#' default tolerances differ accordingly.
-#'
-#' Counts (\code{n_tips}, \code{n_branch_points}, \code{n_roots},
-#' \code{max_branch_order}, \code{n_unordered}) are required to be exact.
-#' Lengths and diameters are scored as relative error.
-#'
-#' @param design Phantom design, passed to \code{\link{root_phantom}}; ignored
-#'   when \code{phantom} is supplied. For \code{"fork"} the per-root metrics
-#'   (\code{n_roots}, \code{max_branch_order}, per-order length and diameter)
-#'   have no ground truth and are omitted from the report.
-#' @param phantom A phantom from \code{\link{root_phantom}} (or any list with
-#'   \code{$mask}, \code{$skeleton} and \code{$truth}).
-#' @param from \code{"skeleton"} to score the graph alone, \code{"mask"} to
-#'   score the whole pipeline including skeletonisation.
-#' @param size,dpi Passed to \code{\link{root_phantom}} when building a phantom.
-#' @param tolerance Named list with \code{count}, \code{length} and
-#'   \code{diameter} relative tolerances; defaults depend on \code{from}.
-#' @param overlay_png Optional path for the order-coloured validation image.
-#' @param verbose Print the report.
-#' @param ... Passed to \code{\link{branch_order_map}}.
-#' @return A data.frame with one row per metric (\code{metric}, \code{expected},
-#'   \code{observed}, \code{abs_error}, \code{rel_error}, \code{tolerance},
-#'   \code{pass}). \code{attr(., "passed")} is \code{TRUE} when every row passes;
-#'   \code{attr(., "result")} holds the \code{branchOrderMap} object.
-#' @seealso \code{\link{root_phantom}}, \code{\link{branch_order_map}}
-#' @examples
-#' \donttest{
-#' v <- validate_branching("comb", size = 200, verbose = FALSE)
-#' v[, c("metric", "expected", "observed", "pass")]
-#' attr(v, "passed")
-#' }
-#' @export
+# Score the branching pipeline against a phantom with known properties.
+#
+# Runs branch_order_map() on a synthetic root image whose geometry is known
+# exactly and reports, metric by metric, what was expected, what was measured and
+# whether the difference is within tolerance. This is the check to run after
+# touching the tracing, ordering or length code.
+#
+# from = "skeleton" feeds the exact one-pixel centre line, so the score isolates
+# the graph: tracing, junction contraction, crossing resolution, ordering and
+# length integration. from = "mask" skeletonises the filled image first and
+# therefore also carries the thinning error -- chiefly the erosion of about one
+# root radius at every tip, which shortens the total by a few percent. Both are
+# legitimate; they answer different questions, and the tolerances differ
+# accordingly.
+#
+# Counts (n_tips, n_branch_points, n_roots, max_branch_order, n_unordered) are
+# required to be exact. Lengths and diameters are scored as relative error. For
+# design "fork" the per-root metrics have no ground truth and are omitted.
+#
+# Returns one row per metric (metric, expected, observed, abs_error, rel_error,
+# tolerance, pass); attr(., "passed") is TRUE when every row passes and
+# attr(., "result") holds the branchOrderMap object. overlay_png optionally
+# writes the order-coloured image, which is how you look at a failure.
 validate_branching <- function(design = c("comb", "herringbone", "hierarchical", "cross", "fork"),
                                phantom = NULL,
                                from = c("skeleton", "mask"),
@@ -421,9 +377,7 @@ validate_branching <- function(design = c("comb", "herringbone", "hierarchical",
   out
 }
 
-#' One row of the validation report
-#' @keywords internal
-#' @noRd
+# One row of the validation report.
 .vrow <- function(metric, expected, observed, tol) {
   expected <- as.numeric(expected); observed <- as.numeric(observed)
   abs_err  <- observed - expected
