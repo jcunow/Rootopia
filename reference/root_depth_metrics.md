@@ -153,7 +153,14 @@ batch_root_traits(
   Character or `NULL`. Sample/tube identifiers added as the `Tube`
   column. If `NULL`, names are derived from characters 3-5 from the
   right of the segmented file name, prefixed with `"T"` (e.g. `"T042"`).
-  Adjust if your naming convention differs. Default `NULL`.
+  Adjust if your naming convention differs.
+
+  Names must be **unique**, one per image, and the run stops if they are
+  not. They key the tube-level joins, where two images sharing a name
+  are read as one tube and their rows are multiplied out. The derived
+  default collides whenever the files share a suffix – a directory of
+  `"CLAS1A10-15fine.tif"` names every image `"Tfin"` – so flatbed scans
+  generally need this argument. Default `NULL`.
 
 - session:
 

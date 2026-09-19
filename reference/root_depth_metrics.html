@@ -223,10 +223,16 @@ Default <code>0</code>.</p></dd>
 
 <dt id="arg-tube-names">tube_names<a class="anchor" aria-label="anchor" href="#arg-tube-names"></a></dt>
 <dd><p>Character or <code>NULL</code>. Sample/tube identifiers added as
-the <code>Tube</code> column.  If <code>NULL</code>, names are derived from characters
-3-5 from the right of the segmented file name, prefixed with <code>"T"</code>
-(e.g. <code>"T042"</code>).  Adjust if your naming convention differs.
-Default <code>NULL</code>.</p></dd>
+  the <code>Tube</code> column.  If <code>NULL</code>, names are derived from characters
+  3-5 from the right of the segmented file name, prefixed with <code>"T"</code>
+  (e.g. <code>"T042"</code>).  Adjust if your naming convention differs.</p>
+<p>Names must be <strong>unique</strong>, one per image, and the run stops if they are
+  not.  They key the tube-level joins, where two images sharing a name are
+  read as one tube and their rows are multiplied out.  The derived default
+  collides whenever the files share a suffix – a directory of
+  <code>"CLAS1A10-15fine.tif"</code> names every image <code>"Tfin"</code> – so flatbed
+  scans generally need this argument.
+  Default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-session">session<a class="anchor" aria-label="anchor" href="#arg-session"></a></dt>
