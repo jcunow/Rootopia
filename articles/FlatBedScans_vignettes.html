@@ -463,6 +463,26 @@ overall root pigmentation.</p>
 </div>
 </div>
 <div class="section level3">
+<h3 id="doing-this-for-a-whole-folder">Doing this for a whole folder<a class="anchor" aria-label="anchor" href="#doing-this-for-a-whole-folder"></a>
+</h3>
+<p>Everything above is the manual route, one image at a time, which is
+the right way to settle your thresholds and check that the segmentation
+is sound. Once it is, <code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> runs the same
+steps over a directory and returns one row per scan:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
+<span>  path_seg             <span class="op">=</span> <span class="st">"scans/trays/"</span>,</span>
+<span>  tube_names           <span class="op">=</span> <span class="va">ids</span>,      <span class="co"># one unique id per file</span></span>
+<span>  dpi                  <span class="op">=</span> <span class="fl">1200</span>,</span>
+<span>  depth_interval_cm    <span class="op">=</span> <span class="cn">NULL</span>,     <span class="co"># a tray has no depth axis</span></span>
+<span>  prune_spur_length_cm <span class="op">=</span> <span class="fl">0.05</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The <a href="BatchProcessing_vignette.html">Batch Processing</a>
+vignette covers which of its arguments matter for flatbed scans and
+which are tube settings you can ignore.</p>
+<hr>
+</div>
+<div class="section level3">
 <h3 id="what-to-read-next">What to read next<a class="anchor" aria-label="anchor" href="#what-to-read-next"></a>
 </h3>
 <ul>

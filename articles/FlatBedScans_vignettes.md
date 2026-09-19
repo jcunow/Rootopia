@@ -461,6 +461,32 @@ write.csv(results, "flatbed_results.csv", row.names = FALSE)
 
 ------------------------------------------------------------------------
 
+### Doing this for a whole folder
+
+Everything above is the manual route, one image at a time, which is the
+right way to settle your thresholds and check that the segmentation is
+sound. Once it is,
+[`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
+runs the same steps over a directory and returns one row per scan:
+
+``` r
+
+result <- root_depth_metrics(
+  path_seg             = "scans/trays/",
+  tube_names           = ids,      # one unique id per file
+  dpi                  = 1200,
+  depth_interval_cm    = NULL,     # a tray has no depth axis
+  prune_spur_length_cm = 0.05
+)
+```
+
+The [Batch
+Processing](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
+vignette covers which of its arguments matter for flatbed scans and
+which are tube settings you can ignore.
+
+------------------------------------------------------------------------
+
 ### What to read next
 
 - [Minirhizotron

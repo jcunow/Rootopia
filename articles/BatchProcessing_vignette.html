@@ -94,10 +94,13 @@ Cunow</h4>
 <div class="section level3">
 <h3 id="who-this-vignette-is-for">Who this vignette is for<a class="anchor" aria-label="anchor" href="#who-this-vignette-is-for"></a>
 </h3>
-<p>If you have a folder of segmented minirhizotron images and want
-depth-resolved root traits for all of them in one call — without writing
-loops yourself — <code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> is the right starting
-point.</p>
+<p>If you have a folder of root images — segmented minirhizotron frames,
+or flatbed scans of washed roots — and want traits for all of them in
+one call, without writing loops yourself,
+<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> is the right starting point. It
+handles both geometries; which one you get follows from the arguments
+you supply (see <a href="#which-parameters-to-set">Which parameters to
+set</a>).</p>
 <p>It handles file loading, depth-map construction, per-bin zonal
 statistics, derived metrics, fault tolerance, and optional file output.
 You toggle which metric groups to compute; everything else is taken care
@@ -160,9 +163,215 @@ the same physical tube/window.</p>
 <hr>
 </div>
 <div class="section level3">
+<h3 id="which-parameters-to-set">Which parameters to set<a class="anchor" aria-label="anchor" href="#which-parameters-to-set"></a>
+</h3>
+<p><code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> takes about fifty arguments. A real
+run sets five or six. Which five depends on the geometry, because a
+third of the arguments describe a minirhizotron tube and do nothing at
+all to a flatbed scan — and nothing warns you when you tune one that is
+inert.</p>
+<p>The geometry is not a switch. Supply <code>insertion_angles</code> or
+<code>tube_diameter_cm</code> and you are in minirhizotron mode; supply
+neither and you are on flatbed.</p>
+<div class="section level4">
+<h4 id="flatbed-scans">Flatbed scans<a class="anchor" aria-label="anchor" href="#flatbed-scans"></a>
+</h4>
+<p>Washed roots on a tray. There is no depth axis: where a root lies on
+the tray says nothing about where it grew, so the whole scan is
+summarised as one row.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Tier</th>
+<th>Parameters</th>
+<th>Why</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Set every time</strong></td>
+<td>
+<code>dpi</code>, <code>tube_names</code>,
+<code>depth_interval_cm = NULL</code>
+</td>
+<td>
+<code>dpi</code> scales every value reported in cm.
+<code>tube_names</code> must be unique — the derived default takes three
+characters from the file name and collides whenever files share a suffix
+like <code>fine.tif</code>, so a run stops rather than mislabel.
+<code>NULL</code> collapses each scan to a single bin.</td>
+</tr>
+<tr class="even">
+<td><strong>Set for raw scans</strong></td>
+<td>
+<code>binarize_threshold</code>, <code>dark_roots</code>
+</td>
+<td>Only if your files are greyscale or RGB rather than a binary mask.
+Both accept one value per image, for sessions where exposure
+drifted.</td>
+</tr>
+<tr class="odd">
+<td><strong>Usually worth setting</strong></td>
+<td>
+<code>prune_spur_length_cm</code>,
+<code>clean_max_artifact_size</code>, <code>diameter_thresholds</code>,
+<code>session</code>
+</td>
+<td>Thinning leaves stubs that count as root tips and as length; specks
+in a painted segmentation count as root area. The thresholds are the
+fine-root cut-offs your question actually turns on.</td>
+</tr>
+<tr class="even">
+<td><strong>Only for the metrics that use them</strong></td>
+<td>
+<code>order_scheme</code>, <code>diam_weight</code>,
+<code>diameter_quantiles</code>, the <code>calc_*</code> toggles</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Ignore</strong></td>
+<td>
+<code>insertion_angles</code>, <code>tube_diameter_cm</code>,
+<code>tube_center_offset</code>, <code>rotation_fixed_width</code>,
+<code>soil_starts</code>, <code>bin_round</code>
+</td>
+<td>Tube and depth-profile settings.
+<code>calc_distribution_indices</code> and
+<code>calc_advanced_metrics</code> describe how roots spread over a
+profile, so they switch themselves off; <code>calc_root_angles</code>
+needs a real depth gradient to mean anything.</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># The names must line up with what the function itself sees, so build them from</span></span>
+<span><span class="co"># the same listing: no pattern, no sorting of your own.</span></span>
+<span><span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="st">"scans/trays/"</span><span class="op">)</span></span>
+<span><span class="va">ids</span>   <span class="op">&lt;-</span> <span class="fu">tools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/tools/fileutils.html" class="external-link">file_path_sans_ext</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></span><span class="op">(</span><span class="va">ids</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
+<span>  path_seg             <span class="op">=</span> <span class="st">"scans/trays/"</span>,</span>
+<span>  tube_names           <span class="op">=</span> <span class="va">ids</span>,</span>
+<span>  dpi                  <span class="op">=</span> <span class="fl">1200</span>,</span>
+<span>  depth_interval_cm    <span class="op">=</span> <span class="cn">NULL</span>,               <span class="co"># a tray has no depth axis</span></span>
+<span>  prune_spur_length_cm <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  session              <span class="op">=</span> <span class="st">"2024_spring"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="minirhizotron-tubes">Minirhizotron tubes<a class="anchor" aria-label="anchor" href="#minirhizotron-tubes"></a>
+</h4>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Tier</th>
+<th>Parameters</th>
+<th>Why</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Set every time</strong></td>
+<td>
+<code>dpi</code>, <code>insertion_angles</code>,
+<code>tube_diameter_cm</code>, <code>soil_starts</code>,
+<code>tube_names</code>, <code>depth_interval_cm</code>,
+<code>bin_round</code>
+</td>
+<td>
+<code>insertion_angles</code> is <strong>degrees from
+horizontal</strong> — 90 is a vertical tube, the opposite of some
+minirhizotron software. <code>soil_starts</code> sets where depth zero
+is.</td>
+</tr>
+<tr class="even">
+<td><strong>Set for raw scans</strong></td>
+<td>
+<code>binarize_threshold</code>, <code>dark_roots</code>
+</td>
+<td>As above.</td>
+</tr>
+<tr class="odd">
+<td><strong>Usually worth setting</strong></td>
+<td>
+<code>rotation_fixed_width</code>, <code>tube_center_offset</code>,
+<code>prune_spur_length_cm</code>
+</td>
+<td>How much of the tube’s curved edge to trim is a property of your
+scanner that no default can guess. <code>tube_center_offset</code> sets
+where the top of the tube falls across the image; leave it at
+<code>0</code> unless your rotational reference differs.</td>
+</tr>
+<tr class="even">
+<td><strong>Only for the metrics that use them</strong></td>
+<td>
+<code>order_scheme</code>, <code>diam_weight</code>,
+<code>diameter_thresholds</code>, <code>diameter_quantiles</code>, the
+<code>calc_*</code> toggles</td>
+<td>
+<code>calc_root_angles</code> and
+<code>calc_distribution_indices</code> earn their keep here, unlike on
+flatbed.</td>
+</tr>
+<tr class="odd">
+<td><strong>Ignore</strong></td>
+<td><code>depth_interval_cm = NULL</code></td>
+<td>It would discard the depth profile, which is the point of a
+tube.</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
+<span>  path_seg             <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
+<span>  tube_names           <span class="op">=</span> <span class="va">meta</span><span class="op">$</span><span class="va">tube_id</span>,</span>
+<span>  insertion_angles     <span class="op">=</span> <span class="va">meta</span><span class="op">$</span><span class="va">angle</span>,          <span class="co"># degrees from HORIZONTAL</span></span>
+<span>  tube_diameter_cm     <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>  soil_starts          <span class="op">=</span> <span class="va">meta</span><span class="op">$</span><span class="va">soil_row</span>,</span>
+<span>  dpi                  <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  depth_interval_cm    <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  bin_round            <span class="op">=</span> <span class="st">"floor"</span>,             <span class="co"># honest 0–5, 5–10 bins</span></span>
+<span>  rotation_fixed_width <span class="op">=</span> <span class="fl">1800</span>,</span>
+<span>  session              <span class="op">=</span> <span class="st">"2022_02"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="one-value-or-one-per-image">One value, or one per image<a class="anchor" aria-label="anchor" href="#one-value-or-one-per-image"></a>
+</h4>
+<p><code>insertion_angles</code>, <code>soil_starts</code>,
+<code>binarize_threshold</code>, <code>dark_roots</code> and
+<code>tube_names</code> each take either a single value for the whole
+run or a vector with one entry per image, in the order of
+<code>list.files(path_seg)</code>. A vector of the wrong length is an
+error rather than a silent recycle.</p>
+</div>
+<div class="section level4">
+<h4 id="a-note-on-bin_round">A note on <code>bin_round</code><a class="anchor" aria-label="anchor" href="#a-note-on-bin_round"></a>
+</h4>
+<p>The default, <code>"rounding"</code>, labels a bin by its centre:
+with <code>depth_interval_cm = 5</code>, the top bin spans 0–2.5 cm
+while every other bin spans 5 cm. Per-bin densities are unaffected —
+they divide by each bin’s own measured area — but <code>mrd</code> and
+<code>total.length.density</code> multiply by
+<code>depth_interval_cm</code> as though every bin were full width, so a
+half-width top bin biases both. <code>"floor"</code> gives the
+soil-science convention: 0–5, 5–10, labelled by the shallower edge.
+Prefer it for new work; the default is kept so existing analyses do not
+shift underneath you.</p>
+<hr>
+</div>
+</div>
+<div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jcunow/Rootopia"</span><span class="op">)</span></span>
 <span></span>
@@ -178,7 +387,7 @@ required; everything else has sensible defaults. <code>path_skl</code>
 is optional — if omitted, skeletons needed for length, diameter, and
 angle metrics are computed internally via
 <code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code>.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,   <span class="co"># optional — computed internally if omitted</span></span>
@@ -205,7 +414,7 @@ metric columns: <code>rootpx</code>, <code>voidpx</code>,
 <p>When tubes differ in insertion angle or soil-surface position, supply
 a vector of values (one per image). Both accept a single recycled value
 when all images share the same setting.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load your field metadata table</span></span>
 <span><span class="va">tube_meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"metadata/tube_metadata_2022_02.csv"</span><span class="op">)</span></span>
 <span><span class="co"># Expected columns: filename, angle, soil_row, tube_id</span></span>
@@ -231,7 +440,7 @@ when all images share the same setting.</p>
 <code>NA</code> columns rather than absent columns, so your downstream
 code can always reference the same column names regardless of what was
 computed.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg  <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl  <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span>
@@ -334,16 +543,17 @@ the image-visible area. Ratio is the length-weighted mean of local 2/r
 </tr>
 <tr class="even">
 <td><code>calc_root_order_metrics</code></td>
-<td>Per bin: <code>mean.branch_order</code>,
-<code>max.branch_order</code>, <code>mean.root_order</code>,
-<code>lateral_root_fraction</code>. Per tube: <code>main_root.*</code> /
-<code>lateral_roots.*</code> (length, diameter, branching frequency, …),
-<code>n_root_orders</code>
+<td>Per bin: <code>mean.&lt;scheme&gt;</code>,
+<code>max.&lt;scheme&gt;</code> for the <code>order_scheme</code> in use
+(e.g. <code>mean.strahler_order</code>), plus
+<code>mean.root_order</code> and <code>lateral_root_fraction</code>. Per
+tube: <code>main_root.*</code> / <code>lateral_roots.*</code> (length,
+diameter, branching frequency, …), <code>n_root_orders</code>
 </td>
 <td>
 <strong>Slow</strong> — builds one segment graph per image. Requires
-<code>calc_root_length</code>
-</td>
+<code>calc_root_length</code>. See <code>order_scheme</code> for which
+ordering is reported</td>
 </tr>
 <tr class="odd">
 <td><code>calc_density_metrics</code></td>
@@ -378,7 +588,7 @@ the image-visible area. Ratio is the length-weighted mean of local 2/r
 <p>When <code>calc_diameter_quantiles = TRUE</code>, you can specify
 custom diameter thresholds that separate fine roots from coarse
 roots:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg                <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl                <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span>
@@ -399,7 +609,7 @@ segments on the thickest, most central path of each connected component
 are order 1, the branches coming off them are order 2, their branches
 order 3, and so on. See the <a href="FlatBedScans_vignettes.html#7b-branch-order">Flatbed Scans</a>
 vignette for a worked example of the underlying pipeline.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg                <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl                <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span>
@@ -471,7 +681,7 @@ thickest order-1 path vs. all higher-order branches, split by
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">result</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">depth</span>, y <span class="op">=</span> <span class="va">lateral_root_fraction</span>, color <span class="op">=</span> <span class="va">Tube</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -500,7 +710,7 @@ need architectural detail.</p>
 set <code>flat_geometry = TRUE</code>. This disables the sinusoidal
 depth correction that is otherwise applied to cylindrical minirhizotron
 tubes.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg      <span class="op">=</span> <span class="st">"scans/segmented/rhizotron_A/"</span>,</span>
 <span>  path_skl      <span class="op">=</span> <span class="st">"scans/skeleton/rhizotron_A/"</span>,</span>
@@ -515,7 +725,7 @@ tubes.</p>
 <p>If your skeleton and RGB directories contain more files than the
 segmented directory (e.g. multiple sessions in one folder), use
 <code>*_file_index</code> to select the matching subset:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use only files 37–72 from the RGB directory</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg       <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
@@ -533,7 +743,7 @@ segmented directory (e.g. multiple sessions in one folder), use
 <code>.RData</code> file (the object is named
 <code>root.depth.metrics</code> inside the file). The directory is
 created if it does not exist.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg    <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl    <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span>
@@ -560,7 +770,7 @@ the corresponding columns are filled with <code>NA</code>. Processing
 always continues. Images that cannot be loaded at all are skipped
 entirely and listed in a warning at the end.</p>
 <p>To suppress all progress output:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span>
@@ -571,7 +781,7 @@ entirely and listed in a warning at the end.</p>
 <div class="section level3">
 <h3 id="example-visualizing-depth-profiles">Example: visualizing depth profiles<a class="anchor" aria-label="anchor" href="#example-visualizing-depth-profiles"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Root length density by depth, one line per tube</span></span>
@@ -613,7 +823,7 @@ entirely and listed in a warning at the end.</p>
 <div class="section level3">
 <h3 id="full-example-with-all-options">Full example with all options<a class="anchor" aria-label="anchor" href="#full-example-with-all-options"></a>
 </h3>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tube_meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"metadata/tube_metadata_2022_02.csv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>

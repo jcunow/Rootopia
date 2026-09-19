@@ -101,12 +101,16 @@ is dropped and listed in a warning at the end.</p>
 <span>  session <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  tube_diameter_cm <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tube_center_offset <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  depth_interval_cm <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  bin_round <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rounding"</span>, <span class="st">"floor"</span>, <span class="st">"ceiling"</span><span class="op">)</span>,</span>
 <span>  rotation_fixed_width <span class="op">=</span> <span class="fl">1800</span>,</span>
 <span>  binarize <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  binarize_threshold <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  dark_roots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seg_layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  clean_max_hole_size <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_max_artifact_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  calc_root_pixels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_root_length <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_diameter_stats <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -143,12 +147,16 @@ is dropped and listed in a warning at the end.</p>
 <span>  session <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  tube_diameter_cm <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tube_center_offset <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  depth_interval_cm <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  bin_round <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rounding"</span>, <span class="st">"floor"</span>, <span class="st">"ceiling"</span><span class="op">)</span>,</span>
 <span>  rotation_fixed_width <span class="op">=</span> <span class="fl">1800</span>,</span>
 <span>  binarize <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  binarize_threshold <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  dark_roots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seg_layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  clean_max_hole_size <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_max_artifact_size <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  calc_root_pixels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_root_length <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_diameter_stats <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -261,12 +269,35 @@ argument switches the run to minirhizotron geometry (see
 <strong>Geometry</strong>).  Default <code>NULL</code> (flatbed).</p></dd>
 
 
+<dt id="arg-tube-center-offset">tube_center_offset<a class="anchor" aria-label="anchor" href="#arg-tube-center-offset"></a></dt>
+<dd><p>Numeric in <code>[0, 1]</code>. Phase of the sinusoidal
+curvature correction: where the top of the tube falls across the image
+height, as a fraction.  <code>0</code> (default) puts it at the first row.  Set it
+if your scanner's rotational reference differs, or the depth assigned to a
+root will be offset by up to half a tube diameter.  Minirhizotron only.</p></dd>
+
+
 <dt id="arg-depth-interval-cm">depth_interval_cm<a class="anchor" aria-label="anchor" href="#arg-depth-interval-cm"></a></dt>
 <dd><p>Numeric or <code>NULL</code>. Size of each depth bin in
 <strong>centimetres</strong>.  Passed as <code>nn</code> to <code><a href="binning.html">binning()</a></code>.
 <code>NULL</code> switches on whole-image mode, where the scan is treated as a
 single bin and summarised in one row (see <strong>Whole-image mode</strong>).
 Default <code>5</code>.</p></dd>
+
+
+<dt id="arg-bin-round">bin_round<a class="anchor" aria-label="anchor" href="#arg-bin-round"></a></dt>
+<dd><p>Character. How <code><a href="binning.html">binning()</a></code> assigns a depth to a bin:
+<code>"rounding"</code> (default, <code>nn * round(depth/nn)</code>), <code>"floor"</code>,
+or <code>"ceiling"</code>.  <strong>Note what "rounding" does to the top bin</strong>: with
+<code>depth_interval_cm = 5</code> it spans 0-2.5 cm while every other bin spans
+5 cm, because the label is the bin's centre rather than its top edge.  Per-bin
+densities are unaffected (they divide by each bin's own measured area), but
+<code>mrd</code> and <code>total.length.density</code> multiply by
+<code>depth_interval_cm</code> as though every bin were full width, so they are
+biased by the half-width top bin.  <code>"floor"</code> gives the soil-science
+convention – 0-5, 5-10, labelled by the shallower edge – and is the better
+choice for a new analysis; the default is kept for continuity with existing
+ones.</p></dd>
 
 
 <dt id="arg-rotation-fixed-width">rotation_fixed_width<a class="anchor" aria-label="anchor" href="#arg-rotation-fixed-width"></a></dt>
@@ -314,6 +345,21 @@ to measure.  <code>NULL</code> (default) picks automatically: a single-layer
 image is used as is, and a 3- or 4-layer image is converted to greyscale
 with <code><a href="rgb2gray.html">rgb2gray()</a></code>.  Set this if your files carry the segmentation in
 one specific band.</p></dd>
+
+
+<dt id="arg-clean-max-hole-size">clean_max_hole_size<a class="anchor" aria-label="anchor" href="#arg-clean-max-hole-size"></a></dt>
+<dd><p>Numeric. Fill enclosed background holes of up to
+this many pixels before anything is measured; <code>0</code> (default) fills
+none, <code>Inf</code> fills every hole.  Pinholes inside a painted root read as
+background, which eats into the distance transform and so into diameter.</p></dd>
+
+
+<dt id="arg-clean-max-artifact-size">clean_max_artifact_size<a class="anchor" aria-label="anchor" href="#arg-clean-max-artifact-size"></a></dt>
+<dd><p>Numeric. Drop disconnected foreground blobs of
+up to this many pixels; <code>0</code> (default) drops none, <code>Inf</code> drops
+everything not touching the largest structure.  Specks count as root area,
+as isolated skeleton pixels, and as root tips.  Both use
+<code><a href="clean_image.html">clean_image</a></code> and need the <span class="pkg">imager</span> package.</p></dd>
 
 
 <dt id="arg-calc-root-pixels">calc_root_pixels<a class="anchor" aria-label="anchor" href="#arg-calc-root-pixels"></a></dt>
@@ -610,6 +656,35 @@ length estimator, not to the binning, and is built either way.)</p>
 <p><code>calc_distribution_indices</code> and <code>calc_advanced_metrics</code> are
 switched off in this mode: mean rooting depth, and each bin's share of the
 profile, mean nothing when there is only one bin.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="which-parameters-to-set">Which parameters to set<a class="anchor" aria-label="anchor" href="#which-parameters-to-set"></a></h2>
+
+
+<p>Most runs set five or six of these arguments, and which five depends on the
+geometry: a third of them describe a minirhizotron tube and do nothing at all
+to a flatbed scan, with no warning when you tune one that is inert.  The
+<em>Batch Processing</em> vignette has the full tier list for both geometries;
+in short:</p><dl><dt>Flatbed</dt>
+<dd><p>Set <code>dpi</code>, <code>tube_names</code> and
+    <code>depth_interval_cm = NULL</code>, plus <code>binarize_threshold</code> and
+    <code>dark_roots</code> for unsegmented scans.  <code>insertion_angles</code>,
+    <code>tube_diameter_cm</code>, <code>tube_center_offset</code>,
+    <code>rotation_fixed_width</code>, <code>soil_starts</code> and <code>bin_round</code>
+    do nothing here.</p></dd>
+
+  <dt>Minirhizotron</dt>
+<dd><p>Set <code>dpi</code>, <code>insertion_angles</code> (degrees from
+    <em>horizontal</em>), <code>tube_diameter_cm</code>, <code>soil_starts</code>,
+    <code>tube_names</code>, <code>depth_interval_cm</code> and <code>bin_round</code>, and
+    look at <code>rotation_fixed_width</code> – how much of the tube's curved edge
+    to trim is a property of your scanner that no default can guess.</p></dd>
+
+
+</dl><p>The per-image arguments – <code>insertion_angles</code>, <code>soil_starts</code>,
+<code>binarize_threshold</code>, <code>dark_roots</code>, <code>tube_names</code> – each take
+either one value for the whole run or one per image, in the order of
+<code>list.files(path_seg)</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="binarization">Binarization<a class="anchor" aria-label="anchor" href="#binarization"></a></h2>

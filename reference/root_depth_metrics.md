@@ -30,12 +30,16 @@ root_depth_metrics(
   session = "",
   dpi = 300,
   tube_diameter_cm = NULL,
+  tube_center_offset = 0,
   depth_interval_cm = 5,
+  bin_round = c("rounding", "floor", "ceiling"),
   rotation_fixed_width = 1800,
   binarize = "auto",
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
+  clean_max_hole_size = 0,
+  clean_max_artifact_size = 0,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -72,12 +76,16 @@ batch_root_traits(
   session = "",
   dpi = 300,
   tube_diameter_cm = NULL,
+  tube_center_offset = 0,
   depth_interval_cm = 5,
+  bin_round = c("rounding", "floor", "ceiling"),
   rotation_fixed_width = 1800,
   binarize = "auto",
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
+  clean_max_hole_size = 0,
+  clean_max_artifact_size = 0,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -189,6 +197,14 @@ batch_root_traits(
   run to minirhizotron geometry (see **Geometry**). Default `NULL`
   (flatbed).
 
+- tube_center_offset:
+
+  Numeric in `[0, 1]`. Phase of the sinusoidal curvature correction:
+  where the top of the tube falls across the image height, as a
+  fraction. `0` (default) puts it at the first row. Set it if your
+  scanner's rotational reference differs, or the depth assigned to a
+  root will be offset by up to half a tube diameter. Minirhizotron only.
+
 - depth_interval_cm:
 
   Numeric or `NULL`. Size of each depth bin in **centimetres**. Passed
@@ -197,6 +213,22 @@ batch_root_traits(
   `NULL` switches on whole-image mode, where the scan is treated as a
   single bin and summarised in one row (see **Whole-image mode**).
   Default `5`.
+
+- bin_round:
+
+  Character. How
+  [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md)
+  assigns a depth to a bin: `"rounding"` (default,
+  `nn * round(depth/nn)`), `"floor"`, or `"ceiling"`. **Note what
+  "rounding" does to the top bin**: with `depth_interval_cm = 5` it
+  spans 0-2.5 cm while every other bin spans 5 cm, because the label is
+  the bin's centre rather than its top edge. Per-bin densities are
+  unaffected (they divide by each bin's own measured area), but `mrd`
+  and `total.length.density` multiply by `depth_interval_cm` as though
+  every bin were full width, so they are biased by the half-width top
+  bin. `"floor"` gives the soil-science convention – 0-5, 5-10, labelled
+  by the shallower edge – and is the better choice for a new analysis;
+  the default is kept for continuity with existing ones.
 
 - rotation_fixed_width:
 
@@ -244,6 +276,22 @@ batch_root_traits(
   is, and a 3- or 4-layer image is converted to greyscale with
   [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md).
   Set this if your files carry the segmentation in one specific band.
+
+- clean_max_hole_size:
+
+  Numeric. Fill enclosed background holes of up to this many pixels
+  before anything is measured; `0` (default) fills none, `Inf` fills
+  every hole. Pinholes inside a painted root read as background, which
+  eats into the distance transform and so into diameter.
+
+- clean_max_artifact_size:
+
+  Numeric. Drop disconnected foreground blobs of up to this many pixels;
+  `0` (default) drops none, `Inf` drops everything not touching the
+  largest structure. Specks count as root area, as isolated skeleton
+  pixels, and as root tips. Both use
+  [`clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+  and need the imager package.
 
 - calc_root_pixels:
 
@@ -539,6 +587,34 @@ estimator, not to the binning, and is built either way.)
 `calc_distribution_indices` and `calc_advanced_metrics` are switched off
 in this mode: mean rooting depth, and each bin's share of the profile,
 mean nothing when there is only one bin.
+
+## Which parameters to set
+
+Most runs set five or six of these arguments, and which five depends on
+the geometry: a third of them describe a minirhizotron tube and do
+nothing at all to a flatbed scan, with no warning when you tune one that
+is inert. The *Batch Processing* vignette has the full tier list for
+both geometries; in short:
+
+- Flatbed:
+
+  Set `dpi`, `tube_names` and `depth_interval_cm = NULL`, plus
+  `binarize_threshold` and `dark_roots` for unsegmented scans.
+  `insertion_angles`, `tube_diameter_cm`, `tube_center_offset`,
+  `rotation_fixed_width`, `soil_starts` and `bin_round` do nothing here.
+
+- Minirhizotron:
+
+  Set `dpi`, `insertion_angles` (degrees from *horizontal*),
+  `tube_diameter_cm`, `soil_starts`, `tube_names`, `depth_interval_cm`
+  and `bin_round`, and look at `rotation_fixed_width` – how much of the
+  tube's curved edge to trim is a property of your scanner that no
+  default can guess.
+
+The per-image arguments – `insertion_angles`, `soil_starts`,
+`binarize_threshold`, `dark_roots`, `tube_names` – each take either one
+value for the whole run or one per image, in the order of
+`list.files(path_seg)`.
 
 ## Binarization
 
