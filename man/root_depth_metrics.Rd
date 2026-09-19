@@ -33,6 +33,10 @@ root_depth_metrics(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
+  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  diam_weight = 0.5,
+  prune_spur_length_cm = 0,
+  prune_spur_iter = 1L,
   calc_density_metrics = TRUE,
   calc_distribution_indices = TRUE,
   calc_advanced_metrics = TRUE,
@@ -71,6 +75,10 @@ batch_root_traits(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
+  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  diam_weight = 0.5,
+  prune_spur_length_cm = 0,
+  prune_spur_iter = 1L,
   calc_density_metrics = TRUE,
   calc_distribution_indices = TRUE,
   calc_advanced_metrics = TRUE,
@@ -239,13 +247,45 @@ Uses \code{deep_drive()}.  Default \code{FALSE}.}
 
 \item{calc_root_order_metrics}{Logical. Build a per-image branching-order
 graph via \code{branch_order_map()} and summarize it both per depth bin
-and per tube.  Adds \code{mean.branch_order}, \code{max.branch_order},
-\code{mean.root_order}, and \code{lateral_root_fraction} per depth bin,
-plus tube-level \code{main_root.*} / \code{lateral_roots.*} columns
-(length, diameter, branching frequency, etc., split by
-\code{order_metrics(..., focal = "thickest")}) and \code{n_root_orders}
-(the highest branch order found).  Requires a skeleton.  \strong{Slow}:
+and per tube.  Adds \code{mean.<scheme>} and \code{max.<scheme>} for the
+scheme named by \code{order_scheme} (e.g. \code{mean.strahler_order}),
+plus \code{mean.root_order} and \code{lateral_root_fraction} per depth
+bin, tube-level \code{main_root.*} / \code{lateral_roots.*} columns
+(length, diameter, branching frequency, etc.), and \code{n_root_orders}
+(the highest order found).  Requires a skeleton.  \strong{Slow}:
 builds one segment graph per image.  Default \code{FALSE}.}
+
+\item{order_scheme}{Character. Which ordering labels the per-bin order
+columns and the main-root split.  \code{"strahler_order"} (default) is the
+convention of the fine-root literature (Pregitzer et al. 2002; Fitter):
+every distal unbranched root is order 1, and the order rises only where two
+roots of equal order meet.  \code{"tip_order"} is the same leaf-peeling
+with the order raised at \emph{every} junction, so an axis carrying ten
+laterals reaches order 11.  \code{"branch_order"} counts the other way --
+the thickest root of each component is 1 and its laterals 2 -- and
+\code{"root_order"} gives each continuous root the maximum
+\code{tip_order} along it.  All four are computed regardless; this only
+picks which one is reported.  See \code{\link{branch_order_map}}.}
+
+\item{diam_weight}{Numeric >= 0. At a junction, which two arms are read as
+the same root continuing: \code{straightness + diam_weight *
+diameter_similarity}.  \code{0} uses the angle alone, larger values let
+thickness decide.  Affects \code{root_order}, \code{branch_order} and the
+segment grouping, not \code{strahler_order} or \code{tip_order}.
+Default \code{0.5}.}
+
+\item{prune_spur_length_cm}{Numeric. Remove terminal skeleton branches
+("spurs") shorter than this, in \strong{centimetres}, before any trait is
+measured; \code{0} (default) prunes nothing.  Thinning leaves short stubs
+where roots are wide or ragged, and each one is counted as a root tip and
+adds a little length, so the pruning applies to the skeleton every metric
+is measured from -- length and diameter as well as the order graph.  Start
+around two to three times the width of your thickest root and check one
+image before trusting a batch.  Uses \code{\link{prune_skeleton}}.}
+
+\item{prune_spur_iter}{Integer. Pruning passes, so that a spur exposed by
+removing another is caught too.  More passes eat further into real roots.
+Default \code{1}.}
 
 \item{calc_density_metrics}{Logical. Compute \code{rootpx.density} (percent
 root area cover) and \code{rootlength.density} (cm root length per cm^2

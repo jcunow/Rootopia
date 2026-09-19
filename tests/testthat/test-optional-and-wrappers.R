@@ -179,6 +179,39 @@ test_that("duplicate tube names are refused", {
 })
 
 
+test_that("order_scheme names its own columns, and spurs can be pruned", {
+  skip_if_not_installed("terra")
+  data(flatbed_scan_example)
+  small <- terra::aggregate(terra::rast(flatbed_scan_example)[[1]],
+                            fact = 4, fun = "max")
+  dir <- tempfile("seg"); dir.create(dir)
+  terra::writeRaster(small, file.path(dir, "tray.tif"), overwrite = TRUE)
+
+  run <- function(...) suppressWarnings(root_depth_metrics(
+    path_seg = dir, tube_names = "tray", dpi = 150, depth_interval_cm = NULL,
+    calc_diameter_stats = FALSE,        # needs imager
+    calc_root_order_metrics = TRUE, verbose = FALSE, ...))
+
+  strahler <- run()                                  # the default
+  branch   <- run(order_scheme = "branch_order")
+
+  # A column can never be read under the wrong definition.
+  expect_true(all(c("mean.strahler_order", "max.strahler_order") %in% names(strahler)))
+  expect_false("mean.branch_order" %in% names(strahler))
+  expect_true("mean.branch_order" %in% names(branch))
+
+  expect_gte(strahler$lateral_root_fraction, 0)
+  expect_lte(strahler$lateral_root_fraction, 1)
+
+  # Pruning works on the skeleton every metric is measured from, so it takes
+  # both tips and length away.
+  pruned <- run(prune_spur_length_cm = 0.3, prune_spur_iter = 2)
+  tips <- function(r) r$main_root.n_tips + r$lateral_roots.n_tips
+  expect_lt(tips(pruned), tips(strahler))
+  expect_lt(pruned$rootlength, strahler$rootlength)
+})
+
+
 test_that("rotation_fixed_width controls the rotation-axis crop", {
   # It used to be hardcoded to 1800, which is wider than any tube in the
   # bundled data, so the crop silently clamped to the full image every time.

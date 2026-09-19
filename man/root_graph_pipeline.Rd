@@ -17,7 +17,7 @@ root_graph_pipeline(
   splice_passthrough = TRUE,
   crossing_straight = -0.5,
   crossing_diam_ratio = 0,
-  color_by = c("branch_order", "root_order", "tip_order"),
+  color_by = c("strahler_order", "branch_order", "root_order", "tip_order"),
   diam_weight = 0.5,
   prune_min_length = 0,
   prune_min_diameter = 0,

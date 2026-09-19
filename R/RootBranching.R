@@ -395,6 +395,7 @@ build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
 #' @return \code{edge_tbl} with an added integer \code{tip_order} column.
 #' @keywords internal
 #' @noRd
+#' @name compute_tip_order
 compute_tip_order <- function(edge_tbl) {
   if (is.null(edge_tbl) || nrow(edge_tbl) == 0L) return(edge_tbl)
   nodes <- unique(c(edge_tbl$from, edge_tbl$to))
@@ -411,6 +412,108 @@ compute_tip_order <- function(edge_tbl) {
   edge_tbl$tip_order <- ord
   if (any(is.na(ord)))
     warning(sprintf("%d segment(s) NA tip_order (genuine cycle, no endpoints).", sum(is.na(ord))))
+  edge_tbl
+}
+
+
+#' Strahler order, rooted at the base of each root system
+#'
+#' Assigns \code{strahler_order} per segment: every terminal segment is 1, and a
+#' segment's order rises only where two of its children share the highest order
+#' -- otherwise it inherits that highest order unchanged. This is the convention
+#' the fine-root literature means by root order (Pregitzer et al. 2002; Fitter's
+#' topological ordering), where first-order roots are the distal, unbranched
+#' absorptive roots.
+#'
+#' It shares the peeling loop with \code{compute_tip_order()} but not its rule:
+#' there, order climbs at every junction, so an axis carrying ten laterals
+#' reaches order 11; here it stays 1 until two equal-order roots actually meet.
+#'
+#' \strong{Rooting.} Strahler ordering is defined on a \emph{rooted} tree, and a
+#' skeleton is not rooted: the base of a root system is a free end like any tip,
+#' so peeling from every free end at once scores the basal axis 1, alongside the
+#' finest laterals. Each connected component is therefore rooted at its thickest
+#' free end -- the degree-1 node whose segment has the largest mean diameter,
+#' which on a root scan is the proximal end of the main axis. That node is held
+#' back from the peeling, so its segment is scored last, from its children, as a
+#' rooted traversal would. Components with no free end at all (a pure cycle)
+#' receive \code{NA}, as for \code{tip_order}.
+#'
+#' @param edge_tbl Edge table from \code{\link{build_edge_table}}. Uses
+#'   \code{mean_diameter} to root each component, falling back to \code{length}
+#'   and then to the first free end found.
+#' @return \code{edge_tbl} with an added integer \code{strahler_order} column.
+#' @keywords internal
+#' @noRd
+compute_strahler_order <- function(edge_tbl) {
+  if (is.null(edge_tbl) || nrow(edge_tbl) == 0L) return(edge_tbl)
+  nodes <- unique(c(edge_tbl$from, edge_tbl$to))
+  ni <- stats::setNames(seq_along(nodes), nodes)
+  fi <- as.integer(ni[edge_tbl$from]); ti <- as.integer(ni[edge_tbl$to])
+  M <- length(nodes); E <- nrow(edge_tbl)
+
+  # ---- one root node per connected component --------------------------------
+  ufr  <- seq_len(M)
+  find <- function(x) { r <- x; while (ufr[r] != r) r <- ufr[r]
+    while (ufr[x] != r) { nx <- ufr[x]; ufr[x] <<- r; x <- nx }; r }
+  for (e in seq_len(E)) {
+    a <- find(fi[e]); b <- find(ti[e])
+    if (a != b) ufr[a] <- b
+  }
+  comp <- vapply(seq_len(M), find, integer(1))
+
+  deg0 <- tabulate(c(fi, ti), nbins = M)
+  w <- if (!is.null(edge_tbl$mean_diameter)) edge_tbl$mean_diameter
+       else if (!is.null(edge_tbl$length))   edge_tbl$length
+       else rep(1, E)
+  w[!is.finite(w)] <- 0
+
+  is_root  <- rep(FALSE, M)
+  end_node <- c(fi, ti)                       # every segment end, both columns
+  end_w    <- c(w,  w)
+  free     <- deg0[end_node] == 1L
+  if (any(free)) {
+    en <- end_node[free]; o <- order(end_w[free], decreasing = TRUE)
+    en <- en[o]
+    is_root[en[!duplicated(comp[en])]] <- TRUE   # thickest free end per component
+  }
+
+  # ---- peel toward the root -------------------------------------------------
+  active <- rep(TRUE, E)
+  ord    <- rep(NA_integer_, E)
+  # Orders of the segments already peeled away at each node. A segment's
+  # children are whatever was removed at the end it became a leaf on; a genuine
+  # tip has none, which is what makes it order 1.
+  kids <- vector("list", M)
+
+  strahler <- function(k) {
+    if (length(k) == 0L) return(1L)
+    m <- max(k)
+    if (sum(k == m) >= 2L) m + 1L else m
+  }
+
+  repeat {
+    inc <- tabulate(c(fi[active], ti[active]), nbins = M)
+    # A root node is never a leaf, so its segment waits until everything above
+    # it has been scored.
+    leaf_at_f <- inc[fi] == 1L & !is_root[fi]
+    leaf_at_t <- inc[ti] == 1L & !is_root[ti]
+    leaf <- which(active & (leaf_at_f | leaf_at_t))
+    if (length(leaf) == 0L) break
+
+    # Score first, then remove and push upward, so segments peeled in the same
+    # round cannot see each other's orders.
+    leaf_end <- ifelse(leaf_at_f[leaf], fi[leaf], ti[leaf])
+    far_end  <- ifelse(leaf_end == fi[leaf], ti[leaf], fi[leaf])
+    new_ord  <- vapply(leaf_end, function(u) strahler(kids[[u]]), integer(1))
+
+    ord[leaf]    <- new_ord
+    active[leaf] <- FALSE
+    for (k in seq_along(leaf))
+      kids[[far_end[k]]] <- c(kids[[far_end[k]]], new_ord[k])
+  }
+
+  edge_tbl$strahler_order <- ord
   edge_tbl
 }
 
@@ -529,7 +632,7 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
                                 keep_segments = FALSE,
                                 resolve_overlaps = TRUE, splice_passthrough = TRUE,
                                 crossing_straight = -0.5, crossing_diam_ratio = 0,
-                                color_by = c("branch_order", "root_order", "tip_order"),
+                                color_by = c("strahler_order", "branch_order", "root_order", "tip_order"),
                                 diam_weight = 0.5,
                                 prune_min_length = 0, prune_min_diameter = 0, prune_iter = 0L) {
   color_by <- match.arg(color_by)
@@ -595,6 +698,7 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
   if (is.null(edge_tbl)) { warning("No segments."); return(edge_tbl) }
   if (verbose) cat("Tip order...\n")
   edge_tbl <- compute_tip_order(edge_tbl)
+  edge_tbl <- compute_strahler_order(edge_tbl)
   edge_tbl <- assign_root_order(segs, edge_tbl, diam_weight = diam_weight)
   
   attr(edge_tbl, "crop_offset") <- c(row = ro, col = co)
@@ -1373,7 +1477,8 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' terra::plot(res$class_map, maxcell = Inf)
 #' }
 #' @export
-branch_order_map <- function(skel = NULL, mask = NULL, order = c("branch_order", "root_order", "tip_order"),
+branch_order_map <- function(skel = NULL, mask = NULL,
+                             order = c("strahler_order", "branch_order", "root_order", "tip_order"),
                              unit = "cm", dpi = 300, length_method = "polyline",
                              template = NULL, overlay_png = NULL, return_map = TRUE, ...) {
   order <- match.arg(order)

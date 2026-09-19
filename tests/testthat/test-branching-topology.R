@@ -20,6 +20,22 @@ spur_image <- function() {
 }
 
 
+test_that("strahler_order rises only where two equal orders meet", {
+  # The axis carries one lateral and one spur, so under Strahler it stays
+  # order 2 above the junction while every tip -- and the basal piece below the
+  # last junction -- is 1. tip_order peels from every free end instead, so it
+  # scores the same skeleton differently.
+  im <- spur_image()
+  et <- root_graph_pipeline(im$skel, im$mask, verbose = FALSE)
+
+  expect_true(all(c("strahler_order", "tip_order") %in% names(et)))
+  expect_setequal(unique(et$strahler_order), c(1L, 2L))
+  expect_equal(sum(et$strahler_order == 1L), 3L)
+  expect_equal(sum(et$strahler_order == 2L), 2L)
+  expect_equal(sum(et$tip_order == 1L), 4L)
+})
+
+
 test_that("pruning removes short terminal segments and leaves the rest intact", {
   im <- spur_image()
   keep <- root_graph_pipeline(im$skel, im$mask, verbose = FALSE)
