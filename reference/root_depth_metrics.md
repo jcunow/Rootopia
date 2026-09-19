@@ -45,6 +45,10 @@ root_depth_metrics(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
+  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  diam_weight = 0.5,
+  prune_spur_length_cm = 0,
+  prune_spur_iter = 1L,
   calc_density_metrics = TRUE,
   calc_distribution_indices = TRUE,
   calc_advanced_metrics = TRUE,
@@ -83,6 +87,10 @@ batch_root_traits(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
+  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  diam_weight = 0.5,
+  prune_spur_length_cm = 0,
+  prune_spur_iter = 1L,
   calc_density_metrics = TRUE,
   calc_distribution_indices = TRUE,
   calc_advanced_metrics = TRUE,
@@ -309,13 +317,53 @@ batch_root_traits(
 
   Logical. Build a per-image branching-order graph via
   [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
-  and summarize it both per depth bin and per tube. Adds
-  `mean.branch_order`, `max.branch_order`, `mean.root_order`, and
-  `lateral_root_fraction` per depth bin, plus tube-level `main_root.*` /
+  and summarize it both per depth bin and per tube. Adds `mean.<scheme>`
+  and `max.<scheme>` for the scheme named by `order_scheme` (e.g.
+  `mean.strahler_order`), plus `mean.root_order` and
+  `lateral_root_fraction` per depth bin, tube-level `main_root.*` /
   `lateral_roots.*` columns (length, diameter, branching frequency,
-  etc., split by `order_metrics(..., focal = "thickest")`) and
-  `n_root_orders` (the highest branch order found). Requires a skeleton.
-  **Slow**: builds one segment graph per image. Default `FALSE`.
+  etc.), and `n_root_orders` (the highest order found). Requires a
+  skeleton. **Slow**: builds one segment graph per image. Default
+  `FALSE`.
+
+- order_scheme:
+
+  Character. Which ordering labels the per-bin order columns and the
+  main-root split. `"strahler_order"` (default) is the convention of the
+  fine-root literature (Pregitzer et al. 2002; Fitter): every distal
+  unbranched root is order 1, and the order rises only where two roots
+  of equal order meet. `"tip_order"` is the same leaf-peeling with the
+  order raised at *every* junction, so an axis carrying ten laterals
+  reaches order 11. `"branch_order"` counts the other way – the thickest
+  root of each component is 1 and its laterals 2 – and `"root_order"`
+  gives each continuous root the maximum `tip_order` along it. All four
+  are computed regardless; this only picks which one is reported. See
+  [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md).
+
+- diam_weight:
+
+  Numeric \>= 0. At a junction, which two arms are read as the same root
+  continuing: `straightness + diam_weight * diameter_similarity`. `0`
+  uses the angle alone, larger values let thickness decide. Affects
+  `root_order`, `branch_order` and the segment grouping, not
+  `strahler_order` or `tip_order`. Default `0.5`.
+
+- prune_spur_length_cm:
+
+  Numeric. Remove terminal skeleton branches ("spurs") shorter than
+  this, in **centimetres**, before any trait is measured; `0` (default)
+  prunes nothing. Thinning leaves short stubs where roots are wide or
+  ragged, and each one is counted as a root tip and adds a little
+  length, so the pruning applies to the skeleton every metric is
+  measured from – length and diameter as well as the order graph. Start
+  around two to three times the width of your thickest root and check
+  one image before trusting a batch. Uses
+  [`prune_skeleton`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md).
+
+- prune_spur_iter:
+
+  Integer. Pruning passes, so that a spur exposed by removing another is
+  caught too. More passes eat further into real roots. Default `1`.
 
 - calc_density_metrics:
 

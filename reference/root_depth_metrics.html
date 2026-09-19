@@ -116,6 +116,10 @@ is dropped and listed in a warning at the end.</p>
 <span>  calc_color_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_angles <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  order_scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"branch_order"</span>, <span class="st">"root_order"</span>, <span class="st">"tip_order"</span><span class="op">)</span>,</span>
+<span>  diam_weight <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  prune_spur_length_cm <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  prune_spur_iter <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  calc_density_metrics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_distribution_indices <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_advanced_metrics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -154,6 +158,10 @@ is dropped and listed in a warning at the end.</p>
 <span>  calc_color_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_angles <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  order_scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"branch_order"</span>, <span class="st">"root_order"</span>, <span class="st">"tip_order"</span><span class="op">)</span>,</span>
+<span>  diam_weight <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  prune_spur_length_cm <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  prune_spur_iter <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  calc_density_metrics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_distribution_indices <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_advanced_metrics <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -378,13 +386,53 @@ Uses <code><a href="deep_drive.html">deep_drive()</a></code>.  Default <code>FAL
 <dt id="arg-calc-root-order-metrics">calc_root_order_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-root-order-metrics"></a></dt>
 <dd><p>Logical. Build a per-image branching-order
 graph via <code><a href="branch_order_map.html">branch_order_map()</a></code> and summarize it both per depth bin
-and per tube.  Adds <code>mean.branch_order</code>, <code>max.branch_order</code>,
-<code>mean.root_order</code>, and <code>lateral_root_fraction</code> per depth bin,
-plus tube-level <code>main_root.*</code> / <code>lateral_roots.*</code> columns
-(length, diameter, branching frequency, etc., split by
-<code>order_metrics(..., focal = "thickest")</code>) and <code>n_root_orders</code>
-(the highest branch order found).  Requires a skeleton.  <strong>Slow</strong>:
+and per tube.  Adds <code>mean.&lt;scheme&gt;</code> and <code>max.&lt;scheme&gt;</code> for the
+scheme named by <code>order_scheme</code> (e.g. <code>mean.strahler_order</code>),
+plus <code>mean.root_order</code> and <code>lateral_root_fraction</code> per depth
+bin, tube-level <code>main_root.*</code> / <code>lateral_roots.*</code> columns
+(length, diameter, branching frequency, etc.), and <code>n_root_orders</code>
+(the highest order found).  Requires a skeleton.  <strong>Slow</strong>:
 builds one segment graph per image.  Default <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-order-scheme">order_scheme<a class="anchor" aria-label="anchor" href="#arg-order-scheme"></a></dt>
+<dd><p>Character. Which ordering labels the per-bin order
+columns and the main-root split.  <code>"strahler_order"</code> (default) is the
+convention of the fine-root literature (Pregitzer et al. 2002; Fitter):
+every distal unbranched root is order 1, and the order rises only where two
+roots of equal order meet.  <code>"tip_order"</code> is the same leaf-peeling
+with the order raised at <em>every</em> junction, so an axis carrying ten
+laterals reaches order 11.  <code>"branch_order"</code> counts the other way –
+the thickest root of each component is 1 and its laterals 2 – and
+<code>"root_order"</code> gives each continuous root the maximum
+<code>tip_order</code> along it.  All four are computed regardless; this only
+picks which one is reported.  See <code><a href="branch_order_map.html">branch_order_map</a></code>.</p></dd>
+
+
+<dt id="arg-diam-weight">diam_weight<a class="anchor" aria-label="anchor" href="#arg-diam-weight"></a></dt>
+<dd><p>Numeric &gt;= 0. At a junction, which two arms are read as
+the same root continuing: <code>straightness + diam_weight *
+diameter_similarity</code>.  <code>0</code> uses the angle alone, larger values let
+thickness decide.  Affects <code>root_order</code>, <code>branch_order</code> and the
+segment grouping, not <code>strahler_order</code> or <code>tip_order</code>.
+Default <code>0.5</code>.</p></dd>
+
+
+<dt id="arg-prune-spur-length-cm">prune_spur_length_cm<a class="anchor" aria-label="anchor" href="#arg-prune-spur-length-cm"></a></dt>
+<dd><p>Numeric. Remove terminal skeleton branches
+("spurs") shorter than this, in <strong>centimetres</strong>, before any trait is
+measured; <code>0</code> (default) prunes nothing.  Thinning leaves short stubs
+where roots are wide or ragged, and each one is counted as a root tip and
+adds a little length, so the pruning applies to the skeleton every metric
+is measured from – length and diameter as well as the order graph.  Start
+around two to three times the width of your thickest root and check one
+image before trusting a batch.  Uses <code><a href="prune_skeleton.html">prune_skeleton</a></code>.</p></dd>
+
+
+<dt id="arg-prune-spur-iter">prune_spur_iter<a class="anchor" aria-label="anchor" href="#arg-prune-spur-iter"></a></dt>
+<dd><p>Integer. Pruning passes, so that a spur exposed by
+removing another is caught too.  More passes eat further into real roots.
+Default <code>1</code>.</p></dd>
 
 
 <dt id="arg-calc-density-metrics">calc_density_metrics<a class="anchor" aria-label="anchor" href="#arg-calc-density-metrics"></a></dt>

@@ -11,7 +11,7 @@ aligned to the input. Lengths and diameters are reported in real units.
 branch_order_map(
   skel = NULL,
   mask = NULL,
-  order = c("branch_order", "root_order", "tip_order"),
+  order = c("strahler_order", "branch_order", "root_order", "tip_order"),
   unit = "cm",
   dpi = 300,
   length_method = "polyline",
