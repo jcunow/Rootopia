@@ -236,6 +236,41 @@ test_that("diameters are scaled by the run's own dpi", {
 })
 
 
+test_that("binarize settings are per image, and bin_round sets the bin edges", {
+  skip_if_not_installed("terra")
+  # A greyscale tray: one dark root band, one mid-grey band.
+  m <- matrix(255L, 200, 200)
+  m[20:22, 20:180] <- 50L
+  m[60:62, 20:180] <- 150L
+  dir <- tempfile("seg"); dir.create(dir)
+  for (f in c("a.tif", "b.tif"))
+    terra::writeRaster(terra::rast(m), file.path(dir, f),
+                       overwrite = TRUE, datatype = "INT1U")
+
+  # A threshold of 100 keeps the dark band only; 200 keeps both.
+  per_image <- suppressWarnings(root_depth_metrics(
+    path_seg = dir, tube_names = c("a", "b"), dpi = 150,
+    depth_interval_cm = NULL, binarize = TRUE,
+    binarize_threshold = c(100, 200), calc_diameter_stats = FALSE,
+    verbose = FALSE))
+  expect_equal(per_image$rootpx, c(483, 966))
+
+  expect_error(suppressWarnings(root_depth_metrics(
+    path_seg = dir, tube_names = c("a", "b"), dpi = 150,
+    binarize_threshold = c(100, 200, 150), verbose = FALSE)), "length 1 or 2")
+
+  # "rounding" labels a bin by its centre, so the top bin is half width;
+  # "floor" labels it by its shallower edge and every bin is full width.
+  prof <- function(br) suppressWarnings(root_depth_metrics(
+    path_seg = dir, seg_file_index = 1, tube_names = "a", dpi = 150,
+    depth_interval_cm = 2, bin_round = br, calc_diameter_stats = FALSE,
+    calc_distribution_indices = FALSE, calc_advanced_metrics = FALSE,
+    verbose = FALSE))
+  px <- function(r) r$rootpx[1] + r$voidpx[1]
+  expect_equal(px(prof("rounding")) * 2, px(prof("floor")))
+})
+
+
 test_that("rotation_fixed_width controls the rotation-axis crop", {
   # It used to be hardcoded to 1800, which is wider than any tube in the
   # bundled data, so the crop silently clamped to the full image every time.

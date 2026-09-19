@@ -18,12 +18,16 @@ root_depth_metrics(
   session = "",
   dpi = 300,
   tube_diameter_cm = NULL,
+  tube_center_offset = 0,
   depth_interval_cm = 5,
+  bin_round = c("rounding", "floor", "ceiling"),
   rotation_fixed_width = 1800,
   binarize = "auto",
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
+  clean_max_hole_size = 0,
+  clean_max_artifact_size = 0,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -60,12 +64,16 @@ batch_root_traits(
   session = "",
   dpi = 300,
   tube_diameter_cm = NULL,
+  tube_center_offset = 0,
   depth_interval_cm = 5,
+  bin_round = c("rounding", "floor", "ceiling"),
   rotation_fixed_width = 1800,
   binarize = "auto",
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
+  clean_max_hole_size = 0,
+  clean_max_artifact_size = 0,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -151,11 +159,30 @@ and wavelength of the sinusoidal curvature correction.  Supplying this
 argument switches the run to minirhizotron geometry (see
 \strong{Geometry}).  Default \code{NULL} (flatbed).}
 
+\item{tube_center_offset}{Numeric in \code{[0, 1]}. Phase of the sinusoidal
+curvature correction: where the top of the tube falls across the image
+height, as a fraction.  \code{0} (default) puts it at the first row.  Set it
+if your scanner's rotational reference differs, or the depth assigned to a
+root will be offset by up to half a tube diameter.  Minirhizotron only.}
+
 \item{depth_interval_cm}{Numeric or \code{NULL}. Size of each depth bin in
 \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
 \code{NULL} switches on whole-image mode, where the scan is treated as a
 single bin and summarised in one row (see \strong{Whole-image mode}).
 Default \code{5}.}
+
+\item{bin_round}{Character. How \code{binning()} assigns a depth to a bin:
+\code{"rounding"} (default, \code{nn * round(depth/nn)}), \code{"floor"},
+or \code{"ceiling"}.  \strong{Note what "rounding" does to the top bin}: with
+\code{depth_interval_cm = 5} it spans 0-2.5 cm while every other bin spans
+5 cm, because the label is the bin's centre rather than its top edge.  Per-bin
+densities are unaffected (they divide by each bin's own measured area), but
+\code{mrd} and \code{total.length.density} multiply by
+\code{depth_interval_cm} as though every bin were full width, so they are
+biased by the half-width top bin.  \code{"floor"} gives the soil-science
+convention -- 0-5, 5-10, labelled by the shallower edge -- and is the better
+choice for a new analysis; the default is kept for continuity with existing
+ones.}
 
 \item{rotation_fixed_width}{Numeric. Width in \strong{rows} that each image is
 cropped to along the rotation axis, centred on the middle row, before any
@@ -193,6 +220,17 @@ to measure.  \code{NULL} (default) picks automatically: a single-layer
 image is used as is, and a 3- or 4-layer image is converted to greyscale
 with \code{rgb2gray()}.  Set this if your files carry the segmentation in
 one specific band.}
+
+\item{clean_max_hole_size}{Numeric. Fill enclosed background holes of up to
+this many pixels before anything is measured; \code{0} (default) fills
+none, \code{Inf} fills every hole.  Pinholes inside a painted root read as
+background, which eats into the distance transform and so into diameter.}
+
+\item{clean_max_artifact_size}{Numeric. Drop disconnected foreground blobs of
+up to this many pixels; \code{0} (default) drops none, \code{Inf} drops
+everything not touching the largest structure.  Specks count as root area,
+as isolated skeleton pixels, and as root tips.  Both use
+\code{\link{clean_image}} and need the \pkg{imager} package.}
 
 \item{calc_root_pixels}{Logical. Count \code{rootpx} (foreground pixels) and
 \code{voidpx} (background pixels) per depth bin.  Required for density
@@ -450,6 +488,61 @@ length estimator, not to the binning, and is built either way.)
 \code{calc_distribution_indices} and \code{calc_advanced_metrics} are
 switched off in this mode: mean rooting depth, and each bin's share of the
 profile, mean nothing when there is only one bin.
+}
+
+\section{Which parameters to set}{
+
+There are a lot of arguments and most runs need a handful.  Which handful
+depends on the geometry, so they are grouped here by how often they actually
+need attention.
+
+\strong{Flatbed scans} (washed roots on a tray, no depth axis):
+\describe{
+  \item{Set every time}{\code{dpi} -- everything in cm hangs off it;
+    \code{tube_names} -- one unique name per file, since the derived default
+    collides on a shared suffix; \code{depth_interval_cm = NULL} -- a tray has
+    no depth axis (see \strong{Whole-image mode}); and, for raw rather than
+    segmented scans, \code{binarize_threshold} with \code{dark_roots}.}
+  \item{Usually worth setting}{\code{prune_spur_length_cm} -- thinning leaves
+    stubs that count as tips and length; \code{clean_max_artifact_size} --
+    specks in a painted segmentation; \code{diameter_thresholds} -- the
+    fine-root cut-offs your question actually uses; \code{session}.}
+  \item{Only for the metrics that use them}{\code{order_scheme} and
+    \code{diam_weight} (branching); \code{diameter_quantiles}; the
+    \code{calc_*} toggles.}
+  \item{Ignore}{\code{insertion_angles}, \code{tube_diameter_cm},
+    \code{tube_center_offset}, \code{rotation_fixed_width},
+    \code{soil_starts}, \code{bin_round} -- all tube or depth-profile
+    settings.  \code{calc_distribution_indices} and
+    \code{calc_advanced_metrics} describe a profile and switch themselves off;
+    \code{calc_root_angles} needs a real depth gradient to mean anything.}
+}
+
+\strong{Minirhizotron tubes}:
+\describe{
+  \item{Set every time}{\code{dpi}; \code{insertion_angles} -- degrees from
+    \emph{horizontal}, the opposite of some software's convention;
+    \code{tube_diameter_cm}; \code{soil_starts} -- the zero-depth reference,
+    per image; \code{tube_names}; \code{depth_interval_cm} with
+    \code{bin_round}.}
+  \item{Usually worth setting}{\code{rotation_fixed_width} -- how much of the
+    tube's curved edge to trim, which no default can guess;
+    \code{tube_center_offset} if your rotational reference is not the first
+    row; \code{binarize_threshold} and \code{dark_roots} for unsegmented
+    scans; \code{prune_spur_length_cm}.}
+  \item{Only for the metrics that use them}{\code{order_scheme},
+    \code{diam_weight}, \code{diameter_thresholds},
+    \code{diameter_quantiles}, and the \code{calc_*} toggles --
+    \code{calc_root_angles} and \code{calc_distribution_indices} are worth
+    having here, unlike on flatbed.}
+  \item{Ignore}{\code{depth_interval_cm = NULL} -- it would discard the depth
+    profile, which is the point of a tube.}
+}
+
+The per-image arguments -- \code{insertion_angles}, \code{soil_starts},
+\code{binarize_threshold}, \code{dark_roots}, \code{tube_names} -- each take
+either one value for the whole run or one per image, in the order of
+\code{list.files(path_seg)}.
 }
 
 \section{Binarization}{

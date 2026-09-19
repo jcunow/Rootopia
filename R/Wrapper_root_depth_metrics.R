@@ -91,11 +91,28 @@
 #'   and wavelength of the sinusoidal curvature correction.  Supplying this
 #'   argument switches the run to minirhizotron geometry (see
 #'   \strong{Geometry}).  Default \code{NULL} (flatbed).
+#' @param tube_center_offset Numeric in \code{[0, 1]}. Phase of the sinusoidal
+#'   curvature correction: where the top of the tube falls across the image
+#'   height, as a fraction.  \code{0} (default) puts it at the first row.  Set it
+#'   if your scanner's rotational reference differs, or the depth assigned to a
+#'   root will be offset by up to half a tube diameter.  Minirhizotron only.
 #' @param depth_interval_cm Numeric or \code{NULL}. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
 #'   \code{NULL} switches on whole-image mode, where the scan is treated as a
 #'   single bin and summarised in one row (see \strong{Whole-image mode}).
 #'   Default \code{5}.
+#' @param bin_round Character. How \code{binning()} assigns a depth to a bin:
+#'   \code{"rounding"} (default, \code{nn * round(depth/nn)}), \code{"floor"},
+#'   or \code{"ceiling"}.  \strong{Note what "rounding" does to the top bin}: with
+#'   \code{depth_interval_cm = 5} it spans 0-2.5 cm while every other bin spans
+#'   5 cm, because the label is the bin's centre rather than its top edge.  Per-bin
+#'   densities are unaffected (they divide by each bin's own measured area), but
+#'   \code{mrd} and \code{total.length.density} multiply by
+#'   \code{depth_interval_cm} as though every bin were full width, so they are
+#'   biased by the half-width top bin.  \code{"floor"} gives the soil-science
+#'   convention -- 0-5, 5-10, labelled by the shallower edge -- and is the better
+#'   choice for a new analysis; the default is kept for continuity with existing
+#'   ones.
 #' @param rotation_fixed_width Numeric. Width in \strong{rows} that each image is
 #'   cropped to along the rotation axis, centred on the middle row, before any
 #'   trait is measured (see \code{rotation_censor()}).  This trims the tube
@@ -150,6 +167,59 @@
 #' switched off in this mode: mean rooting depth, and each bin's share of the
 #' profile, mean nothing when there is only one bin.
 #'
+#' @section Which parameters to set:
+#' There are a lot of arguments and most runs need a handful.  Which handful
+#' depends on the geometry, so they are grouped here by how often they actually
+#' need attention.
+#'
+#' \strong{Flatbed scans} (washed roots on a tray, no depth axis):
+#' \describe{
+#'   \item{Set every time}{\code{dpi} -- everything in cm hangs off it;
+#'     \code{tube_names} -- one unique name per file, since the derived default
+#'     collides on a shared suffix; \code{depth_interval_cm = NULL} -- a tray has
+#'     no depth axis (see \strong{Whole-image mode}); and, for raw rather than
+#'     segmented scans, \code{binarize_threshold} with \code{dark_roots}.}
+#'   \item{Usually worth setting}{\code{prune_spur_length_cm} -- thinning leaves
+#'     stubs that count as tips and length; \code{clean_max_artifact_size} --
+#'     specks in a painted segmentation; \code{diameter_thresholds} -- the
+#'     fine-root cut-offs your question actually uses; \code{session}.}
+#'   \item{Only for the metrics that use them}{\code{order_scheme} and
+#'     \code{diam_weight} (branching); \code{diameter_quantiles}; the
+#'     \code{calc_*} toggles.}
+#'   \item{Ignore}{\code{insertion_angles}, \code{tube_diameter_cm},
+#'     \code{tube_center_offset}, \code{rotation_fixed_width},
+#'     \code{soil_starts}, \code{bin_round} -- all tube or depth-profile
+#'     settings.  \code{calc_distribution_indices} and
+#'     \code{calc_advanced_metrics} describe a profile and switch themselves off;
+#'     \code{calc_root_angles} needs a real depth gradient to mean anything.}
+#' }
+#'
+#' \strong{Minirhizotron tubes}:
+#' \describe{
+#'   \item{Set every time}{\code{dpi}; \code{insertion_angles} -- degrees from
+#'     \emph{horizontal}, the opposite of some software's convention;
+#'     \code{tube_diameter_cm}; \code{soil_starts} -- the zero-depth reference,
+#'     per image; \code{tube_names}; \code{depth_interval_cm} with
+#'     \code{bin_round}.}
+#'   \item{Usually worth setting}{\code{rotation_fixed_width} -- how much of the
+#'     tube's curved edge to trim, which no default can guess;
+#'     \code{tube_center_offset} if your rotational reference is not the first
+#'     row; \code{binarize_threshold} and \code{dark_roots} for unsegmented
+#'     scans; \code{prune_spur_length_cm}.}
+#'   \item{Only for the metrics that use them}{\code{order_scheme},
+#'     \code{diam_weight}, \code{diameter_thresholds},
+#'     \code{diameter_quantiles}, and the \code{calc_*} toggles --
+#'     \code{calc_root_angles} and \code{calc_distribution_indices} are worth
+#'     having here, unlike on flatbed.}
+#'   \item{Ignore}{\code{depth_interval_cm = NULL} -- it would discard the depth
+#'     profile, which is the point of a tube.}
+#' }
+#'
+#' The per-image arguments -- \code{insertion_angles}, \code{soil_starts},
+#' \code{binarize_threshold}, \code{dark_roots}, \code{tube_names} -- each take
+#' either one value for the whole run or one per image, in the order of
+#' \code{list.files(path_seg)}.
+#'
 #' @section Binarization:
 #' Flatbed scans are usually delivered as greyscale or RGB with the full 0-255
 #' range, not as a segmented mask.  Such an image is reduced to a single
@@ -177,6 +247,15 @@
 #'   \code{FALSE} inverts this for bright-roots-on-dark-background images.  If
 #'   more than half the pixels come out as root, the polarity is probably wrong
 #'   and a warning says so.
+#' @param clean_max_hole_size Numeric. Fill enclosed background holes of up to
+#'   this many pixels before anything is measured; \code{0} (default) fills
+#'   none, \code{Inf} fills every hole.  Pinholes inside a painted root read as
+#'   background, which eats into the distance transform and so into diameter.
+#' @param clean_max_artifact_size Numeric. Drop disconnected foreground blobs of
+#'   up to this many pixels; \code{0} (default) drops none, \code{Inf} drops
+#'   everything not touching the largest structure.  Specks count as root area,
+#'   as isolated skeleton pixels, and as root tips.  Both use
+#'   \code{\link{clean_image}} and need the \pkg{imager} package.
 #' @param seg_layer Integer or \code{NULL}. Which layer of the segmented image
 #'   to measure.  \code{NULL} (default) picks automatically: a single-layer
 #'   image is used as is, and a 3- or 4-layer image is converted to greyscale
@@ -412,7 +491,9 @@ root_depth_metrics <- function(
   # ---------- scan / geometry ------------------------------------------------
   dpi                     = 300,
   tube_diameter_cm        = NULL,
+  tube_center_offset      = 0,
   depth_interval_cm       = 5,
+  bin_round               = c("rounding", "floor", "ceiling"),
   rotation_fixed_width    = 1800,
   
   # ---------- binarization (raw flatbed scans) -------------------------------
@@ -420,6 +501,8 @@ root_depth_metrics <- function(
   binarize_threshold      = 200,
   dark_roots              = TRUE,
   seg_layer               = NULL,
+  clean_max_hole_size     = 0,
+  clean_max_artifact_size = 0,
   
   # ---------- core metrics (on by default) -----------------------------------
   calc_root_pixels        = TRUE,
@@ -491,7 +574,7 @@ root_depth_metrics <- function(
   #
   # Everything except the colour metrics works on this single layer, which is
   # why the reduction happens here at load time rather than per metric.
-  .as_root_mask <- function(img, label) {
+  .as_root_mask <- function(img, label, thr255, dark) {
     
     nl <- terra::nlyr(img)
     
@@ -518,9 +601,9 @@ root_depth_metrics <- function(
     # on a 0-1 scale get the same cut-off rescaled, so the number the user typed
     # means the same thing either way.
     mx  <- max(vals, na.rm = TRUE)
-    thr <- if (mx <= 1) binarize_threshold / 255 else binarize_threshold
+    thr <- if (mx <= 1) thr255 / 255 else thr255
     
-    mask <- if (dark_roots) (gray <= thr) * 1 else (gray >= thr) * 1
+    mask <- if (dark) (gray <= thr) * 1 else (gray >= thr) * 1
     
     # A mask that is mostly foreground nearly always means the polarity is
     # inverted, and it is far cheaper to say so here than to wonder about the
@@ -530,7 +613,7 @@ root_depth_metrics <- function(
       warning(sprintf(
         paste0("'%s': %.0f%% of pixels classified as root at binarize_threshold = %s. ",
                "If roots are brighter than the background here, set dark_roots = FALSE."),
-        label, frac * 100, format(binarize_threshold)), call. = FALSE)
+        label, frac * 100, format(thr255)), call. = FALSE)
     
     mask
   }
@@ -582,6 +665,7 @@ root_depth_metrics <- function(
   # pixel then falls in the same bin and the densities become whole-scan
   # numbers, because they already divide by the bin's own pixel area.
   order_scheme <- match.arg(order_scheme)
+  bin_round    <- match.arg(bin_round)
   if (!is.numeric(diam_weight) || length(diam_weight) != 1L ||
       is.na(diam_weight) || diam_weight < 0)
     stop("'diam_weight' must be a single number >= 0.", call. = FALSE)
@@ -625,8 +709,11 @@ root_depth_metrics <- function(
   }
   
   # Recycle per-image metadata
-  insertion_angles <- .recycle(insertion_angles, n_images, "insertion_angles")
-  soil_starts      <- .recycle(soil_starts,      n_images, "soil_starts")
+  insertion_angles   <- .recycle(insertion_angles,   n_images, "insertion_angles")
+  soil_starts        <- .recycle(soil_starts,        n_images, "soil_starts")
+  # Exposure drifts across a scanning session, so these are per image too.
+  binarize_threshold <- .recycle(binarize_threshold, n_images, "binarize_threshold")
+  dark_roots         <- .recycle(dark_roots,         n_images, "dark_roots")
   if (!is.null(tube_names))
     tube_names <- .recycle(tube_names, n_images, "tube_names")
   else
@@ -782,7 +869,7 @@ root_depth_metrics <- function(
       img <- load_flexible_image(file.path(path_seg, seg_file),
                                  output_format = "spatrast",
                                  scale = "none")
-      .as_root_mask(img, seg_file)
+      .as_root_mask(img, seg_file, binarize_threshold[l], dark_roots[l])
     })
     if (is.null(im)) {
       message(sprintf("[Rootopia] [%d/%d] %s: could not load segmented image -- skipping.",
@@ -792,6 +879,21 @@ root_depth_metrics <- function(
       next
     }
     
+    # -------------------------------------------------------------------------
+    # 3a2. Segmentation clean-up (optional)
+    # -------------------------------------------------------------------------
+    # Specks and pinholes in a painted segmentation become root pixels, root
+    # tips and a little length. Cleaning before the skeleton is traced keeps
+    # every metric measuring the same image.
+    if (clean_max_hole_size > 0 || clean_max_artifact_size > 0) {
+      im <- .safe("clean_image", {
+        clean_image(im,
+                    max_hole_size     = clean_max_hole_size,
+                    max_artifact_size = clean_max_artifact_size,
+                    output_format     = "spatrast")
+      }, fallback = im)
+    }
+
     im.skeleton <- NULL
     if (do_length || do_diam_st || do_diam_q || do_angles || do_order) {
       if (!is.null(im.ls.skl) && l <= length(im.ls.skl)) {
@@ -897,7 +999,7 @@ root_depth_metrics <- function(
         sinoid      = tube_geometry,
         dpi         = dpi,
         start_soil  = soil0,
-        center_offset = 0,
+        center_offset = tube_center_offset,
         tilt        = angle,
         tube_thicc  = tube_diameter_cm
       )
@@ -924,7 +1026,7 @@ root_depth_metrics <- function(
       terra::values(b) <- 0
       b
     } else {
-      binning(depthmap = DepthMap, nn = depth_interval_cm, round_option = "rounding")
+      binning(depthmap = DepthMap, nn = depth_interval_cm, round_option = bin_round)
     }
     roots <- data.frame(depth = sort(unique(terra::values(bm))))
     
