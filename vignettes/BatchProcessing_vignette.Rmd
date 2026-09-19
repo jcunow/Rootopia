@@ -20,9 +20,11 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE, dpi = 300, fig.width = 9)
 
 ## Who this vignette is for
 
-If you have a folder of segmented minirhizotron images and want depth-resolved
-root traits for all of them in one call — without writing loops yourself —
-`root_depth_metrics()` is the right starting point.
+If you have a folder of root images — segmented minirhizotron frames, or
+flatbed scans of washed roots — and want traits for all of them in one call,
+without writing loops yourself, `root_depth_metrics()` is the right starting
+point. It handles both geometries; which one you get follows from the
+arguments you supply (see [Which parameters to set](#which-parameters-to-set)).
 
 It handles file loading, depth-map construction, per-bin zonal statistics,
 derived metrics, fault tolerance, and optional file output. You toggle which
@@ -46,6 +48,91 @@ If multiple images come from the same tube, consider stitching them beforehand [
 
 Images in the three directories must be in the **same alphabetical order** as
 each other; each position corresponds to the same physical tube/window.
+
+---
+
+## Which parameters to set
+
+`root_depth_metrics()` takes about fifty arguments. A real run sets five or
+six. Which five depends on the geometry, because a third of the arguments
+describe a minirhizotron tube and do nothing at all to a flatbed scan — and
+nothing warns you when you tune one that is inert.
+
+The geometry is not a switch. Supply `insertion_angles` or `tube_diameter_cm`
+and you are in minirhizotron mode; supply neither and you are on flatbed.
+
+### Flatbed scans
+
+Washed roots on a tray. There is no depth axis: where a root lies on the tray
+says nothing about where it grew, so the whole scan is summarised as one row.
+
+| Tier | Parameters | Why |
+|---|---|---|
+| **Set every time** | `dpi`, `tube_names`, `depth_interval_cm = NULL` | `dpi` scales every value reported in cm. `tube_names` must be unique — the derived default takes three characters from the file name and collides whenever files share a suffix like `fine.tif`, so a run stops rather than mislabel. `NULL` collapses each scan to a single bin. |
+| **Set for raw scans** | `binarize_threshold`, `dark_roots` | Only if your files are greyscale or RGB rather than a binary mask. Both accept one value per image, for sessions where exposure drifted. |
+| **Usually worth setting** | `prune_spur_length_cm`, `clean_max_artifact_size`, `diameter_thresholds`, `session` | Thinning leaves stubs that count as root tips and as length; specks in a painted segmentation count as root area. The thresholds are the fine-root cut-offs your question actually turns on. |
+| **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_quantiles`, the `calc_*` toggles | |
+| **Ignore** | `insertion_angles`, `tube_diameter_cm`, `tube_center_offset`, `rotation_fixed_width`, `soil_starts`, `bin_round` | Tube and depth-profile settings. `calc_distribution_indices` and `calc_advanced_metrics` describe how roots spread over a profile, so they switch themselves off; `calc_root_angles` needs a real depth gradient to mean anything. |
+
+```{r flatbed-minimal}
+# The names must line up with what the function itself sees, so build them from
+# the same listing: no pattern, no sorting of your own.
+files <- list.files("scans/trays/")
+ids   <- tools::file_path_sans_ext(files)
+stopifnot(!any(duplicated(ids)))
+
+result <- root_depth_metrics(
+  path_seg             = "scans/trays/",
+  tube_names           = ids,
+  dpi                  = 1200,
+  depth_interval_cm    = NULL,               # a tray has no depth axis
+  prune_spur_length_cm = 0.05,
+  session              = "2024_spring"
+)
+```
+
+### Minirhizotron tubes
+
+| Tier | Parameters | Why |
+|---|---|---|
+| **Set every time** | `dpi`, `insertion_angles`, `tube_diameter_cm`, `soil_starts`, `tube_names`, `depth_interval_cm`, `bin_round` | `insertion_angles` is **degrees from horizontal** — 90 is a vertical tube, the opposite of some minirhizotron software. `soil_starts` sets where depth zero is. |
+| **Set for raw scans** | `binarize_threshold`, `dark_roots` | As above. |
+| **Usually worth setting** | `rotation_fixed_width`, `tube_center_offset`, `prune_spur_length_cm` | How much of the tube's curved edge to trim is a property of your scanner that no default can guess. `tube_center_offset` sets where the top of the tube falls across the image; leave it at `0` unless your rotational reference differs. |
+| **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_thresholds`, `diameter_quantiles`, the `calc_*` toggles | `calc_root_angles` and `calc_distribution_indices` earn their keep here, unlike on flatbed. |
+| **Ignore** | `depth_interval_cm = NULL` | It would discard the depth profile, which is the point of a tube. |
+
+```{r tube-minimal}
+result <- root_depth_metrics(
+  path_seg             = "scans/segmented/2022_02/",
+  tube_names           = meta$tube_id,
+  insertion_angles     = meta$angle,          # degrees from HORIZONTAL
+  tube_diameter_cm     = 7,
+  soil_starts          = meta$soil_row,
+  dpi                  = 300,
+  depth_interval_cm    = 5,
+  bin_round            = "floor",             # honest 0–5, 5–10 bins
+  rotation_fixed_width = 1800,
+  session              = "2022_02"
+)
+```
+
+### One value, or one per image
+
+`insertion_angles`, `soil_starts`, `binarize_threshold`, `dark_roots` and
+`tube_names` each take either a single value for the whole run or a vector
+with one entry per image, in the order of `list.files(path_seg)`. A vector of
+the wrong length is an error rather than a silent recycle.
+
+### A note on `bin_round`
+
+The default, `"rounding"`, labels a bin by its centre: with
+`depth_interval_cm = 5`, the top bin spans 0–2.5 cm while every other bin
+spans 5 cm. Per-bin densities are unaffected — they divide by each bin's own
+measured area — but `mrd` and `total.length.density` multiply by
+`depth_interval_cm` as though every bin were full width, so a half-width top
+bin biases both. `"floor"` gives the soil-science convention: 0–5, 5–10,
+labelled by the shallower edge. Prefer it for new work; the default is kept so
+existing analyses do not shift underneath you.
 
 ---
 
@@ -158,7 +245,7 @@ result <- root_depth_metrics(
 | `calc_landscape_metrics` | `enn_mn`, `joinent`, `relmutinf`, `np`, `contag`, `np_density` | **Slow** — one call per depth bin |
 | `calc_color_metrics` | `rcc_root`, `gcc_root`, ..., `rcc_bg`, `gcc_bg`, ... | Requires `path_rgb` |
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |
-| `calc_root_order_metrics` | Per bin: `mean.branch_order`, `max.branch_order`, `mean.root_order`, `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, ...), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length` |
+| `calc_root_order_metrics` | Per bin: `mean.<scheme>`, `max.<scheme>` for the `order_scheme` in use (e.g. `mean.strahler_order`), plus `mean.root_order` and `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, ...), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length`. See `order_scheme` for which ordering is reported |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
 | `calc_distribution_indices` | `mrd`, `total.length.density` | Tube-level summary |
 | `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter` | Auto-enables distribution indices + diameter stats |

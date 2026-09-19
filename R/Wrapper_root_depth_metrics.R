@@ -168,53 +168,24 @@
 #' profile, mean nothing when there is only one bin.
 #'
 #' @section Which parameters to set:
-#' There are a lot of arguments and most runs need a handful.  Which handful
-#' depends on the geometry, so they are grouped here by how often they actually
-#' need attention.
-#'
-#' \strong{Flatbed scans} (washed roots on a tray, no depth axis):
+#' Most runs set five or six of these arguments, and which five depends on the
+#' geometry: a third of them describe a minirhizotron tube and do nothing at all
+#' to a flatbed scan, with no warning when you tune one that is inert.  The
+#' \emph{Batch Processing} vignette has the full tier list for both geometries;
+#' in short:
 #' \describe{
-#'   \item{Set every time}{\code{dpi} -- everything in cm hangs off it;
-#'     \code{tube_names} -- one unique name per file, since the derived default
-#'     collides on a shared suffix; \code{depth_interval_cm = NULL} -- a tray has
-#'     no depth axis (see \strong{Whole-image mode}); and, for raw rather than
-#'     segmented scans, \code{binarize_threshold} with \code{dark_roots}.}
-#'   \item{Usually worth setting}{\code{prune_spur_length_cm} -- thinning leaves
-#'     stubs that count as tips and length; \code{clean_max_artifact_size} --
-#'     specks in a painted segmentation; \code{diameter_thresholds} -- the
-#'     fine-root cut-offs your question actually uses; \code{session}.}
-#'   \item{Only for the metrics that use them}{\code{order_scheme} and
-#'     \code{diam_weight} (branching); \code{diameter_quantiles}; the
-#'     \code{calc_*} toggles.}
-#'   \item{Ignore}{\code{insertion_angles}, \code{tube_diameter_cm},
-#'     \code{tube_center_offset}, \code{rotation_fixed_width},
-#'     \code{soil_starts}, \code{bin_round} -- all tube or depth-profile
-#'     settings.  \code{calc_distribution_indices} and
-#'     \code{calc_advanced_metrics} describe a profile and switch themselves off;
-#'     \code{calc_root_angles} needs a real depth gradient to mean anything.}
+#'   \item{Flatbed}{Set \code{dpi}, \code{tube_names} and
+#'     \code{depth_interval_cm = NULL}, plus \code{binarize_threshold} and
+#'     \code{dark_roots} for unsegmented scans.  \code{insertion_angles},
+#'     \code{tube_diameter_cm}, \code{tube_center_offset},
+#'     \code{rotation_fixed_width}, \code{soil_starts} and \code{bin_round}
+#'     do nothing here.}
+#'   \item{Minirhizotron}{Set \code{dpi}, \code{insertion_angles} (degrees from
+#'     \emph{horizontal}), \code{tube_diameter_cm}, \code{soil_starts},
+#'     \code{tube_names}, \code{depth_interval_cm} and \code{bin_round}, and
+#'     look at \code{rotation_fixed_width} -- how much of the tube's curved edge
+#'     to trim is a property of your scanner that no default can guess.}
 #' }
-#'
-#' \strong{Minirhizotron tubes}:
-#' \describe{
-#'   \item{Set every time}{\code{dpi}; \code{insertion_angles} -- degrees from
-#'     \emph{horizontal}, the opposite of some software's convention;
-#'     \code{tube_diameter_cm}; \code{soil_starts} -- the zero-depth reference,
-#'     per image; \code{tube_names}; \code{depth_interval_cm} with
-#'     \code{bin_round}.}
-#'   \item{Usually worth setting}{\code{rotation_fixed_width} -- how much of the
-#'     tube's curved edge to trim, which no default can guess;
-#'     \code{tube_center_offset} if your rotational reference is not the first
-#'     row; \code{binarize_threshold} and \code{dark_roots} for unsegmented
-#'     scans; \code{prune_spur_length_cm}.}
-#'   \item{Only for the metrics that use them}{\code{order_scheme},
-#'     \code{diam_weight}, \code{diameter_thresholds},
-#'     \code{diameter_quantiles}, and the \code{calc_*} toggles --
-#'     \code{calc_root_angles} and \code{calc_distribution_indices} are worth
-#'     having here, unlike on flatbed.}
-#'   \item{Ignore}{\code{depth_interval_cm = NULL} -- it would discard the depth
-#'     profile, which is the point of a tube.}
-#' }
-#'
 #' The per-image arguments -- \code{insertion_angles}, \code{soil_starts},
 #' \code{binarize_threshold}, \code{dark_roots}, \code{tube_names} -- each take
 #' either one value for the whole run or one per image, in the order of
