@@ -119,10 +119,17 @@ at which the soil surface begins.  Used to set the zero-depth reference.
 Default \code{0}.}
 
 \item{tube_names}{Character or \code{NULL}. Sample/tube identifiers added as
-the \code{Tube} column.  If \code{NULL}, names are derived from characters
-3-5 from the right of the segmented file name, prefixed with \code{"T"}
-(e.g. \code{"T042"}).  Adjust if your naming convention differs.
-Default \code{NULL}.}
+  the \code{Tube} column.  If \code{NULL}, names are derived from characters
+  3-5 from the right of the segmented file name, prefixed with \code{"T"}
+  (e.g. \code{"T042"}).  Adjust if your naming convention differs.
+
+  Names must be \strong{unique}, one per image, and the run stops if they are
+  not.  They key the tube-level joins, where two images sharing a name are
+  read as one tube and their rows are multiplied out.  The derived default
+  collides whenever the files share a suffix -- a directory of
+  \code{"CLAS1A10-15fine.tif"} names every image \code{"Tfin"} -- so flatbed
+  scans generally need this argument.
+  Default \code{NULL}.}
 
 \item{session}{Character. Session or campaign label added as the
 \code{Session} column, e.g. \code{"2022_02"}.  Default \code{""}.}

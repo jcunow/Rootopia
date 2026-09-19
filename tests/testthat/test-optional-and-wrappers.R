@@ -156,6 +156,29 @@ test_that("depth_interval_cm = NULL collapses each scan to a single row", {
 })
 
 
+test_that("duplicate tube names are refused", {
+  # Non-unique names key the tube-level joins onto one tube and multiply the
+  # rows out, so they are caught before any image is read.
+  skip_if_not_installed("terra")
+  data(flatbed_scan_example)
+  small <- terra::aggregate(terra::rast(flatbed_scan_example)[[1]],
+                            fact = 8, fun = "max")
+  dir <- tempfile("seg"); dir.create(dir)
+  # Both names end in "fine.tif", so the derived default collapses to "Tfin".
+  for (f in c("CLAS1A10-15fine.tif", "CLAS1B25-30fine.tif"))
+    terra::writeRaster(small, file.path(dir, f), overwrite = TRUE)
+
+  run <- function(...) suppressWarnings(root_depth_metrics(
+    path_seg = dir, dpi = 150, depth_interval_cm = NULL,
+    calc_diameter_stats = FALSE, verbose = FALSE, ...))
+
+  expect_error(run(), "unique")                          # derived names collide
+  expect_error(run(tube_names = c("A", "A")), "unique")  # passed in twice
+  expect_error(run(tube_names = "A"), "unique")          # one name recycled
+  expect_equal(run(tube_names = c("A", "B"))$Tube, c("A", "B"))
+})
+
+
 test_that("rotation_fixed_width controls the rotation-axis crop", {
   # It used to be hardcoded to 1800, which is wider than any tube in the
   # bundled data, so the crop silently clamped to the full image every time.

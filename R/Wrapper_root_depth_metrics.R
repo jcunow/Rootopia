@@ -72,6 +72,13 @@
 #'   the \code{Tube} column.  If \code{NULL}, names are derived from characters
 #'   3-5 from the right of the segmented file name, prefixed with \code{"T"}
 #'   (e.g. \code{"T042"}).  Adjust if your naming convention differs.
+#'
+#'   Names must be \strong{unique}, one per image, and the run stops if they are
+#'   not.  They key the tube-level joins, where two images sharing a name are
+#'   read as one tube and their rows are multiplied out.  The derived default
+#'   collides whenever the files share a suffix -- a directory of
+#'   \code{"CLAS1A10-15fine.tif"} names every image \code{"Tfin"} -- so flatbed
+#'   scans generally need this argument.
 #'   Default \code{NULL}.
 #' @param session Character. Session or campaign label added as the
 #'   \code{Session} column, e.g. \code{"2022_02"}.  Default \code{""}.
@@ -576,7 +583,27 @@ root_depth_metrics <- function(
   soil_starts      <- .recycle(soil_starts,      n_images, "soil_starts")
   if (!is.null(tube_names))
     tube_names <- .recycle(tube_names, n_images, "tube_names")
-  
+  else
+    tube_names <- paste0("T", stringr::str_sub(im.ls.seg, start = -8, end = -6))
+
+  # Tube names label the rows and key the tube-level joins at the end, where two
+  # images sharing a name are one tube to dplyr: the join multiplies their rows
+  # out, and the run reports a row count nobody asked for. The default names are
+  # three characters cut from the file name, so a set of files ending in the same
+  # suffix collapses onto one name. Cheaper to say so here than to explain the
+  # row count later.
+  dup <- unique(tube_names[duplicated(tube_names)])
+  if (length(dup) > 0L) {
+    shown <- paste(dup[seq_len(min(5L, length(dup)))], collapse = ", ")
+    if (length(dup) > 5L) shown <- paste0(shown, ", ...")
+    stop(sprintf(paste0(
+      "Tube names must be unique, one per image, but %d name(s) are used more than once: %s.\n",
+      "Without 'tube_names' a name is cut from characters 3-5 from the right of each file ",
+      "name, so files sharing a suffix (\"fine.tif\") all land on the same name. Pass ",
+      "'tube_names' explicitly, one name per file, in the order of list.files(path_seg)."),
+      length(dup), shown), call. = FALSE)
+  }
+
   # ===========================================================================
   # 2.  Global dependency resolution
   # ===========================================================================
@@ -684,8 +711,7 @@ root_depth_metrics <- function(
     t_img <- proc.time()[["elapsed"]]
     
     seg_file <- im.ls.seg[l]
-    tube     <- if (!is.null(tube_names)) tube_names[l] else
-      paste0("T", stringr::str_sub(seg_file, start = -8, end = -6))
+    tube     <- tube_names[l]
     angle    <- insertion_angles[l]
     soil0    <- soil_starts[l]
     
