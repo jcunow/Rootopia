@@ -1019,7 +1019,11 @@ root_depth_metrics <- function(
     rd.map <- NULL
     if (do_diam_st || do_diam_q) {
       rd.map <- .safe("root_diameter map", {
-        dm <- root_diameter(im, skeleton_img = im.skeleton, unit = "cm")$diameter_rast
+        # dpi is not optional here: root_diameter() converts pixels to cm with
+        # 2.54 / dpi, and its own default is 300, so leaving it out silently
+        # scales every diameter as though the scan were 300 dpi.
+        dm <- root_diameter(im, skeleton_img = im.skeleton,
+                            unit = "cm", dpi = dpi)$diameter_rast
         terra::ext(dm) <- terra::ext(bm)
         dm
       })

@@ -212,6 +212,30 @@ test_that("order_scheme names its own columns, and spurs can be pruned", {
 })
 
 
+test_that("diameters are scaled by the run's own dpi", {
+  # root_diameter() defaults to dpi = 300 and converts with 2.54 / dpi. The
+  # wrapper used to call it without dpi, so a 1200 dpi scan reported diameters
+  # four times too large, and surface area and volume with them.
+  skip_if_not_installed("terra")
+  skip_if_not_installed("imager")
+  data(flatbed_scan_example)
+  small <- terra::aggregate(terra::rast(flatbed_scan_example)[[1]],
+                            fact = 8, fun = "max")
+  dir <- tempfile("seg"); dir.create(dir)
+  terra::writeRaster(small, file.path(dir, "tray.tif"), overwrite = TRUE)
+
+  run <- function(dpi) suppressWarnings(root_depth_metrics(
+    path_seg = dir, tube_names = "tray", dpi = dpi,
+    depth_interval_cm = NULL, verbose = FALSE))
+
+  a <- run(300); b <- run(1200)
+  # The same pixels read at four times the resolution are a quarter as wide.
+  expect_equal(b$avg.diameter, a$avg.diameter / 4, tolerance = 1e-8)
+  expect_equal(b$max.diameter, a$max.diameter / 4, tolerance = 1e-8)
+  expect_equal(b$root.volume, a$root.volume / 4^3, tolerance = 1e-8)
+})
+
+
 test_that("rotation_fixed_width controls the rotation-axis crop", {
   # It used to be hardcoded to 1800, which is wider than any tube in the
   # bundled data, so the crop silently clamped to the full image every time.
