@@ -248,8 +248,10 @@ argument switches the run to minirhizotron geometry (see
 
 
 <dt id="arg-depth-interval-cm">depth_interval_cm<a class="anchor" aria-label="anchor" href="#arg-depth-interval-cm"></a></dt>
-<dd><p>Numeric. Size of each depth bin in
+<dd><p>Numeric or <code>NULL</code>. Size of each depth bin in
 <strong>centimetres</strong>.  Passed as <code>nn</code> to <code><a href="binning.html">binning()</a></code>.
+<code>NULL</code> switches on whole-image mode, where the scan is treated as a
+single bin and summarised in one row (see <strong>Whole-image mode</strong>).
 Default <code>5</code>.</p></dd>
 
 
@@ -532,6 +534,28 @@ tube parameters:</p><dl><dt>Flatbed (default)</dt>
 which is the orientation minirhizotron scanners produce.  A flatbed scan with
 the soil surface at the top must be rotated 90 degrees before it is passed
 in, or the depth profile will be built across the wrong axis.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="whole-image-mode">Whole-image mode<a class="anchor" aria-label="anchor" href="#whole-image-mode"></a></h2>
+
+
+<p>A flatbed scan of washed roots in a tray has no depth axis – where a root
+lies on the tray says nothing about where it grew.  Setting
+<code>depth_interval_cm = NULL</code> treats each image as one bin, so the result
+carries one row per image, with <code>depth = 0</code>, and the density metrics
+become whole-scan quantities: <code>rootpx.density</code> is the percentage of the
+scan covered by root and <code>rootlength.density</code> is cm of root per
+cm\(^2\) of scanned area – how densely the tray was packed.  Both already
+divide by the bin's own measured pixel area (<code>rootpx + voidpx</code>), so
+there is nothing to bin by and no depth map is built, unless
+<code>calc_root_angles = TRUE</code> asks for one.  Nothing is masked or trimmed
+per slice either.  On a large scan both are worth skipping: a depth map is a
+full-size double raster.  (<code>calc_root_length</code> still builds a flat
+surface of its own to read flow directions from; that one belongs to the
+length estimator, not to the binning, and is built either way.)</p>
+<p><code>calc_distribution_indices</code> and <code>calc_advanced_metrics</code> are
+switched off in this mode: mean rooting depth, and each bin's share of the
+profile, mean nothing when there is only one bin.</p>
     </div>
     <div class="section level2">
     <h2 id="binarization">Binarization<a class="anchor" aria-label="anchor" href="#binarization"></a></h2>

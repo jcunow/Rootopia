@@ -176,8 +176,11 @@ batch_root_traits(
 
 - depth_interval_cm:
 
-  Numeric. Size of each depth bin in **centimetres**. Passed as `nn` to
+  Numeric or `NULL`. Size of each depth bin in **centimetres**. Passed
+  as `nn` to
   [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md).
+  `NULL` switches on whole-image mode, where the scan is treated as a
+  single bin and summarised in one row (see **Whole-image mode**).
   Default `5`.
 
 - rotation_fixed_width:
@@ -460,6 +463,27 @@ In both cases depth runs along the image **width** (left to right),
 which is the orientation minirhizotron scanners produce. A flatbed scan
 with the soil surface at the top must be rotated 90 degrees before it is
 passed in, or the depth profile will be built across the wrong axis.
+
+## Whole-image mode
+
+A flatbed scan of washed roots in a tray has no depth axis – where a
+root lies on the tray says nothing about where it grew. Setting
+`depth_interval_cm = NULL` treats each image as one bin, so the result
+carries one row per image, with `depth = 0`, and the density metrics
+become whole-scan quantities: `rootpx.density` is the percentage of the
+scan covered by root and `rootlength.density` is cm of root per cm\\^2\\
+of scanned area – how densely the tray was packed. Both already divide
+by the bin's own measured pixel area (`rootpx + voidpx`), so there is
+nothing to bin by and no depth map is built, unless
+`calc_root_angles = TRUE` asks for one. Nothing is masked or trimmed per
+slice either. On a large scan both are worth skipping: a depth map is a
+full-size double raster. (`calc_root_length` still builds a flat surface
+of its own to read flow directions from; that one belongs to the length
+estimator, not to the binning, and is built either way.)
+
+`calc_distribution_indices` and `calc_advanced_metrics` are switched off
+in this mode: mean rooting depth, and each bin's share of the profile,
+mean nothing when there is only one bin.
 
 ## Binarization
 
