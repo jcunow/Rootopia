@@ -136,8 +136,10 @@ and wavelength of the sinusoidal curvature correction.  Supplying this
 argument switches the run to minirhizotron geometry (see
 \strong{Geometry}).  Default \code{NULL} (flatbed).}
 
-\item{depth_interval_cm}{Numeric. Size of each depth bin in
+\item{depth_interval_cm}{Numeric or \code{NULL}. Size of each depth bin in
 \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
+\code{NULL} switches on whole-image mode, where the scan is treated as a
+single bin and summarised in one row (see \strong{Whole-image mode}).
 Default \code{5}.}
 
 \item{rotation_fixed_width}{Numeric. Width in \strong{rows} that each image is
@@ -379,6 +381,28 @@ In both cases depth runs along the image \strong{width} (left to right),
 which is the orientation minirhizotron scanners produce.  A flatbed scan with
 the soil surface at the top must be rotated 90 degrees before it is passed
 in, or the depth profile will be built across the wrong axis.
+}
+
+\section{Whole-image mode}{
+
+A flatbed scan of washed roots in a tray has no depth axis -- where a root
+lies on the tray says nothing about where it grew.  Setting
+\code{depth_interval_cm = NULL} treats each image as one bin, so the result
+carries one row per image, with \code{depth = 0}, and the density metrics
+become whole-scan quantities: \code{rootpx.density} is the percentage of the
+scan covered by root and \code{rootlength.density} is cm of root per
+cm\eqn{^2} of scanned area -- how densely the tray was packed.  Both already
+divide by the bin's own measured pixel area (\code{rootpx + voidpx}), so
+there is nothing to bin by and no depth map is built, unless
+\code{calc_root_angles = TRUE} asks for one.  Nothing is masked or trimmed
+per slice either.  On a large scan both are worth skipping: a depth map is a
+full-size double raster.  (\code{calc_root_length} still builds a flat
+surface of its own to read flow directions from; that one belongs to the
+length estimator, not to the binning, and is built either way.)
+
+\code{calc_distribution_indices} and \code{calc_advanced_metrics} are
+switched off in this mode: mean rooting depth, and each bin's share of the
+profile, mean nothing when there is only one bin.
 }
 
 \section{Binarization}{

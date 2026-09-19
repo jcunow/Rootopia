@@ -84,8 +84,10 @@
 #'   and wavelength of the sinusoidal curvature correction.  Supplying this
 #'   argument switches the run to minirhizotron geometry (see
 #'   \strong{Geometry}).  Default \code{NULL} (flatbed).
-#' @param depth_interval_cm Numeric. Size of each depth bin in
+#' @param depth_interval_cm Numeric or \code{NULL}. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
+#'   \code{NULL} switches on whole-image mode, where the scan is treated as a
+#'   single bin and summarised in one row (see \strong{Whole-image mode}).
 #'   Default \code{5}.
 #' @param rotation_fixed_width Numeric. Width in \strong{rows} that each image is
 #'   cropped to along the rotation axis, centred on the middle row, before any
@@ -120,6 +122,26 @@
 #' which is the orientation minirhizotron scanners produce.  A flatbed scan with
 #' the soil surface at the top must be rotated 90 degrees before it is passed
 #' in, or the depth profile will be built across the wrong axis.
+#'
+#' @section Whole-image mode:
+#' A flatbed scan of washed roots in a tray has no depth axis -- where a root
+#' lies on the tray says nothing about where it grew.  Setting
+#' \code{depth_interval_cm = NULL} treats each image as one bin, so the result
+#' carries one row per image, with \code{depth = 0}, and the density metrics
+#' become whole-scan quantities: \code{rootpx.density} is the percentage of the
+#' scan covered by root and \code{rootlength.density} is cm of root per
+#' cm\eqn{^2} of scanned area -- how densely the tray was packed.  Both already
+#' divide by the bin's own measured pixel area (\code{rootpx + voidpx}), so
+#' there is nothing to bin by and no depth map is built, unless
+#' \code{calc_root_angles = TRUE} asks for one.  Nothing is masked or trimmed
+#' per slice either.  On a large scan both are worth skipping: a depth map is a
+#' full-size double raster.  (\code{calc_root_length} still builds a flat
+#' surface of its own to read flow directions from; that one belongs to the
+#' length estimator, not to the binning, and is built either way.)
+#'
+#' \code{calc_distribution_indices} and \code{calc_advanced_metrics} are
+#' switched off in this mode: mean rooting depth, and each bin's share of the
+#' profile, mean nothing when there is only one bin.
 #'
 #' @section Binarization:
 #' Flatbed scans are usually delivered as greyscale or RGB with the full 0-255
@@ -510,6 +532,22 @@ root_depth_metrics <- function(
   }
   
   # ===========================================================================
+  # 0c. Depth binning: a profile, unless depth_interval_cm is NULL
+  # ===========================================================================
+  # NULL says this image has no depth axis, as for a tray of washed roots. Every
+  # pixel then falls in the same bin and the densities become whole-scan
+  # numbers, because they already divide by the bin's own pixel area.
+  whole_image <- is.null(depth_interval_cm)
+  if (whole_image) {
+    .msg(paste0("[Rootopia] Whole-image mode (depth_interval_cm = NULL): one row per image, ",
+                "densities per cm^2 of scanned area."))
+  } else if (!is.numeric(depth_interval_cm) || length(depth_interval_cm) != 1L ||
+             is.na(depth_interval_cm) || depth_interval_cm <= 0) {
+    stop("'depth_interval_cm' must be a single positive number, or NULL for whole-image mode.",
+         call. = FALSE)
+  }
+
+  # ===========================================================================
   # 1.  Resolve file lists
   # ===========================================================================
   if (!dir.exists(path_seg))
@@ -585,6 +623,14 @@ root_depth_metrics <- function(
       message("[Rootopia] Auto-enabling calc_diameter_stats (required for mean.var.diameter).")
       calc_diameter_stats <- TRUE
     }
+  }
+  # Both of these describe how roots are spread over a profile, so a run with a
+  # single bin has nothing for them to describe.
+  if (whole_image && (calc_distribution_indices || calc_advanced_metrics)) {
+    message(paste("[Rootopia] Whole-image mode: disabling calc_distribution_indices and",
+                  "calc_advanced_metrics (they need more than one depth bin)."))
+    calc_distribution_indices <- FALSE
+    calc_advanced_metrics     <- FALSE
   }
   
   # Warn early about missing paths
@@ -750,7 +796,13 @@ root_depth_metrics <- function(
     # -------------------------------------------------------------------------
     # 3c. Depth map and binning
     # -------------------------------------------------------------------------
-    DepthMap <- .safe("create_depthmap", {
+    # Whole-image mode has nothing to bin by, so this map is only worth building
+    # when deep_drive() will read it; skipping it saves a full-size double
+    # raster per image. (The length block below builds a flat surface of its own
+    # for flow directions -- that one is part of the estimator, not the binning.)
+    need_depthmap <- !whole_image || do_angles
+    
+    DepthMap <- if (need_depthmap) .safe("create_depthmap", {
       dm <- create_depthmap(
         img         = im,
         sinoid      = tube_geometry,
@@ -764,14 +816,27 @@ root_depth_metrics <- function(
       terra::ext(dm) <- terra::ext(im)
       dm
     })
-    if (is.null(DepthMap)) {
-      message(sprintf("[Rootopia] [%d/%d] %s: create_depthmap failed -- skipping.", l, n_images, tube))
-      failed_imgs <- c(failed_imgs, seg_file)
-      img_times   <- c(img_times, proc.time()[["elapsed"]] - t_img)
-      next
+    if (need_depthmap && is.null(DepthMap)) {
+      if (whole_image) {
+        # The bins do not depend on it here, so only the angles are lost.
+        message(sprintf("[Rootopia] %s: create_depthmap failed -- disabling calc_root_angles.", tube))
+        do_angles <- FALSE
+      } else {
+        message(sprintf("[Rootopia] [%d/%d] %s: create_depthmap failed -- skipping.", l, n_images, tube))
+        failed_imgs <- c(failed_imgs, seg_file)
+        img_times   <- c(img_times, proc.time()[["elapsed"]] - t_img)
+        next
+      }
     }
     
-    bm    <- binning(depthmap = DepthMap, nn = depth_interval_cm, round_option = "rounding")
+    bm <- if (whole_image) {
+      # One bin, numbered 0, holding every pixel of the scan.
+      b <- terra::rast(im)
+      terra::values(b) <- 0
+      b
+    } else {
+      binning(depthmap = DepthMap, nn = depth_interval_cm, round_option = "rounding")
+    }
     roots <- data.frame(depth = sort(unique(terra::values(bm))))
     
     # -------------------------------------------------------------------------
@@ -1003,6 +1068,9 @@ root_depth_metrics <- function(
     if (needs_slice) {
       
       depth.slices <- sort(unique(terra::values(bm)))
+      # With a single bin every pixel is already in the slice, so the masking
+      # and trimming below would do nothing but copy full-size rasters.
+      one_bin      <- length(depth.slices) == 1L
       
       lsm_names <- if (do_landscape)
         c("lsm_c_enn_mn", "lsm_l_joinent", "lsm_l_relmutinf", "lsm_l_np", "lsm_l_contag")
@@ -1016,7 +1084,7 @@ root_depth_metrics <- function(
       # Pre-build deep_drive optimal-angle map once per image, reuse per slice
       bm_vals <- ang_vals <- gg_vals <- NULL
       
-      if (do_angles && !is.null(angles_map)) {
+      if (do_angles && !is.null(angles_map) && !is.null(DepthMap)) {
         dd <- .safe("deep_drive (full image)", {
           adm <- terra::t(terra::flip(DepthMap))
           terra::ext(adm) <- terra::ext(angles_map)
@@ -1050,7 +1118,8 @@ root_depth_metrics <- function(
       
       for (d in depth.slices) {
         
-        im.sl <- im; im.sl[bm != d] <- NA; im.sl <- terra::trim(im.sl)
+        im.sl <- im
+        if (!one_bin) { im.sl[bm != d] <- NA; im.sl <- terra::trim(im.sl) }
         
         # --- Landscape metrics -----------------------------------------------
         base_row <- if (do_landscape && length(lsm_names) > 0) {
@@ -1074,7 +1143,8 @@ root_depth_metrics <- function(
                                 red = NA, green = NA, blue = NA)
         if (do_color && !is.null(im.rgb.crop)) {
           cr <- .safe(sprintf("color (depth=%g)", d), {
-            sl  <- im.rgb.crop; sl[bm != d] <- NA; sl <- terra::trim(sl)
+            sl  <- im.rgb.crop
+            if (!one_bin) { sl[bm != d] <- NA; sl <- terra::trim(sl) }
             ri  <- sl; ri[im.sl == 0] <- NA   # root pixels only
             pi_ <- sl; pi_[im.sl == 1] <- NA  # background pixels only
             rc_ <- tryCatch(Rootopia::tube_coloration(ri),  error = function(e) empty_col)
@@ -1091,7 +1161,8 @@ root_depth_metrics <- function(
         q_row <- data.frame()
         if (do_diam_q && !is.null(rd.map) && !is.null(root.length.map)) {
           q_row <- .safe(sprintf("diameter quantiles (depth=%g)", d), {
-            sl_rd  <- rd.map; sl_rd[bm != d] <- NA; sl_rd <- terra::trim(sl_rd)
+            sl_rd  <- rd.map
+            if (!one_bin) { sl_rd[bm != d] <- NA; sl_rd <- terra::trim(sl_rd) }
             rd_v   <- terra::values(sl_rd, na.rm = FALSE)
             
             qv <- stats::quantile(rd_v, diameter_quantiles, na.rm = TRUE)
@@ -1102,7 +1173,8 @@ root_depth_metrics <- function(
               res[[q_top_names[qi]]]  <- mean(rd_v[rd_v >= qv[qi]], na.rm = TRUE)
             }
             
-            sl_rl <- root.length.map; sl_rl[bm != d] <- NA
+            sl_rl <- root.length.map
+            if (!one_bin) sl_rl[bm != d] <- NA
             for (ti in seq_along(thr_cm)) {
               ab  <- sl_rl; ab[rd.map < thr_cm[ti]] <- NA
               res[[paste0("rootlength.above.",    thr_names[ti])]] <-

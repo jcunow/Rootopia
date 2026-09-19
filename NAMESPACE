@@ -2,6 +2,7 @@
 
 export(MRD)
 export(analyze_soil_texture)
+export(batch_root_traits)
 export(binning)
 export(branch_order_map)
 export(build_soil_centroids)

@@ -115,6 +115,47 @@ test_that("the default-on derived metric groups produce values", {
 })
 
 
+test_that("depth_interval_cm = NULL collapses each scan to a single row", {
+  # A tray of washed roots has no depth axis: the whole scan is one bin, and
+  # the densities become whole-scan numbers (how densely the tray was packed).
+  skip_if_not_installed("terra")
+  data(flatbed_scan_example)
+  # Downsampled 4x purely for speed; what is asserted does not depend on size.
+  small <- terra::aggregate(terra::rast(flatbed_scan_example)[[1]],
+                            fact = 4, fun = "max")
+  dir <- tempfile("seg"); dir.create(dir)
+  terra::writeRaster(small, file.path(dir, "tray_01.tif"), overwrite = TRUE)
+
+  run <- function(...) suppressWarnings(root_depth_metrics(
+    path_seg = dir, tube_names = "tray_01", dpi = 150,
+    calc_diameter_stats = FALSE,        # needs imager
+    verbose = FALSE, ...))
+
+  whole <- run(depth_interval_cm = NULL)
+  expect_equal(nrow(whole), 1L)
+  expect_equal(whole$depth, 0)
+  expect_gt(whole$rootlength.density, 0)
+  # With one bin there is no profile shape left for these to describe.
+  expect_false(any(c("mrd", "total.length.density", "rootlength.fraction")
+                   %in% names(whole)))
+
+  # The whole-scan densities are the profile's, pooled over its bins.
+  profile <- run(depth_interval_cm = 5)
+  expect_gt(nrow(profile), 1L)
+
+  cover <- sum(profile$rootpx, na.rm = TRUE) /
+    sum(profile$rootpx + profile$voidpx, na.rm = TRUE) * 100
+  expect_equal(whole$rootpx.density, cover, tolerance = 1e-8)
+
+  # Length gets a loose tolerance on purpose: terra::terrain(v = "flowdir")
+  # breaks ties at random, so root length moves by a few tenths of a percent
+  # between identical runs. The bin width must not move it by more than that.
+  pooled <- sum(profile$rootlength, na.rm = TRUE) /
+    (sum(profile$rootpx + profile$voidpx, na.rm = TRUE) / (150 / 2.54)^2)
+  expect_equal(whole$rootlength.density, pooled, tolerance = 0.02)
+})
+
+
 test_that("rotation_fixed_width controls the rotation-axis crop", {
   # It used to be hardcoded to 1800, which is wider than any tube in the
   # bundled data, so the crop silently clamped to the full image every time.
