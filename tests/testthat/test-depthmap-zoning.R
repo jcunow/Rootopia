@@ -5,6 +5,9 @@ test_that("create_depthmap returns a raster matching the input grid", {
   img <- make_binary_spatraster()
   dm  <- create_depthmap(img, sinoid = TRUE, tube_thicc = 7, tilt = 45, dpi = 300)
   expect_s4_class(dm, "SpatRaster")
+  # the depth map carries the input grid: same dims, same extent/res/CRS
+  expect_equal(dim(dm)[1:2], dim(img)[1:2])
+  expect_true(terra::compareGeom(img, dm, stopOnError = FALSE))
 })
 
 test_that("create_depthmap validates parameters", {

@@ -91,7 +91,7 @@ validate_conversion_params <- function(input, scale, select_layer) {
 #' had drifted apart. The rules themselves genuinely differ between call sites --
 #' some accept `NULL` to mean "all layers", only some know the layer count at the
 #' point of checking -- so those stay explicit arguments rather than being
-#' flattened into one behaviour.
+#' flattened into one behavior.
 #'
 #' @param select_layer The value to check.
 #' @param n_layers Layer count to bound against, or `NULL` to skip that test.

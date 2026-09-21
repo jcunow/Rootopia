@@ -29,13 +29,13 @@ test_that("the thinning table never breaks connectivity or eats a root tip", {
   lut <- .thinning_lut
   expect_length(lut, 256L)
 
-  # Neighbour offsets in the table's own weight layout.
+  # Neighbor offsets in the table's own weight layout.
   wt  <- c(TL = 1, T = 2, TR = 4, R = 8, BR = 16, B = 32, BL = 64, L = 128)
   off <- list(TL = c(-1,-1), T = c(-1,0), TR = c(-1,1), R = c(0,1),
               BR = c(1,1),   B = c(1,0),  BL = c(1,-1), L = c(0,-1))
 
-  # Are the foreground neighbours still 8-connected to each other once the
-  # centre pixel is removed?
+  # Are the foreground neighbors still 8-connected to each other once the
+  # center pixel is removed?
   stays_connected <- function(code) {
     on <- names(wt)[bitwAnd(code, wt) > 0L]
     if (length(on) <= 1L) return(TRUE)

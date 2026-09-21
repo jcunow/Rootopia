@@ -50,9 +50,10 @@ test_that("pruning removes short terminal segments and leaves the rest intact", 
 
 
 test_that("pruning thresholds the same length the edge table reports", {
-  # The prune test used to measure the raw pixel chain while the table reported
-  # that plus the rim-to-centroid junction stub (~1 px per junction end), so a
-  # segment could be dropped at a min_length it visibly cleared in the output.
+  # Pruning and the edge table must measure the same thing: the raw pixel chain
+  # plus the rim-to-centroid junction stub (~1 px per junction end). If pruning
+  # used the bare chain, a segment could be dropped at a min_length it visibly
+  # clears in the reported output.
   skel <- matrix(0, 61, 61); skel[5:55, 31] <- 1; skel[40, 32:44] <- 1
   mask <- skel
   for (i in 5:55) mask[i, 27:35] <- 1

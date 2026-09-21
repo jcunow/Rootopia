@@ -49,14 +49,14 @@ Required if \code{skel} is \code{NULL}.}
 \item{resolve_overlaps}{Resolve degree-4 crossings by continuity.}
 
 \item{splice_passthrough}{Dissolve contracted junctions that carry only two
-segment ends (bends and thinning artefacts, not branch points) by splicing
+segment ends (bends and thinning artifacts, not branch points) by splicing
 the two arms into one segment. Leave \code{TRUE} unless you specifically
 want one edge per traced skeleton chain.}
 
 \item{crossing_straight}{Straightness threshold for crossing resolution.}
 
 \item{crossing_diam_ratio}{Opt-in thickness test at a degree-4 node, off by
-default (\code{0} = resolve on geometry alone, the historical behaviour).
+default (\code{0} = resolve on geometry alone).
 When set (0.5 is a reasonable value), a node is treated as a crossing only
 if the two candidate through-roots are within this thickness ratio of each
 other; otherwise it is read as a bilateral branch and left intact. This is

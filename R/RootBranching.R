@@ -190,7 +190,7 @@ trace_segments <- function(skel) {
   # A 90-degree bend in an 8-connected skeleton leaves such a pixel wedged
   # between two contracted junction pixels; tracing it produced a 3-px J->J
   # self-loop (a spurious micro-cycle: NA tip_order + a phantom branch point).
-  # Folding it into the cluster removes the artefact at its source.
+  # Folding it into the cluster removes the artifact at its source.
   d2 <- which(deg == 2L)
   if (length(d2)) {
     pos <- NB[d2, , drop = FALSE] > 0L
@@ -261,7 +261,7 @@ trace_segments <- function(skel) {
 }
 
 
-#' Distance from a segment's terminal pixel to its junction-cluster centre
+#' Distance from a segment's terminal pixel to its junction-cluster center
 #'
 #' Junction contraction stops the traced arms on the cluster rim, so this stub is
 #' the piece of root length the contraction removed. Tip nodes are not in
@@ -350,7 +350,7 @@ build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
   # Filling plain vectors and calling data.frame() once at the end, rather than
   # building one data.frame per segment and rbind()-ing them, is what keeps this
   # from dominating the pipeline: on a root system of a few thousand segments the
-  # per-segment version cost more than the tracing it summarises.
+  # per-segment version cost more than the tracing it summarizes.
   from <- character(n); to <- character(n)
   n_px <- integer(n); n_orth <- integer(n); n_diag <- integer(n)
   len_poly <- numeric(n); len_kimura <- numeric(n)
@@ -603,12 +603,12 @@ render_order_overlay <- function(segs, tip_order, dims, file,
 #'   (needed for re-plotting and classification maps).
 #' @param resolve_overlaps Resolve degree-4 crossings by continuity.
 #' @param splice_passthrough Dissolve contracted junctions that carry only two
-#'   segment ends (bends and thinning artefacts, not branch points) by splicing
+#'   segment ends (bends and thinning artifacts, not branch points) by splicing
 #'   the two arms into one segment. Leave \code{TRUE} unless you specifically
 #'   want one edge per traced skeleton chain.
 #' @param crossing_straight Straightness threshold for crossing resolution.
 #' @param crossing_diam_ratio Opt-in thickness test at a degree-4 node, off by
-#'   default (\code{0} = resolve on geometry alone, the historical behaviour).
+#'   default (\code{0} = resolve on geometry alone).
 #'   When set (0.5 is a reasonable value), a node is treated as a crossing only
 #'   if the two candidate through-roots are within this thickness ratio of each
 #'   other; otherwise it is read as a bilateral branch and left intact. This is
@@ -940,7 +940,7 @@ resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
 #' Splice segments across pass-through nodes
 #'
 #' A contracted junction cluster carrying only \emph{two} segment ends is not a
-#' branch point -- it is a bend or a thinning artefact that fragmented one root
+#' branch point -- it is a bend or a thinning artifact that fragmented one root
 #' into two edges. Splicing the pair back together restores contiguous segments,
 #' so \code{n_segments} and \code{mean_segment_length} describe roots rather than
 #' skeleton staircases, and the cluster the two arms straddle is re-counted as
@@ -1013,12 +1013,12 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
       next
     }
     # k >= 3: pick the continuation pair (straightest + most similar diameter)
-    # Similarity alone is not enough to pick the continuation: two identical thin
+    # Diameter similarity alone would pick the wrong pair: two identical thin
     # laterals score a perfect 1 while two near-identical thick arms score
-    # slightly less, so at a 4-way node the laterals used to win and the parent
-    # axis was split in two. Scale the diameter term by how thick the pair is
-    # relative to the node, so the thick axis is preferred among equally
-    # straight, equally consistent candidates.
+    # slightly less, so at a 4-way node the laterals outscore the parent axis.
+    # The diameter term is therefore scaled by how thick the pair is relative
+    # to the node (`dmag`), which breaks that tie in favour of the thick axis
+    # among equally straight, equally consistent candidates.
     dmax <- max(diam[inc[, 1]], na.rm = TRUE)
     bi <- NA_integer_; bj <- NA_integer_; best <- -Inf
     for (m in 1:(k - 1L)) for (n in (m + 1L):k) {
@@ -1123,7 +1123,7 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
 #' spliced back into one segment before the next pass measures them. Without
 #' that step a multi-pass prune eats healthy axes, because each parent piece
 #' between two former branch points is short enough on its own to look like a
-#' spur. Set \code{splice = FALSE} for the older delete-only behaviour.
+#' spur. Set \code{splice = FALSE} to delete laterals without splicing.
 #'
 #' @param segs Segment list from \code{trace_segments}.
 #' @param DT Distance-transform matrix (for the diameter test).
@@ -1389,8 +1389,9 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
   if (is.null(et) || nrow(et) == 0L) return(et)
   unit <- match.arg(unit); length_method <- match.arg(length_method)
   px_factor <- function(u, d) switch(u, px = 1, inch = 1 / d, cm = 2.54 / d)
-  # Convert from whatever unit the table is already in, not blindly from pixels:
-  # calling this twice used to rescale an already-converted table a second time.
+  # Convert from whatever unit the table is already in, not blindly from pixels,
+  # so that applying this twice is idempotent rather than scaling twice. The
+  # source unit is read back from the `unit`/`dpi` attributes the last call set.
   from_unit <- attr(et, "unit"); from_dpi <- attr(et, "dpi")
   if (is.null(from_unit)) { from_unit <- "px"; from_dpi <- dpi }
   if (is.null(from_dpi)) from_dpi <- dpi

@@ -22,9 +22,9 @@ zoom_plot(
 \item{frac}{Fraction of each axis kept in the magnified inset (0-1).
 Magnification is `1 / frac`. Default `0.3`.}
 
-\item{center}{Where to centre the inset. One of:
+\item{center}{Where to center the inset. One of:
 \itemize{
-  \item `"center"` (default) — geometric centre of the image;
+  \item `"center"` (default) — geometric center of the image;
   \item `"densest"` — the `frac`-sized window containing the most
         non-zero / non-`NA` pixels (i.e. the most root material);
   \item a length-2 numeric `c(fx, fy)` of *relative* coordinates in
@@ -38,7 +38,7 @@ box outlined. Default `TRUE`. Set `FALSE` to draw only the inset.}
 `"densest"` search uses. Default `NULL` (first layer). Does not subset what
 is plotted — RGB rasters still plot as RGB.}
 
-\item{box_col}{Colour of the zoom-box rectangle on the overview. Default
+\item{box_col}{Color of the zoom-box rectangle on the overview. Default
 `"red"`.}
 
 \item{main}{Title stem. Panels are titled `"<main> - overview"` and
@@ -71,7 +71,7 @@ of the image at full pixel resolution; the effective magnification is
 data(seg_Oulanka2023_Session01_T067)
 r <- terra::rast(seg_Oulanka2023_Session01_T067)
 \dontrun{
-zoom_plot(r, frac = 0.25)                 # 4x inset, centred
+zoom_plot(r, frac = 0.25)                 # 4x inset, centered
 zoom_plot(r, center = "densest")          # zoom where the roots are
 zoom_plot(r, center = c(0.2, 0.8))        # upper-left region
 zoom_plot(r, overview = FALSE)            # inset only

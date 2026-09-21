@@ -64,12 +64,12 @@ and you are in minirhizotron mode; supply neither and you are on flatbed.
 ### Flatbed scans
 
 Washed roots on a tray. There is no depth axis: where a root lies on the tray
-says nothing about where it grew, so the whole scan is summarised as one row.
+says nothing about where it grew, so the whole scan is summarized as one row.
 
 | Tier | Parameters | Why |
 |---|---|---|
 | **Set every time** | `dpi`, `tube_names`, `depth_interval_cm = NULL` | `dpi` scales every value reported in cm. `tube_names` must be unique — the derived default takes three characters from the file name and collides whenever files share a suffix like `fine.tif`, so a run stops rather than mislabel. `NULL` collapses each scan to a single bin. |
-| **Set for raw scans** | `binarize_threshold`, `dark_roots` | Only if your files are greyscale or RGB rather than a binary mask. Both accept one value per image, for sessions where exposure drifted. |
+| **Set for raw scans** | `binarize_threshold`, `dark_roots` | Only if your files are grayscale or RGB rather than a binary mask. Both accept one value per image, for sessions where exposure drifted. |
 | **Usually worth setting** | `prune_spur_length_cm`, `clean_max_artifact_size`, `diameter_thresholds`, `session` | Thinning leaves stubs that count as root tips and as length; specks in a painted segmentation count as root area. The thresholds are the fine-root cut-offs your question actually turns on. |
 | **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_quantiles`, the `calc_*` toggles | |
 | **Ignore** | `insertion_angles`, `tube_diameter_cm`, `tube_center_offset`, `rotation_fixed_width`, `soil_starts`, `bin_round` | Tube and depth-profile settings. `calc_distribution_indices` and `calc_advanced_metrics` describe how roots spread over a profile, so they switch themselves off; `calc_root_angles` needs a real depth gradient to mean anything. |
@@ -125,13 +125,13 @@ the wrong length is an error rather than a silent recycle.
 
 ### A note on `bin_round`
 
-The default, `"rounding"`, labels a bin by its centre: with
+The default, `"rounding"`, labels a bin by its center: with
 `depth_interval_cm = 5`, the top bin spans 0–2.5 cm while every other bin
 spans 5 cm. Per-bin densities are unaffected — they divide by each bin's own
 measured area — but `mrd` and `total.length.density` multiply by
 `depth_interval_cm` as though every bin were full width, so a half-width top
 bin biases both. `"floor"` gives the soil-science convention: 0–5, 5–10,
-labelled by the shallower edge. Prefer it for new work; the default is kept so
+labeled by the shallower edge. Prefer it for new work; the default is kept so
 existing analyses do not shift underneath you.
 
 ---
@@ -143,7 +143,7 @@ existing analyses do not shift underneath you.
 remotes::install_github("jcunow/Rootopia")
 
 library(Rootopia)
-library(tidyverse)   # for downstream plotting
+library(ggplot2)     # for the plots below; dplyr calls are namespaced
 ```
 
 ---

@@ -1,5 +1,5 @@
 # clean_image: hole filling / artifact removal. Output-format sweep + a
-# behavioural check that an isolated speck is removed and an enclosed hole filled.
+# behavioral check that an isolated speck is removed and an enclosed hole filled.
 
 test_that("clean_image returns each requested output format", {
   skip_if_not_installed("terra")

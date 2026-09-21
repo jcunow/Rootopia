@@ -24,7 +24,7 @@ List with:
 }
 \description{
 Computes local connectivity of each foreground pixel using an
-8-neighbourhood (Moore neighbourhood).
+8-neighborhood (Moore neighborhood).
 }
 \details{
 The computation proceeds as follows:

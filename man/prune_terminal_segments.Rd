@@ -42,5 +42,5 @@ gone its branch point carries only two arms, so the parent's two pieces are
 spliced back into one segment before the next pass measures them. Without
 that step a multi-pass prune eats healthy axes, because each parent piece
 between two former branch points is short enough on its own to look like a
-spur. Set \code{splice = FALSE} for the older delete-only behaviour.
+spur. Set \code{splice = FALSE} to delete laterals without splicing.
 }

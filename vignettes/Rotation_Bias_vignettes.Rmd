@@ -337,7 +337,7 @@ Two extensions are planned and not yet implemented:
   images in one call
 - [Image Stitching](Stitching_vignette.html) — combine overlapping frames from
   one tube before correcting rotation
-- [Special Topics](SpecialTopics_vignette.html) — soil colour, texture, halos
+- [Special Topics](SpecialTopics_vignette.html) — soil color, texture, halos
   and turnover
 - [Function reference](../reference/index.html) — full documentation for
   every exported function

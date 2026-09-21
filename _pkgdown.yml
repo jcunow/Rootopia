@@ -127,7 +127,6 @@ reference:
     desc: "Statistical indices summarising root distribution with depth."
     contents:
       - MRD
-      - rhythmicity
       - modal_peaks
       - circular_mean
       - root_accumulation

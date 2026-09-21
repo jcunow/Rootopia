@@ -34,7 +34,7 @@ Processing steps:
    `load_flexible_image()`.
 2. Foreground pixel count is computed.
 3. Skeletonization is performed using `lut_thin_fast()`:
-   - iterative removal of pixels based on 3x3 neighbourhood codes
+   - iterative removal of pixels based on 3x3 neighborhood codes
    - lookup table determines pixel deletions in two sub-steps per iteration
 4. Output is the final thinned binary raster.
 5. Optionally, an overlay image is generated:

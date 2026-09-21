@@ -1,5 +1,5 @@
 # load_flexible_image() must return a canonical (H, W, C) array for every input
-# source, so terra/imager/file paths no longer disagree on orientation.
+# source, so terra, imager and file paths all agree on orientation.
 
 # Asymmetric reference (H != W, distinct features on the first row vs first
 # column) so any transpose is detectable by value, not just by dim.
@@ -46,7 +46,7 @@ test_that("PNG and TIFF files load in the same (H, W, C) orientation", {
   tiff::writeTIFF(ref, tif_f)
   a_tif <- load_flexible_image(tif_f, output_format = "array", scale = "none")
   expect_equal(dim(a_tif)[1:2], dim(ref)[1:2])
-  expect_equal(a_png, a_tif)                    # PNG and TIFF now agree
+  expect_equal(a_png, a_tif)                    # both decoders land on (H, W, C)
 })
 
 test_that("a PNG loaded to SpatRaster matches the array reference (terra view)", {

@@ -22,9 +22,9 @@
 #' @param x A `SpatRaster`.
 #' @param frac Fraction of each axis kept in the magnified inset (0-1).
 #'   Magnification is `1 / frac`. Default `0.3`.
-#' @param center Where to centre the inset. One of:
+#' @param center Where to center the inset. One of:
 #'   \itemize{
-#'     \item `"center"` (default) — geometric centre of the image;
+#'     \item `"center"` (default) — geometric center of the image;
 #'     \item `"densest"` — the `frac`-sized window containing the most
 #'           non-zero / non-`NA` pixels (i.e. the most root material);
 #'     \item a length-2 numeric `c(fx, fy)` of *relative* coordinates in
@@ -35,7 +35,7 @@
 #' @param layer Integer or `NULL`. For multi-layer rasters, which layer the
 #'   `"densest"` search uses. Default `NULL` (first layer). Does not subset what
 #'   is plotted — RGB rasters still plot as RGB.
-#' @param box_col Colour of the zoom-box rectangle on the overview. Default
+#' @param box_col Color of the zoom-box rectangle on the overview. Default
 #'   `"red"`.
 #' @param main Title stem. Panels are titled `"<main> - overview"` and
 #'   `"<main> - inset (Nx)"`.
@@ -48,7 +48,7 @@
 #' data(seg_Oulanka2023_Session01_T067)
 #' r <- terra::rast(seg_Oulanka2023_Session01_T067)
 #' \dontrun{
-#' zoom_plot(r, frac = 0.25)                 # 4x inset, centred
+#' zoom_plot(r, frac = 0.25)                 # 4x inset, centered
 #' zoom_plot(r, center = "densest")          # zoom where the roots are
 #' zoom_plot(r, center = c(0.2, 0.8))        # upper-left region
 #' zoom_plot(r, overview = FALSE)            # inset only
@@ -73,7 +73,7 @@ zoom_plot <- function(x,
   w  <- ev[2] - ev[1]; h <- ev[4] - ev[3]
   hw <- frac * w / 2;  hh <- frac * h / 2
 
-  # Resolve the inset centre (cx, cy) in map coordinates.
+  # Resolve the inset center (cx, cy) in map coordinates.
   if (is.character(center)) {
     center <- match.arg(center, c("center", "densest"))
     if (center == "center") {
@@ -115,7 +115,7 @@ zoom_plot <- function(x,
 
 #' Locate the densest frac-sized window in a raster
 #'
-#' Returns the map-coordinate centre `c(cx, cy)` of the `frac`-sized window
+#' Returns the map-coordinate center `c(cx, cy)` of the `frac`-sized window
 #' containing the most non-zero / non-`NA` cells. Uses a coarse block scan so
 #' it stays cheap on large rasters.
 #' @keywords internal
@@ -139,7 +139,7 @@ zoom_plot <- function(x,
     if (s > best) { best <- s; br <- r0; bc <- c0 }
   }
 
-  # Window-centre cell -> map coordinates.
+  # Window-center cell -> map coordinates.
   ctr_row <- br + wr / 2; ctr_col <- bc + wc / 2
   ev <- as.vector(terra::ext(x))
   cx <- ev[1] + (ctr_col / nc) * (ev[2] - ev[1])

@@ -4,7 +4,7 @@
 ##################################
 
 
-#' Deletion table for the 256 possible 3x3 foreground neighbourhoods
+#' Deletion table for the 256 possible 3x3 foreground neighborhoods
 #'
 #' Indexed by the weight layout documented at \code{lut_codes()} inside
 #' \code{lut_thin_fast()}:
@@ -20,7 +20,7 @@
 #' difference is deliberate: it disagrees with the textbook conditions at 25 of
 #' the 256 codes. Twelve are more conservative -- the textbook deletes in both
 #' sub-iterations, this deletes in only one. The other thirteen are the
-#' staircase corners: a pixel whose only neighbours are two orthogonal ones that
+#' staircase corners: a pixel whose only neighbors are two orthogonal ones that
 #' already touch each other diagonally. Zhang-Suen's crossing-number test scores
 #' those as A = 2 and keeps them, leaving a redundant pixel on every 90-degree
 #' bend; deleting them gives a cleaner diagonal skeleton and cannot disconnect
@@ -28,8 +28,8 @@
 #'
 #' The two properties the rest of the package depends on are checked in
 #' \code{tests/testthat/test-skeleton.R} rather than taken on trust: no entry
-#' deletes a pixel whose removal would disconnect its own neighbourhood, and no
-#' pixel with a single neighbour -- a root tip -- is ever deleted.
+#' deletes a pixel whose removal would disconnect its own neighborhood, and no
+#' pixel with a single neighbor -- a root tip -- is ever deleted.
 #'
 #' @keywords internal
 #' @noRd
@@ -49,7 +49,7 @@
 #' Zhang-Suen thinning using lookup table (LUT implementation)
 #'
 #' Performs iterative skeletonization of a binary raster using a
-#' lookup-table encoding of 3x3 neighbourhood configurations.
+#' lookup-table encoding of 3x3 neighborhood configurations.
 #'
 #' The algorithm operates as follows:
 #'
@@ -57,8 +57,8 @@
 #' 2. Each iteration reconstructs a matrix representation of the image.
 #' 3. A zero-padded border is added around the image.
 #' 4. For each pixel equal to 1:
-#'    - The 3x3 neighbourhood is extracted
-#'    - A weighted sum (mask encoding) produces a unique neighbourhood code
+#'    - The 3x3 neighborhood is extracted
+#'    - A weighted sum (mask encoding) produces a unique neighborhood code
 #' 5. The code is used as an index into a 256-entry lookup table:
 #'    - LUT value 1 or 3 -> pixel removed in first sub-step
 #'    - LUT value 2 or 3 -> pixel removed in second sub-step
@@ -89,7 +89,7 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
   
   lut <- .thinning_lut
 
-  # 3x3 neighbourhood -> 256-LUT code for every current foreground pixel.
+  # 3x3 neighborhood -> 256-LUT code for every current foreground pixel.
   # Weight layout (must match the `.thinning_lut` encoding):
   #   TL=1   T=2   TR=4
   #   L=128        R=8
@@ -115,7 +115,7 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
     changed <- FALSE
 
     # Zhang-Suen requires two *sequential* sub-iterations per pass. The
-    # neighbourhood MUST be recomputed between them: evaluating both deletion
+    # neighborhood MUST be recomputed between them: evaluating both deletion
     # sets from a single snapshot erodes a structure from both sides at once
     # and destroys connectivity (a 2-px line or a loop disappears entirely).
 
@@ -149,7 +149,7 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
 #' Detect endpoints and branching points in a skeleton image
 #'
 #' Computes local connectivity of each foreground pixel using an
-#' 8-neighbourhood (Moore neighbourhood).
+#' 8-neighborhood (Moore neighborhood).
 #'
 #' The computation proceeds as follows:
 #'
@@ -228,7 +228,7 @@ detect_skeleton_points <- function(img, select_layer = NULL, skeletonize = FALSE
 #'    `load_flexible_image()`.
 #' 2. Foreground pixel count is computed.
 #' 3. Skeletonization is performed using `lut_thin_fast()`:
-#'    - iterative removal of pixels based on 3x3 neighbourhood codes
+#'    - iterative removal of pixels based on 3x3 neighborhood codes
 #'    - lookup table determines pixel deletions in two sub-steps per iteration
 #' 4. Output is the final thinned binary raster.
 #' 5. Optionally, an overlay image is generated:

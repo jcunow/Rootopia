@@ -40,14 +40,15 @@ test_that("the end-to-end route survives skeletonisation", {
 
 test_that("a right-angle bend is one root, not a fork", {
   # An 8-connected skeleton makes the pixels either side of a 90-degree corner
-  # look like junctions. Contracting them used to leave a 3-px self-loop: a
-  # phantom branch point, an NA tip_order and a fragmented root.
+  # look like junctions. Contracting them must not leave a 3-px self-loop,
+  # which would show up as a phantom branch point, an NA tip_order and a
+  # fragmented root.
   m <- matrix(0, 41, 41); m[21, 5:21] <- 1; m[21:37, 21] <- 1
   et <- root_graph_pipeline(m, m, verbose = FALSE)
   expect_equal(nrow(et), 1L)
   expect_equal(sum(et$n_branch_points), 0)
   expect_false(any(is.na(et$tip_order)))
-  expect_equal(sum(et$length), 32, tolerance = 0.05)   # 16 + 16 px of centre line
+  expect_equal(sum(et$length), 32, tolerance = 0.05)   # 16 + 16 px of center line
 })
 
 test_that("junction contraction does not eat root length", {

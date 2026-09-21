@@ -75,7 +75,7 @@
 # Each stroke is list(v, radius, order, parent), where v is an Nx2 matrix of
 # (row, col) vertices and parent indexes the stroke this one attaches to (NA for
 # a free-standing root). A child's first vertex is the attachment point and sits
-# exactly on the parent's centre line, so the ground-truth length of the union is
+# exactly on the parent's center line, so the ground-truth length of the union is
 # the sum of the stroke lengths. Stamping radius r yields a stroke 2r + 1 px wide.
 .phantom_strokes <- function(design, size) {
   n <- size; mid <- round(n / 2)
@@ -173,15 +173,15 @@
 #
 # Draws a root system whose length, width and topology are prescribed, and
 # returns both the filled mask (what a scanner would see) and the exact one-pixel
-# centre line. Having both is the point: feeding the centre line scores the graph
+# center line. Having both is the point: feeding the center line scores the graph
 # alone, feeding the mask also carries the thinning error, so the two routes tell
 # graph errors and thinning errors apart.
 #
 # Every design is built from strokes -- polylines stamped with a disk of radius r,
 # giving a root 2r + 1 px wide -- and each lateral starts exactly on its parent's
-# centre line. The ground truth is therefore analytic:
+# center line. The ground truth is therefore analytic:
 #
-#   total_length              sum of the stroke centre-line lengths (px)
+#   total_length              sum of the stroke center-line lengths (px)
 #   n_tips, n_branch_points   counted from the stroke attachment graph, so they
 #                             hold for T-attachments and forks alike
 #   n_roots, max_branch_order, by_order
@@ -292,7 +292,7 @@ root_phantom <- function(design = c("comb", "herringbone", "hierarchical", "cros
 # whether the difference is within tolerance. This is the check to run after
 # touching the tracing, ordering or length code.
 #
-# from = "skeleton" feeds the exact one-pixel centre line, so the score isolates
+# from = "skeleton" feeds the exact one-pixel center line, so the score isolates
 # the graph: tracing, junction contraction, crossing resolution, ordering and
 # length integration. from = "mask" skeletonises the filled image first and
 # therefore also carries the thinning error -- chiefly the erosion of about one
@@ -307,7 +307,7 @@ root_phantom <- function(design = c("comb", "herringbone", "hierarchical", "cros
 # Returns one row per metric (metric, expected, observed, abs_error, rel_error,
 # tolerance, pass); attr(., "passed") is TRUE when every row passes and
 # attr(., "result") holds the branchOrderMap object. overlay_png optionally
-# writes the order-coloured image, which is how you look at a failure.
+# writes the order-colored image, which is how you look at a failure.
 validate_branching <- function(design = c("comb", "herringbone", "hierarchical", "cross", "fork"),
                                phantom = NULL,
                                from = c("skeleton", "mask"),

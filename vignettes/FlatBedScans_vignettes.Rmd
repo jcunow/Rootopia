@@ -48,7 +48,7 @@ see the [Batch Processing](BatchProcessing_vignette.html) vignette instead.
 
 library(Rootopia)
 library(terra)
-library(tidyverse)
+library(ggplot2)
 ```
 
 ---
@@ -136,7 +136,7 @@ zoom_plot(seg_clean, main = "After Cleaning",center = c(0.6,0.7), overview = F)
 `skeletonize_image()` reduces roots to single-pixel-wide centerlines. This is
 required for root length (Kimura method) and diameter estimation.
 
-```{r fig.alt="One-pixel-wide skeleton traced through the centre of every root."}
+```{r fig.alt="One-pixel-wide skeleton traced through the center of every root."}
 # `seg` is already the single root layer, so no select_layer needed here
 skl <- skeletonize_image(seg_clean, verbose = FALSE)
 
@@ -282,7 +282,7 @@ it builds a full segment graph from the skeleton and assigns every segment a
 connected component are order 1; the branches coming off them are order 2,
 their branches order 3, and so on — so the order simply counts how many
 branching events separate a segment from the root's main path, rather than
-labelling roots as "main" or "lateral". Because flatbed scans have no depth
+labeling roots as "main" or "lateral". Because flatbed scans have no depth
 dimension, this is computed once for the whole image.
 
 ```{r, eval=FALSE}
@@ -355,7 +355,7 @@ plot_order_window(
 ### 8. Color analysis
 
 `tube_coloration()` extracts mean chromatic coordinates and HSV values from
-an RGB image. On flatbed scans this characterises overall root pigmentation.
+an RGB image. On flatbed scans this characterizes overall root pigmentation.
 
 ```{r, eval=FALSE}
 # Root pixels only
@@ -426,7 +426,7 @@ ignore.
   analysis into a single function call
 - [Image Stitching](Stitching_vignette.html) — combine overlapping frames into
   one mosaic before analysis
-- [Special Topics](SpecialTopics_vignette.html) — soil colour, texture, halos
+- [Special Topics](SpecialTopics_vignette.html) — soil color, texture, halos
   and turnover
 - [Function reference](../reference/index.html) — full documentation for
   every exported function

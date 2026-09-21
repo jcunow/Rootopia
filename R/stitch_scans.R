@@ -686,7 +686,7 @@ stitch_discover_files <- function(input, pattern = NULL) {
 stitch_to_hwc <- function(input) {
   # load_flexible_image() returns a canonical (H, W, C) array for every source
   # (including imager-read PNG/JPG files), so no orientation correction is
-  # needed here -- just normalise the number of dimensions.
+  # needed here -- just normalize the number of dimensions.
   a <- load_flexible_image(input, output_format = "array", scale = "none")
   d <- dim(a)
   if (length(d) == 2) {

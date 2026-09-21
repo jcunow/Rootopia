@@ -1,4 +1,4 @@
-# Pixel / colour metrics. These delegate input handling to load_flexible_image,
+# Pixel / color metrics. These delegate input handling to load_flexible_image,
 # so one representative input each, plus the property each is supposed to compute.
 
 test_that("count_pixels counts foreground pixels", {
@@ -20,7 +20,7 @@ test_that("rgb2gray requires exactly 3 layers", {
   expect_error(rgb2gray(make_binary_spatraster()))
 })
 
-test_that("tube_coloration returns the documented colour data.frame", {
+test_that("tube_coloration returns the documented color data.frame", {
   skip_if_not_installed("terra")
   rgb <- terra::rast(make_rgb_array() * 255)
   cv <- tube_coloration(rgb)

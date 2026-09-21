@@ -18,7 +18,7 @@ Binary SpatRaster representing skeletonized image
 }
 \description{
 Performs iterative skeletonization of a binary raster using a
-lookup-table encoding of 3x3 neighbourhood configurations.
+lookup-table encoding of 3x3 neighborhood configurations.
 }
 \details{
 The algorithm operates as follows:
@@ -27,8 +27,8 @@ The algorithm operates as follows:
 2. Each iteration reconstructs a matrix representation of the image.
 3. A zero-padded border is added around the image.
 4. For each pixel equal to 1:
-   - The 3x3 neighbourhood is extracted
-   - A weighted sum (mask encoding) produces a unique neighbourhood code
+   - The 3x3 neighborhood is extracted
+   - A weighted sum (mask encoding) produces a unique neighborhood code
 5. The code is used as an index into a 256-entry lookup table:
    - LUT value 1 or 3 -> pixel removed in first sub-step
    - LUT value 2 or 3 -> pixel removed in second sub-step

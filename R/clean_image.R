@@ -136,7 +136,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 # Exported diagnostic helper
 # ---------------------------------------------------------------------------
 
-#' Summarise the component-size distribution of a binary image
+#' Summarize the component-size distribution of a binary image
 #'
 #' Reports the size distribution of the two component types that [clean_image()]
 #' acts on, to help you choose `max_hole_size` and `max_artifact_size`:
@@ -150,7 +150,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' }
 #'
 #' @section No size threshold here:
-#' This function applies **no** size cutoff — it characterises *every*
+#' This function applies **no** size cutoff — it characterizes *every*
 #' component. There is therefore nothing special separating a "big root" from an
 #' "artifact": both are root components, distinguished only by size. Use the
 #' printed summary and the histograms to pick the `max_*_size` values you then

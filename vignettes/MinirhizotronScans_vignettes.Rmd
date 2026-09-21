@@ -55,7 +55,7 @@ processing stage or who are working on a specific subset of functions.
 
 library(Rootopia)
 library(terra)
-library(tidyverse)
+library(ggplot2)
 ```
 
 ---
@@ -219,7 +219,7 @@ terra::plot(depth_map, main = "Depth map (cm)")
 `binning()` rounds continuous depth values to discrete intervals. The bin
 width (`nn`) should match your analysis scale — 5 cm is a common choice. You may want to adjust this depending on your root prevalence.  
 
-```{r fig.alt="The depth map reduced to discrete depth bins, drawn as bands of constant colour."}
+```{r fig.alt="The depth map reduced to discrete depth bins, drawn as bands of constant color."}
 depth_bins <- binning(depthmap = depth_map, nn = 5, round_option = "rounding")
 
 # The set of depth bins we will iterate over for per-slice traits
@@ -402,7 +402,7 @@ color_df <- do.call(rbind, color_list)   # NULLs from empty bins are dropped
 These tube-level summary metrics require a complete depth profile.
 
 ```{r}
-# Mean rooting depth — depth-weighted mean (a robust centre-of-root-mass estimate)
+# Mean rooting depth — depth-weighted mean (a robust center-of-root-mass estimate)
 mrd_val <- MRD(w = depth_data$depth, roots = depth_data$rootlength.density)
 
 # Total length density — sum over the full profile

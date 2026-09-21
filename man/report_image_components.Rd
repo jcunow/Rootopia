@@ -2,7 +2,7 @@
 % Please edit documentation in R/clean_image.R
 \name{report_image_components}
 \alias{report_image_components}
-\title{Summarise the component-size distribution of a binary image}
+\title{Summarize the component-size distribution of a binary image}
 \usage{
 report_image_components(img, plot = TRUE, breaks = 30, select_layer = NULL)
 }
@@ -35,7 +35,7 @@ acts on, to help you choose `max_hole_size` and `max_artifact_size`:
 }
 \section{No size threshold here}{
 
-This function applies **no** size cutoff — it characterises *every*
+This function applies **no** size cutoff — it characterizes *every*
 component. There is therefore nothing special separating a "big root" from an
 "artifact": both are root components, distinguished only by size. Use the
 printed summary and the histograms to pick the `max_*_size` values you then

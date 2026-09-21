@@ -121,7 +121,8 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     masked.depthmap = terra::rast(img[[1]])
     terra::values(masked.depthmap) = as.vector(t(M))           # row-major for terra
 
-    # Mask foreign objects -- now correctly aligned cell-for-cell with img.
+    # Mask foreign objects. `mask` shares img's grid, so cell i of the mask and
+    # cell i of the depth map are the same pixel.
     mv = as.vector(terra::values(mask))
     terra::values(masked.depthmap)[which(mv == 1)] <- NA
 

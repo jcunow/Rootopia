@@ -631,7 +631,7 @@ classify_soil_rgb <- function(img,
 #'
 #' @importFrom terra values
 #' @importFrom stats dist hclust as.dendrogram
-#' @importFrom graphics par layout plot legend axis abline mtext
+#' @importFrom graphics par layout plot legend axis abline
 #' @importFrom grDevices png dev.off
 #' @export
 plot_soil_classification <- function(result,

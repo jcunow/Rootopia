@@ -142,7 +142,7 @@ root_length <- function(img,
     
     # -----------------------------
     # Per-pixel pair detection
-    # A focal sum of 2 means the pixel and exactly one neighbour (in the
+    # A focal sum of 2 means the pixel and exactly one neighbor (in the
     # relevant direction) are both root, i.e. a connected step. Compare the
     # rasters element-wise to flag those steps before summing them below.
     # -----------------------------
@@ -338,7 +338,7 @@ count_pixels <- function(img) {
 #' @param b Blue channel luminosity weight.
 #' @return A data frame with columns: rcc, gcc, bcc, hue, saturation,
 #'   luminosity, red, green, blue. \code{hue} and \code{saturation} come from
-#'   the HSV transform of the mean colour; \code{luminosity} is the
+#'   the HSV transform of the mean color; \code{luminosity} is the
 #'   \code{r}/\code{g}/\code{b}-weighted mean luminance (not HSV value).
 #' @export
 #'
@@ -349,7 +349,7 @@ count_pixels <- function(img) {
 tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
   # These are the exact Rec. 709 luma coefficients, deliberately NOT the rounded
   # 0.21/0.72/0.07 that rgb2gray() defaults to. Routing this through rgb2gray()
-  # would shift every colour value this function has ever reported, so the two
+  # would shift every color value this function has ever reported, so the two
   # stay separate even though the arithmetic is the same.
   tryCatch({
     if (missing(img)) stop("Image input is required")

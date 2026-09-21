@@ -18,7 +18,7 @@ tube_coloration(img, r = 0.2126, g = 0.7152, b = 0.0722)
 \value{
 A data frame with columns: rcc, gcc, bcc, hue, saturation,
   luminosity, red, green, blue. \code{hue} and \code{saturation} come from
-  the HSV transform of the mean colour; \code{luminosity} is the
+  the HSV transform of the mean color; \code{luminosity} is the
   \code{r}/\code{g}/\code{b}-weighted mean luminance (not HSV value).
 }
 \description{

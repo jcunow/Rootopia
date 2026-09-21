@@ -5,7 +5,7 @@
 #' traits summarized per depth interval.  Handles flatbed scans and flat
 #' rhizotron windows by default, and cylindrical minirhizotron tubes when tube
 #' parameters are supplied (see \strong{Geometry}).  Input may be already
-#' segmented or a raw greyscale/RGB scan, which is binarized on the way in (see
+#' segmented or a raw grayscale/RGB scan, which is binarized on the way in (see
 #' \strong{Binarization}).
 #'
 #' \code{batch_root_traits()} is an alias for the same function.
@@ -99,22 +99,22 @@
 #' @param depth_interval_cm Numeric or \code{NULL}. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
 #'   \code{NULL} switches on whole-image mode, where the scan is treated as a
-#'   single bin and summarised in one row (see \strong{Whole-image mode}).
+#'   single bin and summarized in one row (see \strong{Whole-image mode}).
 #'   Default \code{5}.
 #' @param bin_round Character. How \code{binning()} assigns a depth to a bin:
 #'   \code{"rounding"} (default, \code{nn * round(depth/nn)}), \code{"floor"},
 #'   or \code{"ceiling"}.  \strong{Note what "rounding" does to the top bin}: with
 #'   \code{depth_interval_cm = 5} it spans 0-2.5 cm while every other bin spans
-#'   5 cm, because the label is the bin's centre rather than its top edge.  Per-bin
+#'   5 cm, because the label is the bin's center rather than its top edge.  Per-bin
 #'   densities are unaffected (they divide by each bin's own measured area), but
 #'   \code{mrd} and \code{total.length.density} multiply by
 #'   \code{depth_interval_cm} as though every bin were full width, so they are
 #'   biased by the half-width top bin.  \code{"floor"} gives the soil-science
-#'   convention -- 0-5, 5-10, labelled by the shallower edge -- and is the better
+#'   convention -- 0-5, 5-10, labeled by the shallower edge -- and is the better
 #'   choice for a new analysis; the default is kept for continuity with existing
 #'   ones.
 #' @param rotation_fixed_width Numeric. Width in \strong{rows} that each image is
-#'   cropped to along the rotation axis, centred on the middle row, before any
+#'   cropped to along the rotation axis, centered on the middle row, before any
 #'   trait is measured (see \code{rotation_censor()}).  This trims the tube
 #'   edges, where the curvature of the tube distorts what the scanner sees.  An
 #'   image with fewer rows than this cannot be cropped symmetrically, so
@@ -137,7 +137,7 @@
 #'   \item{Minirhizotron}{Either argument is supplied.  The sinusoidal
 #'     curvature correction is switched on, the depth axis is foreshortened by
 #'     \code{sin(insertion_angles)}, and each image is cropped to
-#'     \code{rotation_fixed_width} rows about its centre.  An argument you
+#'     \code{rotation_fixed_width} rows about its center.  An argument you
 #'     leave out falls back to a neutral default: \code{tube_diameter_cm = 7}
 #'     and \code{insertion_angles = 90} (vertical tube), both announced in the
 #'     run log.}
@@ -192,22 +192,22 @@
 #' \code{list.files(path_seg)}.
 #'
 #' @section Binarization:
-#' Flatbed scans are usually delivered as greyscale or RGB with the full 0-255
+#' Flatbed scans are usually delivered as grayscale or RGB with the full 0-255
 #' range, not as a segmented mask.  Such an image is reduced to a single
-#' greyscale layer (\code{rgb2gray()} for RGB input) and cut at
+#' grayscale layer (\code{rgb2gray()} for RGB input) and cut at
 #' \code{binarize_threshold}, in the same way RhizoVision Explorer does it.
 #' Already-segmented input passes through untouched: with the default
 #' \code{binarize = "auto"} the cut is only applied when the image actually
-#' has more than two grey levels.
+#' has more than two gray levels.
 #'
 #' @param binarize Either \code{"auto"} (default), \code{TRUE}, or
 #'   \code{FALSE}.  \code{"auto"} thresholds an image only if it has more
-#'   than two distinct grey levels, so binary masks are left alone and raw scans
+#'   than two distinct gray levels, so binary masks are left alone and raw scans
 #'   are binarized.  \code{TRUE} always thresholds, \code{FALSE} never does
 #'   (any non-zero pixel is then taken as root).  Note that \code{TRUE} on an
 #'   image already coded 0/1 will \emph{invert} it, because 0 counts as dark;
 #'   this is what \code{"auto"} exists to prevent.
-#' @param binarize_threshold Numeric. Grey level at which a scan is cut into
+#' @param binarize_threshold Numeric. Gray level at which a scan is cut into
 #'   root and background, on the \strong{0-255} scale (the RhizoVision Explorer
 #'   convention).  Images that load on a 0-1 scale get the same cut-off
 #'   rescaled, so the number means the same thing either way.  Default
@@ -229,7 +229,7 @@
 #'   \code{\link{clean_image}} and need the \pkg{imager} package.
 #' @param seg_layer Integer or \code{NULL}. Which layer of the segmented image
 #'   to measure.  \code{NULL} (default) picks automatically: a single-layer
-#'   image is used as is, and a 3- or 4-layer image is converted to greyscale
+#'   image is used as is, and a 3- or 4-layer image is converted to grayscale
 #'   with \code{rgb2gray()}.  Set this if your files carry the segmentation in
 #'   one specific band.
 #'
@@ -364,7 +364,7 @@
 #'
 #' @details
 #' \strong{Surface, volume, and their ratio.}  For each skeleton pixel, the root
-#' segment is modelled as a cylinder of length \eqn{l_i} (one pixel edge in cm)
+#' segment is modeled as a cylinder of length \eqn{l_i} (one pixel edge in cm)
 #' and radius \eqn{r_i} (half the local diameter in cm).  Its \emph{lateral}
 #' surface area is \eqn{2 \pi r_i l_i} -- the curved wall wrapping the root, i.e.
 #' the area in contact with the soil, not the flat root area seen in the image --
@@ -378,7 +378,7 @@
 #' \emph{local} ratio, it is dominated by fine roots (small \eqn{r_i} give large
 #' \eqn{2 / r_i}).  This is deliberately not the same as the bulk ratio
 #' \code{root.surface.area / root.volume}, which is dominated by thick roots
-#' (they hold most of the volume); the two summarise different things and will
+#' (they hold most of the volume); the two summarize different things and will
 #' not match unless every root in the bin has the same diameter.
 #'
 #' \strong{Fault tolerance.}  Every metric block is wrapped in
@@ -393,7 +393,7 @@
 #' # Flatbed scans, not yet binarized -- the default path.
 #' # No tube arguments, so this is flat geometry: no curvature correction,
 #' # no foreshortening, no tube crop. Roots are dark on a bright tray, so
-#' # everything at or below grey level 200 is taken as root.
+#' # everything at or below gray level 200 is taken as root.
 #' result <- batch_root_traits(
 #'   path_seg           = "scans/flatbed/tray_01/",
 #'   dpi                = 600,
@@ -435,8 +435,7 @@
 #' )
 #' }
 #'
-#' @importFrom dplyr group_by filter summarize full_join across rename_with
-#'   select mutate cur_data
+#' @importFrom dplyr group_by filter summarize full_join rename_with
 #' @importFrom tidyr pivot_wider
 #' @importFrom stringr str_sub
 #' @importFrom terra rast zonal values ext focal terrain subst flip t trim
@@ -537,13 +536,13 @@ root_depth_metrics <- function(
   
   # Reduce whatever came off disk to a single-layer 0/1 root mask.
   #
-  # A flatbed scan arrives as greyscale or RGB spanning the full 0-255 range, so
-  # it has to be cut at a grey level before anything downstream can treat a
+  # A flatbed scan arrives as grayscale or RGB spanning the full 0-255 range, so
+  # it has to be cut at a gray level before anything downstream can treat a
   # pixel as root. An already-segmented image arrives as 0/1 or 0/255 and must
   # pass through untouched -- that is what binarize = "auto" is for: it only
-  # cuts when the image really has more than two grey levels.
+  # cuts when the image really has more than two gray levels.
   #
-  # Everything except the colour metrics works on this single layer, which is
+  # Everything except the color metrics works on this single layer, which is
   # why the reduction happens here at load time rather than per metric.
   .as_root_mask <- function(img, label, thr255, dark) {
     
@@ -568,7 +567,7 @@ root_depth_metrics <- function(
     
     if (!do_bin) return((gray > 0) * 1)
     
-    # binarize_threshold is a grey level on the 0-255 scale. Images that loaded
+    # binarize_threshold is a gray level on the 0-255 scale. Images that loaded
     # on a 0-1 scale get the same cut-off rescaled, so the number the user typed
     # means the same thing either way.
     mx  <- max(vals, na.rm = TRUE)
@@ -834,7 +833,7 @@ root_depth_metrics <- function(
     # 3a. Load images
     # -------------------------------------------------------------------------
     # scale = "none" on purpose: "binary" is ceiling(x / max), which turns every
-    # non-zero grey value into root and would silently destroy an unbinarized
+    # non-zero gray value into root and would silently destroy an unbinarized
     # flatbed scan. .as_root_mask() does the cutting, with a real threshold.
     im <- .safe(sprintf("load segmented [%s]", seg_file), {
       img <- load_flexible_image(file.path(path_seg, seg_file),
@@ -906,7 +905,7 @@ root_depth_metrics <- function(
     # 3b. Rotation censor (crop to tube interior) -- minirhizotron only
     # -------------------------------------------------------------------------
     # A flatbed scan has no tube interior, so cropping it to a fixed number of
-    # rows about the centre would just throw away real data.
+    # rows about the center would just throw away real data.
     if (tube_geometry) {
       r0 <- round(dim(im)[1] / 2, 0)
       
@@ -974,7 +973,8 @@ root_depth_metrics <- function(
         tilt        = angle,
         tube_thicc  = tube_diameter_cm
       )
-      # create_depthmap() now returns a map aligned with `im` (no transpose).
+      # create_depthmap() returns a map on `im`'s grid, so only the extent has
+      # to be carried over -- no transpose.
       terra::ext(dm) <- terra::ext(im)
       dm
     })

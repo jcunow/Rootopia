@@ -565,10 +565,10 @@ estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=15
 
     # The scan ran past the last depth slice without the tape coverage ever
     # dropping below `tape_thresh`, so the tape is not fully contained in the
-    # search area and there is no end to report. Resetting `i` to 1 here (the
-    # previous behaviour) silently produced the same answer as "tape ended at
-    # the very first slice", making a failed search indistinguishable from a
-    # real detection at depth 0.
+    # search area and there is no end to report. NA is the only honest answer:
+    # any numeric `i` here would be indistinguishable from a real detection at
+    # that slice, and `i = 1` in particular reads as "tape ended at the very
+    # first slice".
     if (!found_end) {
       warning("Tape coverage never dropped below 'tape_thresh' within the ",
               "search area; the tape is probably not fully contained. ",

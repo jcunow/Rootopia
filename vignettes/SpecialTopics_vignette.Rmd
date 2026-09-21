@@ -53,7 +53,7 @@ class (e.g., dark soil, red soil, root, silver tape, coarse debris, ...) by
 nearest-centroid matching in CIE LAB color space. Pixels too far from any
 centroid are left "unclassified".
 
-```{r soil-classify, fig.alt=c("RGB minirhizotron scan, full view with the magnified region outlined.", "The same scan magnified to native resolution.", "Class map: every pixel assigned to a soil or material class by colour.", "The class map magnified to native resolution.")}
+```{r soil-classify, fig.alt=c("RGB minirhizotron scan, full view with the magnified region outlined.", "The same scan magnified to native resolution.", "Class map: every pixel assigned to a soil or material class by color.", "The class map magnified to native resolution.")}
 img <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
                            output_format = "spatrast", scale = "none")
 # original image
@@ -68,7 +68,7 @@ zoom_plot(result$map, main = "Soil classification")
 
 Some classes come out well, others less so. It is worth experimenting to see
 whether the class you care about can be identified reliably by this fairly
-simple approach; each class's centre and distance can be adjusted to fit your
+simple approach; each class's center and distance can be adjusted to fit your
 material.
 
 The returned list also carries per-class statistics -- pixel counts, area
@@ -83,11 +83,11 @@ result$metrics
 `plot_soil_classification()` renders the class map with a legend and the
 actual mean colors of each class:
 
-```{r soil-plot, fig.alt="Soil classification map with a legend showing each class in its own mean colour."}
+```{r soil-plot, fig.alt="Soil classification map with a legend showing each class in its own mean color."}
 plot_soil_classification(result)
 ```
 
-Roots and coarse debris separate poorly here, because their colours are close.
+Roots and coarse debris separate poorly here, because their colors are close.
 "Coarse debris" is meant to capture fibrous woody or rhizome structures, which
 in this scan are only weakly distinguishable from roots.
 

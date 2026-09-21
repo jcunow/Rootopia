@@ -213,9 +213,9 @@ test_that("order_scheme names its own columns, and spurs can be pruned", {
 
 
 test_that("diameters are scaled by the run's own dpi", {
-  # root_diameter() defaults to dpi = 300 and converts with 2.54 / dpi. The
-  # wrapper used to call it without dpi, so a 1200 dpi scan reported diameters
-  # four times too large, and surface area and volume with them.
+  # root_diameter() defaults to dpi = 300 and converts with 2.54 / dpi, so the
+  # wrapper must pass the run's own dpi through. At 1200 dpi a dropped dpi
+  # inflates every diameter 4x, and surface area and volume with it.
   skip_if_not_installed("terra")
   skip_if_not_installed("imager")
   data(flatbed_scan_example)
@@ -238,7 +238,7 @@ test_that("diameters are scaled by the run's own dpi", {
 
 test_that("binarize settings are per image, and bin_round sets the bin edges", {
   skip_if_not_installed("terra")
-  # A greyscale tray: one dark root band, one mid-grey band.
+  # A grayscale tray: one dark root band, one mid-gray band.
   m <- matrix(255L, 200, 200)
   m[20:22, 20:180] <- 50L
   m[60:62, 20:180] <- 150L
@@ -259,7 +259,7 @@ test_that("binarize settings are per image, and bin_round sets the bin edges", {
     path_seg = dir, tube_names = c("a", "b"), dpi = 150,
     binarize_threshold = c(100, 200, 150), verbose = FALSE)), "length 1 or 2")
 
-  # "rounding" labels a bin by its centre, so the top bin is half width;
+  # "rounding" labels a bin by its center, so the top bin is half width;
   # "floor" labels it by its shallower edge and every bin is full width.
   prof <- function(br) suppressWarnings(root_depth_metrics(
     path_seg = dir, seg_file_index = 1, tube_names = "a", dpi = 150,
@@ -272,8 +272,9 @@ test_that("binarize settings are per image, and bin_round sets the bin edges", {
 
 
 test_that("rotation_fixed_width controls the rotation-axis crop", {
-  # It used to be hardcoded to 1800, which is wider than any tube in the
-  # bundled data, so the crop silently clamped to the full image every time.
+  # The crop width must come from the argument: any value wider than the image
+  # clamps to the full frame, which looks like success but crops nothing. The
+  # bundled tubes are all narrower than 1800 rows, so that failure is silent.
   skip_if_not_installed("terra")
   data(seg_Oulanka2023_Session01_T067)
   # Downsampled 4x: this test runs the whole wrapper twice, and at full size

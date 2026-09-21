@@ -43,7 +43,7 @@ A list containing:
   \item{diameter_rast}{`SpatRaster`. Raster showing diameters in the skeletonized regions.}
   \item{distance_map_rast}{`SpatRaster`. Raster showing the distance transform values.}
   \item{root_volume}{Numeric. Total root volume, in `unit`^3. Each skeleton
-    pixel is modelled as a cylinder of radius `diameter / 2` and length 1
+    pixel is modeled as a cylinder of radius `diameter / 2` and length 1
     pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.}
   \item{root_surface_area}{Numeric. Total root lateral surface area, in
     `unit`^2. Each skeleton pixel's cylinder contributes a lateral surface

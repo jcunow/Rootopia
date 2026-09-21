@@ -126,7 +126,7 @@ deep_drive <- function(DepthMap,
     # align orientation with AngleMap
     DepthMap = terra::t(terra::flip(DepthMap))
     
-    # which pixel to go to reach the next deepest pixel in 8px neighbourhood
+    # which pixel to go to reach the next deepest pixel in 8px neighborhood
     offs   <- list(c(1,1),c(1,2),c(1,3),c(2,1),c(2,3),c(3,1),c(3,2),c(3,3))
     slopes <- lapply(offs, function(o) {
       w <- matrix(0,3,3); w[2,2] <- -1; w[o[1],o[2]] <- 1
