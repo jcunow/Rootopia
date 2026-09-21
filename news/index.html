@@ -53,7 +53,14 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="rootopia-110">Rootopia 1.1.0<a class="anchor" aria-label="anchor" href="#rootopia-110"></a></h2>
-<ul><li>Beta Version, Github repo only.</li>
+<p>Beta release, available from the GitHub repository only. Not submitted to CRAN.</p>
+<ul><li>Requires R &gt;= 4.1 (the package uses the native <code>|&gt;</code> pipe) and <code>terra</code> &gt;= 1.8.</li>
+<li>
+<code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> / <code><a href="../reference/root_depth_metrics.html">batch_root_traits()</a></code> run a full depth-profile analysis over a directory of images; flatbed scans and flat rhizotron windows are the default geometry, cylindrical minirhizotron tubes are opt-in via the tube parameters.</li>
+<li>
+<code><a href="../reference/stitch_root_scans.html">stitch_root_scans()</a></code> combines overlapping scans of one tube into a mosaic.</li>
+<li>
+<code><a href="../reference/branch_order_map.html">branch_order_map()</a></code> and <code><a href="../reference/root_graph_pipeline.html">root_graph_pipeline()</a></code> assign tip, branch and root order from a skeleton.</li>
 </ul></div>
   </main></div>
 

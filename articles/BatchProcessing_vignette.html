@@ -178,7 +178,7 @@ neither and you are on flatbed.</p>
 </h4>
 <p>Washed roots on a tray. There is no depth axis: where a root lies on
 the tray says nothing about where it grew, so the whole scan is
-summarised as one row.</p>
+summarized as one row.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -209,7 +209,7 @@ like <code>fine.tif</code>, so a run stops rather than mislabel.
 <td>
 <code>binarize_threshold</code>, <code>dark_roots</code>
 </td>
-<td>Only if your files are greyscale or RGB rather than a binary mask.
+<td>Only if your files are grayscale or RGB rather than a binary mask.
 Both accept one value per image, for sessions where exposure
 drifted.</td>
 </tr>
@@ -355,14 +355,14 @@ error rather than a silent recycle.</p>
 <div class="section level4">
 <h4 id="a-note-on-bin_round">A note on <code>bin_round</code><a class="anchor" aria-label="anchor" href="#a-note-on-bin_round"></a>
 </h4>
-<p>The default, <code>"rounding"</code>, labels a bin by its centre:
+<p>The default, <code>"rounding"</code>, labels a bin by its center:
 with <code>depth_interval_cm = 5</code>, the top bin spans 0–2.5 cm
 while every other bin spans 5 cm. Per-bin densities are unaffected —
 they divide by each bin’s own measured area — but <code>mrd</code> and
 <code>total.length.density</code> multiply by
 <code>depth_interval_cm</code> as though every bin were full width, so a
 half-width top bin biases both. <code>"floor"</code> gives the
-soil-science convention: 0–5, 5–10, labelled by the shallower edge.
+soil-science convention: 0–5, 5–10, labeled by the shallower edge.
 Prefer it for new work; the default is kept so existing analyses do not
 shift underneath you.</p>
 <hr>
@@ -376,7 +376,7 @@ shift underneath you.</p>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jcunow/Rootopia"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/Rootopia" class="external-link">Rootopia</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span>   <span class="co"># for downstream plotting</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>     <span class="co"># for the plots below; dplyr calls are namespaced</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">

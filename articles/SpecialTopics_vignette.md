@@ -54,13 +54,13 @@ zoom_plot(result$map, main = "Soil classification")
 ```
 
 ![Class map: every pixel assigned to a soil or material class by
-colour.](SpecialTopics_vignette_files/figure-html/soil-classify-3.png)![The
+color.](SpecialTopics_vignette_files/figure-html/soil-classify-3.png)![The
 class map magnified to native
 resolution.](SpecialTopics_vignette_files/figure-html/soil-classify-4.png)
 
 Some classes come out well, others less so. It is worth experimenting to
 see whether the class you care about can be identified reliably by this
-fairly simple approach; each class’s centre and distance can be adjusted
+fairly simple approach; each class’s center and distance can be adjusted
 to fit your material.
 
 The returned list also carries per-class statistics – pixel counts, area
@@ -97,9 +97,9 @@ plot_soil_classification(result)
 ```
 
 ![Soil classification map with a legend showing each class in its own
-mean colour.](SpecialTopics_vignette_files/figure-html/soil-plot-1.png)
+mean color.](SpecialTopics_vignette_files/figure-html/soil-plot-1.png)
 
-Roots and coarse debris separate poorly here, because their colours are
+Roots and coarse debris separate poorly here, because their colors are
 close. “Coarse debris” is meant to capture fibrous woody or rhizome
 structures, which in this scan are only weakly distinguishable from
 roots.

@@ -34,9 +34,9 @@ zoom_plot(
 
 - center:
 
-  Where to centre the inset. One of:
+  Where to center the inset. One of:
 
-  - \`"center"\` (default) — geometric centre of the image;
+  - \`"center"\` (default) — geometric center of the image;
 
   - \`"densest"\` — the \`frac\`-sized window containing the most
     non-zero / non-\`NA\` pixels (i.e. the most root material);
@@ -58,7 +58,7 @@ zoom_plot(
 
 - box_col:
 
-  Colour of the zoom-box rectangle on the overview. Default \`"red"\`.
+  Color of the zoom-box rectangle on the overview. Default \`"red"\`.
 
 - main:
 
@@ -93,7 +93,7 @@ effective magnification is \`1 / frac\` (e.g. \`frac = 0.25\` magnifies
 data(seg_Oulanka2023_Session01_T067)
 r <- terra::rast(seg_Oulanka2023_Session01_T067)
 if (FALSE) { # \dontrun{
-zoom_plot(r, frac = 0.25)                 # 4x inset, centred
+zoom_plot(r, frac = 0.25)                 # 4x inset, centered
 zoom_plot(r, center = "densest")          # zoom where the roots are
 zoom_plot(r, center = c(0.2, 0.8))        # upper-left region
 zoom_plot(r, overview = FALSE)            # inset only

@@ -30,7 +30,7 @@ tube_coloration(img, r = 0.2126, g = 0.7152, b = 0.0722)
 
 A data frame with columns: rcc, gcc, bcc, hue, saturation, luminosity,
 red, green, blue. `hue` and `saturation` come from the HSV transform of
-the mean colour; `luminosity` is the `r`/`g`/`b`-weighted mean luminance
+the mean color; `luminosity` is the `r`/`g`/`b`-weighted mean luminance
 (not HSV value).
 
 ## Examples

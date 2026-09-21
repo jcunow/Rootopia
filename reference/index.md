@@ -28,7 +28,7 @@ images.
 - [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
   : Clean a binary root image
 - [`report_image_components()`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
-  : Summarise the component-size distribution of a binary image
+  : Summarize the component-size distribution of a binary image
 - [`image_threshold()`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
   : Threshold or deblur an image to binarize features
 - [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md)
@@ -133,8 +133,6 @@ Statistical indices summarising root distribution with depth.
 
 - [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) :
   Calculate Mean Rooting Depth
-- [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
-  : Assess rhythmicity via sine curve fitting and model comparison
 - [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
   : Detect and Classify Modes in a Distribution Using Prominence or
   Mclust

@@ -1,7 +1,7 @@
 # Detect endpoints and branching points in a skeleton image
 
 Computes local connectivity of each foreground pixel using an
-8-neighbourhood (Moore neighbourhood).
+8-neighborhood (Moore neighborhood).
 
 ## Usage
 

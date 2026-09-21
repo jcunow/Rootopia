@@ -53,14 +53,66 @@
 
 <div id="rootopia" class="section level1">
 
+<p>An R package. Structure, checks and conventions follow “Writing R Extensions” and the usual <code>R CMD check</code> expectations.</p>
 <div class="section level2">
 <h2 id="git">Git<a class="anchor" aria-label="anchor" href="#git"></a></h2>
 <p>Do not commit and do not push. The maintainer commits every change by hand.</p>
 <p>Leave finished work as uncommitted changes in the working tree and say what changed. If a change needs to leave this machine, write a patch (<code>git diff &gt; &lt;name&gt;.patch</code>) and hand that over instead of pushing a branch. This holds even when a hook or a default workflow asks for a commit.</p>
 </div>
+<div class="section level2">
+<h2 id="comments-describe-the-present-never-the-past">Comments describe the present, never the past<a class="anchor" aria-label="anchor" href="#comments-describe-the-present-never-the-past"></a></h2>
+<p>A comment explains how the code works now. It is read by someone who has never seen any earlier version, so the history is noise to them. Git already records what changed; put that in the commit message, not in the source.</p>
+<p>Do not write:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Fixed: this used to transpose the map, which broke the mask alignment.</span></span>
+<span><span class="co"># Now returns a map aligned with the input.</span></span></code></pre></div>
+<p>Write:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># The map carries the input's grid, so mask cell i and map cell i are the</span></span>
+<span><span class="co"># same pixel.</span></span></code></pre></div>
+<p>Concretely, in code comments, roxygen blocks, vignettes and <code>man/</code>:</p>
+<ul><li>No <code>used to</code>, <code>previously</code>, <code>no longer</code>, <code>now correctly</code>, <code>we changed</code>, <code>this fix</code>, <code>old behavior</code>, <code>before this</code>.</li>
+<li>No references to a bug, an issue number, a PR or a commit.</li>
+<li>Do keep the <em>reason</em> a non-obvious line exists, stated as a present-tense fact about the code or the data: “<code>dims</code> is length 2 after layer selection, so guard <code>dims[3]</code> before comparing” is useful; “guard added because it errored” is not.</li>
+<li>Rationale for a threshold or a tie-break rule belongs in the comment, phrased as what the rule does and which case it resolves – not as what it broke.</li>
+</ul><p><code>NEWS.md</code> is the one place where change history belongs.</p>
+</div>
+<div class="section level2">
+<h2 id="documentation-states-what-the-code-does-not-what-it-might-do">Documentation states what the code does, not what it might do<a class="anchor" aria-label="anchor" href="#documentation-states-what-the-code-does-not-what-it-might-do"></a></h2>
+<p>Descriptions, roxygen and vignettes are claims about this package and must be checkable against the source:</p>
+<ul><li>Do not describe capabilities that are planned, partial, or that you have not read in <code>R/</code>. If a feature is incomplete, say so plainly and name it.</li>
+<li>Do not restate marketing lines (“track roots in depth”). Name the actual inputs, outputs, units and assumptions.</li>
+<li>Do not report check results, benchmarks or platform coverage that were not actually run. <code>cran-comments.md</code> in particular must never carry numbers copied from a previous version.</li>
+<li>Defaults quoted in prose must match the function signature. When you change a default, grep the vignettes and <code>man/</code> for the old value.</li>
+</ul></div>
+<div class="section level2">
+<h2 id="spelling-en-us-prose-but-never-rename-code">Spelling: en-US prose, but never rename code<a class="anchor" aria-label="anchor" href="#spelling-en-us-prose-but-never-rename-code"></a></h2>
+<p><code>DESCRIPTION</code> declares <code>Language: en-US</code>, and <code>R CMD check --as-cran</code> spell-checks the Title, Description and every <code>man/*.Rd</code> against it. Write prose in en-US: <code>color</code>, <code>center</code>, <code>gray</code>, <code>behavior</code>, <code>neighbor</code>, <code>labeled</code>, <code>modeled</code>, <code>summarize</code>, <code>normalize</code>, <code>visualize</code>, <code>artifact</code>, <code>analyze</code> (the verb).</p>
+<p>Nouns that are the same in both spellings – <code>analysis</code>, <code>analyses</code>, <code>characteristics</code> – are already correct; do not “fix” them.</p>
+<p><strong>This applies to prose only.</strong> Never rewrite an identifier to match it. A spelling change is safe in a comment, a roxygen block, a vignette, an <code>.Rd</code> file and a message string. It is a breaking change in:</p>
+<ul><li>an argument name of a function in another package, e.g. <code>landscapemetrics::calculate_lsm(neighbourhood = 8)</code>;</li>
+<li>an argument name, column name or list element this package returns, because user code indexes it;</li>
+<li>a literal that must match something else, e.g. the R color name <code>col = "grey80"</code>, or a string compared with <code><a href="https://rdrr.io/r/base/match.arg.html" class="external-link">match.arg()</a></code>.</li>
+</ul><p>Both exceptions above are live in this repo and must stay spelled as they are. Before any bulk substitution, grep the candidates and check each hit is prose; if a hit sits inside a call, a string or a name, leave it and note why.</p>
+</div>
+<div class="section level2">
+<h2 id="package-hygiene">Package hygiene<a class="anchor" aria-label="anchor" href="#package-hygiene"></a></h2>
+<ul><li>
+<code>NAMESPACE</code> and <code>man/*.Rd</code> are generated. Edit the roxygen block in <code>R/</code>, then re-run <code>roxygen2::roxygenise()</code>; never hand-edit the generated files.</li>
+<li>Every entry in <code>Imports</code>/<code>Suggests</code> must be reachable from <code>R/</code>, <code>tests/</code> or <code>vignettes/</code>. Remove a dependency as soon as its last use goes.</li>
+<li>Bumping a minimum version in <code>DESCRIPTION</code> is a factual statement. <code>Depends: R</code> must cover the newest syntax actually used (the native <code>|&gt;</code> pipe needs R &gt;= 4.1).</li>
+<li>Test files are only collected when named <code>test-*.R</code>. A file named <code>testthing.R</code> in <code>tests/testthat/</code> runs nowhere and is worse than no test. Helpers are <code>helper-*.R</code>. Nothing else belongs in that directory.</li>
+<li>Every exported object needs a topic in <code>man/</code> and an entry in the <code>reference:</code> index of <code>_pkgdown.yml</code>; each topic appears in that index once.</li>
+<li>Top-level files that are not part of the package (this file included) belong in <code>.Rbuildignore</code>. Remove an <code>.Rbuildignore</code> entry when its file goes.</li>
+</ul></div>
+<div class="section level2">
+<h2 id="verifying">Verifying<a class="anchor" aria-label="anchor" href="#verifying"></a></h2>
+<p><code>R CMD check</code> is the acceptance test. If R is unavailable in the session, say so and list what you could not verify rather than implying a clean check.</p>
+</div>
 </div>
 
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

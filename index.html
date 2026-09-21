@@ -76,9 +76,9 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="rootopia-extract-root-traits-from-flatbed-and-minirhizotron-images">Rootopia: Extract Root Traits from Flatbed and Minirhizotron Images<a class="anchor" aria-label="anchor" href="#rootopia-extract-root-traits-from-flatbed-and-minirhizotron-images"></a>
 </h1></div>
-<p><a href="https://jcunow.github.io/Rootopia/"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a></p>
+<p><a href="https://github.com/jcunow/Rootopia/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/jcunow/Rootopia/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a> <a href="https://jcunow.github.io/Rootopia/"><img src="https://img.shields.io/badge/docs-pkgdown-blue.svg" alt="pkgdown"></a></p>
 <p>Rootopia extracts quantitative belowground traits from <strong>flatbed root scans</strong> and <strong>minirhizotron image sequences</strong>. It provides flexible image preprocessing, trait estimation such as root length and diameter, depth mapping, and distribution tools.</p>
-<p>Some features are still experimental. This package is an insect’s playground and we love bugs here — please call them out if their behaviour is undesirable.</p>
+<p>Some features are still experimental. This package is an insect’s playground and we love bugs here — please call them out if their behavior is undesirable.</p>
 <div class="section level2">
 <h2 id="what-rootopia-does">What Rootopia does<a class="anchor" aria-label="anchor" href="#what-rootopia-does"></a>
 </h2>
@@ -86,7 +86,7 @@
 <li>Cleans and processes root scans from (mini)rhizotrons and flatbed scanners</li>
 <li>Estimates root length, depth profiles, and turnover between sessions</li>
 <li>Measures root diameters and diameter distributions</li>
-<li>Analyses root architecture: branching points, root tips, branch and root order, and root angle distribution</li>
+<li>Analyzes root architecture: branching points, root tips, branch and root order, and root angle distribution</li>
 <li>Computes spatial indices for root distribution with depth and for rotation bias</li>
 <li>Stitches overlapping scan sequences into one mosaic per tube</li>
 </ul>
@@ -96,19 +96,28 @@
 </h2>
 <p>New to Rootopia? Start with one of the step-by-step tutorials — they walk through loading, depth mapping, and trait extraction one function at a time, so you learn what each stage does. Once you are comfortable, the batch-processing tutorial wraps the whole minirhizotron pipeline and flatbed scan analysis over a folder of images into a single function call.</p>
 <ul>
-<li><a href="articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Workflow (step-by-step)</a></li>
-<li><a href="articles/FlatBedScans_vignettes.html">Flatbed Scan Workflow (step-by-step)</a></li>
-<li><a href="articles/Stitching_vignette.html">Stitching Scan Sequences into Mosaics</a></li>
-<li><a href="articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
-<li><a href="articles/SpecialTopics_vignette.html">Special Topics: soil colour, texture, halos, turnover</a></li>
-<li><a href="articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once)</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Workflow (step-by-step)</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html">Flatbed Scan Workflow (step-by-step)</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/Stitching_vignette.html">Stitching Scan Sequences into Mosaics</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.html">Rotation Bias Correction</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.html">Special Topics: soil color, texture, halos, turnover</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.html">Batch Processing (whole folders at once)</a></li>
 </ul>
 <p>Each tutorial includes code, images, overlays, and tips for interpretation.</p>
 </div>
 <div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>Rootopia is not on CRAN. Install the development version from GitHub:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jcunow/Rootopia"</span><span class="op">)</span></span></code></pre></div>
+<p>Requires R &gt;= 4.1 and <code>terra</code> &gt;= 1.8. To build the vignettes locally, add <code>build_vignettes = TRUE</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jcunow/Rootopia" class="external-link">Rootopia</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span><span class="op">)</span></span>
 <span></span>
@@ -140,7 +149,7 @@
 <span><span class="va">order_res</span><span class="op">$</span><span class="va">summary</span></span>
 <span><span class="fu"><a href="reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="st">"thinnest"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Visualise</span></span>
+<span><span class="co"># Visualize</span></span>
 <span><span class="fu"><a href="reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">diam_map</span><span class="op">$</span><span class="va">diameter_rast</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">class_map</span><span class="op">)</span></span></code></pre></div>
@@ -149,8 +158,8 @@
 <h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
 <ul>
-<li><a href="reference/index.html">Function reference</a></li>
-<li><a href="articles/index.html">Vignettes</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/reference/index.html">Function reference</a></li>
+<li><a href="https://jcunow.github.io/Rootopia/articles/index.html">Vignettes</a></li>
 <li><a href="https://github.com/jcunow/Rootopia" class="external-link">Source code on GitHub</a></li>
 </ul>
 </div>

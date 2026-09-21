@@ -1,5 +1,6 @@
 # Rootopia: Extract Root Traits from Flatbed and Minirhizotron Images
 
+[![R-CMD-check](https://github.com/jcunow/Rootopia/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jcunow/Rootopia/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/Rootopia/)
 
 Rootopia extracts quantitative belowground traits from **flatbed root
@@ -9,7 +10,7 @@ depth mapping, and distribution tools.
 
 Some features are still experimental. This package is an insect’s
 playground and we love bugs here — please call them out if their
-behaviour is undesirable.
+behavior is undesirable.
 
 ## What Rootopia does
 
@@ -17,7 +18,7 @@ behaviour is undesirable.
   scanners
 - Estimates root length, depth profiles, and turnover between sessions
 - Measures root diameters and diameter distributions
-- Analyses root architecture: branching points, root tips, branch and
+- Analyzes root architecture: branching points, root tips, branch and
   root order, and root angle distribution
 - Computes spatial indices for root distribution with depth and for
   rotation bias
@@ -33,20 +34,33 @@ flatbed scan analysis over a folder of images into a single function
 call.
 
 - [Start here: Minirhizotron Workflow
-  (step-by-step)](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md)
+  (step-by-step)](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.html)
 - [Flatbed Scan Workflow
-  (step-by-step)](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.md)
+  (step-by-step)](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html)
 - [Stitching Scan Sequences into
-  Mosaics](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
+  Mosaics](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.html)
 - [Rotation Bias
-  Correction](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md)
-- [Special Topics: soil colour, texture, halos,
-  turnover](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.md)
+  Correction](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.html)
+- [Special Topics: soil color, texture, halos,
+  turnover](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.html)
 - [Batch Processing (whole folders at
-  once)](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.md)
+  once)](https://jcunow.github.io/Rootopia/articles/BatchProcessing_vignette.html)
 
 Each tutorial includes code, images, overlays, and tips for
 interpretation.
+
+## Installation
+
+Rootopia is not on CRAN. Install the development version from GitHub:
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("jcunow/Rootopia")
+```
+
+Requires R \>= 4.1 and `terra` \>= 1.8. To build the vignettes locally,
+add `build_vignettes = TRUE`.
 
 ## Quick start
 
@@ -83,7 +97,7 @@ order_res <- branch_order_map(skel, mask = cleaned, order = "root_order",
 order_res$summary
 order_metrics(order_res, focal = "thinnest")
 
-# Visualise
+# Visualize
 zoom_plot(diam_map$diameter_rast)
 zoom_plot(skel)
 zoom_plot(order_res$class_map)
@@ -92,8 +106,8 @@ zoom_plot(order_res$class_map)
 ## Documentation
 
 - [Function
-  reference](https://jcunow.github.io/Rootopia/reference/index.md)
-- [Vignettes](https://jcunow.github.io/Rootopia/articles/index.md)
+  reference](https://jcunow.github.io/Rootopia/reference/index.html)
+- [Vignettes](https://jcunow.github.io/Rootopia/articles/index.html)
 - [Source code on GitHub](https://github.com/jcunow/Rootopia)
 
 ## Contributions and issues

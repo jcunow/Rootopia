@@ -42,8 +42,8 @@ point and stop at any point; nothing forces you through the whole thing.
                     v
             distribution indices
 
-Turnover and soil & colour sit outside this chain: turnover compares two
-images, soil & colour works on the colour channels rather than the root
+Turnover and soil & color sit outside this chain: turnover compares two
+images, soil & color works on the color channels rather than the root
 shape.
 
 [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
@@ -91,7 +91,7 @@ acquired along the tube, set `direction = "vertical"`; frames are
 transposed internally, stitched the same way, and transposed back.
 
 **Check the `peak` column before trusting a mosaic.** It is the
-normalised correlation height at each join — low values mean the
+normalized correlation height at each join — low values mean the
 alignment was uncertain. Sorting the report by `peak` surfaces the weak
 joins first.
 
@@ -156,7 +156,7 @@ threshold.
 
 **Under the hood**
 
-Connected-component labelling and the optional edge smoothing are
+Connected-component labeling and the optional edge smoothing are
 standard morphology, done by `imager` (`label`, `dilate`, `erode`).
 Rootopia adds the hole-versus-outside rule and the size thresholds; it
 does not reimplement the morphology. See
@@ -221,7 +221,7 @@ keeps a window of rows and discards the rest. Two modes:
 
 - `fixed_rotation = FALSE` cuts proportionally to the measured offset,
   so the output width varies between images.
-- `fixed_rotation = TRUE` centres a window of exactly `fixed_width` rows
+- `fixed_rotation = TRUE` centers a window of exactly `fixed_width` rows
   on a given row. Use this when comparing multiple sessions, because
   equal width is what makes counts comparable.
 
@@ -262,7 +262,7 @@ The shape of the root system, from a segmented image.
 
 A segmented root image is a solid shape. To measure architecture — where
 roots branch, how they connect, which is a parent and which is a lateral
-— you need the centre line rather than the shape. Skeletonisation thins
+— you need the center line rather than the shape. Skeletonisation thins
 each root down to a line one pixel wide that runs along its middle,
 keeping the connections intact.
 
@@ -270,7 +270,7 @@ keeping the connections intact.
 
 ``` r
 
-skel   <- skeletonize_image(mask)            # solid mask -> 1-px centre line
+skel   <- skeletonize_image(mask)            # solid mask -> 1-px center line
 points <- detect_skeleton_points(skel)       # find tips and branch points
 clean  <- prune_skeleton(skel, mask,         # optional: remove short spurs
                          min_length = 10)
@@ -284,15 +284,15 @@ call it for you if you pass a mask instead of a skeleton.
 
 **Thinning.** Pixels are deleted from the outside inward, repeatedly,
 until nothing more can go. Whether a pixel may be deleted depends only
-on the pattern of its eight neighbours. Each of the 256 possible
-patterns has a fixed verdict stored in a lookup table: keep, delete in
-the first half-pass, delete in the second, or delete in both. Two
-half-passes alternate so that the shape erodes evenly from both sides
-rather than drifting; the neighbourhood is recomputed between them.
+on the pattern of its eight neighbors. Each of the 256 possible patterns
+has a fixed verdict stored in a lookup table: keep, delete in the first
+half-pass, delete in the second, or delete in both. Two half-passes
+alternate so that the shape erodes evenly from both sides rather than
+drifting; the neighborhood is recomputed between them.
 
-**Tips and branch points.** A skeleton pixel with exactly one neighbour
+**Tips and branch points.** A skeleton pixel with exactly one neighbor
 is a tip. One with three or more is a branch point. Pixels with exactly
-two neighbours are ordinary line pixels and are neither.
+two neighbors are ordinary line pixels and are neither.
 
 **Spur pruning.**
 [`prune_skeleton()`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md)
@@ -306,7 +306,7 @@ cleaned solid mask.
 The table is a Zhang–Suen *variant*, not the published table: it differs
 at 25 of the 256 patterns. Twelve differences are more conservative —
 the textbook deletes in both half-passes, this deletes in only one. The
-other thirteen are staircase corners: a pixel whose only neighbours are
+other thirteen are staircase corners: a pixel whose only neighbors are
 two orthogonal ones that already touch each other diagonally. The
 textbook crossing-number test keeps those, which leaves a redundant
 pixel on every 90° bend; deleting them gives a cleaner diagonal line and
@@ -315,8 +315,8 @@ cannot disconnect anything.
 Two properties hold for every entry, and are checked in
 `tests/testthat/test-skeleton.R` rather than taken on trust:
 
-1.  No deletion can disconnect a pixel’s own neighbourhood.
-2.  No pixel with a single neighbour — a root tip — is ever deleted, so
+1.  No deletion can disconnect a pixel’s own neighborhood.
+2.  No pixel with a single neighbor — a root tip — is ever deleted, so
     thinning never shortens a root from its end.
 
 For `output = "mask"`, each surviving skeleton pixel is regrown by its
@@ -396,16 +396,16 @@ and summary,
 ##### The rules
 
 **Building the network.** Every skeleton pixel is classified by how many
-neighbours it has: one means a tip, two means an ordinary line pixel,
+neighbors it has: one means a tip, two means an ordinary line pixel,
 three or more means a junction. *Adjacent junction pixels are merged
 into a single node.* This matters — a real branch point is usually
 several pixels wide in a thinned image, and treating each as its own
-node would shatter the graph. Segments are the runs of two-neighbour
+node would shatter the graph. Segments are the runs of two-neighbor
 pixels between nodes.
 
 **Segment length** is the distance along the pixel chain **plus** a
 short stub at each end that lands on a merged junction, reaching from
-the segment’s last pixel to the centre of the junction cluster. Without
+the segment’s last pixel to the center of the junction cluster. Without
 that stub, every branch point would quietly eat about a pixel of root
 from each arm that meets it.
 
@@ -470,7 +470,7 @@ laterals.
 **Under the hood — what “diameter” means here**
 
 Diameters come from a distance transform of the **solid mask**, not the
-skeleton: each pixel is labelled with its distance to the nearest
+skeleton: each pixel is labeled with its distance to the nearest
 background pixel, so a skeleton pixel carries the radius of the largest
 circle that fits inside the root there. Diameter is twice that.
 
@@ -487,7 +487,7 @@ with it.
 | A ring with no tips (a genuine loop) | Those segments get `NA` order and a warning; they are excluded from summaries and counted in `attr(., "n_unordered")` |
 | A solid mask passed as `skel` | Coverage check warns: nearly every pixel looks like a junction, so the graph comes out near-empty |
 | Two separate root systems in one image | Each connected piece gets its own order-1 seed; they do not share numbering |
-| A node with exactly two arms | Not a branch point — it is a bend or a thinning artefact, and the two arms are spliced back into one segment |
+| A node with exactly two arms | Not a branch point — it is a bend or a thinning artifact, and the two arms are spliced back into one segment |
 | Perfectly symmetric fork | The continuation score genuinely ties and the first pair enumerated wins. The `"fork"` validation phantom is excluded from per-root scoring for this reason |
 | `class_map` pixel counts below the skeleton | Expected: merged junction interiors belong to no segment, leaving one unpainted pixel per branch point. Read lengths from `res$edges$length` |
 | Pruning enabled | Thresholds use the same length definition the table reports, stub included |
@@ -534,7 +534,7 @@ depth bins does not equal the whole-image value, which is why the
 depth-profile wrapper uses a per-pixel Freeman length map instead.
 
 **Diameter comes from a distance transform.** Every root pixel is
-labelled with its distance to the nearest background pixel — the radius
+labeled with its distance to the nearest background pixel — the radius
 of the largest circle that fits inside the root there. Diameter is twice
 that. This is why
 [`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
@@ -546,7 +546,7 @@ needs the filled mask, not the skeleton.
 **Under the hood**
 
 Step counting uses four 3×3 focal kernels, one per direction pair. A
-focal sum of exactly 2 means the centre pixel and one neighbour in that
+focal sum of exactly 2 means the center pixel and one neighbor in that
 direction are both root — that is, a connected step.
 
 [`root_scape_metrics()`](https://jcunow.github.io/Rootopia/reference/root_scape_metrics.md)
@@ -674,8 +674,8 @@ measured growth directions by another route.
     increasing clockwise.
 
 2.  The **optimal** direction: for each pixel, which of its eight
-    neighbours lies deepest. This is computed directly from the depth
-    map, and diagonal neighbours are divided by √2 so that a diagonal
+    neighbors lies deepest. This is computed directly from the depth
+    map, and diagonal neighbors are divided by √2 so that a diagonal
     step is not unfairly favoured over an orthogonal one.
 
 **The score** is simply the count of pixels where the two agree exactly,
@@ -690,15 +690,15 @@ as one heading 180° away.
 | Neither `AngleMap` nor `RootMap` supplied | Stops |
 | Depth map is entirely `NA` | Stops |
 | No root pixels with a defined direction | Warning, returns `NA` |
-| D8 code 0 (a pixel with no downhill neighbour) | Becomes `NA` and is excluded from both counts |
+| D8 code 0 (a pixel with no downhill neighbor) | Becomes `NA` and is excluded from both counts |
 | Depth values negative | The absolute value is used, so sign conventions do not matter |
 
 #### Distribution indices
 
 ##### What it is for
 
-Summarising *where* roots are rather than how many there are: how deep
-the centre of mass sits, whether two profiles differ, whether there is a
+Summarizing *where* roots are rather than how many there are: how deep
+the center of mass sits, whether two profiles differ, whether there is a
 repeating pattern around the tube.
 
 ##### The flow
@@ -767,7 +767,7 @@ model-based clustering via `mclust`.
 
 ### Specialised
 
-Questions that need a second image or the colour channels.
+Questions that need a second image or the color channels.
 
 #### Turnover
 
@@ -800,9 +800,9 @@ of each time point. This method sees only the *net* change — root that
 grew and died between the two scans is invisible.
 
 **Decay–production–constant (`"dpc"`)** decomposes a single three-layer
-image in which a segmentation tool has already colour-coded each pixel
-as produced, decayed, or unchanged. This resolves gross change rather
-than net.
+image in which a segmentation tool has already color-coded each pixel as
+produced, decayed, or unchanged. This resolves gross change rather than
+net.
 
 The three layers are separated by thresholding each against the
 unchanged layer at `blur_capture` (default 0.95) of its maximum, which
@@ -828,12 +828,12 @@ identified and removed first.
 | All three classes empty | Warning, ratios returned as `NA` |
 | `im_return = TRUE` | Returns the four classified rasters instead of the numbers, for visual checking |
 
-#### Soil and colour
+#### Soil and color
 
 ##### What it is for
 
-Everything that uses colour rather than shape: classifying what each
-pixel is made of, summarising tube colour, quantifying surface texture,
+Everything that uses color rather than shape: classifying what each
+pixel is made of, summarizing tube color, quantifying surface texture,
 and building a rhizosphere zone around roots.
 
 ##### The flow
@@ -845,7 +845,7 @@ plot_soil_classification(result)
 result$metrics                                       # per-class statistics
 
 cents <- build_soil_centroids(picks, max_dist)       # calibrate to your scanner
-tube_coloration(rgb_img)                             # whole-image colour summary
+tube_coloration(rgb_img)                             # whole-image color summary
 analyze_soil_texture(rgb_img)                        # GLCM texture
 halo <- create_root_buffer(seg, width = 3, halo_only = TRUE)
 ```
@@ -853,26 +853,26 @@ halo <- create_root_buffer(seg, width = 3, halo_only = TRUE)
 ##### The rules
 
 **Classification is nearest-centroid in CIE LAB.** Each pixel is
-converted from RGB to LAB — a colour space where Euclidean distance
+converted from RGB to LAB — a color space where Euclidean distance
 roughly matches perceived difference — and assigned to the closest class
 centroid.
 
 **Each class has its own distance limit.** A pixel further than
 `MAX_DIST` from *every* centroid is left `"unclassified"` rather than
 forced into the nearest class. The limits are per class because some
-materials are tighter in colour than others.
+materials are tighter in color than others.
 
 **Every material in your scan needs its own class.** Anything without
 one is snapped into whichever class happens to sit closest. The shipped
 centroids were calibrated on one scanner at one site;
 [`build_soil_centroids()`](https://jcunow.github.io/Rootopia/reference/build_soil_centroids.md)
-derives your own from colour picks, and can blend them with the existing
+derives your own from color picks, and can blend them with the existing
 ones via `alpha` if you are refining progressively.
 
 **The halo is dilation.**
 [`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
 grows the root mask outward by `width` iterations using either an
-8-neighbour (`"circle"`) or 4-neighbour (`"diamond"`) kernel. With
+8-neighbor (`"circle"`) or 4-neighbor (`"diamond"`) kernel. With
 `halo_only = TRUE` the roots themselves are subtracted, leaving only the
 ring.
 
@@ -884,7 +884,7 @@ which is why a full-resolution scan classifies in seconds;
 `downsample_fact` speeds it up further for previews.
 
 Texture metrics come from
-[`glcm::glcm()`](https://rdrr.io/pkg/glcm/man/glcm.html) (grey-level
+[`glcm::glcm()`](https://rdrr.io/pkg/glcm/man/glcm.html) (gray-level
 co-occurrence matrix) — a standard method, documented in that package.
 
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
@@ -892,7 +892,7 @@ uses the exact Rec. 709 luma coefficients (0.2126/0.7152/0.0722). Note
 that
 [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md)
 uses rounded ones (0.21/0.72/0.07), so the two do not produce identical
-greyscale values; this is deliberate and the difference is documented at
+grayscale values; this is deliberate and the difference is documented at
 both sites in the source.
 
 **Edge cases**
@@ -917,11 +917,11 @@ drawn.
 Five designs are used, each stressing something different: laterals on
 one axis, 45° laterals, three generations of nested branching, two roots
 crossing without touching, and a symmetric fork. Each is scored twice.
-Feeding the exact one-pixel centre line isolates the graph — tracing,
+Feeding the exact one-pixel center line isolates the graph — tracing,
 junction handling, crossing resolution, ordering, length integration.
 Feeding the filled image instead also carries the thinning error,
 chiefly the erosion of about one root radius at every tip, so it gets
-more room: 6% on length against 3% for the centre-line route. Tip,
+more room: 6% on length against 3% for the center-line route. Tip,
 branch-point and root counts must be exact. Diameters allow 10%, scored
 against the package’s own `2 × EDT` convention rather than a formula.
 
@@ -947,6 +947,6 @@ A short index of the rules most likely to explain an unexpected result.
 | A symmetric fork is ordered arbitrarily | The continuation score genuinely ties | Branching order |
 | Tip and branch-point counts disagree with the graph | A four-way crossing is one branch point, not two | Skeletonisation |
 | Rotation crop is not the width requested | `fixed_width` did not fit and was clamped | Rotation bias |
-| Many pixels come back unclassified | Every centroid was beyond its `MAX_DIST` | Soil and colour |
+| Many pixels come back unclassified | Every centroid was beyond its `MAX_DIST` | Soil and color |
 | Turnover ratios differ between runs | `include_virtualroots` changes the denominator | Turnover |
 | [`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md) output will not overlay | Its rasters are rebuilt without the input’s extent | Skeletonisation |

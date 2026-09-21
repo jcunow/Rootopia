@@ -4,7 +4,7 @@ Processes a directory of root images and returns a tidy data frame of
 root traits summarized per depth interval. Handles flatbed scans and
 flat rhizotron windows by default, and cylindrical minirhizotron tubes
 when tube parameters are supplied (see **Geometry**). Input may be
-already segmented or a raw greyscale/RGB scan, which is binarized on the
+already segmented or a raw grayscale/RGB scan, which is binarized on the
 way in (see **Binarization**).
 
 `batch_root_traits()` is an alias for the same function.
@@ -211,7 +211,7 @@ batch_root_traits(
   as `nn` to
   [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md).
   `NULL` switches on whole-image mode, where the scan is treated as a
-  single bin and summarised in one row (see **Whole-image mode**).
+  single bin and summarized in one row (see **Whole-image mode**).
   Default `5`.
 
 - bin_round:
@@ -222,19 +222,19 @@ batch_root_traits(
   `nn * round(depth/nn)`), `"floor"`, or `"ceiling"`. **Note what
   "rounding" does to the top bin**: with `depth_interval_cm = 5` it
   spans 0-2.5 cm while every other bin spans 5 cm, because the label is
-  the bin's centre rather than its top edge. Per-bin densities are
+  the bin's center rather than its top edge. Per-bin densities are
   unaffected (they divide by each bin's own measured area), but `mrd`
   and `total.length.density` multiply by `depth_interval_cm` as though
   every bin were full width, so they are biased by the half-width top
-  bin. `"floor"` gives the soil-science convention – 0-5, 5-10, labelled
+  bin. `"floor"` gives the soil-science convention – 0-5, 5-10, labeled
   by the shallower edge – and is the better choice for a new analysis;
   the default is kept for continuity with existing ones.
 
 - rotation_fixed_width:
 
   Numeric. Width in **rows** that each image is cropped to along the
-  rotation axis, centred on the middle row, before any trait is measured
-  (see
+  rotation axis, centered on the middle row, before any trait is
+  measured (see
   [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)).
   This trims the tube edges, where the curvature of the tube distorts
   what the scanner sees. An image with fewer rows than this cannot be
@@ -247,7 +247,7 @@ batch_root_traits(
 - binarize:
 
   Either `"auto"` (default), `TRUE`, or `FALSE`. `"auto"` thresholds an
-  image only if it has more than two distinct grey levels, so binary
+  image only if it has more than two distinct gray levels, so binary
   masks are left alone and raw scans are binarized. `TRUE` always
   thresholds, `FALSE` never does (any non-zero pixel is then taken as
   root). Note that `TRUE` on an image already coded 0/1 will *invert*
@@ -255,7 +255,7 @@ batch_root_traits(
 
 - binarize_threshold:
 
-  Numeric. Grey level at which a scan is cut into root and background,
+  Numeric. Gray level at which a scan is cut into root and background,
   on the **0-255** scale (the RhizoVision Explorer convention). Images
   that load on a 0-1 scale get the same cut-off rescaled, so the number
   means the same thing either way. Default `200`.
@@ -273,7 +273,7 @@ batch_root_traits(
 
   Integer or `NULL`. Which layer of the segmented image to measure.
   `NULL` (default) picks automatically: a single-layer image is used as
-  is, and a 3- or 4-layer image is converted to greyscale with
+  is, and a 3- or 4-layer image is converted to grayscale with
   [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md).
   Set this if your files carry the segmentation in one specific band.
 
@@ -479,7 +479,7 @@ every image failed.
 ## Details
 
 **Surface, volume, and their ratio.** For each skeleton pixel, the root
-segment is modelled as a cylinder of length \\l_i\\ (one pixel edge in
+segment is modeled as a cylinder of length \\l_i\\ (one pixel edge in
 cm) and radius \\r_i\\ (half the local diameter in cm). Its *lateral*
 surface area is \\2 \pi r_i l_i\\ – the curved wall wrapping the root,
 i.e. the area in contact with the soil, not the flat root area seen in
@@ -493,7 +493,7 @@ of \\2 / r_i\\ over the bin's skeleton pixels. Because it averages the
 *local* ratio, it is dominated by fine roots (small \\r_i\\ give large
 \\2 / r_i\\). This is deliberately not the same as the bulk ratio
 `root.surface.area / root.volume`, which is dominated by thick roots
-(they hold most of the volume); the two summarise different things and
+(they hold most of the volume); the two summarize different things and
 will not match unless every root in the bin has the same diameter.
 
 **Fault tolerance.** Every metric block is wrapped in `tryCatch`.
@@ -557,7 +557,7 @@ supply tube parameters:
   Either argument is supplied. The sinusoidal curvature correction is
   switched on, the depth axis is foreshortened by
   `sin(insertion_angles)`, and each image is cropped to
-  `rotation_fixed_width` rows about its centre. An argument you leave
+  `rotation_fixed_width` rows about its center. An argument you leave
   out falls back to a neutral default: `tube_diameter_cm = 7` and
   `insertion_angles = 90` (vertical tube), both announced in the run
   log.
@@ -618,14 +618,14 @@ value for the whole run or one per image, in the order of
 
 ## Binarization
 
-Flatbed scans are usually delivered as greyscale or RGB with the full
+Flatbed scans are usually delivered as grayscale or RGB with the full
 0-255 range, not as a segmented mask. Such an image is reduced to a
-single greyscale layer
+single grayscale layer
 ([`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md)
 for RGB input) and cut at `binarize_threshold`, in the same way
 RhizoVision Explorer does it. Already-segmented input passes through
 untouched: with the default `binarize = "auto"` the cut is only applied
-when the image actually has more than two grey levels.
+when the image actually has more than two gray levels.
 
 ## Examples
 
@@ -634,7 +634,7 @@ if (FALSE) { # \dontrun{
 # Flatbed scans, not yet binarized -- the default path.
 # No tube arguments, so this is flat geometry: no curvature correction,
 # no foreshortening, no tube crop. Roots are dark on a bright tray, so
-# everything at or below grey level 200 is taken as root.
+# everything at or below gray level 200 is taken as root.
 result <- batch_root_traits(
   path_seg           = "scans/flatbed/tray_01/",
   dpi                = 600,

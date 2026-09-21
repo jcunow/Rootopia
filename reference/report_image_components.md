@@ -1,4 +1,4 @@
-# Summarise the component-size distribution of a binary image
+# Summarize the component-size distribution of a binary image
 
 Reports the size distribution of the two component types that
 \[clean_image()\] acts on, to help you choose \`max_hole_size\` and
@@ -45,7 +45,7 @@ the size (in pixels) of every enclosed hole and every root component.
 
 ## No size threshold here
 
-This function applies \*\*no\*\* size cutoff — it characterises
+This function applies \*\*no\*\* size cutoff — it characterizes
 \*every\* component. There is therefore nothing special separating a
 "big root" from an "artifact": both are root components, distinguished
 only by size. Use the printed summary and the histograms to pick the

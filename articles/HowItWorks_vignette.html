@@ -136,9 +136,9 @@ thing.</p>
                 |
                 v
         distribution indices</code></pre>
-<p>Turnover and soil &amp; colour sit outside this chain: turnover
-compares two images, soil &amp; colour works on the colour channels
-rather than the root shape.</p>
+<p>Turnover and soil &amp; color sit outside this chain: turnover
+compares two images, soil &amp; color works on the color channels rather
+than the root shape.</p>
 <p><code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> is not a module. It is a batch
 wrapper that runs branching order, size traits, depth mapping, root
 angle and the distribution indices over a folder of images. Read those
@@ -185,7 +185,7 @@ For sequences acquired along the tube, set
 <code>direction = "vertical"</code>; frames are transposed internally,
 stitched the same way, and transposed back.</p>
 <p><strong>Check the <code>peak</code> column before trusting a
-mosaic.</strong> It is the normalised correlation height at each join —
+mosaic.</strong> It is the normalized correlation height at each join —
 low values mean the alignment was uncertain. Sorting the report by
 <code>peak</code> surfaces the weak joins first.</p>
 <details><summary><b>Edge cases</b>
@@ -276,7 +276,7 @@ Use <code><a href="../reference/report_image_components.html">report_image_compo
 distribution rather than guessing a threshold.</p>
 <details><summary><b>Under the hood</b>
 </summary>
-Connected-component labelling and the optional edge smoothing are
+Connected-component labeling and the optional edge smoothing are
 standard morphology, done by <code>imager</code> (<code>label</code>,
 <code>dilate</code>, <code>erode</code>). Rootopia adds the
 hole-versus-outside rule and the size thresholds; it does not
@@ -368,7 +368,7 @@ window of rows and discards the rest. Two modes:</p>
 <code>fixed_rotation = FALSE</code> cuts proportionally to the
 measured offset, so the output width varies between images.</li>
 <li>
-<code>fixed_rotation = TRUE</code> centres a window of exactly
+<code>fixed_rotation = TRUE</code> centers a window of exactly
 <code>fixed_width</code> rows on a given row. Use this when comparing
 multiple sessions, because equal width is what makes counts
 comparable.</li>
@@ -442,7 +442,7 @@ coefficient yourself if you need it.</p>
 </h5>
 <p>A segmented root image is a solid shape. To measure architecture —
 where roots branch, how they connect, which is a parent and which is a
-lateral — you need the centre line rather than the shape.
+lateral — you need the center line rather than the shape.
 Skeletonisation thins each root down to a line one pixel wide that runs
 along its middle, keeping the connections intact.</p>
 </div>
@@ -450,7 +450,7 @@ along its middle, keeping the connections intact.</p>
 <h5 id="the-flow-3">The flow<a class="anchor" aria-label="anchor" href="#the-flow-3"></a>
 </h5>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">skel</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">mask</span><span class="op">)</span>            <span class="co"># solid mask -&gt; 1-px centre line</span></span>
+<code class="sourceCode R"><span><span class="va">skel</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">mask</span><span class="op">)</span>            <span class="co"># solid mask -&gt; 1-px center line</span></span>
 <span><span class="va">points</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span>       <span class="co"># find tips and branch points</span></span>
 <span><span class="va">clean</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prune_skeleton.html">prune_skeleton</a></span><span class="op">(</span><span class="va">skel</span>, <span class="va">mask</span>,         <span class="co"># optional: remove short spurs</span></span>
 <span>                         min_length <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
@@ -463,16 +463,16 @@ instead of a skeleton.</p>
 </h5>
 <p><strong>Thinning.</strong> Pixels are deleted from the outside
 inward, repeatedly, until nothing more can go. Whether a pixel may be
-deleted depends only on the pattern of its eight neighbours. Each of the
+deleted depends only on the pattern of its eight neighbors. Each of the
 256 possible patterns has a fixed verdict stored in a lookup table:
 keep, delete in the first half-pass, delete in the second, or delete in
 both. Two half-passes alternate so that the shape erodes evenly from
-both sides rather than drifting; the neighbourhood is recomputed between
+both sides rather than drifting; the neighborhood is recomputed between
 them.</p>
 <p><strong>Tips and branch points.</strong> A skeleton pixel with
-exactly one neighbour is a tip. One with three or more is a branch
-point. Pixels with exactly two neighbours are ordinary line pixels and
-are neither.</p>
+exactly one neighbor is a tip. One with three or more is a branch point.
+Pixels with exactly two neighbors are ordinary line pixels and are
+neither.</p>
 <p><strong>Spur pruning.</strong> <code><a href="../reference/prune_skeleton.html">prune_skeleton()</a></code> removes
 terminal branches shorter than <code>min_length</code> or thinner than
 <code>min_diameter</code>. It works on the skeleton graph, because that
@@ -483,7 +483,7 @@ or the cleaned solid mask.</p>
 it differs at 25 of the 256 patterns. Twelve differences are more
 conservative — the textbook deletes in both half-passes, this deletes in
 only one. The other thirteen are staircase corners: a pixel whose only
-neighbours are two orthogonal ones that already touch each other
+neighbors are two orthogonal ones that already touch each other
 diagonally. The textbook crossing-number test keeps those, which leaves
 a redundant pixel on every 90° bend; deleting them gives a cleaner
 diagonal line and cannot disconnect anything.</p>
@@ -491,8 +491,8 @@ diagonal line and cannot disconnect anything.</p>
 <code>tests/testthat/test-skeleton.R</code> rather than taken on
 trust:</p>
 <ol style="list-style-type: decimal">
-<li>No deletion can disconnect a pixel’s own neighbourhood.</li>
-<li>No pixel with a single neighbour — a root tip — is ever deleted, so
+<li>No deletion can disconnect a pixel’s own neighborhood.</li>
+<li>No pixel with a single neighbor — a root tip — is ever deleted, so
 thinning never shortens a root from its end.</li>
 </ol>
 For <code>output = "mask"</code>, each surviving skeleton pixel is
@@ -594,15 +594,15 @@ in pixels without the unit conversion and summary,
 <h5 id="the-rules-4">The rules<a class="anchor" aria-label="anchor" href="#the-rules-4"></a>
 </h5>
 <p><strong>Building the network.</strong> Every skeleton pixel is
-classified by how many neighbours it has: one means a tip, two means an
+classified by how many neighbors it has: one means a tip, two means an
 ordinary line pixel, three or more means a junction. <em>Adjacent
 junction pixels are merged into a single node.</em> This matters — a
 real branch point is usually several pixels wide in a thinned image, and
 treating each as its own node would shatter the graph. Segments are the
-runs of two-neighbour pixels between nodes.</p>
+runs of two-neighbor pixels between nodes.</p>
 <p><strong>Segment length</strong> is the distance along the pixel chain
 <strong>plus</strong> a short stub at each end that lands on a merged
-junction, reaching from the segment’s last pixel to the centre of the
+junction, reaching from the segment’s last pixel to the center of the
 junction cluster. Without that stub, every branch point would quietly
 eat about a pixel of root from each arm that meets it.</p>
 <p><strong>Three order schemes are always computed</strong>, and they
@@ -664,10 +664,10 @@ Nodes with five or more are counted and reported under
 continuation plus several laterals.
 </details><details><summary><b>Under the hood — what “diameter” means here</b>
 </summary><p>Diameters come from a distance transform of the <strong>solid
-mask</strong>, not the skeleton: each pixel is labelled with its
-distance to the nearest background pixel, so a skeleton pixel carries
-the radius of the largest circle that fits inside the root there.
-Diameter is twice that.</p>
+mask</strong>, not the skeleton: each pixel is labeled with its distance
+to the nearest background pixel, so a skeleton pixel carries the radius
+of the largest circle that fits inside the root there. Diameter is twice
+that.</p>
 This is why <code>mask =</code> matters. Pass only a skeleton and every
 diameter collapses to about 1 px, and every diameter-dependent rule
 above — the continuation choice, <code>branch_order</code>’s
@@ -708,7 +708,7 @@ numbering</td>
 </tr>
 <tr class="odd">
 <td>A node with exactly two arms</td>
-<td>Not a branch point — it is a bend or a thinning artefact, and the
+<td>Not a branch point — it is a bend or a thinning artifact, and the
 two arms are spliced back into one segment</td>
 </tr>
 <tr class="even">
@@ -794,15 +794,15 @@ the sum over depth bins does not equal the whole-image value, which is
 why the depth-profile wrapper uses a per-pixel Freeman length map
 instead.</p>
 <p><strong>Diameter comes from a distance transform.</strong> Every root
-pixel is labelled with its distance to the nearest background pixel —
-the radius of the largest circle that fits inside the root there.
-Diameter is twice that. This is why <code><a href="../reference/root_diameter.html">root_diameter()</a></code> needs
-the filled mask, not the skeleton.</p>
+pixel is labeled with its distance to the nearest background pixel — the
+radius of the largest circle that fits inside the root there. Diameter
+is twice that. This is why <code><a href="../reference/root_diameter.html">root_diameter()</a></code> needs the filled
+mask, not the skeleton.</p>
 <p><strong>Unit conversion</strong> is the same everywhere:
 <code>inch = px / dpi</code>, <code>cm = px × 2.54 / dpi</code>.</p>
 <details><summary><b>Under the hood</b>
 </summary><p>Step counting uses four 3×3 focal kernels, one per direction pair. A
-focal sum of exactly 2 means the centre pixel and one neighbour in that
+focal sum of exactly 2 means the center pixel and one neighbor in that
 direction are both root — that is, a connected step.</p>
 <code><a href="../reference/root_scape_metrics.html">root_scape_metrics()</a></code> is a thin wrapper around
 <code><a href="https://r-spatialecology.github.io/landscapemetrics/reference/calculate_lsm.html" class="external-link">landscapemetrics::calculate_lsm()</a></code>, which does the actual
@@ -993,8 +993,8 @@ as a root heading deeper. The eight D8 codes are relabelled as compass
 bearings, with 0° pointing up the image and angles increasing
 clockwise.</p></li>
 <li><p>The <strong>optimal</strong> direction: for each pixel, which of
-its eight neighbours lies deepest. This is computed directly from the
-depth map, and diagonal neighbours are divided by √2 so that a diagonal
+its eight neighbors lies deepest. This is computed directly from the
+depth map, and diagonal neighbors are divided by √2 so that a diagonal
 step is not unfairly favoured over an orthogonal one.</p></li>
 </ol>
 <p><strong>The score</strong> is simply the count of pixels where the
@@ -1027,7 +1027,7 @@ optimal counts the same as one heading 180° away.</p>
 </td>
 </tr>
 <tr class="even">
-<td>D8 code 0 (a pixel with no downhill neighbour)</td>
+<td>D8 code 0 (a pixel with no downhill neighbor)</td>
 <td>Becomes <code>NA</code> and is excluded from both counts</td>
 </tr>
 <tr class="odd">
@@ -1044,8 +1044,8 @@ optimal counts the same as one heading 180° away.</p>
 <div class="section level5">
 <h5 id="what-it-is-for-8">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-8"></a>
 </h5>
-<p>Summarising <em>where</em> roots are rather than how many there are:
-how deep the centre of mass sits, whether two profiles differ, whether
+<p>Summarizing <em>where</em> roots are rather than how many there are:
+how deep the center of mass sits, whether two profiles differ, whether
 there is a repeating pattern around the tube.</p>
 </div>
 <div class="section level5">
@@ -1142,7 +1142,7 @@ values</td>
 <div class="section level3">
 <h3 id="specialised">Specialised<a class="anchor" aria-label="anchor" href="#specialised"></a>
 </h3>
-<p>Questions that need a second image or the colour channels.</p>
+<p>Questions that need a second image or the color channels.</p>
 <div class="section level4">
 <h4 id="turnover">Turnover<a class="anchor" aria-label="anchor" href="#turnover"></a>
 </h4>
@@ -1176,7 +1176,7 @@ percentage of each time point. This method sees only the <em>net</em>
 change — root that grew and died between the two scans is invisible.</p>
 <p><strong>Decay–production–constant (<code>"dpc"</code>)</strong>
 decomposes a single three-layer image in which a segmentation tool has
-already colour-coded each pixel as produced, decayed, or unchanged. This
+already color-coded each pixel as produced, decayed, or unchanged. This
 resolves gross change rather than net.</p>
 <p>The three layers are separated by thresholding each against the
 unchanged layer at <code>blur_capture</code> (default 0.95) of its
@@ -1237,13 +1237,13 @@ visual checking</td>
 </div>
 </div>
 <div class="section level4">
-<h4 id="soil-and-colour">Soil and colour<a class="anchor" aria-label="anchor" href="#soil-and-colour"></a>
+<h4 id="soil-and-color">Soil and color<a class="anchor" aria-label="anchor" href="#soil-and-color"></a>
 </h4>
 <div class="section level5">
 <h5 id="what-it-is-for-10">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-10"></a>
 </h5>
-<p>Everything that uses colour rather than shape: classifying what each
-pixel is made of, summarising tube colour, quantifying surface texture,
+<p>Everything that uses color rather than shape: classifying what each
+pixel is made of, summarizing tube color, quantifying surface texture,
 and building a rhizosphere zone around roots.</p>
 </div>
 <div class="section level5">
@@ -1255,7 +1255,7 @@ and building a rhizosphere zone around roots.</p>
 <span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span>                                       <span class="co"># per-class statistics</span></span>
 <span></span>
 <span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_soil_centroids.html">build_soil_centroids</a></span><span class="op">(</span><span class="va">picks</span>, <span class="va">max_dist</span><span class="op">)</span>       <span class="co"># calibrate to your scanner</span></span>
-<span><span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">rgb_img</span><span class="op">)</span>                             <span class="co"># whole-image colour summary</span></span>
+<span><span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">rgb_img</span><span class="op">)</span>                             <span class="co"># whole-image color summary</span></span>
 <span><span class="fu"><a href="../reference/analyze_soil_texture.html">analyze_soil_texture</a></span><span class="op">(</span><span class="va">rgb_img</span><span class="op">)</span>                        <span class="co"># GLCM texture</span></span>
 <span><span class="va">halo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">3</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -1263,24 +1263,24 @@ and building a rhizosphere zone around roots.</p>
 <h5 id="the-rules-10">The rules<a class="anchor" aria-label="anchor" href="#the-rules-10"></a>
 </h5>
 <p><strong>Classification is nearest-centroid in CIE LAB.</strong> Each
-pixel is converted from RGB to LAB — a colour space where Euclidean
+pixel is converted from RGB to LAB — a color space where Euclidean
 distance roughly matches perceived difference — and assigned to the
 closest class centroid.</p>
 <p><strong>Each class has its own distance limit.</strong> A pixel
 further than <code>MAX_DIST</code> from <em>every</em> centroid is left
 <code>"unclassified"</code> rather than forced into the nearest class.
-The limits are per class because some materials are tighter in colour
+The limits are per class because some materials are tighter in color
 than others.</p>
 <p><strong>Every material in your scan needs its own class.</strong>
 Anything without one is snapped into whichever class happens to sit
 closest. The shipped centroids were calibrated on one scanner at one
-site; <code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code> derives your own from colour
+site; <code><a href="../reference/build_soil_centroids.html">build_soil_centroids()</a></code> derives your own from color
 picks, and can blend them with the existing ones via <code>alpha</code>
 if you are refining progressively.</p>
 <p><strong>The halo is dilation.</strong>
 <code><a href="../reference/create_root_buffer.html">create_root_buffer()</a></code> grows the root mask outward by
-<code>width</code> iterations using either an 8-neighbour
-(<code>"circle"</code>) or 4-neighbour (<code>"diamond"</code>) kernel.
+<code>width</code> iterations using either an 8-neighbor
+(<code>"circle"</code>) or 4-neighbor (<code>"diamond"</code>) kernel.
 With <code>halo_only = TRUE</code> the roots themselves are subtracted,
 leaving only the ring.</p>
 <details><summary><b>Under the hood</b>
@@ -1288,12 +1288,12 @@ leaving only the ring.</p>
 over all pixels at once via the expansion ‖p − c‖² = ‖p‖² − 2p·c + ‖c‖²,
 which is why a full-resolution scan classifies in seconds;
 <code>downsample_fact</code> speeds it up further for previews.</p>
-<p>Texture metrics come from <code><a href="https://rdrr.io/pkg/glcm/man/glcm.html" class="external-link">glcm::glcm()</a></code> (grey-level
+<p>Texture metrics come from <code><a href="https://rdrr.io/pkg/glcm/man/glcm.html" class="external-link">glcm::glcm()</a></code> (gray-level
 co-occurrence matrix) — a standard method, documented in that
 package.</p>
 <code><a href="../reference/tube_coloration.html">tube_coloration()</a></code> uses the exact Rec. 709 luma coefficients
 (0.2126/0.7152/0.0722). Note that <code><a href="../reference/rgb2gray.html">rgb2gray()</a></code> uses rounded
-ones (0.21/0.72/0.07), so the two do not produce identical greyscale
+ones (0.21/0.72/0.07), so the two do not produce identical grayscale
 values; this is deliberate and the difference is documented at both
 sites in the source.
 </details><details><summary><b>Edge cases</b>
@@ -1346,11 +1346,11 @@ drawn.</p>
 <p>Five designs are used, each stressing something different: laterals
 on one axis, 45° laterals, three generations of nested branching, two
 roots crossing without touching, and a symmetric fork. Each is scored
-twice. Feeding the exact one-pixel centre line isolates the graph —
+twice. Feeding the exact one-pixel center line isolates the graph —
 tracing, junction handling, crossing resolution, ordering, length
 integration. Feeding the filled image instead also carries the thinning
 error, chiefly the erosion of about one root radius at every tip, so it
-gets more room: 6% on length against 3% for the centre-line route. Tip,
+gets more room: 6% on length against 3% for the center-line route. Tip,
 branch-point and root counts must be exact. Diameters allow 10%, scored
 against the package’s own <code>2 × EDT</code> convention rather than a
 formula.</p>
@@ -1416,7 +1416,7 @@ result.</p>
 <td>Many pixels come back unclassified</td>
 <td>Every centroid was beyond its <code>MAX_DIST</code>
 </td>
-<td>Soil and colour</td>
+<td>Soil and color</td>
 </tr>
 <tr class="even">
 <td>Turnover ratios differ between runs</td>

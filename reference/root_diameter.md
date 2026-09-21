@@ -93,7 +93,7 @@ A list containing:
 - root_volume:
 
   Numeric. Total root volume, in \`unit\`^3. Each skeleton pixel is
-  modelled as a cylinder of radius \`diameter / 2\` and length 1 pixel;
+  modeled as a cylinder of radius \`diameter / 2\` and length 1 pixel;
   volumes (\`pi \* r^2 \* l\`) are summed and converted from px^3.
 
 - root_surface_area:

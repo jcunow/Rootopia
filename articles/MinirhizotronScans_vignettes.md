@@ -37,7 +37,7 @@ subset of functions.
 
 library(Rootopia)
 library(terra)
-library(tidyverse)
+library(ggplot2)
 ```
 
 ------------------------------------------------------------------------
@@ -243,7 +243,7 @@ terra::plot(depth_bins, main = "Depth bins")
 
 ![The depth map reduced to discrete depth bins, drawn as bands of
 constant
-colour.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
+color.](MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)
 
 ------------------------------------------------------------------------
 
@@ -465,7 +465,7 @@ These tube-level summary metrics require a complete depth profile.
 
 ``` r
 
-# Mean rooting depth — depth-weighted mean (a robust centre-of-root-mass estimate)
+# Mean rooting depth — depth-weighted mean (a robust center-of-root-mass estimate)
 mrd_val <- MRD(w = depth_data$depth, roots = depth_data$rootlength.density)
 
 # Total length density — sum over the full profile

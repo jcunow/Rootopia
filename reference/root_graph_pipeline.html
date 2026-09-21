@@ -135,7 +135,7 @@ Required if <code>skel</code> is <code>NULL</code>.</p></dd>
 
 <dt id="arg-splice-passthrough">splice_passthrough<a class="anchor" aria-label="anchor" href="#arg-splice-passthrough"></a></dt>
 <dd><p>Dissolve contracted junctions that carry only two
-segment ends (bends and thinning artefacts, not branch points) by splicing
+segment ends (bends and thinning artifacts, not branch points) by splicing
 the two arms into one segment. Leave <code>TRUE</code> unless you specifically
 want one edge per traced skeleton chain.</p></dd>
 
@@ -146,7 +146,7 @@ want one edge per traced skeleton chain.</p></dd>
 
 <dt id="arg-crossing-diam-ratio">crossing_diam_ratio<a class="anchor" aria-label="anchor" href="#arg-crossing-diam-ratio"></a></dt>
 <dd><p>Opt-in thickness test at a degree-4 node, off by
-default (<code>0</code> = resolve on geometry alone, the historical behaviour).
+default (<code>0</code> = resolve on geometry alone).
 When set (0.5 is a reasonable value), a node is treated as a crossing only
 if the two candidate through-roots are within this thickness ratio of each
 other; otherwise it is read as a bilateral branch and left intact. This is

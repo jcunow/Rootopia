@@ -29,7 +29,7 @@ vignette instead.
 
 library(Rootopia)
 library(terra)
-library(tidyverse)
+library(ggplot2)
 ```
 
 ------------------------------------------------------------------------
@@ -159,9 +159,9 @@ skl <- skeletonize_image(seg_clean, verbose = FALSE)
 zoom_plot(skl, main = "Skeleton", frac = 0.25, center = c(0.7,0.625))
 ```
 
-![One-pixel-wide skeleton traced through the centre of every
+![One-pixel-wide skeleton traced through the center of every
 root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)![One-pixel-wide
-skeleton traced through the centre of every
+skeleton traced through the center of every
 root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png)
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
@@ -336,7 +336,7 @@ segment a **branching order**. Segments on the thickest, most central
 path of each connected component are order 1; the branches coming off
 them are order 2, their branches order 3, and so on — so the order
 simply counts how many branching events separate a segment from the
-root’s main path, rather than labelling roots as “main” or “lateral”.
+root’s main path, rather than labeling roots as “main” or “lateral”.
 Because flatbed scans have no depth dimension, this is computed once for
 the whole image.
 
@@ -419,7 +419,7 @@ plot_order_window(
 
 [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
 extracts mean chromatic coordinates and HSV values from an RGB image. On
-flatbed scans this characterises overall root pigmentation.
+flatbed scans this characterizes overall root pigmentation.
 
 ``` r
 
@@ -501,7 +501,7 @@ which are tube settings you can ignore.
   — combine overlapping frames into one mosaic before analysis
 - [Special
   Topics](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.md)
-  — soil colour, texture, halos and turnover
+  — soil color, texture, halos and turnover
 - [Function
   reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function

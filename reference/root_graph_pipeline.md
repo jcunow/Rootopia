@@ -78,7 +78,7 @@ root_graph_pipeline(
 - splice_passthrough:
 
   Dissolve contracted junctions that carry only two segment ends (bends
-  and thinning artefacts, not branch points) by splicing the two arms
+  and thinning artifacts, not branch points) by splicing the two arms
   into one segment. Leave `TRUE` unless you specifically want one edge
   per traced skeleton chain.
 
@@ -89,15 +89,15 @@ root_graph_pipeline(
 - crossing_diam_ratio:
 
   Opt-in thickness test at a degree-4 node, off by default (`0` =
-  resolve on geometry alone, the historical behaviour). When set (0.5 is
-  a reasonable value), a node is treated as a crossing only if the two
-  candidate through-roots are within this thickness ratio of each other;
-  otherwise it is read as a bilateral branch and left intact. This is a
-  genuine trade-off, not a free win: a thick axis crossed by a thin root
-  and a thick axis with two thin laterals are the same shape in outline,
-  so raising the threshold fixes the second case and breaks the first.
-  Set it only if your material has more bilateral branching than
-  fine-over-coarse crossing.
+  resolve on geometry alone). When set (0.5 is a reasonable value), a
+  node is treated as a crossing only if the two candidate through-roots
+  are within this thickness ratio of each other; otherwise it is read as
+  a bilateral branch and left intact. This is a genuine trade-off, not a
+  free win: a thick axis crossed by a thin root and a thick axis with
+  two thin laterals are the same shape in outline, so raising the
+  threshold fixes the second case and breaks the first. Set it only if
+  your material has more bilateral branching than fine-over-coarse
+  crossing.
 
 - color_by:
 

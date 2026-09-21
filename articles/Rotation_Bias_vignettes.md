@@ -377,7 +377,7 @@ Two extensions are planned and not yet implemented:
   — combine overlapping frames from one tube before correcting rotation
 - [Special
   Topics](https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.md)
-  — soil colour, texture, halos and turnover
+  — soil color, texture, halos and turnover
 - [Function
   reference](https://jcunow.github.io/Rootopia/reference/index.md) —
   full documentation for every exported function
