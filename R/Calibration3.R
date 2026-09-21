@@ -98,8 +98,15 @@ estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, s
     rsums = rowSums(mask.mat, na.rm = TRUE)
     if (all(rsums == 0)) { warning("No valid pixels for rotation calculation"); return(NA) }
     
-    bin = dplyr::ntile(rsums, 2)
-    return(round(stats::median(which(bin == 2)),0))
+    # Centre of the tape band along the rotation axis: the median index of the
+    # rows that actually carry tape. "Carry tape" is a question about coverage,
+    # so it is settled on the value (at least half the peak row's coverage),
+    # not on rank. A rank split into two equal halves would put half of ALL
+    # rows in the tape group however narrow the band is, and would settle the
+    # many ties in `rsums` by row position -- dragging the reported centre
+    # toward one end of the image.
+    tape_rows = which(rsums >= max(rsums, na.rm = TRUE) / 2)
+    return(round(stats::median(tape_rows), 0))
     
   }, error = function(e) stop(paste("Error in estimate_rotation_center:", e$message)))
 }

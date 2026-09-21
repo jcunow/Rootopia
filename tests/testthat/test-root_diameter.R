@@ -38,5 +38,6 @@ test_that("an empty (all-zero) image errors cleanly", {
   skip_if_not_installed("terra")
   skip_if_not_installed("imager")
   empty <- terra::rast(matrix(0, 24, 28))
-  expect_error(root_diameter(empty, unit = "px", select_layer = 1))
+  expect_error(root_diameter(empty, unit = "px", select_layer = 1),
+               "no foreground pixels")
 })

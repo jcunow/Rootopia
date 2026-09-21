@@ -281,8 +281,8 @@ root_scape_metrics <- function(img, index_d = NA, select_layer = NULL,
     # wide format
     rsm_wide <- tidyr::pivot_wider(
       rsm,
-      names_from = metric,
-      values_from = value,
+      names_from = "metric",
+      values_from = "value",
       values_fill = NA_real_
     )
 

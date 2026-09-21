@@ -8,3 +8,5 @@ docs
 /Meta/
 
 Rplots.pdf
+
+tests/testthat/_problems/

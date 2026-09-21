@@ -36,7 +36,9 @@ test_that("estimate_rotation_shift runs when imagefx is available", {
   skip_if_not_installed("terra")
   skip_if_not_installed("imagefx")
   rgb <- terra::rast(make_rgb_array() * 255)
-  res <- estimate_rotation_shift(rgb, rgb, select_layer = 1)
+  # select_layer must stay NULL here: the correlation is on the luma of all
+  # three channels, so a single layer is rejected by design.
+  res <- estimate_rotation_shift(rgb, rgb)
   expect_true(all(c("depth", "rotation", "peak") %in% names(res)))
 })
 

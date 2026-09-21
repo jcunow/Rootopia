@@ -112,8 +112,12 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, se
         stop(sprintf("Distance transform failed: %s", e$message))
       })
 
+      # Every pixel is zero distance from a zero pixel, i.e. the image has no
+      # foreground at all. There is no root to measure, and every step below
+      # would fail on the empty result, so stop here where the cause is still
+      # visible instead of at "no valid diameter measurements" further down.
       if (all(dt == 0)) {
-        warning("Distance transform produced all zero values - check input image")
+        stop("Image has no foreground pixels: nothing to measure a diameter on")
       }
 
       return(dt)

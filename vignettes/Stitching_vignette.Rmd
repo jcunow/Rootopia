@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
   comment  = "#>",
   fig.width = 9,
   fig.align = "center",
-  dpi=300
+  dpi = 150
 )
 has_png <- requireNamespace("png", quietly = TRUE)   # demo writes temp PNGs
 ```
