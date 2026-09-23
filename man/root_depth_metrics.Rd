@@ -195,10 +195,11 @@ Only applied under minirhizotron geometry; a flatbed scan is measured at
 full width.  Default \code{1800}.}
 
 \item{binarize}{Either \code{"auto"} (default), \code{TRUE}, or
-\code{FALSE}.  \code{"auto"} thresholds an image only if it has more
-than two distinct gray levels, so binary masks are left alone and raw scans
-are binarized.  \code{TRUE} always thresholds, \code{FALSE} never does
-(any non-zero pixel is then taken as root).  Note that \code{TRUE} on an
+\code{FALSE}.  \code{"auto"} thresholds an image only if at least one of
+its layers has more than two distinct values, so binary masks (single- or
+multi-layer) are left alone and raw scans are binarized.  \code{TRUE}
+always thresholds, \code{FALSE} never does (a pixel is then root when it
+is non-zero in every layer).  Note that \code{TRUE} on an
 image already coded 0/1 will \emph{invert} it, because 0 counts as dark;
 this is what \code{"auto"} exists to prevent.}
 
@@ -216,9 +217,11 @@ more than half the pixels come out as root, the polarity is probably wrong
 and a warning says so.}
 
 \item{seg_layer}{Integer or \code{NULL}. Which layer of the segmented image
-to measure.  \code{NULL} (default) picks automatically: a single-layer
-image is used as is, and a 3- or 4-layer image is converted to grayscale
-with \code{rgb2gray()}.  Set this if your files carry the segmentation in
+to measure.  \code{NULL} (default) uses every layer: a single-layer image
+as is, the first three layers of a 3- or 4-layer image (any alpha band is
+dropped), and the first layer of a 2-layer image.  Thresholded images are
+converted to grayscale with \code{rgb2gray()}; binary ones take root as
+non-zero in every layer.  Set this if your files carry the segmentation in
 one specific band.}
 
 \item{clean_max_hole_size}{Numeric. Fill enclosed background holes of up to
@@ -523,8 +526,13 @@ range, not as a segmented mask.  Such an image is reduced to a single
 grayscale layer (\code{rgb2gray()} for RGB input) and cut at
 \code{binarize_threshold}, in the same way RhizoVision Explorer does it.
 Already-segmented input passes through untouched: with the default
-\code{binarize = "auto"} the cut is only applied when the image actually
-has more than two gray levels.
+\code{binarize = "auto"} the cut is only applied when at least one layer of
+the image has more than two distinct values.  The check runs on each layer
+before any conversion to gray, so a multi-class mask that is binary in every
+layer -- e.g. RootDetector output with white root, red second class and
+black background -- is not thresholded.  In an image that is not
+thresholded, a pixel is root when it is non-zero in every layer, i.e. white
+in an RGB mask.  Use \code{seg_layer} when root is coded differently.
 }
 
 \examples{

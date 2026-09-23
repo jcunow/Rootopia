@@ -197,14 +197,20 @@
 #' grayscale layer (\code{rgb2gray()} for RGB input) and cut at
 #' \code{binarize_threshold}, in the same way RhizoVision Explorer does it.
 #' Already-segmented input passes through untouched: with the default
-#' \code{binarize = "auto"} the cut is only applied when the image actually
-#' has more than two gray levels.
+#' \code{binarize = "auto"} the cut is only applied when at least one layer of
+#' the image has more than two distinct values.  The check runs on each layer
+#' before any conversion to gray, so a multi-class mask that is binary in every
+#' layer -- e.g. RootDetector output with white root, red second class and
+#' black background -- is not thresholded.  In an image that is not
+#' thresholded, a pixel is root when it is non-zero in every layer, i.e. white
+#' in an RGB mask.  Use \code{seg_layer} when root is coded differently.
 #'
 #' @param binarize Either \code{"auto"} (default), \code{TRUE}, or
-#'   \code{FALSE}.  \code{"auto"} thresholds an image only if it has more
-#'   than two distinct gray levels, so binary masks are left alone and raw scans
-#'   are binarized.  \code{TRUE} always thresholds, \code{FALSE} never does
-#'   (any non-zero pixel is then taken as root).  Note that \code{TRUE} on an
+#'   \code{FALSE}.  \code{"auto"} thresholds an image only if at least one of
+#'   its layers has more than two distinct values, so binary masks (single- or
+#'   multi-layer) are left alone and raw scans are binarized.  \code{TRUE}
+#'   always thresholds, \code{FALSE} never does (a pixel is then root when it
+#'   is non-zero in every layer).  Note that \code{TRUE} on an
 #'   image already coded 0/1 will \emph{invert} it, because 0 counts as dark;
 #'   this is what \code{"auto"} exists to prevent.
 #' @param binarize_threshold Numeric. Gray level at which a scan is cut into
@@ -228,9 +234,11 @@
 #'   as isolated skeleton pixels, and as root tips.  Both use
 #'   \code{\link{clean_image}} and need the \pkg{imager} package.
 #' @param seg_layer Integer or \code{NULL}. Which layer of the segmented image
-#'   to measure.  \code{NULL} (default) picks automatically: a single-layer
-#'   image is used as is, and a 3- or 4-layer image is converted to grayscale
-#'   with \code{rgb2gray()}.  Set this if your files carry the segmentation in
+#'   to measure.  \code{NULL} (default) uses every layer: a single-layer image
+#'   as is, the first three layers of a 3- or 4-layer image (any alpha band is
+#'   dropped), and the first layer of a 2-layer image.  Thresholded images are
+#'   converted to grayscale with \code{rgb2gray()}; binary ones take root as
+#'   non-zero in every layer.  Set this if your files carry the segmentation in
 #'   one specific band.
 #'
 # --- Core metrics (on by default) ---
@@ -538,9 +546,12 @@ root_depth_metrics <- function(
   #
   # A flatbed scan arrives as grayscale or RGB spanning the full 0-255 range, so
   # it has to be cut at a gray level before anything downstream can treat a
-  # pixel as root. An already-segmented image arrives as 0/1 or 0/255 and must
-  # pass through untouched -- that is what binarize = "auto" is for: it only
-  # cuts when the image really has more than two gray levels.
+  # pixel as root. An already-segmented image arrives with at most two values
+  # in each layer and must pass through untouched -- that is what
+  # binarize = "auto" is for. The check runs per layer, before the layers are
+  # combined: a class mask such as white root / red other / black background
+  # is binary in every layer but has three colors, and averaging it to gray
+  # would make it look like a scan.
   #
   # Everything except the color metrics works on this single layer, which is
   # why the reduction happens here at load time rather than per metric.
@@ -548,29 +559,39 @@ root_depth_metrics <- function(
     
     nl <- terra::nlyr(img)
     
-    gray <- if (!is.null(seg_layer)) {
+    if (!is.null(seg_layer)) {
       if (seg_layer > nl)
         stop(sprintf("seg_layer = %d but '%s' has only %d layer(s).",
                      seg_layer, label, nl), call. = FALSE)
-      img[[seg_layer]]
-    } else if (nl == 1L) {
-      img
+      img <- img[[seg_layer]]
     } else if (nl >= 3L) {
-      rgb2gray(img[[1:3]])            # drops any alpha band along the way
-    } else {
-      img[[1]]                        # 2 layers: nothing sensible to weight
+      img <- img[[1:3]]               # an alpha band carries no class
+    } else if (nl == 2L) {
+      img <- img[[1]]                 # 2 layers: nothing sensible to weight
     }
     
-    vals   <- terra::values(gray)
-    n_lev  <- length(unique(vals[!is.na(vals)]))
-    do_bin <- if (identical(binarize, "auto")) n_lev > 2L else isTRUE(binarize)
-    
-    if (!do_bin) return((gray > 0) * 1)
+    # One layer at a time, so a three-band scan never has all its values in
+    # memory at once.
+    n_lev <- vapply(seq_len(terra::nlyr(img)), function(i) {
+      v <- terra::values(img[[i]])
+      length(unique(v[!is.na(v)]))
+    }, numeric(1))
+    do_bin <- if (identical(binarize, "auto")) any(n_lev > 2L) else isTRUE(binarize)
+
+    # A root pixel is on in every layer: white in an RGB class mask, and the
+    # mask itself when there is one layer or all three carry the same mask.
+    if (!do_bin) {
+      on <- img > 0
+      if (terra::nlyr(on) == 3L) on <- on[[1]] & on[[2]] & on[[3]]
+      return(on * 1)
+    }
+
+    gray <- if (terra::nlyr(img) == 3L) rgb2gray(img) else img
     
     # binarize_threshold is a gray level on the 0-255 scale. Images that loaded
     # on a 0-1 scale get the same cut-off rescaled, so the number the user typed
     # means the same thing either way.
-    mx  <- max(vals, na.rm = TRUE)
+    mx  <- max(terra::values(gray), na.rm = TRUE)
     thr <- if (mx <= 1) thr255 / 255 else thr255
     
     mask <- if (dark) (gray <= thr) * 1 else (gray >= thr) * 1
