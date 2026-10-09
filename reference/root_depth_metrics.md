@@ -199,11 +199,14 @@ batch_root_traits(
 
 - tube_center_offset:
 
-  Numeric in `[0, 1]`. Phase of the sinusoidal curvature correction:
-  where the top of the tube falls across the image height, as a
-  fraction. `0` (default) puts it at the first row. Set it if your
-  scanner's rotational reference differs, or the depth assigned to a
-  root will be offset by up to half a tube diameter. Minirhizotron only.
+  Numeric in `[0, 1]`. Phase of the sinusoidal curvature correction, as
+  a fraction of one full tube circumference: where the top of the tube
+  falls across the image height. `0` (default) puts the crest on the
+  first and last row at once, `0.5` halfway down, and `1` is the same
+  phase as `0`. Set it if your scanner's rotational reference differs,
+  or the depth assigned to a root will be offset by up to a full tilted
+  tube diameter (`tube_diameter_cm * sin(insertion_angle)`), the
+  crest-to-trough range of the wave. Minirhizotron only.
 
 - depth_interval_cm:
 

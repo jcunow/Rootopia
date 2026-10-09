@@ -40,9 +40,10 @@ create_depthmap(
 - tilt:
 
   Numeric; insertion angle in degrees measured from horizontal, in (0,
-  90\]. Typically 30-45 for a minirhizotron; 90 is the head-on case
-  (vertical tube, or a flatbed scan) where the depth axis is not
-  foreshortened
+  90\]. The depth axis is scaled by `sin(tilt)`, so 90 is the head-on
+  case (vertical tube, or a flatbed scan) with no foreshortening.
+  Minirhizotron tubes are commonly installed 30-45 degrees from
+  vertical, which is 45-60 in this convention
 
 - dpi:
 
@@ -54,7 +55,11 @@ create_depthmap(
 
 - center_offset:
 
-  Numeric; rotational center offset (0 = centered, 1 = edge)
+  Numeric in \[0, 1\]; phase of the sinusoidal curvature term, as a
+  fraction of one full tube circumference. It rotates the wave to where
+  the top of the tube sits in the image, moving the crest down the image
+  height. 0 and 1 are the same phase (crest at the image edge); 0.5 puts
+  the crest halfway down
 
 ## Value
 

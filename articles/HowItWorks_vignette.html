@@ -907,8 +907,10 @@ circumference is added across the rows: pixels imaged from the upper
 side of the tube are nearer the surface than those from the lower side.
 Its amplitude is the tilted tube diameter, and
 <code>center_offset</code> rotates the wave to match where the top of
-your tube actually sits. With <code>sinoid = FALSE</code> this term is
-zero — the right choice for flat rhizotron windows.</p>
+your tube actually sits — as a fraction of one full circumference, so 0
+and 1 are the same phase and 0.5 moves the crest halfway down the image.
+With <code>sinoid = FALSE</code> this term is zero — the right choice
+for flat rhizotron windows.</p>
 <p><strong>Masking.</strong> Any pixel marked <code>1</code> in the
 optional <code>mask</code> becomes <code>NA</code> in the depth map,
 which is how tape and other foreign objects are excluded from every

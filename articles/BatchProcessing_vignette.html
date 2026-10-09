@@ -422,7 +422,7 @@ when all images share the same setting.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg         <span class="op">=</span> <span class="st">"scans/segmented/2022_02/"</span>,</span>
 <span>  path_skl         <span class="op">=</span> <span class="st">"scans/skeleton/2022_02/"</span>,</span>
-<span>  insertion_angles <span class="op">=</span> <span class="va">tube_meta</span><span class="op">$</span><span class="va">angle</span>,       <span class="co"># degrees from vertical</span></span>
+<span>  insertion_angles <span class="op">=</span> <span class="va">tube_meta</span><span class="op">$</span><span class="va">angle</span>,       <span class="co"># degrees from horizontal; 90 = vertical tube</span></span>
 <span>  soil_starts      <span class="op">=</span> <span class="va">tube_meta</span><span class="op">$</span><span class="va">soil_row</span>,    <span class="co"># pixel row of soil surface</span></span>
 <span>  tube_names       <span class="op">=</span> <span class="va">tube_meta</span><span class="op">$</span><span class="va">tube_id</span>,     <span class="co"># e.g. "T042"</span></span>
 <span>  session          <span class="op">=</span> <span class="st">"2022_02"</span>,</span>

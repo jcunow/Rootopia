@@ -271,10 +271,14 @@ argument switches the run to minirhizotron geometry (see
 
 <dt id="arg-tube-center-offset">tube_center_offset<a class="anchor" aria-label="anchor" href="#arg-tube-center-offset"></a></dt>
 <dd><p>Numeric in <code>[0, 1]</code>. Phase of the sinusoidal
-curvature correction: where the top of the tube falls across the image
-height, as a fraction.  <code>0</code> (default) puts it at the first row.  Set it
-if your scanner's rotational reference differs, or the depth assigned to a
-root will be offset by up to half a tube diameter.  Minirhizotron only.</p></dd>
+curvature correction, as a fraction of one full tube circumference: where
+the top of the tube falls across the image height.  <code>0</code> (default) puts
+the crest on the first and last row at once, <code>0.5</code> halfway down, and
+<code>1</code> is the same phase as <code>0</code>.  Set it if your scanner's
+rotational reference differs, or the depth assigned to a root will be
+offset by up to a full tilted tube diameter
+(<code>tube_diameter_cm * sin(insertion_angle)</code>), the crest-to-trough
+range of the wave.  Minirhizotron only.</p></dd>
 
 
 <dt id="arg-depth-interval-cm">depth_interval_cm<a class="anchor" aria-label="anchor" href="#arg-depth-interval-cm"></a></dt>

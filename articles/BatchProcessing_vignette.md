@@ -190,7 +190,7 @@ tube_meta <- read.csv("metadata/tube_metadata_2022_02.csv")
 result <- root_depth_metrics(
   path_seg         = "scans/segmented/2022_02/",
   path_skl         = "scans/skeleton/2022_02/",
-  insertion_angles = tube_meta$angle,       # degrees from vertical
+  insertion_angles = tube_meta$angle,       # degrees from horizontal; 90 = vertical tube
   soil_starts      = tube_meta$soil_row,    # pixel row of soil surface
   tube_names       = tube_meta$tube_id,     # e.g. "T042"
   session          = "2022_02",
