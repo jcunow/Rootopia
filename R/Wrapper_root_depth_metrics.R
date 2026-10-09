@@ -91,14 +91,14 @@
 #'   and wavelength of the sinusoidal curvature correction.  Supplying this
 #'   argument switches the run to minirhizotron geometry (see
 #'   \strong{Geometry}).  Default \code{NULL} (flatbed).
-#' @param tube_center_offset Numeric in \code{[0, 1]}. Phase of the sinusoidal
-#'   curvature correction, as a fraction of one full tube circumference: where
-#'   the top of the tube falls across the image height.  \code{0} (default) puts
-#'   the crest on the first and last row at once, \code{0.5} halfway down, and
-#'   \code{1} is the same phase as \code{0}.  Set it if your scanner's
-#'   rotational reference differs, or the depth assigned to a root will be
-#'   offset by up to a full tilted tube diameter
-#'   (\code{tube_diameter_cm * sin(insertion_angle)}), the crest-to-trough
+#' @param tube_center_offset Numeric in \code{[0, 1]}. Where the top of the
+#'   tube falls across the image height, as a fraction of one full tube
+#'   circumference.  \code{0} puts it on the first row, \code{0.5} (default)
+#'   halfway down, \code{1} on the last row; \code{0} and \code{1} are the same
+#'   point on the tube, the image seam.  Set it if your scanner's rotational
+#'   reference differs, or the depth assigned to a root will be offset by up to a
+#'   full tilted tube diameter
+#'   (\code{tube_diameter_cm * sin(insertion_angle)}), the shallowest-to-deepest
 #'   range of the wave.  Minirhizotron only.
 #' @param depth_interval_cm Numeric or \code{NULL}. Size of each depth bin in
 #'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
@@ -473,7 +473,7 @@ root_depth_metrics <- function(
   # ---------- scan / geometry ------------------------------------------------
   dpi                     = 300,
   tube_diameter_cm        = NULL,
-  tube_center_offset      = 0,
+  tube_center_offset      = 0.5,
   depth_interval_cm       = 5,
   bin_round               = c("rounding", "floor", "ceiling"),
   rotation_fixed_width    = 1800,

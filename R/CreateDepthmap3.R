@@ -17,11 +17,11 @@
 #'   which is 45-60 in this convention
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start_soil Numeric; soil surface boundary in cm (0 = surface)
-#' @param center_offset Numeric in [0, 1]; phase of the sinusoidal curvature
-#'   term, as a fraction of one full tube circumference. It rotates the wave to
-#'   where the top of the tube sits in the image, moving the crest down the
-#'   image height. 0 and 1 are the same phase (crest at the image edge); 0.5
-#'   puts the crest halfway down
+#' @param center_offset Numeric in [0, 1]; where the top of the tube -- the
+#'   shallowest line of the curvature wave -- sits across the image height, as a
+#'   fraction of one full tube circumference. \code{0} puts it on the first row,
+#'   \code{0.5} halfway down, \code{1} on the last row. \code{0} and \code{1}
+#'   are the same point on the tube, the image seam
 #'
 #' @return terra raster object containing the depth map
 #' @export
@@ -108,10 +108,13 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
       if (length(df1) < 2)
         stop("Insufficient points for sine wave generation. Check tube_thicc and dpi values")
 
-      # center_offset is a fraction of one full turn, so the phase spans 2*pi:
-      # the crest travels the whole circumference as center_offset goes 0 -> 1,
-      # and 1 lands back on the same phase as 0.
-      df00 = (cos(df1+(2*pi*(center_offset))))*(tube_thicc_tilted/2) + (tube_thicc_tilted/2)
+      # center_offset is a fraction of one full turn, so the phase spans 2*pi.
+      # The term runs 0 (tube top, shallowest) to tube_thicc_tilted (tube
+      # bottom), and 1 - cos puts the trough at phase 0: the tube top lands on
+      # image row 1 + (nr - 1) * center_offset, sweeping the full height as
+      # center_offset goes 0 -> 1. Both ends are the same point on the tube --
+      # the image seam -- so the wave stays continuous across it.
+      df00 = (1-cos(df1+(2*pi*(center_offset))))*(tube_thicc_tilted/2)
 
       # Safely handle vector subsetting
       if (nr > length(df00))

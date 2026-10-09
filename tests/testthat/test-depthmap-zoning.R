@@ -18,25 +18,43 @@ test_that("create_depthmap validates parameters", {
   expect_error(create_depthmap(img, center_offset = 2))   # must be in [0,1]
 })
 
-test_that("center_offset sweeps the sine crest over the full image height", {
+test_that("center_offset sweeps the tube top over the full image height", {
   skip_if_not_installed("terra")
   # One period of the curvature wave spans the tube circumference,
   # round(tube_thicc * pi * dpi / 2.54) - 1 = 129 px here, so an image 129 rows
-  # tall holds exactly one period and the crest row is a direct read-out of the
-  # phase. center_offset is a fraction of that full turn.
-  img <- make_binary_spatraster(nr = 129, nc = 6)
-  crest_row <- function(offset) {
+  # tall holds exactly one period and the trough row reads the phase directly.
+  # The trough is the shallowest point, i.e. the top of the tube, and it sits on
+  # row 1 + (nr - 1) * center_offset.
+  img <- make_binary_spatraster(nr = 129)
+  tube_top_row <- function(offset) {
     dm <- create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5, tilt = 45,
                           dpi = 30, center_offset = offset)
-    which.max(terra::as.matrix(dm, wide = TRUE)[, 1])
+    which.min(terra::as.matrix(dm, wide = TRUE)[, 1])
   }
-  expect_equal(crest_row(0.25), 33L)
-  expect_equal(crest_row(0.50), 65L)
-  expect_equal(crest_row(0.75), 97L)
-  # 0 and 1 are the same phase: a full turn comes back to the start. At both the
-  # crest sits on the first and last row at once, and which.max takes the first.
-  expect_equal(crest_row(0), 1L)
-  expect_equal(crest_row(1), crest_row(0))
+  expect_equal(tube_top_row(0),    1L)
+  expect_equal(tube_top_row(0.25), 33L)
+  expect_equal(tube_top_row(0.50), 65L)
+  expect_equal(tube_top_row(0.75), 97L)
+  # Monotone over the whole range, not just the first half.
+  offsets <- seq(0, 0.99, by = 0.01)
+  expect_true(!is.unsorted(vapply(offsets, tube_top_row, integer(1))))
+  expect_equal(tube_top_row(0.99), 128L)
+})
+
+test_that("center_offset 0 and 1 are the same point on the tube", {
+  skip_if_not_installed("terra")
+  # A full turn returns to the image seam, so the two ends agree and the trough
+  # sits on the first and last row at once.
+  img <- make_binary_spatraster(nr = 129)
+  dm <- function(offset) {
+    terra::as.matrix(create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5,
+                                     tilt = 45, dpi = 30,
+                                     center_offset = offset), wide = TRUE)
+  }
+  expect_equal(dm(0), dm(1))
+  col1 <- dm(0)[, 1]
+  expect_equal(col1[1], col1[129])
+  expect_equal(which.min(col1), 1L)
 })
 
 test_that("slice_rotation splits into n contiguous slices", {

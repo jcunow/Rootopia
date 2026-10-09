@@ -181,7 +181,7 @@ the curvature of cylindrical tubes.
 | `tilt` | Insertion angle from **horizontal** in degrees; `90` is a vertical tube. A tube installed at the common 30–45° from vertical is 45–60° here. |
 | `dpi` | Scanner resolution |
 | `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
-| `center_offset` | Phase of the curvature sine wave, as a fraction of one full tube circumference (0–1). 0 and 1 are the same phase; 0.5 puts the crest halfway down the image. |
+| `center_offset` | Where the top of the tube sits across the image height, as a fraction of one full circumference (0–1). 0 = first row, 0.5 = halfway down, 1 = last row. |
 
 ```{r fig.alt="Depth map in centimetres, shading from shallow at one end to deep at the other."}
 # `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth
@@ -197,7 +197,7 @@ depth_map <- create_depthmap(
   tilt          = 45,      # degrees
   dpi           = 150,
   start_soil    = 2.9,     # cm — from in-situ calibration
-  center_offset = 0.5      # fraction of a full turn; 0 and 1 are the same phase
+  center_offset = 0.5      # tube top halfway down the image
 )
 
 # terra::zonal() and depth_zoning() require rasters to share an extent; snap the
