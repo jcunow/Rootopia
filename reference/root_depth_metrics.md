@@ -30,7 +30,7 @@ root_depth_metrics(
   session = "",
   dpi = 300,
   tube_diameter_cm = NULL,
-  tube_center_offset = 0,
+  tube_center_offset = 0.5,
   depth_interval_cm = 5,
   bin_round = c("rounding", "floor", "ceiling"),
   rotation_fixed_width = 1800,
@@ -76,7 +76,7 @@ batch_root_traits(
   session = "",
   dpi = 300,
   tube_diameter_cm = NULL,
-  tube_center_offset = 0,
+  tube_center_offset = 0.5,
   depth_interval_cm = 5,
   bin_round = c("rounding", "floor", "ceiling"),
   rotation_fixed_width = 1800,
@@ -199,14 +199,14 @@ batch_root_traits(
 
 - tube_center_offset:
 
-  Numeric in `[0, 1]`. Phase of the sinusoidal curvature correction, as
-  a fraction of one full tube circumference: where the top of the tube
-  falls across the image height. `0` (default) puts the crest on the
-  first and last row at once, `0.5` halfway down, and `1` is the same
-  phase as `0`. Set it if your scanner's rotational reference differs,
-  or the depth assigned to a root will be offset by up to a full tilted
-  tube diameter (`tube_diameter_cm * sin(insertion_angle)`), the
-  crest-to-trough range of the wave. Minirhizotron only.
+  Numeric in `[0, 1]`. Where the top of the tube falls across the image
+  height, as a fraction of one full tube circumference. `0` puts it on
+  the first row, `0.5` (default) halfway down, `1` on the last row; `0`
+  and `1` are the same point on the tube, the image seam. Set it if your
+  scanner's rotational reference differs, or the depth assigned to a
+  root will be offset by up to a full tilted tube diameter
+  (`tube_diameter_cm * sin(insertion_angle)`), the shallowest-to-deepest
+  range of the wave. Minirhizotron only.
 
 - depth_interval_cm:
 

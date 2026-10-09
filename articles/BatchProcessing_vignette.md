@@ -92,7 +92,7 @@ result <- root_depth_metrics(
 |----|----|----|
 | **Set every time** | `dpi`, `insertion_angles`, `tube_diameter_cm`, `soil_starts`, `tube_names`, `depth_interval_cm`, `bin_round` | `insertion_angles` is **degrees from horizontal** — 90 is a vertical tube, the opposite of some minirhizotron software. `soil_starts` sets where depth zero is. |
 | **Set for raw scans** | `binarize_threshold`, `dark_roots` | As above. |
-| **Usually worth setting** | `rotation_fixed_width`, `tube_center_offset`, `prune_spur_length_cm` | How much of the tube’s curved edge to trim is a property of your scanner that no default can guess. `tube_center_offset` sets where the top of the tube falls across the image; leave it at `0` unless your rotational reference differs. |
+| **Usually worth setting** | `rotation_fixed_width`, `tube_center_offset`, `prune_spur_length_cm` | How much of the tube’s curved edge to trim is a property of your scanner that no default can guess. `tube_center_offset` sets where the top of the tube falls across the image, as a fraction of one circumference; leave it at `0.5` (tube top mid-image) unless your rotational reference differs. |
 | **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_thresholds`, `diameter_quantiles`, the `calc_*` toggles | `calc_root_angles` and `calc_distribution_indices` earn their keep here, unlike on flatbed. |
 | **Ignore** | `depth_interval_cm = NULL` | It would discard the depth profile, which is the point of a tube. |
 

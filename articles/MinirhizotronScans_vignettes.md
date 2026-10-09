@@ -183,7 +183,7 @@ curvature of cylindrical tubes.
 | `tilt` | Insertion angle from **horizontal** in degrees; `90` is a vertical tube. A tube installed at the common 30–45° from vertical is 45–60° here. |
 | `dpi` | Scanner resolution |
 | `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
-| `center_offset` | Phase of the curvature sine wave, as a fraction of one full tube circumference (0–1). 0 and 1 are the same phase; 0.5 puts the crest halfway down the image. |
+| `center_offset` | Where the top of the tube sits across the image height, as a fraction of one full circumference (0–1). 0 = first row, 0.5 = halfway down, 1 = last row. |
 
 ``` r
 
@@ -200,7 +200,7 @@ depth_map <- create_depthmap(
   tilt          = 45,      # degrees
   dpi           = 150,
   start_soil    = 2.9,     # cm — from in-situ calibration
-  center_offset = 0.5      # fraction of a full turn; 0 and 1 are the same phase
+  center_offset = 0.5      # tube top halfway down the image
 )
 
 # terra::zonal() and depth_zoning() require rasters to share an extent; snap the
@@ -271,12 +271,12 @@ depth_data$rootpx.density <- depth_data$rootpx /
                               (depth_data$rootpx + depth_data$voidpx) * 100
 head(depth_data)
 #>   depth rootpx voidpx rootpx.density
-#> 1    -5      0   2595       0.000000
-#> 2     0   9161 238339       3.701414
-#> 3     5  23383 454396       4.894104
-#> 4    10  40037 437595       8.382395
-#> 5    15  32145 445626       6.728119
-#> 6    20  21435 456212       4.487624
+#> 1    -5      0   5156       0.000000
+#> 2     0      0 302559       0.000000
+#> 3     5  34010 443650       7.120127
+#> 4    10  42947 434821       8.989091
+#> 5    15  36115 441521       7.561197
+#> 6    20  23860 453910       4.994035
 ```
 
 ##### 5b. Root length for a *single* depth slice — `depth_zoning()` + `root_length()`
@@ -298,7 +298,7 @@ skl <- skeletonize_image(root_layer, verbose = FALSE)
 skl_10cm <- depth_zoning(skl, depth_map = depth_bins, depth = 10)
 len_10cm <- root_length(skl_10cm, unit = "cm", dpi = 150, show_messages = FALSE)
 len_10cm
-#> [1] 363.2756
+#> [1] 398.291
 ```
 
 ##### 5c. Scale to the whole profile — loop the single-slice computation
@@ -325,12 +325,12 @@ depth_data$rootlength.density <- depth_data$rootlength /
   ((depth_data$rootpx + depth_data$voidpx) / (150 / 2.54)^2)
 head(depth_data)
 #>   depth rootpx voidpx rootpx.density rootlength rootlength.density
-#> 1    -5      0   2595       0.000000    0.00000           0.000000
-#> 2     0   9161 238339       3.701414   95.37376           1.343906
-#> 3     5  23383 454396       4.894104  208.64354           1.522976
-#> 4    10  40037 437595       8.382395  363.27559           2.652515
-#> 5    15  32145 445626       6.728119  319.18993           2.329939
-#> 6    20  21435 456212       4.487624  195.25760           1.425660
+#> 1    -5      0   5156       0.000000     0.0000           0.000000
+#> 2     0      0 302559       0.000000     0.0000           0.000000
+#> 3     5  34010 443650       7.120127   312.5697           2.282144
+#> 4    10  42947 434821       8.989091   398.2910           2.907358
+#> 5    15  36115 441521       7.561197   346.3249           2.528726
+#> 6    20  23860 453910       4.994035   228.3132           1.666584
 ```
 
 ##### 5d. Root diameter — whole profile with `zonal()`
@@ -359,12 +359,12 @@ colnames(diam_by_depth) <- c("depth", "avg.diameter")
 depth_data <- merge(depth_data, diam_by_depth, by = "depth")
 head(depth_data)
 #>   depth rootpx voidpx rootpx.density rootlength rootlength.density avg.diameter
-#> 1    -5      0   2595       0.000000    0.00000           0.000000          NaN
-#> 2     0   9161 238339       3.701414   95.37376           1.343906   0.01836322
-#> 3     5  23383 454396       4.894104  208.64354           1.522976   0.01962727
-#> 4    10  40037 437595       8.382395  363.27559           2.652515   0.01914042
-#> 5    15  32145 445626       6.728119  319.18993           2.329939   0.01794262
-#> 6    20  21435 456212       4.487624  195.25760           1.425660   0.01850958
+#> 1    -5      0   5156       0.000000     0.0000           0.000000          NaN
+#> 2     0      0 302559       0.000000     0.0000           0.000000          NaN
+#> 3     5  34010 443650       7.120127   312.5697           2.282144   0.01951208
+#> 4    10  42947 434821       8.989091   398.2910           2.907358   0.01873523
+#> 5    15  36115 441521       7.561197   346.3249           2.528726   0.01829920
+#> 6    20  23860 453910       4.994035   228.3132           1.666584   0.01811409
 # root thickness
 zoom_plot(diam_result$distance_map_rast, frac = 0.1)
 ```
@@ -473,7 +473,7 @@ total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
 
 cat(sprintf("MRD: %.2f  Total length density: %.4f\n",
             mrd_val, total_ld))
-#> MRD: 19.23  Total length density: 72.9341
+#> MRD: 19.72  Total length density: 70.2596
 ```
 
 [`root_accumulation()`](https://jcunow.github.io/Rootopia/reference/root_accumulation.md)

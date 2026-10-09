@@ -101,7 +101,7 @@ is dropped and listed in a warning at the end.</p>
 <span>  session <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  tube_diameter_cm <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  tube_center_offset <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  tube_center_offset <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  depth_interval_cm <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  bin_round <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rounding"</span>, <span class="st">"floor"</span>, <span class="st">"ceiling"</span><span class="op">)</span>,</span>
 <span>  rotation_fixed_width <span class="op">=</span> <span class="fl">1800</span>,</span>
@@ -147,7 +147,7 @@ is dropped and listed in a warning at the end.</p>
 <span>  session <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  tube_diameter_cm <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  tube_center_offset <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  tube_center_offset <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  depth_interval_cm <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  bin_round <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rounding"</span>, <span class="st">"floor"</span>, <span class="st">"ceiling"</span><span class="op">)</span>,</span>
 <span>  rotation_fixed_width <span class="op">=</span> <span class="fl">1800</span>,</span>
@@ -270,14 +270,14 @@ argument switches the run to minirhizotron geometry (see
 
 
 <dt id="arg-tube-center-offset">tube_center_offset<a class="anchor" aria-label="anchor" href="#arg-tube-center-offset"></a></dt>
-<dd><p>Numeric in <code>[0, 1]</code>. Phase of the sinusoidal
-curvature correction, as a fraction of one full tube circumference: where
-the top of the tube falls across the image height.  <code>0</code> (default) puts
-the crest on the first and last row at once, <code>0.5</code> halfway down, and
-<code>1</code> is the same phase as <code>0</code>.  Set it if your scanner's
-rotational reference differs, or the depth assigned to a root will be
-offset by up to a full tilted tube diameter
-(<code>tube_diameter_cm * sin(insertion_angle)</code>), the crest-to-trough
+<dd><p>Numeric in <code>[0, 1]</code>. Where the top of the
+tube falls across the image height, as a fraction of one full tube
+circumference.  <code>0</code> puts it on the first row, <code>0.5</code> (default)
+halfway down, <code>1</code> on the last row; <code>0</code> and <code>1</code> are the same
+point on the tube, the image seam.  Set it if your scanner's rotational
+reference differs, or the depth assigned to a root will be offset by up to a
+full tilted tube diameter
+(<code>tube_diameter_cm * sin(insertion_angle)</code>), the shallowest-to-deepest
 range of the wave.  Minirhizotron only.</p></dd>
 
 

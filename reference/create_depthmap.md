@@ -55,11 +55,11 @@ create_depthmap(
 
 - center_offset:
 
-  Numeric in \[0, 1\]; phase of the sinusoidal curvature term, as a
-  fraction of one full tube circumference. It rotates the wave to where
-  the top of the tube sits in the image, moving the crest down the image
-  height. 0 and 1 are the same phase (crest at the image edge); 0.5 puts
-  the crest halfway down
+  Numeric in \[0, 1\]; where the top of the tube – the shallowest line
+  of the curvature wave – sits across the image height, as a fraction of
+  one full tube circumference. `0` puts it on the first row, `0.5`
+  halfway down, `1` on the last row. `0` and `1` are the same point on
+  the tube, the image seam
 
 ## Value
 
