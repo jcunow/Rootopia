@@ -18,6 +18,27 @@ test_that("create_depthmap validates parameters", {
   expect_error(create_depthmap(img, center_offset = 2))   # must be in [0,1]
 })
 
+test_that("center_offset sweeps the sine crest over the full image height", {
+  skip_if_not_installed("terra")
+  # One period of the curvature wave spans the tube circumference,
+  # round(tube_thicc * pi * dpi / 2.54) - 1 = 129 px here, so an image 129 rows
+  # tall holds exactly one period and the crest row is a direct read-out of the
+  # phase. center_offset is a fraction of that full turn.
+  img <- make_binary_spatraster(nr = 129, nc = 6)
+  crest_row <- function(offset) {
+    dm <- create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5, tilt = 45,
+                          dpi = 30, center_offset = offset)
+    which.max(terra::as.matrix(dm, wide = TRUE)[, 1])
+  }
+  expect_equal(crest_row(0.25), 33L)
+  expect_equal(crest_row(0.50), 65L)
+  expect_equal(crest_row(0.75), 97L)
+  # 0 and 1 are the same phase: a full turn comes back to the start. At both the
+  # crest sits on the first and last row at once, and which.max takes the first.
+  expect_equal(crest_row(0), 1L)
+  expect_equal(crest_row(1), crest_row(0))
+})
+
 test_that("slice_rotation splits into n contiguous slices", {
   skip_if_not_installed("terra")
   img    <- make_binary_spatraster()

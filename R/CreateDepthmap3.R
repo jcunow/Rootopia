@@ -11,11 +11,17 @@
 #' @param sinoid Logical; if TRUE, accounts for tube curvature in depth calculation
 #' @param tube_thicc Numeric; diameter of minirhizotron tube in cm
 #' @param tilt Numeric; insertion angle in degrees measured from horizontal,
-#'   in (0, 90]. Typically 30-45 for a minirhizotron; 90 is the head-on case
-#'   (vertical tube, or a flatbed scan) where the depth axis is not foreshortened
+#'   in (0, 90]. The depth axis is scaled by \code{sin(tilt)}, so 90 is the
+#'   head-on case (vertical tube, or a flatbed scan) with no foreshortening.
+#'   Minirhizotron tubes are commonly installed 30-45 degrees from vertical,
+#'   which is 45-60 in this convention
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start_soil Numeric; soil surface boundary in cm (0 = surface)
-#' @param center_offset Numeric; rotational center offset (0 = centered, 1 = edge)
+#' @param center_offset Numeric in [0, 1]; phase of the sinusoidal curvature
+#'   term, as a fraction of one full tube circumference. It rotates the wave to
+#'   where the top of the tube sits in the image, moving the crest down the
+#'   image height. 0 and 1 are the same phase (crest at the image edge); 0.5
+#'   puts the crest halfway down
 #'
 #' @return terra raster object containing the depth map
 #' @export
@@ -102,7 +108,10 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
       if (length(df1) < 2)
         stop("Insufficient points for sine wave generation. Check tube_thicc and dpi values")
 
-      df00 = (cos(df1+(pi*(center_offset))))*(tube_thicc_tilted/2) + (tube_thicc_tilted/2)
+      # center_offset is a fraction of one full turn, so the phase spans 2*pi:
+      # the crest travels the whole circumference as center_offset goes 0 -> 1,
+      # and 1 lands back on the same phase as 0.
+      df00 = (cos(df1+(2*pi*(center_offset))))*(tube_thicc_tilted/2) + (tube_thicc_tilted/2)
 
       # Safely handle vector subsetting
       if (nr > length(df00))

@@ -178,10 +178,10 @@ the curvature of cylindrical tubes.
 |---|---|
 | `sinoid` | `TRUE` for cylindrical minirhizotron tubes; `FALSE` for flat windows |
 | `tube_thicc` | Inner tube diameter in cm (typically 4.4 or 7 cm) |
-| `tilt` | Insertion angle from vertical in degrees (often 30–45°) |
+| `tilt` | Insertion angle from **horizontal** in degrees; `90` is a vertical tube. A tube installed at the common 30–45° from vertical is 45–60° here. |
 | `dpi` | Scanner resolution |
 | `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
-| `center_offset` | Fractional position of the rotational center (0–1). 0.5 = centered. |
+| `center_offset` | Phase of the curvature sine wave, as a fraction of one full tube circumference (0–1). 0 and 1 are the same phase; 0.5 puts the crest halfway down the image. |
 
 ```{r fig.alt="Depth map in centimetres, shading from shallow at one end to deep at the other."}
 # `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth
@@ -197,7 +197,7 @@ depth_map <- create_depthmap(
   tilt          = 45,      # degrees
   dpi           = 150,
   start_soil    = 2.9,     # cm — from in-situ calibration
-  center_offset = 0.5      # 0 = top of tube, 1 = bottom
+  center_offset = 0.5      # fraction of a full turn; 0 and 1 are the same phase
 )
 
 # terra::zonal() and depth_zoning() require rasters to share an extent; snap the
