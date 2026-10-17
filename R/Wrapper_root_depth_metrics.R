@@ -228,15 +228,21 @@
 #'   \code{FALSE} inverts this for bright-roots-on-dark-background images.  If
 #'   more than half the pixels come out as root, the polarity is probably wrong
 #'   and a warning says so.
-#' @param clean_max_hole_size Numeric. Fill enclosed background holes of up to
-#'   this many pixels before anything is measured; \code{0} (default) fills
-#'   none, \code{Inf} fills every hole.  Pinholes inside a painted root read as
-#'   background, which eats into the distance transform and so into diameter.
-#' @param clean_max_artifact_size Numeric. Drop disconnected foreground blobs of
-#'   up to this many pixels; \code{0} (default) drops none, \code{Inf} drops
-#'   everything not touching the largest structure.  Specks count as root area,
-#'   as isolated skeleton pixels, and as root tips.  Both use
+#' @param clean_fill_holes_upto Numeric. Largest enclosed background hole that
+#'   gets filled before anything is measured; anything bigger is left alone.
+#'   \code{0} (default) fills none, \code{Inf} fills every hole.  Pinholes
+#'   inside a painted root read as background, which eats into the distance
+#'   transform and so into diameter.
+#' @param clean_drop_objects_upto Numeric. Largest disconnected foreground blob
+#'   that gets deleted; anything bigger is kept.  \code{0} (default) deletes
+#'   none, \code{Inf} deletes everything not touching the largest structure.
+#'   Specks count as root area, as isolated skeleton pixels, and as root tips.
+#' @param clean_size_unit Character. Unit of the two thresholds above:
+#'   \code{"px"} (default) or \code{"mm2"}, which uses \code{dpi} so that the
+#'   same call cleans the same physical size at any scan resolution.  Both use
 #'   \code{\link{clean_image}} and need the \pkg{imager} package.
+#' @param clean_max_hole_size,clean_max_artifact_size Deprecated names for
+#'   \code{clean_fill_holes_upto} and \code{clean_drop_objects_upto}.
 #' @param seg_layer Integer or \code{NULL}. Which layer of the segmented image
 #'   to measure.  \code{NULL} (default) uses every layer: a single-layer image
 #'   as is, the first three layers of a 3- or 4-layer image (any alpha band is
@@ -483,8 +489,11 @@ root_depth_metrics <- function(
   binarize_threshold      = 200,
   dark_roots              = TRUE,
   seg_layer               = NULL,
-  clean_max_hole_size     = 0,
-  clean_max_artifact_size = 0,
+  clean_fill_holes_upto   = 0,
+  clean_drop_objects_upto = 0,
+  clean_size_unit         = "px",
+  clean_max_hole_size     = NULL,
+  clean_max_artifact_size = NULL,
   
   # ---------- core metrics (on by default) -----------------------------------
   calc_root_pixels        = TRUE,
@@ -521,7 +530,36 @@ root_depth_metrics <- function(
   verbose                 = TRUE
   
 ) {
-  
+
+  # Former argument names. They gave a size but not what happened to the thing
+  # that size described, so a reader could not tell whether the value was the
+  # largest object kept or the largest removed.
+  if (!is.null(clean_max_hole_size)) {
+    warning("`clean_max_hole_size` is deprecated; use `clean_fill_holes_upto`.",
+            call. = FALSE)
+    clean_fill_holes_upto <- clean_max_hole_size
+  }
+  if (!is.null(clean_max_artifact_size)) {
+    warning("`clean_max_artifact_size` is deprecated; use `clean_drop_objects_upto`.",
+            call. = FALSE)
+    clean_drop_objects_upto <- clean_max_artifact_size
+  }
+
+  # Validate the cleaning thresholds here rather than inside the per-image
+  # loop, where the call is wrapped in tryCatch and a bad value would print
+  # SKIPPED and quietly leave the image uncleaned.
+  if (!is.null(clean_fill_holes_upto) &&
+      (length(clean_fill_holes_upto) != 1L || !is.numeric(clean_fill_holes_upto) ||
+       is.na(clean_fill_holes_upto)))
+    stop("`clean_fill_holes_upto` must be a single non-NA number, or NULL for no limit.",
+         call. = FALSE)
+  if (!is.null(clean_drop_objects_upto) &&
+      (length(clean_drop_objects_upto) != 1L || !is.numeric(clean_drop_objects_upto) ||
+       is.na(clean_drop_objects_upto)))
+    stop("`clean_drop_objects_upto` must be a single non-NA number, or NULL for no limit.",
+         call. = FALSE)
+  clean_size_unit <- match.arg(clean_size_unit, c("px", "mm2"))
+
   # ===========================================================================
   # 0.  Internal helpers (not exported)
   # ===========================================================================
@@ -880,11 +918,14 @@ root_depth_metrics <- function(
     # Specks and pinholes in a painted segmentation become root pixels, root
     # tips and a little length. Cleaning before the skeleton is traced keeps
     # every metric measuring the same image.
-    if (clean_max_hole_size > 0 || clean_max_artifact_size > 0) {
+    if (is.null(clean_fill_holes_upto) || is.null(clean_drop_objects_upto) ||
+        clean_fill_holes_upto > 0 || clean_drop_objects_upto > 0) {
       im <- .safe("clean_image", {
         clean_image(im,
-                    max_hole_size     = clean_max_hole_size,
-                    max_artifact_size = clean_max_artifact_size,
+                    fill_holes_upto   = clean_fill_holes_upto,
+                    drop_objects_upto = clean_drop_objects_upto,
+                    size_unit         = clean_size_unit,
+                    dpi               = dpi,
                     output_format     = "spatrast")
       }, fallback = im)
     }

@@ -26,8 +26,11 @@ root_depth_metrics(
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
-  clean_max_hole_size = 0,
-  clean_max_artifact_size = 0,
+  clean_fill_holes_upto = 0,
+  clean_drop_objects_upto = 0,
+  clean_size_unit = "px",
+  clean_max_hole_size = NULL,
+  clean_max_artifact_size = NULL,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -72,8 +75,11 @@ batch_root_traits(
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
-  clean_max_hole_size = 0,
-  clean_max_artifact_size = 0,
+  clean_fill_holes_upto = 0,
+  clean_drop_objects_upto = 0,
+  clean_size_unit = "px",
+  clean_max_hole_size = NULL,
+  clean_max_artifact_size = NULL,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -228,16 +234,24 @@ converted to grayscale with \code{rgb2gray()}; binary ones take root as
 non-zero in every layer.  Set this if your files carry the segmentation in
 one specific band.}
 
-\item{clean_max_hole_size}{Numeric. Fill enclosed background holes of up to
-this many pixels before anything is measured; \code{0} (default) fills
-none, \code{Inf} fills every hole.  Pinholes inside a painted root read as
-background, which eats into the distance transform and so into diameter.}
+\item{clean_fill_holes_upto}{Numeric. Largest enclosed background hole that
+gets filled before anything is measured; anything bigger is left alone.
+\code{0} (default) fills none, \code{Inf} fills every hole.  Pinholes
+inside a painted root read as background, which eats into the distance
+transform and so into diameter.}
 
-\item{clean_max_artifact_size}{Numeric. Drop disconnected foreground blobs of
-up to this many pixels; \code{0} (default) drops none, \code{Inf} drops
-everything not touching the largest structure.  Specks count as root area,
-as isolated skeleton pixels, and as root tips.  Both use
+\item{clean_drop_objects_upto}{Numeric. Largest disconnected foreground blob
+that gets deleted; anything bigger is kept.  \code{0} (default) deletes
+none, \code{Inf} deletes everything not touching the largest structure.
+Specks count as root area, as isolated skeleton pixels, and as root tips.}
+
+\item{clean_size_unit}{Character. Unit of the two thresholds above:
+\code{"px"} (default) or \code{"mm2"}, which uses \code{dpi} so that the
+same call cleans the same physical size at any scan resolution.  Both use
 \code{\link{clean_image}} and need the \pkg{imager} package.}
+
+\item{clean_max_hole_size, clean_max_artifact_size}{Deprecated names for
+\code{clean_fill_holes_upto} and \code{clean_drop_objects_upto}.}
 
 \item{calc_root_pixels}{Logical. Count \code{rootpx} (foreground pixels) and
 \code{voidpx} (background pixels) per depth bin.  Required for density
