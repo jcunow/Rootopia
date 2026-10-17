@@ -2,14 +2,26 @@
 % Please edit documentation in R/RootBranching.R
 \name{render_order_overlay}
 \alias{render_order_overlay}
-\title{Write an order-colored validation overlay (PNG)}
+\title{Paint a per-segment value onto the root system (PNG)}
 \usage{
-render_order_overlay(segs, tip_order, dims, file, mask = NULL, max_side = 2000)
+render_order_overlay(
+  segs,
+  values,
+  dims,
+  file,
+  mask = NULL,
+  max_side = 2000,
+  continuous = NA,
+  value_label = NULL,
+  n_bins = 64L,
+  tip_order = NULL
+)
 }
 \arguments{
 \item{segs}{Segment list (kept via \code{keep_segments = TRUE}).}
 
-\item{tip_order}{Numeric vector of the order value per segment to color by.}
+\item{values}{Numeric vector, one value per segment: an order column, or any
+per-segment quantity such as those added by \code{\link{root_transport}}.}
 
 \item{dims}{Integer length-2 vector, the (cropped) raster dimensions.}
 
@@ -18,11 +30,33 @@ render_order_overlay(segs, tip_order, dims, file, mask = NULL, max_side = 2000)
 \item{mask}{Optional 0/1 mask drawn as a gray background.}
 
 \item{max_side}{Long-side cap (px) for the output image.}
+
+\item{continuous}{\code{NA} (default) picks the legend from the data:
+continuous when any value has a fractional part or there are more than 24
+distinct values, discrete otherwise. \code{TRUE} or \code{FALSE} forces it.}
+
+\item{value_label}{Optional title drawn above the colour bar, e.g.
+\code{"path resistance"}. Continuous legend only.}
+
+\item{n_bins}{Number of colour steps in the continuous ramp.}
+
+\item{tip_order}{Deprecated name for \code{values}.}
 }
 \value{
 Invisibly, \code{file}.
 }
 \description{
-Paints each segment by its order value over the mask; unordered (cyclic)
-segments are drawn in red so failures are visible.
+Colors each segment by any value you supply, over the mask. Segments with
+\code{NA} are drawn in red so failures stay visible.
+}
+\details{
+Two legends are available and the right one is chosen from the data. A
+branch order is a handful of small integers and reads as named classes, so
+it gets one labelled swatch per order. A transport quantity -- path
+resistance, path length from the base, the root length a segment serves --
+is continuous and gets a colour ramp with a scale bar instead. Pass
+\code{continuous} to override the choice.
+}
+\seealso{
+\code{\link{root_transport}} for quantities worth painting.
 }
