@@ -1449,13 +1449,24 @@ summarize_orders <- function(et, order_col = "branch_order") {
 #' @param length_method \code{"kimura"} (default) or \code{"polyline"}.
 #'   \code{"polyline"} is the sqrt(2) chain code: it walks the skeleton pixel
 #'   to pixel, counting 1 for an orthogonal step and sqrt(2) for a diagonal one.
-#'   A digital line is a staircase, so that path is longer than the line it
-#'   represents -- measured against straight lines of known length, the chain
-#'   code runs about 5.7\% long on average and up to 8.2\%, worst near 22.5
-#'   degrees and zero only for perfectly horizontal or vertical segments.
-#'   Kimura's estimator corrects for the staircase and reduces that to about
-#'   1.8\% on average. Use \code{"polyline"} to reproduce output from
-#'   Rootopia 1.1.0 and earlier, which defaulted to it.
+#'   A digital line is a staircase, so that walk is longer than the line it
+#'   represents and the chain code reports the staircase. Kimura's estimator,
+#'   \eqn{\sqrt{n_d^2 + (n_d + n_o/2)^2} + n_o/2} over the diagonal and
+#'   orthogonal step counts, corrects for that and is the better estimate of
+#'   root length.
+#'
+#'   Both reduce to the same value when a chain is all orthogonal or all
+#'   diagonal, so a perfectly horizontal, vertical or 45-degree segment reports
+#'   the same length either way. They differ only where a chain mixes the two,
+#'   which is where the staircase is, and there the chain code reads high.
+#'   Kimura's correction is derived for straight digital lines, so it is most
+#'   exact on segments that are nearly straight; both measures follow whatever
+#'   path the skeleton takes, so neither can recover length the skeleton does
+#'   not have.
+#'
+#'   Use \code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier,
+#'   which defaulted to it, or to compare against software that reports the
+#'   chain code.
 #' @return \code{et} with length/diameter columns in \code{unit}; records
 #'   \code{unit}, \code{dpi}, \code{length_method} as attributes.
 #' @examples
@@ -1536,12 +1547,11 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' @param length_method \code{"kimura"} (default) or \code{"polyline"}.
 #'   The sqrt(2) chain code walks the skeleton pixel to pixel, so it traces a
 #'   staircase and reports more length than the line it represents; Kimura's
-#'   estimator corrects for that. Measured on digital straight lines of known
-#'   length, the chain code runs about 5.7\% long on average and Kimura about
-#'   1.8\%. Kimura is derived for straight digital lines, so the correction is
-#'   best on segments that are nearly straight; both estimators follow whatever
-#'   path the skeleton takes. Use \code{"polyline"} to reproduce output from
-#'   Rootopia 1.1.0 and earlier.
+#'   estimator corrects for that and is the better estimate. The two agree
+#'   exactly on a perfectly horizontal, vertical or 45-degree segment and
+#'   differ only where a chain mixes orthogonal and diagonal steps. See
+#'   \code{\link{convert_root_units}} for the definition. Use
+#'   \code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier.
 
 #' @param template \code{SpatRaster} defining the \code{$class_map} grid; defaults
 #'   to \code{skel} when it is a raster.

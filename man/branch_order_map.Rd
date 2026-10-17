@@ -37,12 +37,11 @@ diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.}
 \item{length_method}{\code{"kimura"} (default) or \code{"polyline"}.
 The sqrt(2) chain code walks the skeleton pixel to pixel, so it traces a
 staircase and reports more length than the line it represents; Kimura's
-estimator corrects for that. Measured on digital straight lines of known
-length, the chain code runs about 5.7\% long on average and Kimura about
-1.8\%. Kimura is derived for straight digital lines, so the correction is
-best on segments that are nearly straight; both estimators follow whatever
-path the skeleton takes. Use \code{"polyline"} to reproduce output from
-Rootopia 1.1.0 and earlier.}
+estimator corrects for that and is the better estimate. The two agree
+exactly on a perfectly horizontal, vertical or 45-degree segment and
+differ only where a chain mixes orthogonal and diagonal steps. See
+\code{\link{convert_root_units}} for the definition. Use
+\code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier.}
 
 \item{template}{\code{SpatRaster} defining the \code{$class_map} grid; defaults
 to \code{skel} when it is a raster.}

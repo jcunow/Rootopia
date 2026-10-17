@@ -132,3 +132,110 @@ test_that("a filled mask passed as a skeleton is flagged", {
     warning = function(w) { ws <<- c(ws, conditionMessage(w)); invokeRestart("muffleWarning") })
   expect_true(any(grepl("1-pixel-wide skeleton", ws)))
 })
+
+test_that("the reported length column is Kimura's estimator by default", {
+  # validate_branching() deliberately scores the chain-code column, because
+  # that is the convention the phantom's truth is written in. This pins the
+  # package default separately, so pinning the fixture cannot quietly become a
+  # revert of the default.
+  expect_equal(eval(formals(convert_root_units)$length_method)[1], "kimura")
+  expect_equal(formals(branch_order_map)$length_method, "kimura")
+
+  m <- matrix(0, 11, 41); m[6, 5:37] <- 1
+  et <- root_graph_pipeline(m, m, verbose = FALSE)
+  conv <- convert_root_units(et, unit = "px", dpi = 300)
+  expect_equal(conv$length, conv$length_kimura)
+})
+
+test_that("the two length measures agree exactly on pure chains", {
+  # Kimura's estimator is sqrt(nd^2 + (nd + no/2)^2) + no/2. With no = 0 that is
+  # nd * sqrt(2) and with nd = 0 it is no, so on a chain of only diagonal or
+  # only orthogonal steps it reduces to the chain code. That is why the
+  # phantom's axis-aligned and 45-degree designs score the same either way on
+  # the exact centre line, and it is what makes the fixture's convention choice
+  # harmless for the skeleton route.
+  horiz <- matrix(0, 11, 41); horiz[6, 5:37] <- 1
+  diag_ <- matrix(0, 41, 41); for (k in 0:32) diag_[5 + k, 5 + k] <- 1
+
+  for (m in list(horiz, diag_)) {
+    et <- root_graph_pipeline(m, m, verbose = FALSE)
+    expect_true(et$n_orth == 0L || et$n_diag == 0L)   # the chain really is pure
+    expect_equal(et$length, et$length_kimura)
+  }
+})
+
+test_that("Kimura is the closer measure once thinning jitters a diagonal", {
+  skip_if_not_installed("terra")
+  # Thinning a drawn 45-degree lateral does not return a pure diagonal chain:
+  # a few orthogonal steps appear, and that is exactly where the two measures
+  # part company. The lateral is straight, so the distance between its first
+  # and last traced pixel is its true length, and both measures can be scored
+  # against it. The chain code reads high because it walks the staircase;
+  # Kimura corrects for it and lands closer.
+  ph <- root_phantom("herringbone", size = 200)
+  skel <- .to_binary_matrix(skeletonize_image(ph$mask, verbose = FALSE))
+  et <- root_graph_pipeline(skel, ph$mask, verbose = FALSE, keep_segments = TRUE)
+  segs <- attr(et, "segments")
+
+  lat <- which(et$branch_order == 2)
+  expect_gt(length(lat), 0)
+  i <- lat[1]
+  expect_gt(et$n_orth[i], 0)        # jitter is present
+  expect_gt(et$n_diag[i], 0)
+
+  p <- segs[[i]]$coords
+  span <- sqrt(sum((p[nrow(p), ] - p[1L, ])^2))
+  err_poly   <- (et$length[i] - span) / span
+  err_kimura <- (et$length_kimura[i] - span) / span
+
+  expect_gt(err_poly, 0)                                 # staircase reads high
+  expect_lt(abs(err_kimura), abs(err_poly))              # Kimura reads closer
+  expect_lt(abs(err_kimura), 0.05)
+})
+
+test_that("Kimura beats the chain code on strokes of known length", {
+  skip_if_not_installed("terra")
+  # The phantom designs run along the axes or at 45 degrees, the orientations
+  # where the two length measures coincide exactly, so validate_branching()
+  # cannot tell them apart. This scores them where they do differ: isolated
+  # strokes of analytically known length, drawn, filled, thinned and traced, so
+  # the figures carry the thinning error as well as the measure. No junctions,
+  # so junction contraction cannot confound the comparison.
+  N <- 320L
+  one <- function(v) {
+    true_len <- sum(sqrt(rowSums(diff(v)^2)))
+    m  <- .stamp_stroke(matrix(0, N, N), .polyline_px(round(v)), 2L)
+    sk <- .to_binary_matrix(skeletonize_image(m, verbose = FALSE))
+    et <- root_graph_pipeline(sk, m, verbose = FALSE)
+    if (nrow(et) != 1L) return(NULL)        # only score a cleanly traced stroke
+    c(true = true_len, poly = et$length[1], kimura = et$length_kimura[1])
+  }
+
+  rows <- list()
+  for (deg in seq(6, 84, by = 13)) {        # 0, 45 and 90 are the tie cases
+    th <- deg * pi / 180; L <- 150
+    rows[[length(rows) + 1L]] <-
+      one(rbind(c(240, 70), c(240 - L * sin(th), 70 + L * cos(th))))
+  }
+  for (base in c(10, 35, 70)) {             # gently curved, as a root is
+    t <- seq(0, 150, length.out = 150); th <- base * pi / 180
+    y <- 8 * sin(2 * pi * t / 60)
+    rows[[length(rows) + 1L]] <-
+      one(cbind(240 - (t * sin(th) + y * cos(th)),
+                 70 + (t * cos(th) - y * sin(th))))
+  }
+  rows <- do.call(rbind, Filter(Negate(is.null), rows))
+  expect_gte(nrow(rows), 8L)
+
+  err  <- function(col) (rows[, col] - rows[, "true"]) / rows[, "true"]
+  rms  <- function(x) sqrt(mean(x^2))
+  ep <- err("poly"); ek <- err("kimura")
+
+  # the staircase bias is real and upward
+  expect_gt(mean(ep), 0.02)
+  expect_gt(rms(ep), 0.03)
+  # and Kimura removes most of it
+  expect_lt(rms(ek), 0.03)
+  expect_lt(rms(ek), rms(ep) / 2)
+  expect_gte(sum(abs(ek) < abs(ep)), ceiling(0.7 * nrow(rows)))
+})

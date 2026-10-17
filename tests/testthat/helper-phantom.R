@@ -326,9 +326,18 @@ validate_branching <- function(design = c("comb", "herringbone", "hierarchical",
   skel <- if (from == "skeleton") phantom$skeleton else
     .to_binary_matrix(skeletonize_image(phantom$mask, verbose = FALSE))
 
-  res <- branch_order_map(skel = skel, mask = phantom$mask, order = "branch_order",
-                          unit = "px", dpi = truth$dpi, return_map = FALSE,
-                          overlay_png = overlay_png, verbose = FALSE, ...)
+  # The phantom's truth is analytic in the chain-code convention: every stroke
+  # runs along an axis or at 45 degrees, the two orientations where the chain
+  # code is exact (see the length note above). Scoring is pinned to that
+  # convention rather than following the package default, which is Kimura's
+  # estimator -- a different measure, with no analytic truth here to score it
+  # against. `length_method` passed through ... still overrides this.
+  dots <- list(...)
+  if (is.null(dots$length_method)) dots$length_method <- "polyline"
+  res <- do.call(branch_order_map,
+                 c(list(skel = skel, mask = phantom$mask, order = "branch_order",
+                        unit = "px", dpi = truth$dpi, return_map = FALSE,
+                        overlay_png = overlay_png, verbose = FALSE), dots))
   et <- res$edges
 
   obs_orders <- stats::na.omit(et$branch_order)
