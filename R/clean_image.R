@@ -138,8 +138,8 @@ create_kernel <- function(shape = "disk", size = 3) {
 
 #' Summarize the component-size distribution of a binary image
 #'
-#' Reports the size distribution of the two component types that [clean_image()]
-#' acts on, to help you choose `max_hole_size` and `max_artifact_size`:
+#' Reports the size distribution of the two component types that \code{\link{clean_image}}
+#' acts on, to help you choose `fill_holes_upto` and `drop_objects_upto`:
 #' \itemize{
 #'   \item **holes** — `background (0)` regions fully enclosed by `root (1)`
 #'         (segmentation gaps inside roots). Regions touching the image border
@@ -153,11 +153,14 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' This function applies **no** size cutoff — it characterizes *every*
 #' component. There is therefore nothing special separating a "big root" from an
 #' "artifact": both are root components, distinguished only by size. Use the
-#' printed summary and the histograms to pick the `max_*_size` values you then
-#' pass to [clean_image()]. (Values are in pixels; scale with your scanner DPI.)
+#' printed summary and the histograms to pick the `fill_holes_upto` and
+#' `drop_objects_upto` values you then pass to \code{\link{clean_image}}.
+#' Counts here are in pixels, so they match `clean_image()`'s default
+#' `size_unit = "px"` directly; divide by \eqn{(dpi/25.4)^2} to express one in
+#' mm\eqn{^2}.
 #'
 #' @param img A binary image (`SpatRaster`, `cimg`, matrix, or file path); any
-#'   format accepted by [load_flexible_image()].
+#'   format accepted by \code{\link{load_flexible_image}}.
 #' @param plot Logical. Draw size-distribution histograms (log10 x-axis, with
 #'   mean and median marked). Default `TRUE`.
 #' @param breaks Number of histogram breaks. Default `30`.
@@ -169,7 +172,7 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' \dontrun{
 #' data(seg_Oulanka2023_Session01_T067)
 #' sizes <- report_image_components(seg_Oulanka2023_Session01_T067)
-#' quantile(sizes$objects)   # inspect the small end to set max_artifact_size
+#' quantile(sizes$objects)   # inspect the small end to set drop_objects_upto
 #' }
 report_image_components <- function(img, plot = TRUE, breaks = 30,
                                     select_layer = NULL) {
@@ -255,7 +258,7 @@ report_image_components <- function(img, plot = TRUE, breaks = 30,
 #' skeletonisation; do **not** apply after skeletonisation.
 #'
 #' @param img A `cimg` binary image or any format accepted by
-#'   [load_flexible_image()].
+#'   \code{\link{load_flexible_image}}.
 #' @param kernel_shape One of `"disk"` (default), `"square"`, `"diamond"`.
 #' @param kernel_size Structuring element size (odd integer).  At 300 DPI,
 #'   `kernel_size = 3` is a good starting point.
@@ -292,7 +295,7 @@ smooth_root_edges <- function(img,
 #' Performs three sequential cleaning operations on a binary segmented image:
 #' 1. **Hole filling** -- fills black regions enclosed by white (segmentation
 #'    gaps inside roots).
-#' 2. **Artifact removal** — removes isolated white specks not connected to
+#' 2. **Speck removal** -- deletes isolated foreground blobs not connected to
 #'    the image border (false-positive root detections).
 #' 3. **Edge smoothing** *(optional, off by default)* -- applies morphological
 #'    closing to smooth jagged root edges.
@@ -305,9 +308,15 @@ smooth_root_edges <- function(img,
 #' phantom skeleton segments.  Cleaning first yields a much cleaner skeleton.
 #'
 #' @section Choosing thresholds:
-#' Call [report_image_components()] on your image first to see the actual
-#' pixel counts of all holes and artifacts.  At 300 DPI, sensible starting
-#' values are `max_hole_size = 50` and `max_artifact_size = 10`.
+#' Call \code{\link{report_image_components}} on your image first to see the actual
+#' pixel counts of all holes and specks.  At 300 dpi, sensible starting values
+#' are `fill_holes_upto = 50` and `drop_objects_upto = 10` pixels.
+#'
+#' A pixel threshold means a different physical size at every scan resolution:
+#' 50 px is 0.36 mm\eqn{^2} at 300 dpi but 0.022 mm\eqn{^2} at 1200 dpi, so a
+#' call tuned on one dataset cleans differently on another.  Set
+#' `size_unit = "mm2"` and supply `dpi` to give the thresholds a fixed physical
+#' meaning that carries across resolutions.
 #'
 #' @section Edge smoothing caution:
 #' `edge_smooth = TRUE` applies a morphological closing that slightly dilates
@@ -318,17 +327,26 @@ smooth_root_edges <- function(img,
 #' @section Input must be binary:
 #' `clean_image()` operates on a binary mask (root = 1, background = 0). If your
 #' input is a raw probability / grayscale image from a segmentation model,
-#' binarize it first with [image_threshold()] and pass the result here.
+#' binarize it first with \code{\link{image_threshold}} and pass the result here.
 #'
 #' @param img A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).
-#' @param max_hole_size Maximum hole size in pixels to fill.  If `NULL`, all
-#'   enclosed holes are filled.  See **Choosing thresholds** above.
-#' @param max_artifact_size Maximum artifact size in pixels to remove.  If
-#'   `NULL`, all candidate white regions are removed.
+#' @param fill_holes_upto Largest enclosed hole that gets filled; anything
+#'   bigger is left alone.  `NULL` (default) fills every enclosed hole.  Units
+#'   are set by `size_unit`.  See **Choosing thresholds** above.
+#' @param drop_objects_upto Largest disconnected foreground blob that gets
+#'   deleted; anything bigger is kept.  `NULL` (default) deletes every
+#'   candidate blob.  Units are set by `size_unit`.
+#' @param size_unit Unit of the two thresholds above: `"px"` (default, pixel
+#'   count) or `"mm2"` (square millimetres, which requires `dpi`).
+#' @param dpi Scan resolution, required when `size_unit = "mm2"` and ignored
+#'   otherwise.
+#' @param max_hole_size,max_artifact_size Deprecated names for
+#'   `fill_holes_upto` and `drop_objects_upto`.  Supplying either warns and
+#'   sets the corresponding new argument.
 #' @param protect_border Logical.  If `TRUE`, white regions touching the image
 #'   border are kept regardless of size (roots leaving the frame).  If `FALSE`
 #'   (default), border-touching specks are removed by the same
-#'   `max_artifact_size` test as anything else — being at the edge does not
+#'   `drop_objects_upto` test as anything else -- being at the edge does not
 #'   protect an artifact.
 #' @param edge_smooth Logical.  Apply morphological closing after hole/artifact
 #'   cleaning.  Default `FALSE`.
@@ -344,7 +362,7 @@ smooth_root_edges <- function(img,
 #'   means the result can be passed directly to `terra::plot()`,
 #'   `skeletonize_image()`, `root_length()`, etc. without any further
 #'   conversion.
-#' @param report Logical.  If `TRUE`, also calls [report_image_components()]
+#' @param report Logical.  If `TRUE`, also calls \code{\link{report_image_components}}
 #'   on the *original* (uncleaned) image before cleaning.  When
 #'   `output_format = "spatrast"` (default), the cleaned raster is returned
 #'   directly even when `report = TRUE`; the report is printed as a side
@@ -352,24 +370,35 @@ smooth_root_edges <- function(img,
 #' @return A cleaned image in the format specified by `output_format`
 #'   (`SpatRaster`, `cimg`, or matrix).
 #' @export
-#' @seealso [report_image_components()], [skeletonize_image()], [image_threshold()]
+#' @seealso \code{\link{report_image_components}}, \code{\link{skeletonize_image}}, \code{\link{image_threshold}}
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
 #'
 #'
-#' # Clean: fill small holes, remove tiny artifacts -- returns SpatRaster
+#' # Clean: fill small holes, delete tiny specks -- returns SpatRaster
 #' cleaned <- clean_image(img,
-#'                        max_hole_size     = 50,
-#'                        max_artifact_size = 10,
+#'                        fill_holes_upto   = 50,
+#'                        drop_objects_upto = 10,
 #'                        select_layer      = 2)
 #'
+#' # The same thresholds expressed physically, so they mean the same thing
+#' # whatever the scan resolution
+#' cleaned_mm <- clean_image(img,
+#'                           fill_holes_upto   = 0.36,
+#'                           drop_objects_upto = 0.07,
+#'                           size_unit         = "mm2",
+#'                           dpi               = 300,
+#'                           select_layer      = 2)
+#'
 #' # If you need a cimg for further imager operations:
-#' cleaned_cimg <- clean_image(img, max_hole_size = 50,
+#' cleaned_cimg <- clean_image(img, fill_holes_upto = 50,
 #'                             output_format = "cimg", select_layer = 2)
 clean_image <- function(img,
-                         max_hole_size     = NULL,
-                         max_artifact_size = NULL,
+                         fill_holes_upto   = NULL,
+                         drop_objects_upto = NULL,
+                         size_unit         = c("px", "mm2"),
+                         dpi               = NULL,
                          protect_border    = FALSE,
                          edge_smooth       = FALSE,
                          kernel_shape      = "disk",
@@ -377,9 +406,35 @@ clean_image <- function(img,
                          iterations        = 1,
                          select_layer      = NULL,
                          output_format     = "spatrast",
-                         report            = FALSE) {
+                         report            = FALSE,
+                         max_hole_size     = NULL,
+                         max_artifact_size = NULL) {
 
   output_format <- match.arg(output_format, c("spatrast", "cimg", "matrix"))
+  size_unit     <- match.arg(size_unit)
+
+  # Former argument names. They said how big a thing was but not what happened
+  # to it, so a reader could not tell whether the value was the largest thing
+  # kept or the largest thing removed.
+  if (!is.null(max_hole_size)) {
+    warning("`max_hole_size` is deprecated; use `fill_holes_upto`.", call. = FALSE)
+    if (is.null(fill_holes_upto)) fill_holes_upto <- max_hole_size
+  }
+  if (!is.null(max_artifact_size)) {
+    warning("`max_artifact_size` is deprecated; use `drop_objects_upto`.", call. = FALSE)
+    if (is.null(drop_objects_upto)) drop_objects_upto <- max_artifact_size
+  }
+
+  # A threshold in pixels means a different physical size at every scan
+  # resolution, so the same call cleans differently at 300 and at 1200 dpi.
+  # Giving the size in mm^2 fixes the physical meaning and converts here.
+  if (size_unit == "mm2") {
+    if (is.null(dpi) || !is.numeric(dpi) || dpi <= 0)
+      stop("`dpi` is required, and must be positive, when size_unit = \"mm2\".")
+    px_per_mm2 <- (dpi / 25.4)^2
+    if (!is.null(fill_holes_upto))   fill_holes_upto   <- fill_holes_upto   * px_per_mm2
+    if (!is.null(drop_objects_upto)) drop_objects_upto <- drop_objects_upto * px_per_mm2
+  }
 
   img_cimg <- load_flexible_image(img,
                                    output_format = "cimg",
@@ -388,8 +443,8 @@ clean_image <- function(img,
 
   if (report) report_image_components(img_cimg)
 
-  img_filled  <- fill_holes(img_cimg, max_hole_size)
-  img_cleaned <- remove_small_objects(img_filled, max_artifact_size,
+  img_filled  <- fill_holes(img_cimg, fill_holes_upto)
+  img_cleaned <- remove_small_objects(img_filled, drop_objects_upto,
                                       protect_border = protect_border)
 
   img_out <- if (edge_smooth) {
