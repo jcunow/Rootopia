@@ -108,17 +108,21 @@ image_components = report_image_components(seg)
 
 ![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)
 
-Use those numbers to set `max_hole_size` (largest gap to fill) and
-`max_artifact_size` (largest speck to delete). Specks touching the image
-edge are removed by the same size test as anywhere else — being at the
-border no longer protects an artifact. Set `protect_border = TRUE` only
-if you have real roots leaving the frame that you must keep.
+Use those numbers to set `fill_holes_upto` (largest gap that gets
+filled) and `drop_objects_upto` (largest speck that gets deleted).
+Anything bigger than either threshold is left alone. Both are pixel
+counts by default; set `size_unit = "mm2"` and supply `dpi` to give them
+a fixed physical size, which is what you want when scans of different
+resolution are analyzed together. Specks touching the image edge are
+removed by the same size test as anywhere else; the border carries no
+exemption. Set `protect_border = TRUE` only if you have real roots
+leaving the frame that you must keep.
 
 ``` r
 
 seg_clean <- clean_image(seg,
-                         max_hole_size     = 50, # too small = not filling all the holes; too large = inflates area when roots overlap in a circle
-                         max_artifact_size = 50, # too small = includes dirt; too large = removes genuine roots
+                         fill_holes_upto   = 50, # too small = not filling all the holes; too large = inflates area when roots overlap in a circle
+                         drop_objects_upto = 50, # too small = includes dirt; too large = removes genuine roots
                          protect_border    = FALSE)
 zoom_plot(seg, main = "Before Cleaning", center = c(0.6,0.7))
 ```
@@ -142,6 +146,44 @@ holes.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png)
 > [`image_threshold()`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
 > first.
 
+``` r
+
+grayscale <- load_flexible_image("path/to/scan.tif", scale = "to_01")
+
+# even illumination: one level for the whole scan
+mask <- image_threshold(grayscale, threshold = 0.3, method = "global")
+
+# bright center, dark corners: a level that follows the local brightness
+mask <- image_threshold(grayscale, method = "adaptive",
+                        adaptive_k = 1.15, window_size = 51)
+```
+
+For the adaptive method, two numbers decide whether it works, and both
+are properties of your scan rather than preferences:
+
+- `adaptive_k` is a **multiple of the local mean** and must sit above 1.
+  A window containing only background averages to the background level,
+  so at `adaptive_k = 1` about half of a root-free patch comes back as
+  root and below 1 nearly all of it does. 1.15 suits a clean scan; raise
+  it for a noisy one.
+- `window_size` must be **much wider than your widest root**, because
+  the local average includes the root itself and a root that fills its
+  own window raises the level it is judged against. Measure the widest
+  root in pixels on one scan and allow roughly ten times that. Cost is
+  flat in `window_size`, so there is no reason to keep it small.
+
+Set the window first, then the multiplier: a wider window gives a
+cleaner reference level and allows a larger `adaptive_k`. The *How It
+Works* vignette derives both rules and gives the measured numbers behind
+the defaults.
+
+Both methods mark pixels *brighter* than a reference, so check that your
+roots actually are brighter than what surrounds them. Washed roots on a
+dark tray are; roots against soil in a minirhizotron tube generally are
+not, and there no value of `adaptive_k` works – that case needs a
+trained segmenter, which is what the prerequisite at the top of this
+vignette is about.
+
 ------------------------------------------------------------------------
 
 #### 3. Skeletonize
@@ -160,9 +202,9 @@ zoom_plot(skl, main = "Skeleton", frac = 0.25, center = c(0.7,0.625))
 ```
 
 ![One-pixel-wide skeleton traced through the center of every
-root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png)![One-pixel-wide
+root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)![One-pixel-wide
 skeleton traced through the center of every
-root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png)
+root.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png)
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses a LUT-based Zhang-Suen thinning algorithm to reduce the segmented
@@ -189,7 +231,7 @@ zoom_plot(skl_pruned, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(
 ```
 
 ![Skeleton with short spurs still
-attached.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png)
+attached.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-8-1.png)
 
 ``` r
 
@@ -202,9 +244,9 @@ zoom_plot(seg_clean, main = "Skeleton (spurs pruned)", frac = 0.25, center = c(0
 ```
 
 ![The same skeleton after pruning the short terminal
-spurs.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png)![Skeleton
+spurs.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-8-2.png)![Skeleton
 with short spurs still
-attached.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png)
+attached.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-8-3.png)
 
 ------------------------------------------------------------------------
 
@@ -260,7 +302,7 @@ ggplot(data.frame(diameter = as.numeric(diam_vals)), aes(x = diameter)) +
 ```
 
 ![Histogram of root diameters across the
-scan.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png)
+scan.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-10-1.png)
 
 For fine/coarse root separation,
 [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)

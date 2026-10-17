@@ -14,7 +14,7 @@ branch_order_map(
   order = c("strahler_order", "branch_order", "root_order", "tip_order"),
   unit = "cm",
   dpi = 300,
-  length_method = "polyline",
+  length_method = "kimura",
   template = NULL,
   overlay_png = NULL,
   return_map = TRUE,
@@ -53,8 +53,15 @@ branch_order_map(
 
 - length_method:
 
-  `"polyline"` (sqrt(2) chain code, follows curves) or `"kimura"`
-  (per-segment Kimura correction, better for straight segments).
+  `"kimura"` (default) or `"polyline"`. The sqrt(2) chain code walks the
+  skeleton pixel to pixel, so it traces a staircase and reports more
+  length than the line it represents; Kimura's estimator corrects for
+  that. Measured on digital straight lines of known length, the chain
+  code runs about 5.7% long on average and Kimura about 1.8%. Kimura is
+  derived for straight digital lines, so the correction is best on
+  segments that are nearly straight; both estimators follow whatever
+  path the skeleton takes. Use `"polyline"` to reproduce output from
+  Rootopia 1.1.0 and earlier.
 
 - template:
 
@@ -123,7 +130,11 @@ The odd arm out is a lateral. `tip_order` does not use this rule.
 [`root_graph_pipeline`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md),
 [`order_classification_map`](https://jcunow.github.io/Rootopia/reference/order_classification_map.md),
 [`summarize_orders`](https://jcunow.github.io/Rootopia/reference/summarize_orders.md),
-[`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md)
+[`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md),
+[`root_transport`](https://jcunow.github.io/Rootopia/reference/root_transport.md)
+and
+[`network_metrics`](https://jcunow.github.io/Rootopia/reference/network_metrics.md),
+which both take the `$edges` table returned here.
 
 ## Examples
 

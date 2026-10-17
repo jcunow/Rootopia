@@ -109,8 +109,11 @@ is dropped and listed in a warning at the end.</p>
 <span>  binarize_threshold <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  dark_roots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seg_layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  clean_max_hole_size <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  clean_max_artifact_size <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_fill_holes_upto <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_drop_objects_upto <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_size_unit <span class="op">=</span> <span class="st">"px"</span>,</span>
+<span>  clean_max_hole_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  clean_max_artifact_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  calc_root_pixels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_root_length <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_diameter_stats <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -155,8 +158,11 @@ is dropped and listed in a warning at the end.</p>
 <span>  binarize_threshold <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  dark_roots <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  seg_layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  clean_max_hole_size <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  clean_max_artifact_size <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_fill_holes_upto <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_drop_objects_upto <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clean_size_unit <span class="op">=</span> <span class="st">"px"</span>,</span>
+<span>  clean_max_hole_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  clean_max_artifact_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  calc_root_pixels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_root_length <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  calc_diameter_stats <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -354,19 +360,31 @@ non-zero in every layer.  Set this if your files carry the segmentation in
 one specific band.</p></dd>
 
 
-<dt id="arg-clean-max-hole-size">clean_max_hole_size<a class="anchor" aria-label="anchor" href="#arg-clean-max-hole-size"></a></dt>
-<dd><p>Numeric. Fill enclosed background holes of up to
-this many pixels before anything is measured; <code>0</code> (default) fills
-none, <code>Inf</code> fills every hole.  Pinholes inside a painted root read as
-background, which eats into the distance transform and so into diameter.</p></dd>
+<dt id="arg-clean-fill-holes-upto">clean_fill_holes_upto<a class="anchor" aria-label="anchor" href="#arg-clean-fill-holes-upto"></a></dt>
+<dd><p>Numeric. Largest enclosed background hole that
+gets filled before anything is measured; anything bigger is left alone.
+<code>0</code> (default) fills none, <code>Inf</code> fills every hole.  Pinholes
+inside a painted root read as background, which eats into the distance
+transform and so into diameter.</p></dd>
 
 
-<dt id="arg-clean-max-artifact-size">clean_max_artifact_size<a class="anchor" aria-label="anchor" href="#arg-clean-max-artifact-size"></a></dt>
-<dd><p>Numeric. Drop disconnected foreground blobs of
-up to this many pixels; <code>0</code> (default) drops none, <code>Inf</code> drops
-everything not touching the largest structure.  Specks count as root area,
-as isolated skeleton pixels, and as root tips.  Both use
+<dt id="arg-clean-drop-objects-upto">clean_drop_objects_upto<a class="anchor" aria-label="anchor" href="#arg-clean-drop-objects-upto"></a></dt>
+<dd><p>Numeric. Largest disconnected foreground blob
+that gets deleted; anything bigger is kept.  <code>0</code> (default) deletes
+none, <code>Inf</code> deletes everything not touching the largest structure.
+Specks count as root area, as isolated skeleton pixels, and as root tips.</p></dd>
+
+
+<dt id="arg-clean-size-unit">clean_size_unit<a class="anchor" aria-label="anchor" href="#arg-clean-size-unit"></a></dt>
+<dd><p>Character. Unit of the two thresholds above:
+<code>"px"</code> (default) or <code>"mm2"</code>, which uses <code>dpi</code> so that the
+same call cleans the same physical size at any scan resolution.  Both use
 <code><a href="clean_image.html">clean_image</a></code> and need the <span class="pkg">imager</span> package.</p></dd>
+
+
+<dt id="arg-clean-max-hole-size-clean-max-artifact-size">clean_max_hole_size, clean_max_artifact_size<a class="anchor" aria-label="anchor" href="#arg-clean-max-hole-size-clean-max-artifact-size"></a></dt>
+<dd><p>Deprecated names for
+<code>clean_fill_holes_upto</code> and <code>clean_drop_objects_upto</code>.</p></dd>
 
 
 <dt id="arg-calc-root-pixels">calc_root_pixels<a class="anchor" aria-label="anchor" href="#arg-calc-root-pixels"></a></dt>

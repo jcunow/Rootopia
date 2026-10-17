@@ -198,9 +198,22 @@ order, and summarise root architecture by order class.
 - [`prune_terminal_segments()`](https://jcunow.github.io/Rootopia/reference/prune_terminal_segments.md)
   : Prune short or thin terminal segments
 - [`render_order_overlay()`](https://jcunow.github.io/Rootopia/reference/render_order_overlay.md)
-  : Write an order-colored validation overlay (PNG)
+  : Paint a per-segment value onto the root system (PNG)
 - [`plot_order_window()`](https://jcunow.github.io/Rootopia/reference/plot_order_window.md)
   : Native-resolution validation of a sub-window
+
+## Network topology and transport
+
+Graph-level summary of a segment network: components, tips, branch
+points and the connectivity coefficients, with loop metrics reported as
+traits or as quality control depending on the declared topology. Plus
+per-segment transport quantities measured from the base of each root
+system outward.
+
+- [`network_metrics()`](https://jcunow.github.io/Rootopia/reference/network_metrics.md)
+  : Topology metrics for a spatial network
+- [`root_transport()`](https://jcunow.github.io/Rootopia/reference/root_transport.md)
+  : Per-segment transport quantities
 
 ## Root turnover
 

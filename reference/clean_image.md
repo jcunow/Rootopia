@@ -2,18 +2,21 @@
 
 Performs three sequential cleaning operations on a binary segmented
 image: 1. \*\*Hole filling\*\* – fills black regions enclosed by white
-(segmentation gaps inside roots). 2. \*\*Artifact removal\*\* — removes
-isolated white specks not connected to the image border (false-positive
-root detections). 3. \*\*Edge smoothing\*\* \*(optional, off by
-default)\* – applies morphological closing to smooth jagged root edges.
+(segmentation gaps inside roots). 2. \*\*Speck removal\*\* – deletes
+isolated foreground blobs not connected to the image border
+(false-positive root detections). 3. \*\*Edge smoothing\*\* \*(optional,
+off by default)\* – applies morphological closing to smooth jagged root
+edges.
 
 ## Usage
 
 ``` r
 clean_image(
   img,
-  max_hole_size = NULL,
-  max_artifact_size = NULL,
+  fill_holes_upto = NULL,
+  drop_objects_upto = NULL,
+  size_unit = c("px", "mm2"),
+  dpi = NULL,
   protect_border = FALSE,
   edge_smooth = FALSE,
   kernel_shape = "disk",
@@ -21,7 +24,9 @@ clean_image(
   iterations = 1,
   select_layer = NULL,
   output_format = "spatrast",
-  report = FALSE
+  report = FALSE,
+  max_hole_size = NULL,
+  max_artifact_size = NULL
 )
 ```
 
@@ -31,22 +36,34 @@ clean_image(
 
   A \`cimg\` object, \`SpatRaster\`, matrix, or file path (binary mask).
 
-- max_hole_size:
+- fill_holes_upto:
 
-  Maximum hole size in pixels to fill. If \`NULL\`, all enclosed holes
-  are filled. See \*\*Choosing thresholds\*\* above.
+  Largest enclosed hole that gets filled; anything bigger is left alone.
+  \`NULL\` (default) fills every enclosed hole. Units are set by
+  \`size_unit\`. See \*\*Choosing thresholds\*\* above.
 
-- max_artifact_size:
+- drop_objects_upto:
 
-  Maximum artifact size in pixels to remove. If \`NULL\`, all candidate
-  white regions are removed.
+  Largest disconnected foreground blob that gets deleted; anything
+  bigger is kept. \`NULL\` (default) deletes every candidate blob. Units
+  are set by \`size_unit\`.
+
+- size_unit:
+
+  Unit of the two thresholds above: \`"px"\` (default, pixel count) or
+  \`"mm2"\` (square millimetres, which requires \`dpi\`).
+
+- dpi:
+
+  Scan resolution, required when \`size_unit = "mm2"\` and ignored
+  otherwise.
 
 - protect_border:
 
   Logical. If \`TRUE\`, white regions touching the image border are kept
   regardless of size (roots leaving the frame). If \`FALSE\` (default),
-  border-touching specks are removed by the same \`max_artifact_size\`
-  test as anything else — being at the edge does not protect an
+  border-touching specks are removed by the same \`drop_objects_upto\`
+  test as anything else – being at the edge does not protect an
   artifact.
 
 - edge_smooth:
@@ -81,11 +98,17 @@ clean_image(
 
 - report:
 
-  Logical. If \`TRUE\`, also calls \[report_image_components()\] on the
-  \*original\* (uncleaned) image before cleaning. When \`output_format =
-  "spatrast"\` (default), the cleaned raster is returned directly even
-  when \`report = TRUE\`; the report is printed as a side effect.
-  Default \`FALSE\`.
+  Logical. If \`TRUE\`, also calls
+  [`report_image_components`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
+  on the \*original\* (uncleaned) image before cleaning. When
+  \`output_format = "spatrast"\` (default), the cleaned raster is
+  returned directly even when \`report = TRUE\`; the report is printed
+  as a side effect. Default \`FALSE\`.
+
+- max_hole_size, max_artifact_size:
+
+  Deprecated names for \`fill_holes_upto\` and \`drop_objects_upto\`.
+  Supplying either warns and sets the corresponding new argument.
 
 ## Value
 
@@ -103,9 +126,17 @@ skeleton.
 
 ## Choosing thresholds
 
-Call \[report_image_components()\] on your image first to see the actual
-pixel counts of all holes and artifacts. At 300 DPI, sensible starting
-values are \`max_hole_size = 50\` and \`max_artifact_size = 10\`.
+Call
+[`report_image_components`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
+on your image first to see the actual pixel counts of all holes and
+specks. At 300 dpi, sensible starting values are \`fill_holes_upto =
+50\` and \`drop_objects_upto = 10\` pixels.
+
+A pixel threshold means a different physical size at every scan
+resolution: 50 px is 0.36 mm\\^2\\ at 300 dpi but 0.022 mm\\^2\\ at 1200
+dpi, so a call tuned on one dataset cleans differently on another. Set
+\`size_unit = "mm2"\` and supply \`dpi\` to give the thresholds a fixed
+physical meaning that carries across resolutions.
 
 ## Edge smoothing caution
 
@@ -119,13 +150,15 @@ otherwise.
 
 \`clean_image()\` operates on a binary mask (root = 1, background = 0).
 If your input is a raw probability / grayscale image from a segmentation
-model, binarize it first with \[image_threshold()\] and pass the result
-here.
+model, binarize it first with
+[`image_threshold`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
+and pass the result here.
 
 ## See also
 
-\[report_image_components()\], \[skeletonize_image()\],
-\[image_threshold()\]
+[`report_image_components`](https://jcunow.github.io/Rootopia/reference/report_image_components.md),
+[`skeletonize_image`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md),
+[`image_threshold`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
 
 ## Examples
 
@@ -134,13 +167,22 @@ data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
 
 
-# Clean: fill small holes, remove tiny artifacts -- returns SpatRaster
+# Clean: fill small holes, delete tiny specks -- returns SpatRaster
 cleaned <- clean_image(img,
-                       max_hole_size     = 50,
-                       max_artifact_size = 10,
+                       fill_holes_upto   = 50,
+                       drop_objects_upto = 10,
                        select_layer      = 2)
 
+# The same thresholds expressed physically, so they mean the same thing
+# whatever the scan resolution
+cleaned_mm <- clean_image(img,
+                          fill_holes_upto   = 0.36,
+                          drop_objects_upto = 0.07,
+                          size_unit         = "mm2",
+                          dpi               = 300,
+                          select_layer      = 2)
+
 # If you need a cimg for further imager operations:
-cleaned_cimg <- clean_image(img, max_hole_size = 50,
+cleaned_cimg <- clean_image(img, fill_holes_upto = 50,
                             output_format = "cimg", select_layer = 2)
 ```

@@ -64,7 +64,7 @@ as one row.
 |----|----|----|
 | **Set every time** | `dpi`, `tube_names`, `depth_interval_cm = NULL` | `dpi` scales every value reported in cm. `tube_names` must be unique — the derived default takes three characters from the file name and collides whenever files share a suffix like `fine.tif`, so a run stops rather than mislabel. `NULL` collapses each scan to a single bin. |
 | **Set for raw scans** | `binarize_threshold`, `dark_roots` | Only if your files are grayscale or RGB rather than a binary mask. Both accept one value per image, for sessions where exposure drifted. |
-| **Usually worth setting** | `prune_spur_length_cm`, `clean_max_artifact_size`, `diameter_thresholds`, `session` | Thinning leaves stubs that count as root tips and as length; specks in a painted segmentation count as root area. The thresholds are the fine-root cut-offs your question actually turns on. |
+| **Usually worth setting** | `prune_spur_length_cm`, `clean_drop_objects_upto`, `diameter_thresholds`, `session` | Thinning leaves stubs that count as root tips and as length; specks in a painted segmentation count as root area. The thresholds are the fine-root cut-offs your question actually turns on. |
 | **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_quantiles`, the `calc_*` toggles |  |
 | **Ignore** | `insertion_angles`, `tube_diameter_cm`, `tube_center_offset`, `rotation_fixed_width`, `soil_starts`, `bin_round` | Tube and depth-profile settings. `calc_distribution_indices` and `calc_advanced_metrics` describe how roots spread over a profile, so they switch themselves off; `calc_root_angles` needs a real depth gradient to mean anything. |
 

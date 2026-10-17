@@ -181,16 +181,20 @@ guesswork:</p>
 <span><span class="co">#&gt; === Root components (connected root-1 regions) ===</span></span>
 <span><span class="co">#&gt;   n = 65 | min = 1 | median = 3 | mean = 9207.7 | max = 391995  (px)</span></span></code></pre></div>
 <p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="1350"></p>
-<p>Use those numbers to set <code>max_hole_size</code> (largest gap to
-fill) and <code>max_artifact_size</code> (largest speck to delete).
+<p>Use those numbers to set <code>fill_holes_upto</code> (largest gap
+that gets filled) and <code>drop_objects_upto</code> (largest speck that
+gets deleted). Anything bigger than either threshold is left alone. Both
+are pixel counts by default; set <code>size_unit = "mm2"</code> and
+supply <code>dpi</code> to give them a fixed physical size, which is
+what you want when scans of different resolution are analyzed together.
 Specks touching the image edge are removed by the same size test as
-anywhere else — being at the border no longer protects an artifact. Set
+anywhere else; the border carries no exemption. Set
 <code>protect_border = TRUE</code> only if you have real roots leaving
 the frame that you must keep.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seg_clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clean_image.html">clean_image</a></span><span class="op">(</span><span class="va">seg</span>,</span>
-<span>                         max_hole_size     <span class="op">=</span> <span class="fl">50</span>, <span class="co"># too small = not filling all the holes; too large = inflates area when roots overlap in a circle</span></span>
-<span>                         max_artifact_size <span class="op">=</span> <span class="fl">50</span>, <span class="co"># too small = includes dirt; too large = removes genuine roots</span></span>
+<span>                         fill_holes_upto   <span class="op">=</span> <span class="fl">50</span>, <span class="co"># too small = not filling all the holes; too large = inflates area when roots overlap in a circle</span></span>
+<span>                         drop_objects_upto <span class="op">=</span> <span class="fl">50</span>, <span class="co"># too small = includes dirt; too large = removes genuine roots</span></span>
 <span>                         protect_border    <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg</span>, main <span class="op">=</span> <span class="st">"Before Cleaning"</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>,<span class="fl">0.7</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="Segmented scan before cleaning, with speckle artifacts and holes." width="1350"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-2.png" class="r-plt" alt="The same scan after cleaning, with speckle and holes removed." width="1350"></p>
@@ -202,6 +206,42 @@ the frame that you must keep.</p>
 raw probability or grayscale image, binarize it with
 <code><a href="../reference/image_threshold.html">image_threshold()</a></code> first.</p>
 </blockquote>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grayscale</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="st">"path/to/scan.tif"</span>, scale <span class="op">=</span> <span class="st">"to_01"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># even illumination: one level for the whole scan</span></span>
+<span><span class="va">mask</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/image_threshold.html">image_threshold</a></span><span class="op">(</span><span class="va">grayscale</span>, threshold <span class="op">=</span> <span class="fl">0.3</span>, method <span class="op">=</span> <span class="st">"global"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># bright center, dark corners: a level that follows the local brightness</span></span>
+<span><span class="va">mask</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/image_threshold.html">image_threshold</a></span><span class="op">(</span><span class="va">grayscale</span>, method <span class="op">=</span> <span class="st">"adaptive"</span>,</span>
+<span>                        adaptive_k <span class="op">=</span> <span class="fl">1.15</span>, window_size <span class="op">=</span> <span class="fl">51</span><span class="op">)</span></span></code></pre></div>
+<p>For the adaptive method, two numbers decide whether it works, and
+both are properties of your scan rather than preferences:</p>
+<ul>
+<li>
+<code>adaptive_k</code> is a <strong>multiple of the local
+mean</strong> and must sit above 1. A window containing only background
+averages to the background level, so at <code>adaptive_k = 1</code>
+about half of a root-free patch comes back as root and below 1 nearly
+all of it does. 1.15 suits a clean scan; raise it for a noisy one.</li>
+<li>
+<code>window_size</code> must be <strong>much wider than your widest
+root</strong>, because the local average includes the root itself and a
+root that fills its own window raises the level it is judged against.
+Measure the widest root in pixels on one scan and allow roughly ten
+times that. Cost is flat in <code>window_size</code>, so there is no
+reason to keep it small.</li>
+</ul>
+<p>Set the window first, then the multiplier: a wider window gives a
+cleaner reference level and allows a larger <code>adaptive_k</code>. The
+<em>How It Works</em> vignette derives both rules and gives the measured
+numbers behind the defaults.</p>
+<p>Both methods mark pixels <em>brighter</em> than a reference, so check
+that your roots actually are brighter than what surrounds them. Washed
+roots on a dark tray are; roots against soil in a minirhizotron tube
+generally are not, and there no value of <code>adaptive_k</code> works –
+that case needs a trained segmenter, which is what the prerequisite at
+the top of this vignette is about.</p>
 <hr>
 </div>
 <div class="section level4">
@@ -210,13 +250,13 @@ raw probability or grayscale image, binarize it with
 <p><code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> reduces roots to single-pixel-wide
 centerlines. This is required for root length (Kimura method) and
 diameter estimation.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># `seg` is already the single root layer, so no select_layer needed here</span></span>
 <span><span class="va">skl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">seg_clean</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># ! remember that 1 px skeletons may look less connected from far away</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">skl</span>, main <span class="op">=</span> <span class="st">"Skeleton"</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.625</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="One-pixel-wide skeleton traced through the center of every root." width="1350"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-6-2.png" class="r-plt" alt="One-pixel-wide skeleton traced through the center of every root." width="1350"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="One-pixel-wide skeleton traced through the center of every root." width="1350"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="One-pixel-wide skeleton traced through the center of every root." width="1350"></p>
 <p><code><a href="../reference/skeletonize_image.html">skeletonize_image()</a></code> uses a LUT-based Zhang-Suen thinning
 algorithm to reduce the segmented mask to one-pixel-wide
 centerlines.</p>
@@ -234,18 +274,18 @@ return either the cleaned skeleton or, with
 skeleton pixel is regrown by its local radius (from the distance
 transform of <code>mask</code>) and clipped to <code>mask</code>, so the
 spur’s body is removed from the segmentation too.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">skl_pruned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prune_skeleton.html">prune_skeleton</a></span><span class="op">(</span><span class="va">skl</span>, mask <span class="op">=</span> <span class="va">seg_clean</span>, min_length <span class="op">=</span> <span class="fl">50</span>, iter <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">skl_pruned</span>, main <span class="op">=</span> <span class="st">"Skeleton (spurs pruned)"</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.625</span><span class="op">)</span>, overview <span class="op">=</span> <span class="cn">F</span> <span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="Skeleton with short spurs still attached." width="1350"></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="Skeleton with short spurs still attached." width="1350"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="co"># To clean the segmentation itself instead of the skeleton:</span></span>
 <span><span class="va">seg_clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/prune_skeleton.html">prune_skeleton</a></span><span class="op">(</span><span class="va">skl</span>, mask <span class="op">=</span> <span class="va">seg_clean</span>, min_length <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>                             output <span class="op">=</span> <span class="st">"mask"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg_clean</span>, main <span class="op">=</span> <span class="st">"Skeleton (spurs pruned)"</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.625</span><span class="op">)</span>, overview <span class="op">=</span> <span class="cn">T</span> <span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-2.png" class="r-plt" alt="The same skeleton after pruning the short terminal spurs." width="1350"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-7-3.png" class="r-plt" alt="Skeleton with short spurs still attached." width="1350"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-8-2.png" class="r-plt" alt="The same skeleton after pruning the short terminal spurs." width="1350"><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-8-3.png" class="r-plt" alt="Skeleton with short spurs still attached." width="1350"></p>
 <hr>
 </div>
 <div class="section level4">
@@ -254,7 +294,7 @@ spur’s body is removed from the segmentation too.</p>
 <p><code><a href="../reference/root_length.html">root_length()</a></code> uses Kimura’s formula, which weights
 orthogonal and diagonal skeleton segments differently to approximate
 true path length.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skl_pruned</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">1200</span>, select_layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>                  method <span class="op">=</span> <span class="st">"kimura2"</span>,</span>
 <span>                  show_messages <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -268,7 +308,7 @@ true path length.</p>
 <p><code><a href="../reference/root_diameter.html">root_diameter()</a></code> estimates local root width from the
 distance transform. It returns a diameter raster and the raw diameter
 values.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diam_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_diameter.html">root_diameter</a></span><span class="op">(</span></span>
 <span>  <span class="va">seg_clean</span>,</span>
 <span>  skeleton_img    <span class="op">=</span> <span class="va">skl</span>,</span>
@@ -293,10 +333,10 @@ values.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Diameter (cm)"</span>, y <span class="op">=</span> <span class="st">"Count"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root diameter distribution"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="Histogram of root diameters across the scan." width="1350"></p>
+<p><img src="FlatBedScans_vignettes_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="Histogram of root diameters across the scan." width="1350"></p>
 <p>For fine/coarse root separation, <code><a href="../reference/modal_peaks.html">modal_peaks()</a></code> can find
 diameter modes in the distribution:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">peaks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/modal_peaks.html">modal_peaks</a></span><span class="op">(</span></span>
 <span>  <span class="va">diam_vals</span>,</span>
 <span>  display_type         <span class="op">=</span> <span class="st">"density"</span>,</span>
@@ -310,7 +350,7 @@ diameter modes in the distribution:</p>
 <div class="section level4">
 <h4 id="pixel-counts-and-area-coverage">6. Pixel counts and area coverage<a class="anchor" aria-label="anchor" href="#pixel-counts-and-area-coverage"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">root_px</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">seg</span><span class="op">)</span></span>
 <span><span class="va">void_px</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">seg</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -330,7 +370,7 @@ diameter modes in the distribution:</p>
 </h4>
 <p><code><a href="../reference/detect_skeleton_points.html">detect_skeleton_points()</a></code> classifies skeleton pixels into
 endpoints (root tips) and branching points (forks).</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># `skl` is a single-layer skeleton, so no select_layer is needed</span></span>
 <span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skl</span>, select_layer <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
@@ -359,7 +399,7 @@ connected component are order 1; the branches coming off them are order
 many branching events separate a segment from the root’s main path,
 rather than labeling roots as “main” or “lateral”. Because flatbed scans
 have no depth dimension, this is computed once for the whole image.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">order_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span></span>
 <span>  skel  <span class="op">=</span> <span class="va">skl</span>,    <span class="co"># skeleton from step 2</span></span>
 <span>  mask  <span class="op">=</span> <span class="va">seg</span>,    <span class="co"># filled root mask, same grid — used for diameters</span></span>
@@ -377,7 +417,7 @@ have no depth dimension, this is computed once for the whole image.</p>
 thickest order-1 path(s) versus all higher-order branches (selected by
 diameter, so it works regardless of how many order classes were
 found):</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">main_vs_lateral</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="st">"thickest"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">main_vs_lateral</span><span class="op">)</span></span>
 <span></span>
@@ -386,7 +426,7 @@ found):</p>
 <p><code><a href="../reference/order_metrics.html">order_metrics()</a></code> also accepts a numeric
 <code>focal</code> to split one specific order class off from the
 rest:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Per-order-class table (same as order_res$summary)</span></span>
 <span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">)</span></span>
 <span></span>
@@ -394,7 +434,7 @@ rest:</p>
 <span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">order_res</span>, focal <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p>To check the classification visually, write a color-coded overlay
 PNG, or re-plot a sub-window at native resolution for QC:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">order_res2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span></span>
 <span>  skel          <span class="op">=</span> <span class="va">skl</span>,</span>
 <span>  mask          <span class="op">=</span> <span class="va">seg</span>,</span>
@@ -425,7 +465,7 @@ roots, see <code><a href="../reference/root_graph_pipeline.html">?root_graph_pip
 <p><code><a href="../reference/tube_coloration.html">tube_coloration()</a></code> extracts mean chromatic coordinates
 and HSV values from an RGB image. On flatbed scans this characterizes
 overall root pigmentation.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Root pixels only</span></span>
 <span><span class="va">rgb_roots</span> <span class="op">&lt;-</span> <span class="va">rgb</span></span>
 <span><span class="va">rgb_roots</span><span class="op">[</span><span class="va">seg</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
@@ -442,7 +482,7 @@ overall root pigmentation.</p>
 <div class="section level4">
 <h4 id="collecting-results">9. Collecting results<a class="anchor" aria-label="anchor" href="#collecting-results"></a>
 </h4>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  sample_id          <span class="op">=</span> <span class="st">"my_scan"</span>,</span>
 <span>  root_length_cm     <span class="op">=</span> <span class="va">rl</span>,</span>
@@ -468,7 +508,7 @@ overall root pigmentation.</p>
 the right way to settle your thresholds and check that the segmentation
 is sound. Once it is, <code><a href="../reference/root_depth_metrics.html">root_depth_metrics()</a></code> runs the same
 steps over a directory and returns one row per scan:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg             <span class="op">=</span> <span class="st">"scans/trays/"</span>,</span>
 <span>  tube_names           <span class="op">=</span> <span class="va">ids</span>,      <span class="co"># one unique id per file</span></span>

@@ -15,7 +15,7 @@ smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3, iterations = 1)
 - img:
 
   A \`cimg\` binary image or any format accepted by
-  \[load_flexible_image()\].
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
 
 - kernel_shape:
 

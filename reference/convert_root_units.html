@@ -68,7 +68,7 @@ length_kimura are both retained in the same unit."></head><body>
 <span>  <span class="va">et</span>,</span>
 <span>  unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cm"</span>, <span class="st">"inch"</span>, <span class="st">"px"</span><span class="op">)</span>,</span>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
-<span>  length_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"polyline"</span>, <span class="st">"kimura"</span><span class="op">)</span></span>
+<span>  length_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kimura"</span>, <span class="st">"polyline"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,7 +89,16 @@ length_kimura are both retained in the same unit."></head><body>
 
 
 <dt id="arg-length-method">length_method<a class="anchor" aria-label="anchor" href="#arg-length-method"></a></dt>
-<dd><p><code>"polyline"</code> (sqrt(2) chain code) or <code>"kimura"</code>.</p></dd>
+<dd><p><code>"kimura"</code> (default) or <code>"polyline"</code>.
+<code>"polyline"</code> is the sqrt(2) chain code: it walks the skeleton pixel
+to pixel, counting 1 for an orthogonal step and sqrt(2) for a diagonal one.
+A digital line is a staircase, so that path is longer than the line it
+represents – measured against straight lines of known length, the chain
+code runs about 5.7% long on average and up to 8.2%, worst near 22.5
+degrees and zero only for perfectly horizontal or vertical segments.
+Kimura's estimator corrects for the staircase and reduces that to about
+1.8% on average. Use <code>"polyline"</code> to reproduce output from
+Rootopia 1.1.0 and earlier, which defaulted to it.</p></dd>
 
 </dl></div>
     <div class="section level2">

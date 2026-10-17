@@ -29,18 +29,18 @@ textbook.
 Most analyses run left to right through this chain. You can enter at any
 point and stop at any point; nothing forces you through the whole thing.
 
-     stitch  ->  clean  ->  (rotation censor)
-                    |
-                    v
-               skeletonise  ---->  branching order
-                    |
-                    +-------->  size traits (length, diameter, pixels)
-                    |
-                    v
-                depth map  ---->  root angle
-                    |
-                    v
-            distribution indices
+     stitch  ->  threshold  ->  clean  ->  (rotation censor)
+                                    |
+                                    v
+                               skeletonise  ---->  branching order
+                                    |
+                                    +-------->  size traits (length, diameter, pixels)
+                                    |
+                                    v
+                                depth map  ---->  root angle
+                                    |
+                                    v
+                            distribution indices
 
 Turnover and soil & color sit outside this chain: turnover compares two
 images, soil & color works on the color channels rather than the root
@@ -120,7 +120,7 @@ skeleton, and a speck becomes a fake root.
 
 img     <- load_flexible_image(path, output_format = "spatrast",
                                scale = "binary", select_layer = 2)
-cleaned <- clean_image(img, max_hole_size = 5, max_artifact_size = 5)
+cleaned <- clean_image(img, fill_holes_upto = 5, drop_objects_upto = 5)
 report_image_components(img)      # how big are the specks, before deciding
 ```
 
@@ -149,7 +149,10 @@ border. Set `protect_border = TRUE` to exempt border-touching regions,
 on the assumption that they are roots leaving the frame rather than
 specks.
 
-**Size is in pixels**, counted as connected components. Use
+**Size is a count of connected cells**, in pixels by default. With
+`size_unit = "mm2"` and a `dpi`, the two thresholds are physical areas
+instead and are converted to pixel counts internally, so the same call
+removes the same physical speck whether a scan is 300 or 1200 dpi. Use
 [`report_image_components()`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
 first to see the actual size distribution rather than guessing a
 threshold.
@@ -168,9 +171,161 @@ for the kernel options.
 | Situation | What happens |
 |----|----|
 | Image has no cells | Stops |
-| `max_hole_size` / `max_artifact_size` left `NULL` | That cleaning step is skipped entirely |
+| `fill_holes_upto` / `drop_objects_upto` left `NULL` | Every hole is filled / every candidate speck is deleted |
 | Non-binary input to [`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md) | Binarised on load |
 | Unsupported file extension | Stops, listing the supported ones |
+
+#### Thresholding
+
+##### What it is for
+
+Turning a grayscale image into the binary mask every later step needs.
+The whole pipeline downstream – skeleton, diameter, branching, transport
+– reads only this mask, so a pixel misclassified here is wrong in every
+trait derived from it.
+
+##### The flow
+
+``` r
+
+# one level for the whole image
+bw <- image_threshold(img, threshold = 0.3, method = "global")
+
+# a level that follows the local brightness
+bw <- image_threshold(img, method = "adaptive",
+                      adaptive_k = 1.15, window_size = 51)
+```
+
+##### The rules
+
+**Global compares a pixel against the image; adaptive compares it
+against its neighborhood.** The two decisions are
+
+    global    foreground  <=>  pixel >= threshold  * max(image)
+    adaptive  foreground  <=>  pixel >= adaptive_k * mean(box around pixel)
+
+Global needs even illumination, because one level has to be right
+everywhere. A flatbed scan with a bright center and dark corners has no
+such level: on test images with a threefold brightness gradient the best
+global level reached an F1 of 0.76 against a known mask, where adaptive
+reached 1.00. Adaptive buys that by replacing one global reference with
+a local one, and the two constants that define the local reference both
+have hard constraints.
+
+**`adaptive_k` must be above 1, and that is arithmetic rather than
+taste.** Take a window that happens to contain no root at all. The mean
+over that window *is* the background level, so the background pixels sit
+on both sides of it – half above, half below, by construction. Comparing
+a pixel against `1.0 x` that mean therefore marks about half of a
+root-free patch as root, and against anything below 1 it marks nearly
+all of it. Measured on a uniform patch with a background coefficient of
+variation of 5%, the fraction wrongly marked runs:
+
+| `adaptive_k`                   | 0.4  | 0.9 | 1.00 | 1.05 | 1.15  | 1.30 |
+|--------------------------------|------|-----|------|------|-------|------|
+| root-free patch marked as root | 100% | 98% | 50%  | 16%  | 0.13% | 0%   |
+
+So the method needs a dead band above 1, and the band has to clear the
+background’s own noise. The width that works scales with that noise:
+about `1 + 3 * cv` as a lower bound, where `cv` is the background’s
+coefficient of variation. The upper bound is the root-to-background
+brightness ratio – push `adaptive_k` past it and the roots fail their
+own test, and nothing is found at all. Across test images spanning
+contrasts of 1.3 to 2.2 and background CVs of 2% to 10%, the best value
+always fell between 1.05 and 1.30, and between 1.10 and 1.20 for most of
+that range. That is where the default of 1.15 comes from. It is a
+starting point, not a constant of nature: a noisy scan wants more, a
+high-contrast one tolerates more.
+
+**`window_size` must be large compared with the widest root.** The
+window average includes the pixel being tested and its root along with
+it. A root that fills a large share of its own window therefore raises
+its own reference level and is rejected – the feature contaminates the
+background estimate it is being compared against. This is not a small
+effect. On test images whose roots are up to 9 px wide, the best
+achievable F1 by window size was:
+
+| `window_size` | 9    | 15   | 21   | 31   | 51   | 71   | 101  | 151  |
+|---------------|------|------|------|------|------|------|------|------|
+| best F1       | 0.39 | 0.54 | 0.65 | 0.79 | 0.90 | 0.93 | 0.96 | 0.97 |
+
+Recall is what fails at the small end: the roots are suppressed, not the
+background. A window about ten times the widest root is a reasonable
+starting point. Measure the widest root in pixels on one scan and scale
+from there, because the pixel width of a root depends on the scan
+resolution and so the right window does too.
+
+**The two constants are coupled.** A larger window gives a cleaner
+background estimate, which leaves the full root-to-background contrast
+available and so allows a larger dead band. Over the same window sweep
+the best `adaptive_k` rose from 1.05 at `window_size = 9` to 1.20 at
+151. Tune the window first, then the multiplier.
+
+**Going large costs nothing.** A box mean is separable, so the local
+mean is computed as a pass over rows and a pass over columns rather than
+one square kernel. The work per pixel is proportional to `window_size`,
+not to its square: on a 1000 x 1000 raster the local mean takes 0.13 s
+at `window_size = 15` and 0.73 s at 101. There is no speed argument for
+a window too small to work, and the local reference still tracked an
+eightfold illumination gradient at `window_size = 151`.
+
+**Neither method can separate root from soil of the same brightness.**
+Both mark pixels brighter than a reference, so a brightness threshold is
+only ever a brightness threshold. When root and soil are equally bright
+the useful range for `adaptive_k` is empty – its lower bound, set by the
+background noise, sits above its upper bound, set by the
+root-to-background ratio – and no value works. The bundled minirhizotron
+scan is exactly that case: measured against its own segmentation, its
+roots average 1.07 times the soil brightness while the soil’s
+coefficient of variation runs from 0.23 to 0.93 across the frame, so the
+soil texture varies several times more than root differs from soil.
+Adaptive thresholding reaches an F1 of about 0.1 there, and tuning
+cannot rescue it. This is a property of the image, not of the
+implementation, and it is why Rootopia expects a segmentation from a
+trained model such as RootDetector rather than offering to produce one.
+Check the ratio on your own images before reaching for either method: if
+roots are not visibly brighter than their surroundings, no threshold
+here will find them.
+
+**`threshold` is not the adaptive multiplier.** `threshold` is a
+fraction of the global maximum, between 0 and 1, and is used by
+`method = "global"` and by `deblur = TRUE`. `adaptive_k` is a multiple
+of a local mean and lives above 1. Passing `threshold` alongside
+`method = "adaptive"` warns rather than being quietly ignored.
+
+**Under the hood**
+
+The local mean is two
+[`terra::focal()`](https://rspatial.github.io/terra/reference/focal.html)
+passes with a `window_size x 1` and then a `1 x window_size` kernel,
+which equals a single square
+[`focal()`](https://rspatial.github.io/terra/reference/focal.html) mean
+to machine precision when no cell is `NA`. Where the window overhangs
+the image edge, `na.rm = TRUE` averages over the cells that exist.
+Interior `NA` cells make the two passes a row-weighted mean instead of a
+plain mean over the non-`NA` cells – rows count equally however many
+valid cells each holds – which differs from the square kernel by under
+1e-3 for `window_size >= 31` and is immaterial for a reference level.
+
+`deblur = TRUE` is a third mode and ignores `method` entirely: it
+subtracts `select_layer` from `mask_layer` and thresholds both at
+`threshold` times the maximum of `select_layer`, separating in-focus
+structure from an out-of-focus halo in a two-layer segmented image.
+
+**Edge cases**
+
+| Situation | What happens |
+|----|----|
+| `window_size` wider than the image | Clamped to the largest odd window that fits, with a warning |
+| `window_size` even, or below 3 | Stops |
+| `adaptive_k` at or below 1 | Runs, with a warning that a root-free window will come back half foreground |
+| `adaptive_k` not a single finite positive number | Stops |
+| `threshold` given with `method = "adaptive"` | Warns; `adaptive_k` is used |
+| Root and background equally bright | Runs and returns nearly nothing useful; no multiplier fixes it |
+| Roots darker than the background | Not detectable by either method, which mark bright pixels only |
+| Raster is entirely `NA` | Stops |
+| `select_layer` is `NULL` on a multilayer image | The mean of all layers is thresholded |
+| `binary_01 = FALSE` | Output is 0 and the input’s maximum, not 0 and 1 |
 
 #### Rotation bias
 
@@ -947,8 +1102,12 @@ A short index of the rules most likely to explain an unexpected result.
 | Depth bins sum to less than the whole image | Kimura length estimators are not additive | Size traits |
 | `class_map` has fewer pixels than the skeleton | Merged junction interiors belong to no segment | Branching order |
 | A symmetric fork is ordered arbitrarily | The continuation score genuinely ties | Branching order |
+| [`root_transport()`](https://jcunow.github.io/Rootopia/reference/root_transport.md) columns are `NA` for some segments | Those segments lie on a cycle and have no subtree | Branching order |
 | Tip and branch-point counts disagree with the graph | A four-way crossing is one branch point, not two | Skeletonisation |
 | Rotation crop is not the width requested | `fixed_width` did not fit and was clamped | Rotation bias |
 | Many pixels come back unclassified | Every centroid was beyond its `MAX_DIST` | Soil and color |
 | Turnover ratios differ between runs | `include_virtualroots` changes the denominator | Turnover |
 | [`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md) output will not overlay | Its rasters are rebuilt without the input’s extent | Skeletonisation |
+| Adaptive thresholding returns the whole image as root | `adaptive_k` is at or below 1, so a root-free window passes its own mean | Thresholding |
+| Adaptive thresholding returns almost no root | `window_size` is comparable to the root width, so each root raises its own reference level | Thresholding |
+| No threshold setting segments a tube scan | Root and soil are equally bright there; brightness carries no signal to threshold | Thresholding |

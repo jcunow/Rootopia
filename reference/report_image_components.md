@@ -1,8 +1,9 @@
 # Summarize the component-size distribution of a binary image
 
 Reports the size distribution of the two component types that
-\[clean_image()\] acts on, to help you choose \`max_hole_size\` and
-\`max_artifact_size\`:
+[`clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+acts on, to help you choose \`fill_holes_upto\` and
+\`drop_objects_upto\`:
 
 - \*\*holes\*\* — \`background (0)\` regions fully enclosed by \`root
   (1)\` (segmentation gaps inside roots). Regions touching the image
@@ -23,7 +24,8 @@ report_image_components(img, plot = TRUE, breaks = 30, select_layer = NULL)
 - img:
 
   A binary image (\`SpatRaster\`, \`cimg\`, matrix, or file path); any
-  format accepted by \[load_flexible_image()\].
+  format accepted by
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
 
 - plot:
 
@@ -49,8 +51,11 @@ This function applies \*\*no\*\* size cutoff — it characterizes
 \*every\* component. There is therefore nothing special separating a
 "big root" from an "artifact": both are root components, distinguished
 only by size. Use the printed summary and the histograms to pick the
-\`max\_\*\_size\` values you then pass to \[clean_image()\]. (Values are
-in pixels; scale with your scanner DPI.)
+\`fill_holes_upto\` and \`drop_objects_upto\` values you then pass to
+[`clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md).
+Counts here are in pixels, so they match \`clean_image()\`'s default
+\`size_unit = "px"\` directly; divide by \\(dpi/25.4)^2\\ to express one
+in mm\\^2\\.
 
 ## Examples
 
@@ -58,6 +63,6 @@ in pixels; scale with your scanner DPI.)
 if (FALSE) { # \dontrun{
 data(seg_Oulanka2023_Session01_T067)
 sizes <- report_image_components(seg_Oulanka2023_Session01_T067)
-quantile(sizes$objects)   # inspect the small end to set max_artifact_size
+quantile(sizes$objects)   # inspect the small end to set drop_objects_upto
 } # }
 ```

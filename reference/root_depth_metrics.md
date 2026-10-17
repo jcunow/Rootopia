@@ -38,8 +38,11 @@ root_depth_metrics(
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
-  clean_max_hole_size = 0,
-  clean_max_artifact_size = 0,
+  clean_fill_holes_upto = 0,
+  clean_drop_objects_upto = 0,
+  clean_size_unit = "px",
+  clean_max_hole_size = NULL,
+  clean_max_artifact_size = NULL,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -84,8 +87,11 @@ batch_root_traits(
   binarize_threshold = 200,
   dark_roots = TRUE,
   seg_layer = NULL,
-  clean_max_hole_size = 0,
-  clean_max_artifact_size = 0,
+  clean_fill_holes_upto = 0,
+  clean_drop_objects_upto = 0,
+  clean_size_unit = "px",
+  clean_max_hole_size = NULL,
+  clean_max_artifact_size = NULL,
   calc_root_pixels = TRUE,
   calc_root_length = TRUE,
   calc_diameter_stats = TRUE,
@@ -284,21 +290,33 @@ batch_root_traits(
   binary ones take root as non-zero in every layer. Set this if your
   files carry the segmentation in one specific band.
 
-- clean_max_hole_size:
+- clean_fill_holes_upto:
 
-  Numeric. Fill enclosed background holes of up to this many pixels
-  before anything is measured; `0` (default) fills none, `Inf` fills
-  every hole. Pinholes inside a painted root read as background, which
-  eats into the distance transform and so into diameter.
+  Numeric. Largest enclosed background hole that gets filled before
+  anything is measured; anything bigger is left alone. `0` (default)
+  fills none, `Inf` fills every hole. Pinholes inside a painted root
+  read as background, which eats into the distance transform and so into
+  diameter.
 
-- clean_max_artifact_size:
+- clean_drop_objects_upto:
 
-  Numeric. Drop disconnected foreground blobs of up to this many pixels;
-  `0` (default) drops none, `Inf` drops everything not touching the
-  largest structure. Specks count as root area, as isolated skeleton
-  pixels, and as root tips. Both use
+  Numeric. Largest disconnected foreground blob that gets deleted;
+  anything bigger is kept. `0` (default) deletes none, `Inf` deletes
+  everything not touching the largest structure. Specks count as root
+  area, as isolated skeleton pixels, and as root tips.
+
+- clean_size_unit:
+
+  Character. Unit of the two thresholds above: `"px"` (default) or
+  `"mm2"`, which uses `dpi` so that the same call cleans the same
+  physical size at any scan resolution. Both use
   [`clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
   and need the imager package.
+
+- clean_max_hole_size, clean_max_artifact_size:
+
+  Deprecated names for `clean_fill_holes_upto` and
+  `clean_drop_objects_upto`.
 
 - calc_root_pixels:
 
