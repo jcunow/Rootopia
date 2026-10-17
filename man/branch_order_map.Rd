@@ -10,7 +10,7 @@ branch_order_map(
   order = c("strahler_order", "branch_order", "root_order", "tip_order"),
   unit = "cm",
   dpi = 300,
-  length_method = "polyline",
+  length_method = "kimura",
   template = NULL,
   overlay_png = NULL,
   return_map = TRUE,
@@ -34,8 +34,15 @@ diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.}
 
 \item{dpi}{Scan resolution (dots per inch); required for cm/inch.}
 
-\item{length_method}{\code{"polyline"} (sqrt(2) chain code, follows curves) or
-\code{"kimura"} (per-segment Kimura correction, better for straight segments).}
+\item{length_method}{\code{"kimura"} (default) or \code{"polyline"}.
+The sqrt(2) chain code walks the skeleton pixel to pixel, so it traces a
+staircase and reports more length than the line it represents; Kimura's
+estimator corrects for that. Measured on digital straight lines of known
+length, the chain code runs about 5.7\% long on average and Kimura about
+1.8\%. Kimura is derived for straight digital lines, so the correction is
+best on segments that are nearly straight; both estimators follow whatever
+path the skeleton takes. Use \code{"polyline"} to reproduce output from
+Rootopia 1.1.0 and earlier.}
 
 \item{template}{\code{SpatRaster} defining the \code{$class_map} grid; defaults
 to \code{skel} when it is a raster.}
@@ -98,5 +105,7 @@ terra::plot(res$class_map, maxcell = Inf)
 }
 \seealso{
 \code{\link{root_graph_pipeline}}, \code{\link{order_classification_map}},
-  \code{\link{summarize_orders}}, \code{\link{convert_root_units}}
+  \code{\link{summarize_orders}}, \code{\link{convert_root_units}},
+  \code{\link{root_transport}} and \code{\link{network_metrics}}, which both
+  take the \code{$edges} table returned here.
 }

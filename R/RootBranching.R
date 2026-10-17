@@ -518,58 +518,129 @@ compute_strahler_order <- function(edge_tbl) {
 }
 
 
-#' Write an order-colored validation overlay (PNG)
+#' Paint a per-segment value onto the root system (PNG)
 #'
-#' Paints each segment by its order value over the mask; unordered (cyclic)
-#' segments are drawn in red so failures are visible.
+#' Colors each segment by any value you supply, over the mask. Segments with
+#' \code{NA} are drawn in red so failures stay visible.
+#'
+#' Two legends are available and the right one is chosen from the data. A
+#' branch order is a handful of small integers and reads as named classes, so
+#' it gets one labelled swatch per order. A transport quantity -- path
+#' resistance, path length from the base, the root length a segment serves --
+#' is continuous and gets a colour ramp with a scale bar instead. Pass
+#' \code{continuous} to override the choice.
 #'
 #' @param segs Segment list (kept via \code{keep_segments = TRUE}).
-#' @param tip_order Numeric vector of the order value per segment to color by.
+#' @param values Numeric vector, one value per segment: an order column, or any
+#'   per-segment quantity such as those added by \code{\link{root_transport}}.
 #' @param dims Integer length-2 vector, the (cropped) raster dimensions.
 #' @param file Output PNG path.
 #' @param mask Optional 0/1 mask drawn as a gray background.
 #' @param max_side Long-side cap (px) for the output image.
+#' @param continuous \code{NA} (default) picks the legend from the data:
+#'   continuous when any value has a fractional part or there are more than 24
+#'   distinct values, discrete otherwise. \code{TRUE} or \code{FALSE} forces it.
+#' @param value_label Optional title drawn above the colour bar, e.g.
+#'   \code{"path resistance"}. Continuous legend only.
+#' @param n_bins Number of colour steps in the continuous ramp.
+#' @param tip_order Deprecated name for \code{values}.
 #' @return Invisibly, \code{file}.
+#' @seealso \code{\link{root_transport}} for quantities worth painting.
 #' @export
-render_order_overlay <- function(segs, tip_order, dims, file,
-                                 mask = NULL, max_side = 2000) {
-  nr <- dims[1]; nc <- dims[2]
-  ord_img <- matrix(NA_real_, nr, nc); na_img <- matrix(NA_real_, nr, nc)
-  for (i in seq_along(segs)) {
-    o <- tip_order[i]; p <- segs[[i]]$coords
-    if (is.na(o)) na_img[p] <- 1 else ord_img[p] <- o
+render_order_overlay <- function(segs, values, dims, file,
+                                 mask = NULL, max_side = 2000,
+                                 continuous = NA, value_label = NULL,
+                                 n_bins = 64L, tip_order = NULL) {
+  if (!is.null(tip_order)) {
+    warning("`tip_order` is deprecated; use `values`.", call. = FALSE)
+    if (missing(values)) values <- tip_order
   }
-  maxo <- suppressWarnings(max(tip_order, na.rm = TRUE)); if (!is.finite(maxo)) maxo <- 1L
-  ord_f <- .flip_matrix(ord_img); na_f <- .flip_matrix(na_img)
+  nr <- dims[1]; nc <- dims[2]
+  if (length(values) < length(segs))
+    stop("`values` is shorter than `segs`: one value per segment is needed.",
+         call. = FALSE)
+
+  # Order labels are a handful of small integers and read best as named
+  # classes; a transport quantity is continuous and needs a ramp and a scale
+  # bar instead. Anything with a fractional part, or with more distinct levels
+  # than a legend can carry, is treated as continuous.
+  if (is.na(continuous)) {
+    fin <- values[is.finite(values)]
+    continuous <- length(fin) > 0L &&
+      (any(abs(fin - round(fin)) > 1e-9) || length(unique(fin)) > 24L)
+  }
+
+  val_img <- matrix(NA_real_, nr, nc); na_img <- matrix(NA_real_, nr, nc)
+  for (i in seq_along(segs)) {
+    o <- values[i]; p <- segs[[i]]$coords
+    if (is.na(o)) na_img[p] <- 1 else val_img[p] <- o
+  }
+  rng  <- suppressWarnings(range(values[is.finite(values)]))
+  maxo <- suppressWarnings(max(values, na.rm = TRUE)); if (!is.finite(maxo)) maxo <- 1L
+  val_f <- .flip_matrix(val_img); na_f <- .flip_matrix(na_img)
   mk_f  <- if (!is.null(mask)) .flip_matrix((.to_binary_matrix(mask) > 0) * 1) else .flip_matrix(matrix(0, nr, nc))
-  xs <- seq(0, 1, length.out = nrow(ord_f)); ys <- seq(0, 1, length.out = ncol(ord_f))
-  
+  xs <- seq(0, 1, length.out = nrow(val_f)); ys <- seq(0, 1, length.out = ncol(val_f))
+
   scale <- min(1, max_side / max(nr, nc))
   W <- max(1L, round(nc * scale)); H <- max(1L, round(nr * scale))
   grDevices::png(file, width = W, height = H, units = "px", res = 96)
   on.exit(grDevices::dev.off())
   graphics::par(mar = c(0, 0, 0, 0))
-  
+
   graphics::image(xs, ys, mk_f, col = c("white", "gray88"), zlim = c(0, 1),
                   axes = FALSE, useRaster = TRUE)
-  pal <- grDevices::hcl.colors(max(maxo, 1L), "viridis")
-  # image() derives breaks from the data, so an all-NA layer must be skipped
-  if (any(!is.na(ord_f)))
-    graphics::image(xs, ys, ord_f, col = pal, breaks = seq(0.5, maxo + 0.5, by = 1),
-                    add = TRUE, useRaster = TRUE)
+
+  if (continuous) {
+    nb  <- max(2L, as.integer(n_bins))
+    pal <- grDevices::hcl.colors(nb, "viridis")
+    # A constant-valued map has a zero-width range, which gives breaks that are
+    # not strictly increasing; widen it so image() still has something to bin.
+    # With no finite value at all there is nothing to scale to, so the bar is
+    # labelled 0-1 and nothing is painted.
+    if (!all(is.finite(rng))) rng <- c(0, 1)
+    else if (diff(rng) <= 0)  rng <- c(rng[1] - 0.5, rng[1] + 0.5)
+    brk <- seq(rng[1], rng[2], length.out = nb + 1L)
+    if (any(!is.na(val_f)))
+      graphics::image(xs, ys, val_f, col = pal, breaks = brk,
+                      add = TRUE, useRaster = TRUE)
+  } else {
+    pal <- grDevices::hcl.colors(max(maxo, 1L), "viridis")
+    # image() derives breaks from the data, so an all-NA layer must be skipped
+    if (any(!is.na(val_f)))
+      graphics::image(xs, ys, val_f, col = pal, breaks = seq(0.5, maxo + 0.5, by = 1),
+                      add = TRUE, useRaster = TRUE)
+  }
   if (any(!is.na(na_f)))
     graphics::image(xs, ys, na_f, col = "red", zlim = c(0, 1),
                     add = TRUE, useRaster = TRUE)
-  
-  for (k in seq_len(maxo)) {
-    yt <- 0.99 - (k - 1) * 0.035
-    graphics::rect(0.01, yt - 0.03, 0.035, yt, col = pal[k], border = NA)
-    graphics::text(0.04, yt - 0.015, sprintf("order %d", k), adj = 0, cex = 0.7)
-  }
-  if (any(is.na(tip_order))) {
-    yt <- 0.99 - maxo * 0.035
-    graphics::rect(0.01, yt - 0.03, 0.035, yt, col = "red", border = NA)
-    graphics::text(0.04, yt - 0.015, "unordered", adj = 0, cex = 0.7)
+
+  if (continuous) {
+    # vertical colour bar, labelled at both ends and the middle
+    nb <- length(pal); y0 <- 0.55; y1 <- 0.97
+    yy <- seq(y0, y1, length.out = nb + 1L)
+    for (k in seq_len(nb))
+      graphics::rect(0.012, yy[k], 0.032, yy[k + 1L], col = pal[k], border = NA)
+    graphics::rect(0.012, y0, 0.032, y1, border = "gray40")
+    lab <- function(y, v) graphics::text(0.036, y, format(v, digits = 3),
+                                         adj = 0, cex = 0.65)
+    lab(y0, rng[1]); lab((y0 + y1) / 2, mean(rng)); lab(y1, rng[2])
+    if (!is.null(value_label))
+      graphics::text(0.012, y1 + 0.025, value_label, adj = 0, cex = 0.7, font = 2)
+    if (any(is.na(values))) {
+      graphics::rect(0.012, y0 - 0.05, 0.032, y0 - 0.02, col = "red", border = NA)
+      graphics::text(0.036, y0 - 0.035, "no value", adj = 0, cex = 0.65)
+    }
+  } else {
+    for (k in seq_len(maxo)) {
+      yt <- 0.99 - (k - 1) * 0.035
+      graphics::rect(0.01, yt - 0.03, 0.035, yt, col = pal[k], border = NA)
+      graphics::text(0.04, yt - 0.015, sprintf("order %d", k), adj = 0, cex = 0.7)
+    }
+    if (any(is.na(values))) {
+      yt <- 0.99 - maxo * 0.035
+      graphics::rect(0.01, yt - 0.03, 0.035, yt, col = "red", border = NA)
+      graphics::text(0.04, yt - 0.015, "unordered", adj = 0, cex = 0.7)
+    }
   }
   invisible(file)
 }
@@ -1375,7 +1446,16 @@ summarize_orders <- function(et, order_col = "branch_order") {
 #' @param et Edge table in pixels (from \code{\link{root_graph_pipeline}}).
 #' @param unit One of \code{"cm"}, \code{"inch"}, \code{"px"}.
 #' @param dpi Scan resolution (dots per inch).
-#' @param length_method \code{"polyline"} (sqrt(2) chain code) or \code{"kimura"}.
+#' @param length_method \code{"kimura"} (default) or \code{"polyline"}.
+#'   \code{"polyline"} is the sqrt(2) chain code: it walks the skeleton pixel
+#'   to pixel, counting 1 for an orthogonal step and sqrt(2) for a diagonal one.
+#'   A digital line is a staircase, so that path is longer than the line it
+#'   represents -- measured against straight lines of known length, the chain
+#'   code runs about 5.7\% long on average and up to 8.2\%, worst near 22.5
+#'   degrees and zero only for perfectly horizontal or vertical segments.
+#'   Kimura's estimator corrects for the staircase and reduces that to about
+#'   1.8\% on average. Use \code{"polyline"} to reproduce output from
+#'   Rootopia 1.1.0 and earlier, which defaulted to it.
 #' @return \code{et} with length/diameter columns in \code{unit}; records
 #'   \code{unit}, \code{dpi}, \code{length_method} as attributes.
 #' @examples
@@ -1385,7 +1465,7 @@ summarize_orders <- function(et, order_col = "branch_order") {
 #' }
 #' @export
 convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
-                               length_method = c("polyline", "kimura")) {
+                               length_method = c("kimura", "polyline")) {
   if (is.null(et) || nrow(et) == 0L) return(et)
   unit <- match.arg(unit); length_method <- match.arg(length_method)
   px_factor <- function(u, d) switch(u, px = 1, inch = 1 / d, cm = 2.54 / d)
@@ -1453,8 +1533,15 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'   \code{"branch_order"}, \code{"root_order"}, or \code{"tip_order"}.
 #' @param unit Reporting unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
 #' @param dpi Scan resolution (dots per inch); required for cm/inch.
-#' @param length_method \code{"polyline"} (sqrt(2) chain code, follows curves) or
-#'   \code{"kimura"} (per-segment Kimura correction, better for straight segments).
+#' @param length_method \code{"kimura"} (default) or \code{"polyline"}.
+#'   The sqrt(2) chain code walks the skeleton pixel to pixel, so it traces a
+#'   staircase and reports more length than the line it represents; Kimura's
+#'   estimator corrects for that. Measured on digital straight lines of known
+#'   length, the chain code runs about 5.7\% long on average and Kimura about
+#'   1.8\%. Kimura is derived for straight digital lines, so the correction is
+#'   best on segments that are nearly straight; both estimators follow whatever
+#'   path the skeleton takes. Use \code{"polyline"} to reproduce output from
+#'   Rootopia 1.1.0 and earlier.
 
 #' @param template \code{SpatRaster} defining the \code{$class_map} grid; defaults
 #'   to \code{skel} when it is a raster.
@@ -1468,7 +1555,9 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'   \code{NA} off-root), and \code{$order}, \code{$unit}, \code{$dpi},
 #'   \code{$length_method}.
 #' @seealso \code{\link{root_graph_pipeline}}, \code{\link{order_classification_map}},
-#'   \code{\link{summarize_orders}}, \code{\link{convert_root_units}}
+#'   \code{\link{summarize_orders}}, \code{\link{convert_root_units}},
+#'   \code{\link{root_transport}} and \code{\link{network_metrics}}, which both
+#'   take the \code{$edges} table returned here.
 #' @examples
 #' \dontrun{
 #' skel <- skeletonize_image(mask)
@@ -1480,7 +1569,7 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' @export
 branch_order_map <- function(skel = NULL, mask = NULL,
                              order = c("strahler_order", "branch_order", "root_order", "tip_order"),
-                             unit = "cm", dpi = 300, length_method = "polyline",
+                             unit = "cm", dpi = 300, length_method = "kimura",
                              template = NULL, overlay_png = NULL, return_map = TRUE, ...) {
   order <- match.arg(order)
   et <- root_graph_pipeline(skel, mask, color_by = order, keep_segments = TRUE,

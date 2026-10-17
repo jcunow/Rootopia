@@ -8,7 +8,7 @@ convert_root_units(
   et,
   unit = c("cm", "inch", "px"),
   dpi = 300,
-  length_method = c("polyline", "kimura")
+  length_method = c("kimura", "polyline")
 )
 }
 \arguments{
@@ -18,7 +18,16 @@ convert_root_units(
 
 \item{dpi}{Scan resolution (dots per inch).}
 
-\item{length_method}{\code{"polyline"} (sqrt(2) chain code) or \code{"kimura"}.}
+\item{length_method}{\code{"kimura"} (default) or \code{"polyline"}.
+\code{"polyline"} is the sqrt(2) chain code: it walks the skeleton pixel
+to pixel, counting 1 for an orthogonal step and sqrt(2) for a diagonal one.
+A digital line is a staircase, so that path is longer than the line it
+represents -- measured against straight lines of known length, the chain
+code runs about 5.7\% long on average and up to 8.2\%, worst near 22.5
+degrees and zero only for perfectly horizontal or vertical segments.
+Kimura's estimator corrects for the staircase and reduces that to about
+1.8\% on average. Use \code{"polyline"} to reproduce output from
+Rootopia 1.1.0 and earlier, which defaulted to it.}
 }
 \value{
 \code{et} with length/diameter columns in \code{unit}; records
