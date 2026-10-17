@@ -96,6 +96,16 @@ reference:
       - render_order_overlay
       - plot_order_window
 
+  - title: "Network topology and transport"
+    desc: "Graph-level summary of a segment network: components, tips, branch
+      points and the connectivity coefficients, with loop metrics reported as
+      traits or as quality control depending on the declared topology. Plus
+      per-segment transport quantities measured from the base of each root
+      system outward."
+    contents:
+      - network_metrics
+      - root_transport
+
 
   - title: "Root turnover"
     desc: "Estimate root production, decay, and turnover from temporal image
