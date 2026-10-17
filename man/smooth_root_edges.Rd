@@ -8,7 +8,7 @@ smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3, iterations = 1)
 }
 \arguments{
 \item{img}{A `cimg` binary image or any format accepted by
-[load_flexible_image()].}
+\code{\link{load_flexible_image}}.}
 
 \item{kernel_shape}{One of `"disk"` (default), `"square"`, `"diamond"`.}
 
