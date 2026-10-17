@@ -438,16 +438,16 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 #'
 #' A box mean is separable: averaging over \code{w} rows and then over
 #' \code{w} columns gives the same value as one \code{w x w} average, at
-#' \code{w} kernel weights per pixel instead of \code{w^2}. On a 1000 x 1000
-#' raster that is 0.7 s instead of 29 s at \code{w = 101}, which is what makes
-#' the large windows adaptive thresholding needs affordable.
+#' \code{w} kernel weights per pixel instead of \code{w^2}. The cost is
+#' therefore linear in the window side rather than quadratic, which is what
+#' makes the large windows adaptive thresholding needs affordable.
 #'
 #' Where the window overhangs the edge, \code{na.rm = TRUE} averages over the
 #' cells that exist. Interior NA cells make the two passes a row-weighted mean
 #' rather than a plain mean over the non-NA cells: rows contribute equally
-#' regardless of how many valid cells each holds. The two agree to machine
-#' precision when nothing is NA and to under 1e-3 for \code{w >= 31}, which is
-#' immaterial for a reference level.
+#' regardless of how many valid cells each holds. With no NA cells the two
+#' agree to floating-point precision; the weighting only matters where NAs are
+#' unevenly spread, and it shrinks as the window grows.
 #'
 #' @param x Single-layer SpatRaster.
 #' @param w Odd window side, in cells.
@@ -484,40 +484,39 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 #' image rather than preferences:
 #'
 #' \strong{\code{adaptive_k} must exceed 1.} In a window holding only
-#' background the local mean \emph{is} the background level, so background pixels
-#' sit on both sides of it. At \code{adaptive_k = 1} half of a root-free patch
-#' comes out as root; below 1 nearly all of it does. The margin needed above 1
-#' scales with the background noise: on test images with a background
-#' coefficient of variation of 5\%, \code{adaptive_k = 1.15} leaves 0.1\% of
-#' a root-free patch marked, while \code{1.05} leaves 16\%. The useful range
-#' runs from roughly \code{1 + 3 * cv} up to the root-to-background brightness
-#' ratio; past that ratio the roots fail their own test and nothing is found.
-#' Across test images spanning root/background contrasts of 1.3 to 2.2 and
-#' background CVs of 2\% to 10\%, the best value fell between 1.10 and 1.20.
+#' background the local mean \emph{is} the background level, so about half the
+#' background sits above it. At \code{adaptive_k = 1} roughly half of a
+#' root-free patch therefore comes out as root, and below 1 nearly all of it
+#' does. The method needs a dead band above 1, and the band has to clear the
+#' background's own noise: the noisier the background, the larger
+#' \code{adaptive_k} has to be. Its upper bound is the root-to-background
+#' brightness ratio -- past that the roots fail their own test and nothing is
+#' found. The default suits a reasonably clean scan; a noisy one wants more, and
+#' a scan with little root-to-background contrast leaves no useful range at all.
 #'
 #' \strong{\code{window_size} must be large compared with the widest root.}
 #' The window average includes the root itself, so a root that fills much of
-#' its own window raises its own reference level and is rejected. With roots up
-#' to 9 px wide, F1 against a known mask rose from 0.54 at
-#' \code{window_size = 15} to 0.90 at 51 and 0.96 at 101, and the useful
-#' \code{adaptive_k} rose with it, from 1.05 to 1.20, as the reference level
-#' stopped being contaminated. A window about ten times the widest root is a
-#' reasonable starting point; there is no penalty for going well beyond that,
-#' because the cost is flat in \code{window_size} and the reference level still
-#' tracked an eightfold illumination gradient at \code{window_size = 151}.
+#' its own window raises its own reference level and is rejected. Recall is what
+#' fails first: the roots are suppressed rather than the background. A window
+#' several times the widest root is a reasonable starting point; measure the
+#' widest root in pixels on one scan and scale from there, since a root's pixel
+#' width depends on the scan resolution. A larger window also leaves the full
+#' root-to-background contrast available, so it allows a larger
+#' \code{adaptive_k}; set the window first, then the multiplier. Going large
+#' costs little, because the local mean is computed as two 1-D passes and so
+#' scales with the window side rather than its square.
 #'
 #' @section What neither method can do:
 #' Both methods mark pixels that are \emph{brighter} than a reference, so they
 #' separate bright features on a darker background and nothing else. Where root
-#' and soil have the same brightness, no threshold of either kind can tell them
-#' apart, and the useful range for \code{adaptive_k} described above is empty:
-#' its lower bound sits above its upper bound. The bundled minirhizotron scan
-#' is such an image. Measured against the matching segmentation, its roots
-#' average 1.07 times the soil brightness, while the soil's own coefficient of
-#' variation runs from 0.23 to 0.93 across the frame -- the soil texture varies
-#' several times more than root differs from soil -- and adaptive thresholding
-#' reaches an F1 of about 0.1 there. That is a property of the image rather
-#' than of the implementation. Scans like it need a trained segmenter such as
+#' and soil are about equally bright, the useful range for \code{adaptive_k}
+#' closes: the margin the background noise demands is larger than the
+#' root-to-background contrast allows, and no setting works. The bundled
+#' minirhizotron scan is such an image -- scored against the segmentation
+#' shipped with it, its roots are not reliably brighter than the surrounding
+#' soil, and the soil's own texture varies more than root differs from soil.
+#' That is a property of the image rather than of the implementation, and
+#' tuning does not rescue it. Scans like it need a trained segmenter such as
 #' RootDetector, whose binary output the rest of Rootopia reads directly.
 #'
 #' @section Deblurring:
