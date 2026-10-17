@@ -164,13 +164,14 @@ are properties of your scan rather than preferences:
 - `adaptive_k` is a **multiple of the local mean** and must sit above 1.
   A window containing only background averages to the background level,
   so at `adaptive_k = 1` about half of a root-free patch comes back as
-  root and below 1 nearly all of it does. 1.15 suits a clean scan; raise
-  it for a noisy one.
+  root and below 1 nearly all of it does. The default suits a reasonably
+  clean scan; raise it for a noisy one.
 - `window_size` must be **much wider than your widest root**, because
   the local average includes the root itself and a root that fills its
   own window raises the level it is judged against. Measure the widest
-  root in pixels on one scan and allow roughly ten times that. Cost is
-  flat in `window_size`, so there is no reason to keep it small.
+  root in pixels on one scan and allow several times that. The cost
+  grows with `window_size` rather than with its square, so there is
+  little reason to keep it small.
 
 Set the window first, then the multiplier: a wider window gives a
 cleaner reference level and allows a larger `adaptive_k`. The *How It

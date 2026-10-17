@@ -89,43 +89,43 @@ Two constraints decide whether it works, and both are properties of the
 image rather than preferences:
 
 **`adaptive_k` must exceed 1.** In a window holding only background the
-local mean *is* the background level, so background pixels sit on both
-sides of it. At `adaptive_k = 1` half of a root-free patch comes out as
-root; below 1 nearly all of it does. The margin needed above 1 scales
-with the background noise: on test images with a background coefficient
-of variation of 5%, `adaptive_k = 1.15` leaves 0.1% of a root-free patch
-marked, while `1.05` leaves 16%. The useful range runs from roughly
-`1 + 3 * cv` up to the root-to-background brightness ratio; past that
-ratio the roots fail their own test and nothing is found. Across test
-images spanning root/background contrasts of 1.3 to 2.2 and background
-CVs of 2% to 10%, the best value fell between 1.10 and 1.20.
+local mean *is* the background level, so about half the background sits
+above it. At `adaptive_k = 1` roughly half of a root-free patch
+therefore comes out as root, and below 1 nearly all of it does. The
+method needs a dead band above 1, and the band has to clear the
+background's own noise: the noisier the background, the larger
+`adaptive_k` has to be. Its upper bound is the root-to-background
+brightness ratio – past that the roots fail their own test and nothing
+is found. The default suits a reasonably clean scan; a noisy one wants
+more, and a scan with little root-to-background contrast leaves no
+useful range at all.
 
 **`window_size` must be large compared with the widest root.** The
 window average includes the root itself, so a root that fills much of
-its own window raises its own reference level and is rejected. With
-roots up to 9 px wide, F1 against a known mask rose from 0.54 at
-`window_size = 15` to 0.90 at 51 and 0.96 at 101, and the useful
-`adaptive_k` rose with it, from 1.05 to 1.20, as the reference level
-stopped being contaminated. A window about ten times the widest root is
-a reasonable starting point; there is no penalty for going well beyond
-that, because the cost is flat in `window_size` and the reference level
-still tracked an eightfold illumination gradient at `window_size = 151`.
+its own window raises its own reference level and is rejected. Recall is
+what fails first: the roots are suppressed rather than the background. A
+window several times the widest root is a reasonable starting point;
+measure the widest root in pixels on one scan and scale from there,
+since a root's pixel width depends on the scan resolution. A larger
+window also leaves the full root-to-background contrast available, so it
+allows a larger `adaptive_k`; set the window first, then the multiplier.
+Going large costs little, because the local mean is computed as two 1-D
+passes and so scales with the window side rather than its square.
 
 ## What neither method can do
 
 Both methods mark pixels that are *brighter* than a reference, so they
 separate bright features on a darker background and nothing else. Where
-root and soil have the same brightness, no threshold of either kind can
-tell them apart, and the useful range for `adaptive_k` described above
-is empty: its lower bound sits above its upper bound. The bundled
-minirhizotron scan is such an image. Measured against the matching
-segmentation, its roots average 1.07 times the soil brightness, while
-the soil's own coefficient of variation runs from 0.23 to 0.93 across
-the frame – the soil texture varies several times more than root differs
-from soil – and adaptive thresholding reaches an F1 of about 0.1 there.
-That is a property of the image rather than of the implementation. Scans
-like it need a trained segmenter such as RootDetector, whose binary
-output the rest of Rootopia reads directly.
+root and soil are about equally bright, the useful range for
+`adaptive_k` closes: the margin the background noise demands is larger
+than the root-to-background contrast allows, and no setting works. The
+bundled minirhizotron scan is such an image – scored against the
+segmentation shipped with it, its roots are not reliably brighter than
+the surrounding soil, and the soil's own texture varies more than root
+differs from soil. That is a property of the image rather than of the
+implementation, and tuning does not rescue it. Scans like it need a
+trained segmenter such as RootDetector, whose binary output the rest of
+Rootopia reads directly.
 
 ## Deblurring
 

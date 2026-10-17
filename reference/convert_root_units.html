@@ -90,15 +90,24 @@ length_kimura are both retained in the same unit."></head><body>
 
 <dt id="arg-length-method">length_method<a class="anchor" aria-label="anchor" href="#arg-length-method"></a></dt>
 <dd><p><code>"kimura"</code> (default) or <code>"polyline"</code>.
-<code>"polyline"</code> is the sqrt(2) chain code: it walks the skeleton pixel
-to pixel, counting 1 for an orthogonal step and sqrt(2) for a diagonal one.
-A digital line is a staircase, so that path is longer than the line it
-represents – measured against straight lines of known length, the chain
-code runs about 5.7% long on average and up to 8.2%, worst near 22.5
-degrees and zero only for perfectly horizontal or vertical segments.
-Kimura's estimator corrects for the staircase and reduces that to about
-1.8% on average. Use <code>"polyline"</code> to reproduce output from
-Rootopia 1.1.0 and earlier, which defaulted to it.</p></dd>
+  <code>"polyline"</code> is the sqrt(2) chain code: it walks the skeleton pixel
+  to pixel, counting 1 for an orthogonal step and sqrt(2) for a diagonal one.
+  A digital line is a staircase, so that walk is longer than the line it
+  represents and the chain code reports the staircase. Kimura's estimator,
+  \(\sqrt{n_d^2 + (n_d + n_o/2)^2} + n_o/2\) over the diagonal and
+  orthogonal step counts, corrects for that and is the better estimate of
+  root length.</p>
+<p>Both reduce to the same value when a chain is all orthogonal or all
+  diagonal, so a perfectly horizontal, vertical or 45-degree segment reports
+  the same length either way. They differ only where a chain mixes the two,
+  which is where the staircase is, and there the chain code reads high.
+  Kimura's correction is derived for straight digital lines, so it is most
+  exact on segments that are nearly straight; both measures follow whatever
+  path the skeleton takes, so neither can recover length the skeleton does
+  not have.</p>
+<p>Use <code>"polyline"</code> to reproduce output from Rootopia 1.1.0 and earlier,
+  which defaulted to it, or to compare against software that reports the
+  chain code.</p></dd>
 
 </dl></div>
     <div class="section level2">
