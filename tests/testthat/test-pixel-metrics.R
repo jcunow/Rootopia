@@ -29,13 +29,21 @@ test_that("tube_coloration returns the documented color data.frame", {
                   %in% names(cv)))
 })
 
+# Shape only: that the output is a 0/1 raster is true even of a threshold that
+# marks every pixel, so whether the two methods actually separate anything is
+# tested against a known mask in test-image-threshold.R.
 test_that("image_threshold returns a binarised raster across methods", {
   skip_if_not_installed("terra")
   set.seed(1)
   r <- terra::rast(matrix(runif(24 * 28), 24, 28))
-  for (mth in c("global", "adaptive")) {
-    out <- image_threshold(r, threshold = 0.4, method = mth,
-                           select_layer = 1, mask_layer = NULL, binary_01 = TRUE)
+  outs <- list(
+    global   = image_threshold(r, threshold = 0.4, method = "global",
+                               select_layer = 1, mask_layer = NULL,
+                               binary_01 = TRUE),
+    adaptive = image_threshold(r, method = "adaptive", adaptive_k = 1.15,
+                               window_size = 21, select_layer = 1,
+                               mask_layer = NULL, binary_01 = TRUE))
+  for (out in outs) {
     expect_s4_class(out, "SpatRaster")
     vals <- terra::values(out)
     expect_true(all(vals %in% c(0, 1) | is.na(vals)))
