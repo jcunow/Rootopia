@@ -8,7 +8,8 @@ image_threshold(
   img,
   threshold = 0.4,
   method = "global",
-  window_size = 15,
+  adaptive_k = 1.15,
+  window_size = 51,
   select_layer = 2,
   mask_layer = 1,
   binary_01 = FALSE,
@@ -16,34 +17,123 @@ image_threshold(
 )
 }
 \arguments{
-\item{img}{SpatRaster object}
+\item{img}{SpatRaster object.}
 
-\item{threshold}{Numeric value (0–1). For global thresholding, it's a fraction of the global max.
-For adaptive thresholding, it's a fraction of local mean. For deblurring, it's the fraction of max used to recover structure.}
+\item{threshold}{Fraction of the global maximum, between 0 and 1, used by
+\code{method = "global"} and by \code{deblur = TRUE}. Not used by
+\code{method = "adaptive"}, which takes \code{adaptive_k} instead.}
 
-\item{method}{"global" or "adaptive". Ignored if `deblur = TRUE`.}
+\item{method}{\code{"global"} or \code{"adaptive"}. Ignored when
+\code{deblur = TRUE}.}
 
-\item{window_size}{Integer (odd), only used for adaptive thresholding.}
+\item{adaptive_k}{Multiple of the local mean a pixel must reach to count as
+foreground, for \code{method = "adaptive"} only. Must be above 1 for the
+method to separate anything; see the section above.}
 
-\item{select_layer}{Integer or NULL. Which layer to use for thresholding or deblurring.
-If NULL and multilayer, the mean of all layers is used.}
+\item{window_size}{Odd integer, the side of the local-mean box in pixels,
+for \code{method = "adaptive"} only.}
 
-\item{mask_layer}{Integer or NULL. If set, used to preserve masked regions or enhance structure.}
+\item{select_layer}{Integer or NULL. Which layer to threshold or deblur.
+If NULL and the image is multilayer, the mean of all layers is used.}
 
-\item{binary_01}{Logical. If TRUE, binarized output uses 0/1. If FALSE, it retains max value of input.}
+\item{mask_layer}{Integer or NULL. If set, this layer is thresholded against
+its own level rather than against \code{select_layer}'s.}
 
-\item{deblur}{Logical. If TRUE, applies deblurring logic instead of standard thresholding.}
+\item{binary_01}{Logical. If TRUE, the output is 0/1; if FALSE, it keeps the
+maximum value of the input.}
+
+\item{deblur}{Logical. If TRUE, runs the deblurring mode instead of
+thresholding.}
 }
 \value{
-SpatRaster object
+SpatRaster object.
 }
 \description{
-Applies global or adaptive thresholding to a raster image, with optional
-masking and simple deblurring based on structural layer separation.
+Turns a grayscale image into a binary one, either against a single
+image-wide level (\code{method = "global"}) or against the local
+brightness around each pixel (\code{method = "adaptive"}). A separate
+\code{deblur = TRUE} mode instead separates two layers of a segmented
+image.
 }
+\section{Global thresholding}{
+
+A pixel is foreground when it is at least \code{threshold} times the
+brightest value in the image. One level for the whole image, so it only
+works when the illumination is even: a flatbed scan with a bright center
+and dark corners has no single level that is right everywhere.
+}
+
+\section{Adaptive thresholding}{
+
+A pixel is foreground when it is at least \code{adaptive_k} times the mean
+of the \code{window_size} x \code{window_size} box around it. The
+reference level follows the illumination, so a brightness gradient leaves the
+decision unchanged.
+
+Two constraints decide whether it works, and both are properties of the
+image rather than preferences:
+
+\strong{\code{adaptive_k} must exceed 1.} In a window holding only
+background the local mean \emph{is} the background level, so background pixels
+sit on both sides of it. At \code{adaptive_k = 1} half of a root-free patch
+comes out as root; below 1 nearly all of it does. The margin needed above 1
+scales with the background noise: on test images with a background
+coefficient of variation of 5\%, \code{adaptive_k = 1.15} leaves 0.1\% of
+a root-free patch marked, while \code{1.05} leaves 16\%. The useful range
+runs from roughly \code{1 + 3 * cv} up to the root-to-background brightness
+ratio; past that ratio the roots fail their own test and nothing is found.
+Across test images spanning root/background contrasts of 1.3 to 2.2 and
+background CVs of 2\% to 10\%, the best value fell between 1.10 and 1.20.
+
+\strong{\code{window_size} must be large compared with the widest root.}
+The window average includes the root itself, so a root that fills much of
+its own window raises its own reference level and is rejected. With roots up
+to 9 px wide, F1 against a known mask rose from 0.54 at
+\code{window_size = 15} to 0.90 at 51 and 0.96 at 101, and the useful
+\code{adaptive_k} rose with it, from 1.05 to 1.20, as the reference level
+stopped being contaminated. A window about ten times the widest root is a
+reasonable starting point; there is no penalty for going well beyond that,
+because the cost is flat in \code{window_size} and the reference level still
+tracked an eightfold illumination gradient at \code{window_size = 151}.
+}
+
+\section{What neither method can do}{
+
+Both methods mark pixels that are \emph{brighter} than a reference, so they
+separate bright features on a darker background and nothing else. Where root
+and soil have the same brightness, no threshold of either kind can tell them
+apart, and the useful range for \code{adaptive_k} described above is empty:
+its lower bound sits above its upper bound. The bundled minirhizotron scan
+is such an image. Measured against the matching segmentation, its roots
+average 1.07 times the soil brightness, while the soil's own coefficient of
+variation runs from 0.23 to 0.93 across the frame -- the soil texture varies
+several times more than root differs from soil -- and adaptive thresholding
+reaches an F1 of about 0.1 there. That is a property of the image rather
+than of the implementation. Scans like it need a trained segmenter such as
+RootDetector, whose binary output the rest of Rootopia reads directly.
+}
+
+\section{Deblurring}{
+
+\code{deblur = TRUE} ignores \code{method}. It subtracts
+\code{select_layer} from \code{mask_layer} and thresholds both at
+\code{threshold} times the maximum of \code{select_layer}, which separates
+in-focus structure from an out-of-focus halo in a two-layer segmented image.
+}
+
 \examples{
 img = terra::rast(seg_Oulanka2023_Session03_T067)
 image_threshold(img, threshold = 0.3, method = "global")
-image_threshold(img, threshold = 0.9, method = "adaptive", window_size = 15, binary_01 = TRUE)
 image_threshold(img, threshold = 0.4, select_layer = 2, mask_layer = 1, deblur = TRUE)
+
+# Adaptive thresholding, on a small image that meets both conditions above:
+# the background falls from 0.40 to 0.11 across the frame, a 3.6-fold range
+# no single global level can follow, and three 1 px roots sit at twice their
+# own local background. The window is far wider than the roots, and the
+# multiplier is above 1.
+m <- outer(seq(1, 0.4, length.out = 120), seq(1, 0.7, length.out = 120)) * 0.4
+m[, c(20, 50, 90)] <- m[, c(20, 50, 90)] * 2
+bw <- image_threshold(terra::rast(m), method = "adaptive",
+                      adaptive_k = 1.15, window_size = 31, binary_01 = TRUE)
+terra::plot(bw)
 }
