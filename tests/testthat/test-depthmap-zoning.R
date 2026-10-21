@@ -93,3 +93,39 @@ test_that("depth_zoning requires depth_map and depth", {
   expect_error(depth_zoning(img, depth = 5))
   expect_error(depth_zoning(img, depth_map = make_binary_spatraster()))
 })
+
+
+test_that("slice_rotation tiles the rotation axis exactly", {
+  skip_if_not_installed("terra")
+  r  <- terra::rast(matrix(seq_len(20 * 7), 20, 7))
+  nr <- terra::nrow(r)
+  # The claim is contiguous, non-overlapping slices covering every row. Row
+  # counts summing to nr proves no gap and no overlap together, and n values
+  # that do not divide nr are the cases a rounding error would show up in.
+  for (n in c(1L, 3L, 4L, 7L)) {
+    sl   <- slice_rotation(r, n)
+    rows <- vapply(sl, function(x) as.numeric(terra::nrow(x)), numeric(1))
+    expect_length(sl, n)
+    expect_equal(sum(rows), nr, info = paste("n =", n))
+    expect_true(all(rows >= 1))
+    # Slice i must start where slice i-1 ended: the first cell of each slice
+    # is the first cell of the next unused row, counted from the top.
+    expect_equal(vapply(sl, function(x) terra::values(x)[1], numeric(1)),
+                 cumsum(c(1, head(rows, -1))), info = paste("n =", n))
+  }
+})
+
+test_that("depth_zoning reads three or more consecutive bins as a range", {
+  skip_if_not_installed("terra")
+  img  <- terra::rast(matrix(1, 4, 4))
+  bins <- terra::rast(matrix(rep(c(0, 5, 10, 15), each = 4), 4, 4, byrow = TRUE))
+  kept <- function(d) sort(unique(terra::values(bins)[!is.na(terra::values(
+    depth_zoning(img, depth_map = bins, depth = d)))]))
+
+  expect_equal(kept(5), 5)
+  # Evenly spaced and longer than two: an inclusive range, so 10 comes along.
+  expect_equal(kept(c(5, 10, 15)), c(5, 10, 15))
+  # Exactly two values are matched one by one instead, so the bin between them
+  # is not kept. The length-2 case is a pair, never a range.
+  expect_equal(kept(c(5, 15)), c(5, 15))
+})

@@ -302,3 +302,54 @@ test_that("rotation_fixed_width controls the rotation-axis crop", {
 test_that("stitch_root_scans end-to-end (needs a scan-sequence fixture)", {
   skip("Provide a directory of overlapping scans to enable this test.")
 })
+
+
+test_that("one unreadable image is skipped and named, the rest still reported", {
+  skip_if_not_installed("terra")
+  skip_if_not_installed("tiff")
+  # The per-image loop wraps every metric block in .safe(), keeps a local copy
+  # of each calc_* flag and collects failures, so a bad frame degrades that
+  # frame only. Nothing exercised that, so this is the design under test: with
+  # two images and one of them corrupt, the good one must still produce rows.
+  dir <- file.path(tempdir(), "safe-degrade")
+  unlink(dir, recursive = TRUE); dir.create(dir, recursive = TRUE)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+
+  good <- terra::rast(matrix(c(rep(0, 40), rep(1, 20), rep(0, 40)), 10, 10))
+  terra::writeRaster(good, file.path(dir, "good.tif"), overwrite = TRUE)
+  # A .tif extension passes the file-name check, so the failure happens where
+  # the image is actually decoded -- inside the loop, under .safe().
+  writeLines("not an image", file.path(dir, "broken.tif"))
+
+  expect_warning(
+    res <- root_depth_metrics(
+      path_seg = dir, tube_names = c("broken", "good"),
+      depth_interval_cm = NULL, dpi = 300,
+      calc_root_pixels = TRUE, calc_root_length = FALSE,
+      calc_diameter_stats = FALSE, calc_density_metrics = FALSE,
+      calc_distribution_indices = FALSE, calc_advanced_metrics = FALSE,
+      verbose = FALSE),
+    "broken.tif")
+
+  expect_s3_class(res, "data.frame")
+  expect_equal(res$Tube, "good")
+  expect_gt(sum(res$rootpx, na.rm = TRUE), 0)
+})
+
+test_that("a run where every image fails returns nothing rather than an empty frame", {
+  skip_if_not_installed("terra")
+  dir <- file.path(tempdir(), "safe-allfail")
+  unlink(dir, recursive = TRUE); dir.create(dir, recursive = TRUE)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+  writeLines("not an image", file.path(dir, "a.tif"))
+
+  expect_warning(
+    res <- root_depth_metrics(path_seg = dir, tube_names = "a",
+                              depth_interval_cm = NULL, verbose = FALSE,
+                              calc_root_length = FALSE, calc_diameter_stats = FALSE,
+                              calc_density_metrics = FALSE,
+                              calc_distribution_indices = FALSE,
+                              calc_advanced_metrics = FALSE),
+    "No images were processed successfully")
+  expect_null(res)
+})

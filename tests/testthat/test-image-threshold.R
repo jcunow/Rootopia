@@ -213,3 +213,33 @@ test_that("the documented example recovers its three roots exactly", {
   }, numeric(1)))
   expect_lt(best_global, 0.9)
 })
+
+
+test_that("deblur separates the two layers at a fraction of select_layer's max", {
+  skip_if_not_installed("terra")
+  # Both output layers are worked out by hand from the documented rule: the
+  # mask layer becomes (mask - select >= max(select) * threshold) * max(select),
+  # and the select layer becomes (select >= max(select) * threshold) * max(select).
+  l_mask   <- matrix(c(200, 200, 100, 0), 2, 2, byrow = TRUE)
+  l_select <- matrix(c(100,   0,   0, 0), 2, 2, byrow = TRUE)
+  img <- c(terra::rast(l_mask), terra::rast(l_select))
+
+  out <- image_threshold(img, threshold = 0.5, select_layer = 2,
+                         mask_layer = 1, deblur = TRUE)
+
+  mx  <- max(l_select)                       # 100
+  thr <- mx * 0.5                            # 50
+  expect_equal(as.vector(terra::values(out[[1]])),
+               as.vector(t((l_mask - l_select >= thr) * mx)))
+  expect_equal(as.vector(terra::values(out[[2]])),
+               as.vector(t((l_select >= thr) * mx)))
+})
+
+test_that("deblur needs two different layers to subtract", {
+  skip_if_not_installed("terra")
+  one <- terra::rast(matrix(1, 2, 2))
+  expect_error(image_threshold(one, deblur = TRUE), "multi-layer")
+  two <- c(terra::rast(matrix(1, 2, 2)), terra::rast(matrix(1, 2, 2)))
+  expect_error(image_threshold(two, select_layer = 1, mask_layer = 1, deblur = TRUE),
+               "cannot be the same")
+})

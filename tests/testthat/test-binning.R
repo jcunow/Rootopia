@@ -25,3 +25,19 @@ test_that("binning validates its arguments", {
   expect_error(binning(dm, nn = -1))             # non-positive
   expect_error(binning(dm, nn = 5, round_option = "nope"))
 })
+
+
+test_that("the three rounding options place depths in the bins they name", {
+  skip_if_not_installed("terra")
+  # nn * f(depth / nn) for f = round, floor, ceiling, worked out by hand for
+  # bin width 5. No depth sits on a .5 boundary, so R's banker's rounding at
+  # exactly .5 never decides a case here.
+  dm <- terra::rast(matrix(c(0, 2, 3, 7, 8, 12), nrow = 1))
+
+  expect_equal(as.vector(terra::values(binning(dm, nn = 5, round_option = "rounding"))),
+               c(0, 0, 5, 5, 10, 10))
+  expect_equal(as.vector(terra::values(binning(dm, nn = 5, round_option = "floor"))),
+               c(0, 0, 0, 5, 5, 10))
+  expect_equal(as.vector(terra::values(binning(dm, nn = 5, round_option = "ceiling"))),
+               c(0, 5, 5, 10, 10, 15))
+})

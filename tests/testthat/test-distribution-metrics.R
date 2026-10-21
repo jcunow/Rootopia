@@ -23,3 +23,16 @@ test_that("root_accumulation returns a cumulative vector aligned to input rows",
   expect_equal(acc[5], 95)                     # group a cumulative total
   expect_true(all(diff(acc[1:5]) >= 0))        # monotonic within a group
 })
+
+
+test_that("root_accumulation standardizes the running total three ways", {
+  df <- data.frame(depth = c(0, 20, 40), Plot = "a", rootpx = c(5, 50, 20))
+  # cumsum is 5, 55, 75. "additive" divides by its maximum (75) so the deepest
+  # bin is 1; "relative" divides by the sum of the running totals (135).
+  expect_equal(root_accumulation(df, "Plot", "depth", "rootpx", stdrz = "counts"),
+               c(5, 55, 75))
+  expect_equal(root_accumulation(df, "Plot", "depth", "rootpx", stdrz = "additive"),
+               c(5, 55, 75) / 75)
+  expect_equal(root_accumulation(df, "Plot", "depth", "rootpx", stdrz = "relative"),
+               c(5, 55, 75) / 135)
+})
