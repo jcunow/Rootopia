@@ -20,12 +20,12 @@ plot_soil_classification(
 \item{color_mode}{Character. One of \code{"contrast"} (default),
 \code{"vibrant"}, or \code{"centroid"}.
 \describe{
-  \item{\code{"contrast"}}{Muted, distinguishable colors defined in
-    \code{class_colors}.}
-  \item{\code{"vibrant"}}{Saturated, high-contrast colors defined in
-    \code{vibrant_colors}.}
-  \item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
-    color -- useful for sanity-checking centroid values.}
+\item{\code{"contrast"}}{Muted, distinguishable colors defined in
+\code{class_colors}.}
+\item{\code{"vibrant"}}{Saturated, high-contrast colors defined in
+\code{vibrant_colors}.}
+\item{\code{"centroid"}}{Each class rendered as its actual LAB centroid
+color -- useful for sanity-checking centroid values.}
 }}
 
 \item{class_colors}{Named character vector of hex colors for

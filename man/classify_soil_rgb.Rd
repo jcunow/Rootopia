@@ -43,18 +43,18 @@ needed.}
 \value{
 A named list with elements:
 \describe{
-  \item{\code{map}}{A \code{SpatRaster} of integer class IDs with factor
-    levels set to class names. Level 0 = "unclassified". Same CRS, extent,
-    and resolution as \code{img}. Use directly with \code{terra::zonal()},
-    \code{terra::mask()}, \code{terra::freq()}.}
-  \item{\code{metrics}}{A \code{data.frame} with per-class pixel counts,
-    area fractions (\%), LAB and RGB means and SDs, mean distance to
-    centroid, and the actual mean color rendered as hex. \code{NULL} if
-    \code{compute_metrics = FALSE}.}
-  \item{\code{inter_dist}}{Numeric matrix of pairwise LAB distances between
-    class centroids.}
-  \item{\code{centroids}}{The centroid table used (useful when the default
-    was applied).}
+\item{\code{map}}{A \code{SpatRaster} of integer class IDs with factor
+levels set to class names. Level 0 = "unclassified". Same CRS, extent,
+and resolution as \code{img}. Use directly with \code{terra::zonal()},
+\code{terra::mask()}, \code{terra::freq()}.}
+\item{\code{metrics}}{A \code{data.frame} with per-class pixel counts,
+area fractions (\%), LAB and RGB means and SDs, mean distance to
+centroid, and the actual mean color rendered as hex. \code{NULL} if
+\code{compute_metrics = FALSE}.}
+\item{\code{inter_dist}}{Numeric matrix of pairwise LAB distances between
+class centroids.}
+\item{\code{centroids}}{The centroid table used (useful when the default
+was applied).}
 }
 }
 \description{
@@ -68,22 +68,22 @@ distance threshold are labeled "unclassified".
 The \code{centroids} table has one row per material class and these
 columns:
 \describe{
-  \item{\code{class}}{Character. Name of the class (e.g.
-    \code{"dark_soil"}, \code{"root"}). Becomes the factor level in
-    \code{result$map} and the \code{class} column of \code{result$metrics}.}
-  \item{\code{L}, \code{A}, \code{B}}{Numeric. The class centroid's
-    coordinates in CIE LAB color space (D65 illuminant): \code{L} is
-    lightness (0 = black, 100 = white), \code{A} is the green-red axis
-    (negative = green, positive = red), and \code{B} is the blue-yellow
-    axis (negative = blue, positive = yellow). These are the *mean* LAB
-    values of the representative pixels for that class.}
-  \item{\code{MAX_DIST}}{Numeric. The per-class assignment radius, in
-    Euclidean LAB units. A pixel is assigned to the class whose centroid
-    is nearest in LAB space, but only if that distance is \code{<=
+\item{\code{class}}{Character. Name of the class (e.g.
+\code{"dark_soil"}, \code{"root"}). Becomes the factor level in
+\code{result$map} and the \code{class} column of \code{result$metrics}.}
+\item{\code{L}, \code{A}, \code{B}}{Numeric. The class centroid's
+coordinates in CIE LAB color space (D65 illuminant): \code{L} is
+lightness (0 = black, 100 = white), \code{A} is the green-red axis
+(negative = green, positive = red), and \code{B} is the blue-yellow
+axis (negative = blue, positive = yellow). These are the \emph{mean} LAB
+values of the representative pixels for that class.}
+\item{\code{MAX_DIST}}{Numeric. The per-class assignment radius, in
+Euclidean LAB units. A pixel is assigned to the class whose centroid
+is nearest in LAB space, but only if that distance is \code{<=
     MAX_DIST}; otherwise the pixel is labeled \code{"unclassified"}.
-    Larger values classify more pixels but risk merging visually distinct
-    materials; smaller values leave more pixels unclassified. Typical
-    values are roughly 10-30.}
+Larger values classify more pixels but risk merging visually distinct
+materials; smaller values leave more pixels unclassified. Typical
+values are roughly 10-30.}
 }
 Pixel RGB values are converted to LAB internally before distances are
 computed, so \code{L}/\code{A}/\code{B} are never raw RGB numbers.

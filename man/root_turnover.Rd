@@ -61,22 +61,24 @@ timepoint in the DPC method? Default: FALSE}
 }
 \value{
 Depends on the method:
-  - \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
-  - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im_return = TRUE}) a list of SpatRaster layers.
+\itemize{
+\item \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
+\item \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im_return = TRUE}) a list of SpatRaster layers.
+}
 }
 \description{
 Wrapper around the two root-turnover methods. \code{method} selects which
 one runs:
 \describe{
-  \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
-    (\code{img1}, \code{img2}) and reports standing roots, production, and
-    new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
-    \code{tc_method} argument chooses how root amount is measured:
-    \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
-  \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
-    multi-layer 'RootDetector' image into decayed, newly produced, and
-    unchanged (constant) root fractions. Dispatches to
-    \code{\link{turnover_dpc}}; \code{img2} is not used.}
+\item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
+(\code{img1}, \code{img2}) and reports standing roots, production, and
+new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
+\code{tc_method} argument chooses how root amount is measured:
+\code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
+\item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
+multi-layer 'RootDetector' image into decayed, newly produced, and
+unchanged (constant) root fractions. Dispatches to
+\code{\link{turnover_dpc}}; \code{img2} is not used.}
 }
 }
 \examples{

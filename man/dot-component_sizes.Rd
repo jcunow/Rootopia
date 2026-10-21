@@ -7,8 +7,8 @@
 .component_sizes(bin_cimg, exclude_border)
 }
 \description{
-Labels the connected `1`-regions of `bin_cimg` and returns one size per
-component. With `exclude_border = TRUE`, components touching the image edge
+Labels the connected \code{1}-regions of \code{bin_cimg} and returns one size per
+component. With \code{exclude_border = TRUE}, components touching the image edge
 are dropped (used for enclosed holes).
 }
 \keyword{internal}

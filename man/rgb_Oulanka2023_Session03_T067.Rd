@@ -6,11 +6,11 @@
 \title{Original Minirhizotron Root Scan - Session 3, Tube 67}
 \format{
 A RasterBrick object with dimensions:
-  \itemize{
-    \item 4900 columns (width)
-    \item 1161 rows (height)
-    \item 3 layers (RGB channels)
-  }
+\itemize{
+\item 4900 columns (width)
+\item 1161 rows (height)
+\item 3 layers (RGB channels)
+}
 }
 \source{
 Original minirhizotron images acquired by Johannes Cunow and Gesche Blume-Werry
@@ -26,9 +26,9 @@ This image represents a composite of multiple stitched scans.
 \details{
 The image represents a complete tube scan where:
 \itemize{
-  \item Columns correspond to tube length
-  \item Rows correspond to tube rotation
-  \item RGB channels represent true color information
+\item Columns correspond to tube length
+\item Rows correspond to tube rotation
+\item RGB channels represent true color information
 }
 }
 \examples{

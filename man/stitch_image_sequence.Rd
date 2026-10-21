@@ -68,7 +68,7 @@ and a per-step performance data frame (\code{step}, \code{dx}, \code{dy},
 }
 \value{
 A numeric \code{(height, width, channel)} array (0-255); or, when
-  \code{return_offsets = TRUE}, a list \code{list(mosaic, offsets)}.
+\code{return_offsets = TRUE}, a list \code{list(mosaic, offsets)}.
 }
 \description{
 Frames are stitched in the given order: the first pair is composited, then

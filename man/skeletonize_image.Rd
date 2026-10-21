@@ -29,18 +29,23 @@ implementation of the Zhang-Suen skeletonization algorithm.
 }
 \details{
 Processing steps:
-
-1. Input is converted to a single-layer binary SpatRaster using
-   `load_flexible_image()`.
-2. Foreground pixel count is computed.
-3. Skeletonization is performed using `lut_thin_fast()`:
-   - iterative removal of pixels based on 3x3 neighborhood codes
-   - lookup table determines pixel deletions in two sub-steps per iteration
-4. Output is the final thinned binary raster.
-5. Optionally, an overlay image is generated:
-   - original image marked as base layer
-   - skeleton pixels overlaid in a separate class
-   - saved using base R PNG plotting
+\enumerate{
+\item Input is converted to a single-layer binary SpatRaster using
+\code{load_flexible_image()}.
+\item Foreground pixel count is computed.
+\item Skeletonization is performed using \code{lut_thin_fast()}:
+\itemize{
+\item iterative removal of pixels based on 3x3 neighborhood codes
+\item lookup table determines pixel deletions in two sub-steps per iteration
+}
+\item Output is the final thinned binary raster.
+\item Optionally, an overlay image is generated:
+\itemize{
+\item original image marked as base layer
+\item skeleton pixels overlaid in a separate class
+\item saved using base R PNG plotting
+}
+}
 }
 \examples{
 library(terra)

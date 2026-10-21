@@ -17,7 +17,7 @@
 #' @param weighting Character. Weighting function:
 #' \code{"constant"}, \code{"asymptotic"}, \code{"linear"},
 #' \code{"exponential"}, \code{"sigmoid"}, \code{"gompertz"}, \code{"step"}.
-#' @param baseline.weight Numeric in [0,1]. Minimum weight applied.
+#' @param baseline.weight Numeric in `[0,1]`. Minimum weight applied.
 #' @param inverse Logical. If TRUE, reverses weighting direction.
 #'
 #' @return Numeric vector of normalized weights.
@@ -123,7 +123,7 @@ tail_weight_function <- function(
 #' @param index.spacing Character. \code{"equal"} or \code{"custom"}.
 #' @param parameter List with \code{lambda} and \code{x0}.
 #' @param weighting Character. Weighting function applied before comparison.
-#' @param baseline.weight Numeric in [0,1]. Minimum weight.
+#' @param baseline.weight Numeric in `[0,1]`. Minimum weight.
 #' @param inverse Logical. Reverse weighting direction.
 #' @param alignPQ Logical. If TRUE, aligns vectors of unequal length.
 #' @param cut Logical. If TRUE, truncates longer vector instead of padding.
@@ -325,7 +325,7 @@ tail_weighted_wasserstein_distance <- function(
 #' @param index.spacing Character. \code{"equal"} or \code{"custom"}.
 #' @param alignPQ Logical. Aligns unequal-length vectors.
 #' @param cut Logical. If TRUE, truncates longer vector when aligning.
-#' @param baseline.weight Numeric in [0,1]. Minimum weight applied.
+#' @param baseline.weight Numeric in `[0,1]`. Minimum weight applied.
 #'
 #' @section Data requirements:
 #'

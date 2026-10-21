@@ -17,28 +17,33 @@ deep_drive(
 \arguments{
 \item{DepthMap}{A SpatRast object representing local depth (e.g., distance from surface or tube wall).}
 
-\item{RootMap}{Optional. A binary SpatRast indicating root presence. Used to infer `AngleMap` if not provided.}
+\item{RootMap}{Optional. A binary SpatRast indicating root presence. Used to infer \code{AngleMap} if not provided.}
 
-\item{AngleMap}{Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from `RootMap` and `DepthMap`.}
+\item{AngleMap}{Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from \code{RootMap} and \code{DepthMap}.}
 
-\item{select_layer_rm}{Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.}
+\item{select_layer_rm}{Integer. Which layer to use from \code{RootMap} if it has multiple bands. Default is \code{NULL}, which passes every layer to \code{load_flexible_image()} rather than selecting one.}
 
-\item{select_layer_dm}{Integer. Which layer to use from `DepthMap`. Default is `NULL`.}
+\item{select_layer_dm}{Integer. Which layer to use from \code{DepthMap}. Default is \code{NULL}.}
 
-\item{select_layer_am}{Integer. Which layer to use from `AngleMap`. Default is `NULL`.}
+\item{select_layer_am}{Integer. Which layer to use from \code{AngleMap}. Default is \code{NULL}.}
 
-\item{return}{Character. `"value"` (default) returns a single numeric proportion. `"all"` returns a list with spatial outputs for visualization.}
+\item{return}{Character. \code{"value"} (default) returns a single numeric proportion. \code{"all"} returns a list with spatial outputs for visualization.}
 }
 \value{
-- If `return = "value"`: A numeric value between 0 and 1.
-  - `1` means all root pixels align with the local steepest downward direction.
-  - `0` means none of the root pixels align with local depth gradients.
-
-- If `return = "all"`: A named list with:
-  - `deep_drive`: numeric proportion (same as above)
-  - `angle_map`: the root direction map used (SpatRast)
-  - `optimal_angle_map`: the steepest downward direction from `DepthMap` (SpatRast)
-  - `aligned_roots`: binary SpatRast showing root pixels aligned with the steepest local depth descent
+\itemize{
+\item If \code{return = "value"}: A numeric value between 0 and 1.
+\itemize{
+\item \code{1} means all root pixels align with the local steepest downward direction.
+\item \code{0} means none of the root pixels align with local depth gradients.
+}
+\item If \code{return = "all"}: A named list with:
+\itemize{
+\item \code{deep_drive}: numeric proportion (same as above)
+\item \code{angle_map}: the root direction map used (SpatRast)
+\item \code{optimal_angle_map}: the steepest downward direction from \code{DepthMap} (SpatRast)
+\item \code{aligned_roots}: binary SpatRast showing root pixels aligned with the steepest local depth descent
+}
+}
 }
 \description{
 This function calculates the proportion of root pixels that grow in the direction
@@ -46,8 +51,8 @@ of steepest local depth descent — a metric for evaluating how efficiently root
 explore the vertical soil profile.
 }
 \details{
-It uses a depth raster (`DepthMap`) and a root direction raster (`AngleMap`)
-or estimates one from a binary root presence map (`RootMap`). Directions are
+It uses a depth raster (\code{DepthMap}) and a root direction raster (\code{AngleMap})
+or estimates one from a binary root presence map (\code{RootMap}). Directions are
 compared using a D8 neighborhood scheme.
 }
 \examples{

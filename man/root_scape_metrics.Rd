@@ -21,14 +21,14 @@ raster is more appropriate for your use case.}
 inside a loop over depth bins.}
 
 \item{select_layer}{Integer. Specifies which layer to use if the input is a
-multi-band image. Default is `NULL` (single-layer expected).}
+multi-band image. Default is \code{NULL} (single-layer expected).}
 
 \item{metrics}{Character vector of metrics to calculate; must be valid names
-from `landscapemetrics::list_lsm()`.}
+from \code{landscapemetrics::list_lsm()}.}
 }
 \value{
 A data frame of metric values with columns: metric, value, object,
-  depth.
+depth.
 }
 \description{
 RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features
@@ -37,6 +37,8 @@ akin to landscape analysis.
 \examples{
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
-RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
-                                       metrics = c("lsm_c_ca"))
+if (requireNamespace("landscapemetrics", quietly = TRUE)) {
+  RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
+                                        metrics = c("lsm_c_ca"))
+}
 }

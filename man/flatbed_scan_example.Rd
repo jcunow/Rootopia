@@ -6,13 +6,13 @@
 \title{Example Flatbed Root Scan (segmented)}
 \format{
 A 3-dimensional numeric array (rows x columns x layers), matching the
-  other bundled datasets. Rebuild a SpatRaster with \code{terra::rast()}.
-  Dimensions:
-  \itemize{
-    \item 2000 rows (height)
-    \item 2000 columns (width)
-    \item 3 layers (segmentation channels)
-  }
+other bundled datasets. Rebuild a SpatRaster with \code{terra::rast()}.
+Dimensions:
+\itemize{
+\item 2000 rows (height)
+\item 2000 columns (width)
+\item 3 layers (segmentation channels)
+}
 }
 \usage{
 data(flatbed_scan_example)

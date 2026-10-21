@@ -6,11 +6,11 @@
 \title{Root Turnover Analysis Data}
 \format{
 A RasterBrick object with dimensions:
-  \itemize{
-    \item 2550 columns (width)
-    \item 2273 rows (height)
-    \item 3 layers (decay, growth, persistent)
-  }
+\itemize{
+\item 2550 columns (width)
+\item 2273 rows (height)
+\item 3 layers (decay, growth, persistent)
+}
 }
 \source{
 Original minirhizotron images acquired by Johannes Cunow
@@ -28,21 +28,21 @@ RootDetector root tracking feature.
 \details{
 Multi-layer representation of root dynamics where:
 \itemize{
-  \item Layer 1: Root decay (value = 1)
-    \itemize{
-      \item Roots that disappeared between time points
-      \item Foreign objects (e.g., tape)
-      \item Persistent roots
-    }
-  \item Layer 2: Root growth (value = 1)
-    \itemize{
-      \item New roots that appeared
-      \item Persistent roots
-    }
-  \item Layer 3: Persistent roots (value = 1)
-    \itemize{
-      \item Roots present in both time points
-    }
+\item Layer 1: Root decay (value = 1)
+\itemize{
+\item Roots that disappeared between time points
+\item Foreign objects (e.g., tape)
+\item Persistent roots
+}
+\item Layer 2: Root growth (value = 1)
+\itemize{
+\item New roots that appeared
+\item Persistent roots
+}
+\item Layer 3: Persistent roots (value = 1)
+\itemize{
+\item Roots present in both time points
+}
 }
 Background is represented as 0 in all layers.
 }

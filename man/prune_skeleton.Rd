@@ -33,7 +33,7 @@ prune_skeleton(
 }
 \value{
 A cleaned image matching the class of \code{skel} (\code{SpatRaster}
-  in, \code{SpatRaster} out; matrix in, matrix out).
+in, \code{SpatRaster} out; matrix in, matrix out).
 }
 \description{
 Standalone clean-up step that removes short/thin terminal branches ("spurs")

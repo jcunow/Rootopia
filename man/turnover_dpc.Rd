@@ -28,7 +28,7 @@ turnover_dpc(
 }
 \value{
 If im_return = FALSE: tibble with pixel sums and ratios
-        If im_return = TRUE: list of SpatRaster layers for tape, constant, production, and decay
+If im_return = TRUE: list of SpatRaster layers for tape, constant, production, and decay
 }
 \description{
 Extract Root Decay, New Root Production, and No-Change Roots (only 'RootDetector' images)

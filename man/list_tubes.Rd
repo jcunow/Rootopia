@@ -18,8 +18,8 @@ path. Default \code{"T0\\d{2}"} matches tube labels such as \code{T067}.}
 }
 \value{
 A data frame with columns \code{index} (1-based, the value to pass to
-  \code{stitch_root_scans(tubes = ...)}), \code{tube} (group id) and
-  \code{n_frames}.
+\code{stitch_root_scans(tubes = ...)}), \code{tube} (group id) and
+\code{n_frames}.
 }
 \description{
 Summarizes the unique groups (tubes) that \code{\link{stitch_root_scans}}

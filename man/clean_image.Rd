@@ -23,74 +23,76 @@ clean_image(
 )
 }
 \arguments{
-\item{img}{A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).}
+\item{img}{A \code{cimg} object, \code{SpatRaster}, matrix, or file path (binary mask).}
 
 \item{fill_holes_upto}{Largest enclosed hole that gets filled; anything
-bigger is left alone.  `NULL` (default) fills every enclosed hole.  Units
-are set by `size_unit`.  See **Choosing thresholds** above.}
+bigger is left alone.  \code{NULL} (default) fills every enclosed hole.  Units
+are set by \code{size_unit}.  See \strong{Choosing thresholds} above.}
 
 \item{drop_objects_upto}{Largest disconnected foreground blob that gets
-deleted; anything bigger is kept.  `NULL` (default) deletes every
-candidate blob.  Units are set by `size_unit`.}
+deleted; anything bigger is kept.  \code{NULL} (default) deletes every
+candidate blob.  Units are set by \code{size_unit}.}
 
-\item{size_unit}{Unit of the two thresholds above: `"px"` (default, pixel
-count) or `"mm2"` (square millimetres, which requires `dpi`).}
+\item{size_unit}{Unit of the two thresholds above: \code{"px"} (default, pixel
+count) or \code{"mm2"} (square millimetres, which requires \code{dpi}).}
 
-\item{dpi}{Scan resolution, required when `size_unit = "mm2"` and ignored
+\item{dpi}{Scan resolution, required when \code{size_unit = "mm2"} and ignored
 otherwise.}
 
-\item{protect_border}{Logical.  If `TRUE`, white regions touching the image
-border are kept regardless of size (roots leaving the frame).  If `FALSE`
+\item{protect_border}{Logical.  If \code{TRUE}, white regions touching the image
+border are kept regardless of size (roots leaving the frame).  If \code{FALSE}
 (default), border-touching specks are removed by the same
-`drop_objects_upto` test as anything else -- being at the edge does not
+\code{drop_objects_upto} test as anything else -- being at the edge does not
 protect an artifact.}
 
 \item{edge_smooth}{Logical.  Apply morphological closing after hole/artifact
-cleaning.  Default `FALSE`.}
+cleaning.  Default \code{FALSE}.}
 
 \item{kernel_shape}{Structuring element shape for edge smoothing:
-`"disk"` (default), `"square"`, or `"diamond"`.}
+\code{"disk"} (default), \code{"square"}, or \code{"diamond"}.}
 
-\item{kernel_size}{Structuring element size (odd integer).  Default `3`.}
+\item{kernel_size}{Structuring element size (odd integer).  Default \code{3}.}
 
 \item{iterations}{Number of closing iterations for edge smoothing.
-Default `1`.}
+Default \code{1}.}
 
-\item{select_layer}{Integer or `NULL`.  Which layer to use for multi-layer
+\item{select_layer}{Integer or \code{NULL}.  Which layer to use for multi-layer
 inputs.}
 
 \item{output_format}{Character.  Format of the returned object.  One of
-`"spatrast"` (default), `"cimg"`, or `"matrix"`.  Using `"spatrast"`
-means the result can be passed directly to `terra::plot()`,
-`skeletonize_image()`, `root_length()`, etc. without any further
+\code{"spatrast"} (default), \code{"cimg"}, or \code{"matrix"}.  Using \code{"spatrast"}
+means the result can be passed directly to \code{terra::plot()},
+\code{skeletonize_image()}, \code{root_length()}, etc. without any further
 conversion.}
 
-\item{report}{Logical.  If `TRUE`, also calls \code{\link{report_image_components}}
-on the *original* (uncleaned) image before cleaning.  When
-`output_format = "spatrast"` (default), the cleaned raster is returned
-directly even when `report = TRUE`; the report is printed as a side
-effect.  Default `FALSE`.}
+\item{report}{Logical.  If \code{TRUE}, also calls \code{\link{report_image_components}}
+on the \emph{original} (uncleaned) image before cleaning.  When
+\code{output_format = "spatrast"} (default), the cleaned raster is returned
+directly even when \code{report = TRUE}; the report is printed as a side
+effect.  Default \code{FALSE}.}
 
 \item{max_hole_size, max_artifact_size}{Deprecated names for
-`fill_holes_upto` and `drop_objects_upto`.  Supplying either warns and
+\code{fill_holes_upto} and \code{drop_objects_upto}.  Supplying either warns and
 sets the corresponding new argument.}
 }
 \value{
-A cleaned image in the format specified by `output_format`
-  (`SpatRaster`, `cimg`, or matrix).
+A cleaned image in the format specified by \code{output_format}
+(\code{SpatRaster}, \code{cimg}, or matrix).
 }
 \description{
 Performs three sequential cleaning operations on a binary segmented image:
-1. **Hole filling** -- fills black regions enclosed by white (segmentation
-   gaps inside roots).
-2. **Speck removal** -- deletes isolated foreground blobs not connected to
-   the image border (false-positive root detections).
-3. **Edge smoothing** *(optional, off by default)* -- applies morphological
-   closing to smooth jagged root edges.
+\enumerate{
+\item \strong{Hole filling} -- fills black regions enclosed by white (segmentation
+gaps inside roots).
+\item \strong{Speck removal} -- deletes isolated foreground blobs not connected to
+the image border (false-positive root detections).
+\item \strong{Edge smoothing} \emph{(optional, off by default)} -- applies morphological
+closing to smooth jagged root edges.
+}
 }
 \section{Why clean before skeletonisation}{
 
-`skeletonize_image()` uses the Medial Axis Transform, which is driven by
+\code{skeletonize_image()} uses the Medial Axis Transform, which is driven by
 the distance transform.  Small holes inside a root inflate the local
 distance values and force the medial axis to bifurcate around the hole,
 producing spurious branching points.  Isolated artifact pixels produce
@@ -101,26 +103,26 @@ phantom skeleton segments.  Cleaning first yields a much cleaner skeleton.
 
 Call \code{\link{report_image_components}} on your image first to see the actual
 pixel counts of all holes and specks.  At 300 dpi, sensible starting values
-are `fill_holes_upto = 50` and `drop_objects_upto = 10` pixels.
+are \code{fill_holes_upto = 50} and \code{drop_objects_upto = 10} pixels.
 
 A pixel threshold means a different physical size at every scan resolution:
 50 px is 0.36 mm\eqn{^2} at 300 dpi but 0.022 mm\eqn{^2} at 1200 dpi, so a
 call tuned on one dataset cleans differently on another.  Set
-`size_unit = "mm2"` and supply `dpi` to give the thresholds a fixed physical
+\code{size_unit = "mm2"} and supply \code{dpi} to give the thresholds a fixed physical
 meaning that carries across resolutions.
 }
 
 \section{Edge smoothing caution}{
 
-`edge_smooth = TRUE` applies a morphological closing that slightly dilates
+\code{edge_smooth = TRUE} applies a morphological closing that slightly dilates
 then erodes root edges.  This can merge closely adjacent roots and alter
 root diameter measurements.  Only use it when the segmentation output has
-very jagged edges; leave it off (`FALSE`, the default) otherwise.
+very jagged edges; leave it off (\code{FALSE}, the default) otherwise.
 }
 
 \section{Input must be binary}{
 
-`clean_image()` operates on a binary mask (root = 1, background = 0). If your
+\code{clean_image()} operates on a binary mask (root = 1, background = 0). If your
 input is a raw probability / grayscale image from a segmentation model,
 binarize it first with \code{\link{image_threshold}} and pass the result here.
 }

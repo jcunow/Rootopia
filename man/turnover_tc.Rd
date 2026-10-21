@@ -24,15 +24,17 @@ turnover_tc(
 
 \item{dpi}{Image resolution (only for method = "kimura"). Default: 300}
 
-\item{select_layer}{Integer specifying the layer to use in both timesteps if \code{img} is a multi-layer `SpatRaster`. Defaults to 2.}
+\item{select_layer}{Integer specifying the layer to use in both timesteps if \code{img} is a multi-layer \code{SpatRaster}. Defaults to 2.}
 }
 \value{
 data.frame containing:
-  - standingroot_t1: Standing roots at first timepoint
-  - standingroot_t2: Standing roots at second timepoint
-  - production: Root production between timepoints
-  - newroot%per_t1: Percentage of new roots compared to starting conditions
-  - newroot%per_t2: Percentage of new roots at second timepoint
+\itemize{
+\item standingroot_t1: Standing roots at first timepoint
+\item standingroot_t2: Standing roots at second timepoint
+\item production: Root production between timepoints
+\item newroot\%per_t1: Percentage of new roots compared to starting conditions
+\item newroot\%per_t2: Percentage of new roots at second timepoint
+}
 }
 \description{
 Calculate global root production and root turnover from temporal comparison

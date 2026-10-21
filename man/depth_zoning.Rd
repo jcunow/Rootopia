@@ -21,7 +21,7 @@ crop applied before masking.}
 }
 \value{
 A \code{terra::SpatRaster} masked (extent unchanged) to the requested
-  depth zone.
+depth zone.
 }
 \description{
 \code{depth_zoning()} performs \emph{depth zone masking}: it returns the input

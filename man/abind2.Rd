@@ -40,9 +40,9 @@ all arguments must be identical.}
 
 \item{rev.along}{(optional)
 Alternate way to specify the dimension along which to bind the arrays:
- \code{along = N + 1 - rev.along}.  This is provided mainly to allow easy
+\code{along = N + 1 - rev.along}.  This is provided mainly to allow easy
 specification of \code{along = N + 1} (by supplying
-                                      \code{rev.along=0}).  If both \code{along} and \code{rev.along} are
+\code{rev.along=0}).  If both \code{along} and \code{rev.along} are
 supplied, the supplied value of \code{along} is ignored.}
 
 \item{new.names}{(optional)
@@ -65,7 +65,7 @@ preserve).  Otherwise, abind will convert objects to class array.  Thus,
 to guarantee that an array object is returned, supply the argument
 \code{force.array=TRUE}.  Note that the use of rbind or cbind introduces
 some subtle changes in the way default dimension names are constructed:
- see the examples below.}
+see the examples below.}
 
 \item{make.names}{(optional)
 If \code{TRUE}, the last resort for dimnames for the along
@@ -73,7 +73,7 @@ dimension will be the deparsed versions of anonymous
 arguments.  This can result in cumbersome names when
 arguments are expressions.
 
-<p>The default is \code{FALSE}.}
+The default is \code{FALSE}.}
 
 \item{use.anon.names}{(optional)
 \code{use.anon.names}
@@ -83,8 +83,8 @@ is a deprecated synonym for \code{make.names}.}
 When dimension names are present on more than one
 argument, should dimension names for the result be take from
 the first available (the default is to take them from the
-                    last available, which is the same behavior as
-                    \code{rbind} and \code{cbind}.)}
+last available, which is the same behavior as
+\code{rbind} and \code{cbind}.)}
 
 \item{hier.names}{(optional)
 If \code{TRUE}, dimension names on the concatenated dimension will be
@@ -132,13 +132,13 @@ arguments.  Names for each dimension are searched for in the
 following order: new.names, argument name, dimnames (or
 names) attribute of last argument, dimnames (or names)
 attribute of second last argument, etc.  (Supplying the
-                                         argument \code{use.first.dimnames=TRUE} changes this to
-                                         cause \code{abind} to use dimnames or names from the
-                                         first argument first.  The default behavior is the same as
-                                         for \code{rbind} and \code{cbind}: use dimnames
-                                         from later arguments.)  If some names are supplied for the
+argument \code{use.first.dimnames=TRUE} changes this to
+cause \code{abind} to use dimnames or names from the
+first argument first.  The default behavior is the same as
+for \code{rbind} and \code{cbind}: use dimnames
+from later arguments.)  If some names are supplied for the
 along dimension (either as argument names or dimnames in
-                arguments), names are constructed for anonymous arguments
+arguments), names are constructed for anonymous arguments
 unless \code{use.anon.names=FALSE}.
 
 sourced from the 'abind' package:  https://doi.org/10.32614/CRAN.package.abind under MIT-license

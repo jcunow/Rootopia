@@ -91,7 +91,7 @@
 #' Original minirhizotron images acquired by Johannes Cunow
 #' and Gesche Blume-Werry at Oulanka Research Station, Finland (October 2023).
 #' Images were processed using RootDetector.
-
+#'
 #' @references
 #' Peters B, Blume-Werry G, Gillert A, et al. (2023)
 #' RootDetector: a convolutional neural network for root detection.
@@ -131,7 +131,7 @@
 #' Original minirhizotron images acquired by Johannes Cunow
 #' and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
 #' Images were processed using RootDetector.
-
+#'
 #' @references
 #' Peters B, Blume-Werry G, Gillert A, et al. (2023)
 #' RootDetector: a convolutional neural network for root detection.
@@ -171,7 +171,7 @@
 #' Original minirhizotron images acquired by Johannes Cunow
 #' and Gesche Blume-Werry at Oulanka Research Station, Finland (October 2023).
 #' Images were processed using RootDetector.
-
+#'
 #' @references
 #' Peters B, Blume-Werry G, Gillert A, et al. (2023)
 #' RootDetector: a convolutional neural network for root detection.
@@ -223,7 +223,7 @@
 #' Original minirhizotron images acquired by Johannes Cunow
 #' and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
 #' Images were processed using RootDetector.
-
+#'
 #' @references
 #' Peters B, Blume-Werry G, Gillert A, et al. (2023)
 #' RootDetector: a convolutional neural network for root detection.
@@ -266,7 +266,7 @@
 #' @author Johannes Cunow
 #' Original flatbed scans from boreal pine forests in northern Finland, acquired by
 #' Johannes Cunow and others (field campaign 2022).
-
+#'
 #' @references
 #' Cunow J, Pijcke F, Olofsson J, Väisänen M, Blume-Werry G (accepted, 2026).
 #' Reindeer grazing induces spatial and functional shifts in root systems

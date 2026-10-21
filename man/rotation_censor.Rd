@@ -21,14 +21,14 @@ rotation_censor(
 \item{center_offset}{Numeric or character. Where to center the kept window
 (in fixed mode), given in one of three forms:
 \itemize{
-  \item \strong{Absolute row} - a number \code{> 1}: the exact row to
-    center on (e.g. from \code{estimate_rotation_center()}). 
-  \item \strong{Fraction} - a number in \code{[0, 1]}: a fraction of the
-    image height. \code{0} = top, \code{0.25} = a quarter down,
-    \code{0.5} = middle, \code{1} = bottom (so the center row is
-    \code{center_offset * nrow}).
-  \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
-    \code{"center"} / \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
+\item \strong{Absolute row} - a number \code{> 1}: the exact row to
+center on (e.g. from \code{estimate_rotation_center()}).
+\item \strong{Fraction} - a number in \code{[0, 1]}: a fraction of the
+image height. \code{0} = top, \code{0.25} = a quarter down,
+\code{0.5} = middle, \code{1} = bottom (so the center row is
+\code{center_offset * nrow}).
+\item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
+\code{"center"} / \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
 }
 The default \code{0} centers on the top row.
 When \code{fixed_rotation = FALSE} the resolved value is used as the
@@ -52,7 +52,7 @@ Default \code{FALSE}.}
 }
 \value{
 A cropped \code{SpatRaster} (returned invisibly when
-  \code{overlay = TRUE}), or \code{NULL} if the result is empty.
+\code{overlay = TRUE}), or \code{NULL} if the result is empty.
 }
 \description{
 Crops the rotation axis (rows) of a root scan. In fixed mode it returns a

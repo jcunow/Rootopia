@@ -26,7 +26,7 @@ with the prior centroids using \code{alpha}. Only classes present in both
 \code{picks} and \code{prior} are blended; new classes in \code{picks}
 that are absent from \code{prior} are added as-is.}
 
-\item{alpha}{Numeric in [0, 1]. Blend weight for the prior centroids.
+\item{alpha}{Numeric in \verb{[0, 1]}. Blend weight for the prior centroids.
 \code{alpha = 0} (default) ignores the prior entirely -- centroids are
 derived purely from the new picks. \code{alpha = 1} returns the prior
 unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
@@ -38,7 +38,7 @@ matrix. Default \code{TRUE}.}
 }
 \value{
 A \code{data.frame} with columns \code{class}, \code{L}, \code{A},
-  \code{B}, \code{MAX_DIST}.
+\code{B}, \code{MAX_DIST}.
 }
 \description{
 Converts raw RGB pixel picks (collected e.g. in QGIS, FIJI, or ImageJ) to

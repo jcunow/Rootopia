@@ -7,13 +7,13 @@
 fill_holes(img, max_size = NULL)
 }
 \arguments{
-\item{img}{A `cimg` binary image (values 0 and 1).}
+\item{img}{A \code{cimg} binary image (values 0 and 1).}
 
-\item{max_size}{Maximum hole size in pixels to fill.  If `NULL` (default),
+\item{max_size}{Maximum hole size in pixels to fill.  If \code{NULL} (default),
 all holes are filled regardless of size.}
 }
 \value{
-A `cimg` with holes filled.
+A \code{cimg} with holes filled.
 }
 \description{
 Sets to 1 all black regions (value = 0) that are completely surrounded by

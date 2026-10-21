@@ -17,30 +17,34 @@ fit_sine_curve(
 \item{y}{Numeric vector of dependent variable values.}
 
 \item{par_start}{Named list of starting values for parameters:
-- amp: Amplitude (default 3)
-- phase: Phase shift (default 0)
-- offset: Vertical offset (default 0)
-- period: Period (default 24)}
+\itemize{
+\item amp: Amplitude (default 3)
+\item phase: Phase shift (default 0)
+\item offset: Vertical offset (default 0)
+\item period: Period (default 24)
+}}
 
-\item{fix_period}{Numeric or NULL. If numeric, period is fixed to this value 
+\item{fix_period}{Numeric or NULL. If numeric, period is fixed to this value
 and not estimated. If NULL (default), period is estimated.}
 }
 \value{
 A list containing:
-  - amp: Estimated amplitude
-  - phase: Estimated phase (modulo period)
-  - offset: Estimated offset
-  - period: Estimated or fixed period
-  - tss: Total sum of squares
-  - rss: Residual sum of squares
-  - R2: Coefficient of determination
-  - residual_se: Residual standard error
-  - df_residual: Residual degrees of freedom
-  - predicted: Fitted values
-  - residuals: Residuals (y - predicted)
+\itemize{
+\item amp: Estimated amplitude
+\item phase: Estimated phase (modulo period)
+\item offset: Estimated offset
+\item period: Estimated or fixed period
+\item tss: Total sum of squares
+\item rss: Residual sum of squares
+\item R2: Coefficient of determination
+\item residual_se: Residual standard error
+\item df_residual: Residual degrees of freedom
+\item predicted: Fitted values
+\item residuals: Residuals (y - predicted)
+}
 }
 \description{
-Fits a sine curve model: 
+Fits a sine curve model:
 \eqn{ y = amp * sin(2 * pi / period * (x + phase)) + offset }
 to data points (x, y) using nonlinear least squares.
 }

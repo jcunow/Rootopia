@@ -35,7 +35,7 @@ which is 45-60 in this convention}
 
 \item{start_soil}{Numeric; soil surface boundary in cm (0 = surface)}
 
-\item{center_offset}{Numeric in [0, 1]; where the top of the tube -- the
+\item{center_offset}{Numeric in \verb{[0, 1]}; where the top of the tube -- the
 shallowest line of the curvature wave -- sits across the image height, as a
 fraction of one full tube circumference. \code{0} puts it on the first row,
 \code{0.5} halfway down, \code{1} on the last row. \code{0} and \code{1}

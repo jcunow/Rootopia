@@ -7,22 +7,22 @@
 smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3, iterations = 1)
 }
 \arguments{
-\item{img}{A `cimg` binary image or any format accepted by
+\item{img}{A \code{cimg} binary image or any format accepted by
 \code{\link{load_flexible_image}}.}
 
-\item{kernel_shape}{One of `"disk"` (default), `"square"`, `"diamond"`.}
+\item{kernel_shape}{One of \code{"disk"} (default), \code{"square"}, \code{"diamond"}.}
 
 \item{kernel_size}{Structuring element size (odd integer).  At 300 DPI,
-`kernel_size = 3` is a good starting point.}
+\code{kernel_size = 3} is a good starting point.}
 
 \item{iterations}{Number of closing iterations.}
 }
 \value{
-A `cimg` binary image.
+A \code{cimg} binary image.
 }
 \description{
 Applies a morphological closing (dilation then erosion) to smooth the
 edges of binary objects.  Intended as a post-cleaning step before
-skeletonisation; do **not** apply after skeletonisation.
+skeletonisation; do \strong{not} apply after skeletonisation.
 }
 \keyword{internal}

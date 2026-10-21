@@ -2,7 +2,7 @@
 % Please edit documentation in R/flexible_inputs.R
 \name{normalize_array}
 \alias{normalize_array}
-\title{Rescale the array according to `scale`}
+\title{Rescale the array according to \code{scale}}
 \usage{
 normalize_array(arr, scale = "none")
 }
@@ -11,10 +11,10 @@ All conversions use fixed factors (255), never a per-image max, and are
 guarded so a conversion is a no-op when the data is already in the target
 range:
 \itemize{
-  \item `"none"`   leave values untouched
-  \item `"to_01"`  0-255 -> 0-1 (divide by 255; skipped if already <= 1)
-  \item `"to_255"` 0-1 -> 0-255 (multiply by 255; skipped if already > 1)
-  \item `"binary"` strictly 0/1 via ceiling(arr / max)
+\item \code{"none"}   leave values untouched
+\item \code{"to_01"}  0-255 -> 0-1 (divide by 255; skipped if already <= 1)
+\item \code{"to_255"} 0-1 -> 0-255 (multiply by 255; skipped if already > 1)
+\item \code{"binary"} strictly 0/1 via ceiling(arr / max)
 }
 }
 \keyword{internal}

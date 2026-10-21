@@ -7,8 +7,8 @@
 .densest_window(x, frac, layer = NULL)
 }
 \description{
-Returns the map-coordinate center `c(cx, cy)` of the `frac`-sized window
-containing the most non-zero / non-`NA` cells. Uses a coarse block scan so
+Returns the map-coordinate center \code{c(cx, cy)} of the \code{frac}-sized window
+containing the most non-zero / non-\code{NA} cells. Uses a coarse block scan so
 it stays cheap on large rasters.
 }
 \keyword{internal}

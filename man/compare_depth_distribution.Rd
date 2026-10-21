@@ -44,7 +44,7 @@ compare_depth_distribution(
 
 \item{cut}{Logical. If TRUE, truncates longer vector when aligning.}
 
-\item{baseline.weight}{Numeric in [0,1]. Minimum weight applied.}
+\item{baseline.weight}{Numeric in \verb{[0,1]}. Minimum weight applied.}
 }
 \value{
 Numeric distance or divergence value.
@@ -57,9 +57,9 @@ with optional depth-dependent weighting.
 \details{
 This function wraps:
 \itemize{
-  \item \code{tail_weighted_wasserstein_distance()}
-  \item \code{tail_weighted_js_divergence()}
-  \item \code{tail_weighted_kl_divergence()}
+\item \code{tail_weighted_wasserstein_distance()}
+\item \code{tail_weighted_js_divergence()}
+\item \code{tail_weighted_kl_divergence()}
 }
 
 If \code{tail_weight = FALSE}, uniform weighting is used.

@@ -7,16 +7,16 @@
 create_kernel(shape = "disk", size = 3)
 }
 \arguments{
-\item{shape}{One of `"disk"` (default), `"square"`, or `"diamond"`.}
+\item{shape}{One of \code{"disk"} (default), \code{"square"}, or \code{"diamond"}.}
 
 \item{size}{Kernel size in pixels (odd integer).  Even values are silently
 incremented by 1.}
 }
 \value{
-A `cimg` kernel.
+A \code{cimg} kernel.
 }
 \description{
-Returns a `cimg` kernel of a given shape for use with
-`imager::dilate()` / `imager::erode()`.
+Returns a \code{cimg} kernel of a given shape for use with
+\code{imager::dilate()} / \code{imager::erode()}.
 }
 \keyword{internal}

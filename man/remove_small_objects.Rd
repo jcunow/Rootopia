@@ -7,19 +7,19 @@
 remove_small_objects(img, max_size = NULL, protect_border = FALSE)
 }
 \arguments{
-\item{img}{A `cimg` binary image (values 0 and 1).}
+\item{img}{A \code{cimg} binary image (values 0 and 1).}
 
-\item{max_size}{Maximum artifact size in pixels to remove.  If `NULL`,
+\item{max_size}{Maximum artifact size in pixels to remove.  If \code{NULL},
 all candidate white regions are removed.}
 
-\item{protect_border}{Logical.  If `TRUE`, white regions touching the image
+\item{protect_border}{Logical.  If \code{TRUE}, white regions touching the image
 border are never removed (they are assumed to be roots leaving the frame).
-If `FALSE` (default), border-touching regions are subject to the same
-`max_size` test as any other region, so edge specks are removed too.
+If \code{FALSE} (default), border-touching regions are subject to the same
+\code{max_size} test as any other region, so edge specks are removed too.
 Border location confers no protection on its own.}
 }
 \value{
-A `cimg` with artifacts removed.
+A \code{cimg} with artifacts removed.
 }
 \description{
 Sets to 0 all white regions (value = 1) that are not connected to the

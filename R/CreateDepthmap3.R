@@ -17,7 +17,7 @@
 #'   which is 45-60 in this convention
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start_soil Numeric; soil surface boundary in cm (0 = surface)
-#' @param center_offset Numeric in [0, 1]; where the top of the tube -- the
+#' @param center_offset Numeric in `[0, 1]`; where the top of the tube -- the
 #'   shallowest line of the curvature wave -- sits across the image height, as a
 #'   fraction of one full tube circumference. \code{0} puts it on the first row,
 #'   \code{0.5} halfway down, \code{1} on the last row. \code{0} and \code{1}

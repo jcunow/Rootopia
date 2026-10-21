@@ -6,11 +6,11 @@
 \title{Segmented Minirhizotron Root Scan - Session 1, Tube 67}
 \format{
 A RasterBrick object with dimensions:
-  \itemize{
-    \item 4900 columns (width)
-    \item 1144 rows (height)
-    \item 3 layers (channels)
-  }
+\itemize{
+\item 4900 columns (width)
+\item 1144 rows (height)
+\item 3 layers (channels)
+}
 }
 \source{
 Original minirhizotron images acquired by Johannes Cunow and Gesche Blume-Werry
@@ -26,9 +26,9 @@ The image was processed using RootDetector for root segmentation.
 \details{
 Binary mask representation where:
 \itemize{
-  \item Roots = 1
-  \item Background = 0
-  \item Layer 1 includes foreign objects (e.g., tape) marked as 1
+\item Roots = 1
+\item Background = 0
+\item Layer 1 includes foreign objects (e.g., tape) marked as 1
 }
 Spatial dimensions correspond to physical tube measurements:
 columns = tube length, rows = tube rotation.

@@ -18,8 +18,8 @@ tail_weight_function(
 
 \item{parameter}{List with:
 \itemize{
-  \item \code{lambda}: shape parameter controlling steepness
-  \item \code{x0}: inflection or threshold parameter
+\item \code{lambda}: shape parameter controlling steepness
+\item \code{x0}: inflection or threshold parameter
 }}
 
 \item{index.spacing}{Character. Either \code{"equal"} or \code{"custom"}.}
@@ -28,7 +28,7 @@ tail_weight_function(
 \code{"constant"}, \code{"asymptotic"}, \code{"linear"},
 \code{"exponential"}, \code{"sigmoid"}, \code{"gompertz"}, \code{"step"}.}
 
-\item{baseline.weight}{Numeric in [0,1]. Minimum weight applied.}
+\item{baseline.weight}{Numeric in \verb{[0,1]}. Minimum weight applied.}
 
 \item{inverse}{Logical. If TRUE, reverses weighting direction.}
 }

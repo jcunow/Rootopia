@@ -140,7 +140,7 @@
 #'   with the prior centroids using \code{alpha}. Only classes present in both
 #'   \code{picks} and \code{prior} are blended; new classes in \code{picks}
 #'   that are absent from \code{prior} are added as-is.
-#' @param alpha Numeric in [0, 1]. Blend weight for the prior centroids.
+#' @param alpha Numeric in `[0, 1]`. Blend weight for the prior centroids.
 #'   \code{alpha = 0} (default) ignores the prior entirely -- centroids are
 #'   derived purely from the new picks. \code{alpha = 1} returns the prior
 #'   unchanged. \code{alpha = 0.5} weights old and new equally. Decrease
@@ -316,7 +316,7 @@ build_soil_centroids <- function(picks, max_dist, prior = NULL, alpha = 0,
 #'     and resolution as \code{img}. Use directly with \code{terra::zonal()},
 #'     \code{terra::mask()}, \code{terra::freq()}.}
 #'   \item{\code{metrics}}{A \code{data.frame} with per-class pixel counts,
-#'     area fractions (\%), LAB and RGB means and SDs, mean distance to
+#'     area fractions (%), LAB and RGB means and SDs, mean distance to
 #'     centroid, and the actual mean color rendered as hex. \code{NULL} if
 #'     \code{compute_metrics = FALSE}.}
 #'   \item{\code{inter_dist}}{Numeric matrix of pairwise LAB distances between

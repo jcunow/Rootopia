@@ -30,7 +30,7 @@ tail_weighted_kl_divergence(
 
 \item{weighting}{Character. Weighting function applied before comparison.}
 
-\item{baseline.weight}{Numeric in [0,1]. Minimum weight.}
+\item{baseline.weight}{Numeric in \verb{[0,1]}. Minimum weight.}
 
 \item{inverse}{Logical. Reverse weighting direction.}
 

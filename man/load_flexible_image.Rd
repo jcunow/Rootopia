@@ -20,17 +20,17 @@ load_flexible_image(
 \item{output_format}{Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.}
 
 \item{scale}{Character, the value rescaling to apply. One of
-`"to_01"` (0-255 -> 0-1, the default), `"to_255"` (0-1 -> 0-255),
-`"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
+\code{"to_01"} (0-255 -> 0-1, the default), \code{"to_255"} (0-1 -> 0-255),
+\code{"binary"} (strictly 0/1), or \code{"none"} (leave values untouched). Each
 conversion is a no-op if the data is already in the target range.}
 
 \item{select_layer}{Numeric, which layer to select if input has multiple layers}
 
 \item{normalize, binarize, denormalize}{Deprecated logical flags kept for
-backward compatibility; use `scale` instead. `normalize = TRUE` maps to
-`scale = "to_01"`, `denormalize = TRUE` to `"to_255"`, and
-`binarize = TRUE` to `"binary"`. Supplying these together with `scale`, or
-setting both `normalize` and `denormalize`, is an error.}
+backward compatibility; use \code{scale} instead. \code{normalize = TRUE} maps to
+\code{scale = "to_01"}, \code{denormalize = TRUE} to \code{"to_255"}, and
+\code{binarize = TRUE} to \code{"binary"}. Supplying these together with \code{scale}, or
+setting both \code{normalize} and \code{denormalize}, is an error.}
 }
 \description{
 Load an image flexibly from file or convert from memory

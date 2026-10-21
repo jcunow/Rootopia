@@ -30,8 +30,8 @@ alignment.}
 }
 \value{
 Named numeric vector \code{c(dx, dy, peak)}: \code{dx} horizontal
-  placement shift (\code{overlap = edge_width - dx}), \code{dy} vertical shift
-  (pixels) and \code{peak} the normalized correlation peak height.
+placement shift (\code{overlap = edge_width - dx}), \code{dy} vertical shift
+(pixels) and \code{peak} the normalized correlation peak height.
 }
 \description{
 Estimates the relative pixel shift between the right edge of \code{img1} and

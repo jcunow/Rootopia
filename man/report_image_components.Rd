@@ -7,41 +7,41 @@
 report_image_components(img, plot = TRUE, breaks = 30, select_layer = NULL)
 }
 \arguments{
-\item{img}{A binary image (`SpatRaster`, `cimg`, matrix, or file path); any
+\item{img}{A binary image (\code{SpatRaster}, \code{cimg}, matrix, or file path); any
 format accepted by \code{\link{load_flexible_image}}.}
 
 \item{plot}{Logical. Draw size-distribution histograms (log10 x-axis, with
-mean and median marked). Default `TRUE`.}
+mean and median marked). Default \code{TRUE}.}
 
-\item{breaks}{Number of histogram breaks. Default `30`.}
+\item{breaks}{Number of histogram breaks. Default \code{30}.}
 
-\item{select_layer}{Integer or `NULL`. Layer to use for multi-layer inputs.}
+\item{select_layer}{Integer or \code{NULL}. Layer to use for multi-layer inputs.}
 }
 \value{
-Invisibly, a list with numeric vectors `holes` and `objects` giving
-  the size (in pixels) of every enclosed hole and every root component.
+Invisibly, a list with numeric vectors \code{holes} and \code{objects} giving
+the size (in pixels) of every enclosed hole and every root component.
 }
 \description{
 Reports the size distribution of the two component types that \code{\link{clean_image}}
-acts on, to help you choose `fill_holes_upto` and `drop_objects_upto`:
+acts on, to help you choose \code{fill_holes_upto} and \code{drop_objects_upto}:
 \itemize{
-  \item **holes** — `background (0)` regions fully enclosed by `root (1)`
-        (segmentation gaps inside roots). Regions touching the image border
-        are background, not holes, and are excluded.
-  \item **root components** — connected `root (1)` regions. The whole root
-        system is usually one large component; genuine artifacts are the
-        small components at the low end of this distribution.
+\item \strong{holes} — \code{background (0)} regions fully enclosed by \code{root (1)}
+(segmentation gaps inside roots). Regions touching the image border
+are background, not holes, and are excluded.
+\item \strong{root components} — connected \code{root (1)} regions. The whole root
+system is usually one large component; genuine artifacts are the
+small components at the low end of this distribution.
 }
 }
 \section{No size threshold here}{
 
-This function applies **no** size cutoff — it characterizes *every*
+This function applies \strong{no} size cutoff — it characterizes \emph{every}
 component. There is therefore nothing special separating a "big root" from an
 "artifact": both are root components, distinguished only by size. Use the
-printed summary and the histograms to pick the `fill_holes_upto` and
-`drop_objects_upto` values you then pass to \code{\link{clean_image}}.
-Counts here are in pixels, so they match `clean_image()`'s default
-`size_unit = "px"` directly; divide by \eqn{(dpi/25.4)^2} to express one in
+printed summary and the histograms to pick the \code{fill_holes_upto} and
+\code{drop_objects_upto} values you then pass to \code{\link{clean_image}}.
+Counts here are in pixels, so they match \code{clean_image()}'s default
+\code{size_unit = "px"} directly; divide by \eqn{(dpi/25.4)^2} to express one in
 mm\eqn{^2}.
 }
 

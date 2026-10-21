@@ -18,7 +18,7 @@ path. Default \code{"T0\\d{2}"} matches tube labels such as \code{T067}.}
 }
 \value{
 A data frame with columns \code{index} (1-based position), \code{file}
-  (full path) and \code{group} (matched id, or \code{NA}).
+(full path) and \code{group} (matched id, or \code{NA}).
 }
 \description{
 Discovers the image files that \code{\link{stitch_root_scans}} would process

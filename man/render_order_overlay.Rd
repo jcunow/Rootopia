@@ -10,6 +10,7 @@ render_order_overlay(
   dims,
   file,
   mask = NULL,
+  crop_offset = NULL,
   max_side = 2000,
   continuous = NA,
   value_label = NULL,
@@ -27,7 +28,15 @@ per-segment quantity such as those added by \code{\link{root_transport}}.}
 
 \item{file}{Output PNG path.}
 
-\item{mask}{Optional 0/1 mask drawn as a gray background.}
+\item{mask}{Optional 0/1 mask drawn as a gray background. The pipeline
+traces in a frame cropped to the foreground, so a full-size mask is
+usually larger than \code{dims}; pass \code{crop_offset} as well and it
+is cut to match. Without one, a mismatched mask is dropped with a warning
+rather than drawn out of register.}
+
+\item{crop_offset}{Optional length-2 (row, column) offset of the traced
+frame within \code{mask}, as carried by
+\code{attr(et, "crop_offset")}.}
 
 \item{max_side}{Long-side cap (px) for the output image.}
 

@@ -102,10 +102,10 @@ and a per-step performance table instead of just the mosaics (see Value).}
 }
 \value{
 If \code{report = FALSE} (default), invisibly a named list of mosaics
-  (one numeric \code{(H, W, C)} array per tube). If \code{report = TRUE}, a
-  list \code{list(mosaics, report)} where \code{report} is a data frame with
-  columns \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak}
-  (confidence; higher is better) and \code{overlap} (\code{= edge_width - dx}).
+(one numeric \code{(H, W, C)} array per tube). If \code{report = TRUE}, a
+list \code{list(mosaics, report)} where \code{report} is a data frame with
+columns \code{tube}, \code{step}, \code{dx}, \code{dy}, \code{peak}
+(confidence; higher is better) and \code{overlap} (\code{= edge_width - dx}).
 }
 \description{
 High-level driver ported from the Python \code{ImageStitcher} \code{main} /

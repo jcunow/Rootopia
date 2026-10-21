@@ -17,46 +17,46 @@ zoom_plot(
 )
 }
 \arguments{
-\item{x}{A `SpatRaster`.}
+\item{x}{A \code{SpatRaster}.}
 
 \item{frac}{Fraction of each axis kept in the magnified inset (0-1).
-Magnification is `1 / frac`. Default `0.3`.}
+Magnification is \code{1 / frac}. Default \code{0.3}.}
 
 \item{center}{Where to center the inset. One of:
 \itemize{
-  \item `"center"` (default) — geometric center of the image;
-  \item `"densest"` — the `frac`-sized window containing the most
-        non-zero / non-`NA` pixels (i.e. the most root material);
-  \item a length-2 numeric `c(fx, fy)` of *relative* coordinates in
-        `[0, 1]`, where `c(0, 0)` is bottom-left and `c(1, 1)` top-right.
+\item \code{"center"} (default) — geometric center of the image;
+\item \code{"densest"} — the \code{frac}-sized window containing the most
+non-zero / non-\code{NA} pixels (i.e. the most root material);
+\item a length-2 numeric \code{c(fx, fy)} of \emph{relative} coordinates in
+\verb{[0, 1]}, where \code{c(0, 0)} is bottom-left and \code{c(1, 1)} top-right.
 }}
 
 \item{overview}{Logical. Draw the full-image overview panel with the zoom
-box outlined. Default `TRUE`. Set `FALSE` to draw only the inset.}
+box outlined. Default \code{TRUE}. Set \code{FALSE} to draw only the inset.}
 
-\item{layer}{Integer or `NULL`. For multi-layer rasters, which layer the
-`"densest"` search uses. Default `NULL` (first layer). Does not subset what
+\item{layer}{Integer or \code{NULL}. For multi-layer rasters, which layer the
+\code{"densest"} search uses. Default \code{NULL} (first layer). Does not subset what
 is plotted — RGB rasters still plot as RGB.}
 
 \item{box_col}{Color of the zoom-box rectangle on the overview. Default
-`"red"`.}
+\code{"red"}.}
 
-\item{main}{Title stem. Panels are titled `"<main> - overview"` and
-`"<main> - inset (Nx)"`.}
+\item{main}{Title stem. Panels are titled \code{"<main> - overview"} and
+\code{"<main> - inset (Nx)"}.}
 
-\item{maxcell}{Passed to [terra::plot()]/[terra::plotRGB()]. Default `Inf`
+\item{maxcell}{Passed to \code{\link[terra:plot]{terra::plot()}}/\code{\link[terra:plotRGB]{terra::plotRGB()}}. Default \code{Inf}
 (no down-sampling) so thin features survive.}
 
 \item{...}{Further arguments passed to the underlying terra plot call.}
 }
 \value{
-Invisibly, the `terra::ext()` of the inset region.
+Invisibly, the \code{terra::ext()} of the inset region.
 }
 \description{
-Displays a high-resolution `SpatRaster` without losing thin features to
+Displays a high-resolution \code{SpatRaster} without losing thin features to
 device down-sampling. By default it draws two panels: a full-image
-**overview** with the zoomed region outlined, and a **magnified inset** of
-that region rendered at (near) 1:1 (`maxcell = Inf`).
+\strong{overview} with the zoomed region outlined, and a \strong{magnified inset} of
+that region rendered at (near) 1:1 (\code{maxcell = Inf}).
 }
 \section{Why this exists}{
 
@@ -64,7 +64,7 @@ Root masks and skeletons are often one pixel wide. Fitting a multi-thousand
 pixel scan into a small figure forces the graphics device to drop those
 pixels, so roots vanish or look broken. The magnified inset keeps a fraction
 of the image at full pixel resolution; the effective magnification is
-`1 / frac` (e.g. `frac = 0.25` magnifies 4x).
+\code{1 / frac} (e.g. \code{frac = 0.25} magnifies 4x).
 }
 
 \examples{

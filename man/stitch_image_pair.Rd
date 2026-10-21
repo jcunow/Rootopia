@@ -64,10 +64,10 @@ ghosting on color scans. Ignored unless \code{blend = "linear"}.}
 }
 \value{
 A numeric \code{(height, width, channel)} array in 0-255. The
-  estimated \code{c(dx, dy, peak)} is attached as \code{attr(., "offset")}
-  (\code{dx} the horizontal shift, with \code{overlap = edge_width - dx}).
-  Convert for plotting with e.g. \code{terra::rast()} /
-  \code{terra::plotRGB()}.
+estimated \code{c(dx, dy, peak)} is attached as \code{attr(., "offset")}
+(\code{dx} the horizontal shift, with \code{overlap = edge_width - dx}).
+Convert for plotting with e.g. \code{terra::rast()} /
+\code{terra::plotRGB()}.
 }
 \description{
 Core compositing step ported from the Python \code{ImageStitcher}

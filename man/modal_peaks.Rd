@@ -18,13 +18,13 @@ modal_peaks(
 
 \item{prominence_threshold}{Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.}
 
-\item{display_type}{Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.}
+\item{display_type}{Type of plot to display: \code{"density"} (default), \code{"raw"} for colored points, or \code{"none"} for no plot.}
 
 \item{adjust}{numeric. Adjusts the size of the density kernel. Higher values lead to more smoothing.}
 
-\item{mclust}{Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.}
+\item{mclust}{Logical. If \code{TRUE}, performs model-based clustering using \code{mclust::Mclust}.}
 
-\item{G}{Number of mixture components (clusters) for `mclust::Mclust`, used only
+\item{G}{Number of mixture components (clusters) for \code{mclust::Mclust}, used only
 when \code{mclust = TRUE}. \code{NULL} (default) lets Mclust select the number
 of components automatically over \code{G = 1:9} by BIC. Supply an integer to
 fix the count (e.g. \code{G = 2} for fine vs coarse roots) or an integer
@@ -33,31 +33,33 @@ vector to restrict the BIC search (e.g. \code{G = 1:4}).}
 \value{
 A list with the following elements:
 \describe{
-  \item{peak_x}{Vector of x-values (locations) of detected peaks.}
-  \item{peak_y}{Vector of y-values (heights) of detected peaks in the kernel density.}
-  \item{valley_x}{Vector of x-values for local minima between peaks (if any).}
-  \item{valley_y}{Vector of y-values for local minima between peaks (if any).}
-  \item{prominences}{Vector of prominence values corresponding to each detected peak.}
-  \item{mclust}{A list of Mclust model results if \code{mclust = TRUE}, including means, SDs, standard errors, cluster sizes, and 95\% CI.}
-  \item{classifications}{A vector assigning each observation in \code{x} to a cluster. Based on Mclust if \code{mclust = TRUE}, otherwise based on closest peak from prominence method.}
+\item{peak_x}{Vector of x-values (locations) of detected peaks.}
+\item{peak_y}{Vector of y-values (heights) of detected peaks in the kernel density.}
+\item{valley_x}{Vector of x-values for local minima between peaks (if any).}
+\item{valley_y}{Vector of y-values for local minima between peaks (if any).}
+\item{prominences}{Vector of prominence values corresponding to each detected peak.}
+\item{mclust}{A list of Mclust model results if \code{mclust = TRUE}, including means, SDs, standard errors, cluster sizes, and 95\% CI.}
+\item{classifications}{A vector assigning each observation in \code{x} to a cluster. Based on Mclust if \code{mclust = TRUE}, otherwise based on closest peak from prominence method.}
 }
 }
 \description{
 This function detects local modes (peaks) in a univariate distribution using kernel density
 estimation and a prominence threshold. It can optionally apply model-based clustering
-using `mclust` to estimate the number and characteristics of distributional components.
+using \code{mclust} to estimate the number and characteristics of distributional components.
 }
 \details{
 Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
-This helps identify meaningful peaks while filtering out spurious noise-driven ones.  
+This helps identify meaningful peaks while filtering out spurious noise-driven ones.
 When \code{mclust = TRUE}, model-based clustering is performed using Gaussian mixture models (\code{V} variance structure),
 and the results are returned along with a classification vector. By default the
 number of components is chosen automatically by BIC (\code{G = NULL}); set
 \code{G} to constrain or fix it.
 
-The classification strategy depends on \code{mclust}:  
-- If \code{TRUE}, it returns cluster assignments from \code{mclust::Mclust()}.  
-- If \code{FALSE}, it classifies each observation by its nearest peak in the kernel density estimate.
+The classification strategy depends on \code{mclust}:
+\itemize{
+\item If \code{TRUE}, it returns cluster assignments from \code{mclust::Mclust()}.
+\item If \code{FALSE}, it classifies each observation by its nearest peak in the kernel density estimate.
+}
 
 Both plots (density and uncertainty) share the same x-axis to support visual comparison.
 }

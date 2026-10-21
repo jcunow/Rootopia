@@ -24,8 +24,8 @@ whenever you know it.}
 }
 \value{
 A list with \code{topology}, \code{traits}, \code{qc} and
-  \code{note}. An empty or zero-row input returns the same structure with
-  empty \code{traits} rather than an error.
+\code{note}. An empty or zero-row input returns the same structure with
+empty \code{traits} rather than an error.
 }
 \description{
 Summarizes an edge table as a graph: node and edge counts, components, tips,
@@ -39,20 +39,20 @@ The same quantity means three different things depending on whether loops in
 the data are real.
 
 \describe{
-  \item{\code{"reticulate"}}{Loops are biology: fungal mycelium with
-    anastomoses, leaf venation, the endoplasmic reticulum, vasculature. The
-    cyclomatic number and the alpha coefficient measure redundancy, so they
-    are returned as traits.}
-  \item{\code{"tree"}}{Loops are impossible: a root system, a bronchial tree,
-    a river network. Then \eqn{E = V - G} holds by definition, so the
-    cyclomatic number is identically zero and the alpha coefficient carries
-    no information. They are returned under \code{$qc}, where a value above
-    zero means the input is not actually a forest.}
-  \item{\code{"projected_tree"}}{A tree photographed in two dimensions, which
-    is what a root scan is. Every loop is two roots crossing in projection,
-    so the cyclomatic number counts unresolved overlaps and belongs under
-    \code{$qc}. \code{artefact_rate} normalizes that count by network length
-    so it is comparable between images.}
+\item{\code{"reticulate"}}{Loops are biology: fungal mycelium with
+anastomoses, leaf venation, the endoplasmic reticulum, vasculature. The
+cyclomatic number and the alpha coefficient measure redundancy, so they
+are returned as traits.}
+\item{\code{"tree"}}{Loops are impossible: a root system, a bronchial tree,
+a river network. Then \eqn{E = V - G} holds by definition, so the
+cyclomatic number is identically zero and the alpha coefficient carries
+no information. They are returned under \code{$qc}, where a value above
+zero means the input is not actually a forest.}
+\item{\code{"projected_tree"}}{A tree photographed in two dimensions, which
+is what a root scan is. Every loop is two roots crossing in projection,
+so the cyclomatic number counts unresolved overlaps and belongs under
+\code{$qc}. \code{artefact_rate} normalizes that count by network length
+so it is comparable between images.}
 }
 
 Reporting a meshedness of 0.002 as a biological result, when it is a count of

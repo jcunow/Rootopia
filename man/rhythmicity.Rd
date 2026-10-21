@@ -19,30 +19,30 @@ rhythmicity(
 
 \item{fix_period}{Either numeric (e.g., 24) to fix the period, or \code{NULL} to estimate it.}
 
-\item{method}{Type of test to use: \code{"F"} for F-test (default), \code{"FLR"} for finite sample 
+\item{method}{Type of test to use: \code{"F"} for F-test (default), \code{"FLR"} for finite sample
 likelihood ratio test, or \code{"LR"} for large sample likelihood ratio test.}
 
-\item{par_start}{Named list with starting values for parameters: \code{amp}, \code{phase}, \code{offset}, 
+\item{par_start}{Named list with starting values for parameters: \code{amp}, \code{phase}, \code{offset},
 and \code{period}. Only used when \code{fix_period} is \code{NULL}.}
 }
 \value{
 A named list with the following elements:
 \itemize{
-  \item \code{amplitude}: Fitted amplitude
-  \item \code{phase}: Fitted phase
-  \item \code{offset}: Fitted offset
-  \item \code{period}: Fitted or fixed period
-  \item \code{peakTime}: Peak time (phase + period/4)
-  \item \code{R2}: Coefficient of determination
-  \item \code{residual_se}: Residual standard error (F-test only)
-  \item \code{df_residual}: Residual degrees of freedom (F-test only)
-  \item \code{sigma02}: Variance under null (LR methods only)
-  \item \code{sigmaA2}: Variance under alternative (LR methods only)
-  \item \code{l0}: Log-likelihood under null (LR methods only)
-  \item \code{l1}: Log-likelihood under alternative (LR methods only)
-  \item \code{df}: Degrees of freedom for the test
-  \item \code{stat}: Test statistic
-  \item \code{p_value}: P-value for the test
+\item \code{amplitude}: Fitted amplitude
+\item \code{phase}: Fitted phase
+\item \code{offset}: Fitted offset
+\item \code{period}: Fitted or fixed period
+\item \code{peakTime}: Peak time (phase + period/4)
+\item \code{R2}: Coefficient of determination
+\item \code{residual_se}: Residual standard error (F-test only)
+\item \code{df_residual}: Residual degrees of freedom (F-test only)
+\item \code{sigma02}: Variance under null (LR methods only)
+\item \code{sigmaA2}: Variance under alternative (LR methods only)
+\item \code{l0}: Log-likelihood under null (LR methods only)
+\item \code{l1}: Log-likelihood under alternative (LR methods only)
+\item \code{df}: Degrees of freedom for the test
+\item \code{stat}: Test statistic
+\item \code{p_value}: P-value for the test
 }
 }
 \description{

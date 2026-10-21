@@ -2,13 +2,13 @@
 % Please edit documentation in R/flexible_inputs.R
 \name{resolve_scale}
 \alias{resolve_scale}
-\title{Resolve the single `scale` argument, mapping the deprecated logical flags}
+\title{Resolve the single \code{scale} argument, mapping the deprecated logical flags}
 \usage{
 resolve_scale(scale, normalize, binarize, denormalize, scale_given)
 }
 \description{
-`normalize`, `binarize`, and `denormalize` are kept only for backward
-compatibility. Exactly one source of truth is allowed: either `scale` or the
+\code{normalize}, \code{binarize}, and \code{denormalize} are kept only for backward
+compatibility. Exactly one source of truth is allowed: either \code{scale} or the
 old flags, never both.
 }
 \keyword{internal}

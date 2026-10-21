@@ -13,13 +13,13 @@ analyze_soil_texture(
 }
 \arguments{
 \item{img.color}{Three-band raster (RGB) or path to image. Internally
-converted to a `raster::RasterBrick` as required by the `glcm` package.}
+converted to a \code{raster::RasterBrick} as required by the \code{glcm} package.}
 
 \item{grays}{Number of gray levels for GLCM quantization. Must be between
 2 and 255. Default is 7.}
 
 \item{window}{Window size for GLCM calculation as a length-2 vector of odd
-positive integers, e.g. `c(9, 9)`. Default is `c(9, 9)`.}
+positive integers, e.g. \code{c(9, 9)}. Default is \code{c(9, 9)}.}
 
 \item{metrics}{Character vector of GLCM texture statistics to calculate.
 Valid options: "mean", "variance", "homogeneity", "contrast",
@@ -27,7 +27,7 @@ Valid options: "mean", "variance", "homogeneity", "contrast",
 }
 \value{
 A RasterLayer (or RasterBrick for multiple metrics) with texture
-  values.
+values.
 }
 \description{
 Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)
