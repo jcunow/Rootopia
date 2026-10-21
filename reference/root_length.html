@@ -117,18 +117,16 @@ segmented mask and reduced to a skeleton internally via
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Let Nd be the number of diagonal pixel connections and No the number
 of orthogonal pixel connections in the skeleton.</p>
-<p>Freeman methods treat the skeleton as a discrete chain-code path:
-- freeman_basic:
-  L = sqrt(2) * Nd + No</p>
-<p>- freeman_corrected:
-  L = 0.948 * (sqrt(2) * Nd + No)</p>
-<p>Kimura methods treat the skeleton as a discretized representation of
-an underlying continuous curve and reduce orientation bias:</p>
-<p>- kimura1:
-  L = sqrt(Nd^2 + (Nd + No)^2)</p>
-<p>- kimura2 (default):
-  L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2</p>
-<p>The Kimura2 estimator is generally preferred due to improved stability
+<p>Freeman methods treat the skeleton as a discrete chain-code path:</p><ul><li><p>freeman_basic:
+L = sqrt(2) * Nd + No</p></li>
+<li><p>freeman_corrected:
+L = 0.948 * (sqrt(2) * Nd + No)</p></li>
+</ul><p>Kimura methods treat the skeleton as a discretized representation of
+an underlying continuous curve and reduce orientation bias:</p><ul><li><p>kimura1:
+L = sqrt(Nd^2 + (Nd + No)^2)</p></li>
+<li><p>kimura2 (default):
+L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2</p></li>
+</ul><p>The Kimura2 estimator is generally preferred due to improved stability
 across object orientations and curvature distributions.</p>
     </div>
 

@@ -40,14 +40,28 @@ Binary SpatRaster representing skeletonized image
 
 Processing steps:
 
-1\. Input is converted to a single-layer binary SpatRaster using
-\`load_flexible_image()\`. 2. Foreground pixel count is computed. 3.
-Skeletonization is performed using \`lut_thin_fast()\`: - iterative
-removal of pixels based on 3x3 neighborhood codes - lookup table
-determines pixel deletions in two sub-steps per iteration 4. Output is
-the final thinned binary raster. 5. Optionally, an overlay image is
-generated: - original image marked as base layer - skeleton pixels
-overlaid in a separate class - saved using base R PNG plotting
+1.  Input is converted to a single-layer binary SpatRaster using
+    [`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
+
+2.  Foreground pixel count is computed.
+
+3.  Skeletonization is performed using
+    [`lut_thin_fast()`](https://jcunow.github.io/Rootopia/reference/lut_thin_fast.md):
+
+    - iterative removal of pixels based on 3x3 neighborhood codes
+
+    - lookup table determines pixel deletions in two sub-steps per
+      iteration
+
+4.  Output is the final thinned binary raster.
+
+5.  Optionally, an overlay image is generated:
+
+    - original image marked as base layer
+
+    - skeleton pixels overlaid in a separate class
+
+    - saved using base R PNG plotting
 
 ## Examples
 

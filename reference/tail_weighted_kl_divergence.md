@@ -48,7 +48,7 @@ tail_weighted_kl_divergence(
 
 - baseline.weight:
 
-  Numeric in \[0,1\]. Minimum weight.
+  Numeric in `[0,1]`. Minimum weight.
 
 - inverse:
 

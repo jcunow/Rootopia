@@ -30,12 +30,12 @@ root_scape_metrics(
 - select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`NULL\` (single-layer expected).
+  image. Default is `NULL` (single-layer expected).
 
 - metrics:
 
   Character vector of metrics to calculate; must be valid names from
-  \`landscapemetrics::list_lsm()\`.
+  [`landscapemetrics::list_lsm()`](https://r-spatialecology.github.io/landscapemetrics/reference/list_lsm.html).
 
 ## Value
 
@@ -47,7 +47,9 @@ depth.
 ``` r
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
-RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
-                                       metrics = c("lsm_c_ca"))
+if (requireNamespace("landscapemetrics", quietly = TRUE)) {
+  RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
+                                        metrics = c("lsm_c_ca"))
+}
 #> Warning: Please use 'check_landscape()' to ensure the input data is valid.
 ```

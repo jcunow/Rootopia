@@ -2,7 +2,7 @@
 
 Applies a morphological closing (dilation then erosion) to smooth the
 edges of binary objects. Intended as a post-cleaning step before
-skeletonisation; do \*\*not\*\* apply after skeletonisation.
+skeletonisation; do **not** apply after skeletonisation.
 
 ## Usage
 
@@ -14,17 +14,17 @@ smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3, iterations = 1)
 
 - img:
 
-  A \`cimg\` binary image or any format accepted by
+  A `cimg` binary image or any format accepted by
   [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
 
 - kernel_shape:
 
-  One of \`"disk"\` (default), \`"square"\`, \`"diamond"\`.
+  One of `"disk"` (default), `"square"`, `"diamond"`.
 
 - kernel_size:
 
-  Structuring element size (odd integer). At 300 DPI, \`kernel_size =
-  3\` is a good starting point.
+  Structuring element size (odd integer). At 300 DPI, `kernel_size = 3`
+  is a good starting point.
 
 - iterations:
 
@@ -32,4 +32,4 @@ smooth_root_edges(img, kernel_shape = "disk", kernel_size = 3, iterations = 1)
 
 ## Value
 
-A \`cimg\` binary image.
+A `cimg` binary image.

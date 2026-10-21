@@ -77,26 +77,26 @@ The input can be a file path, raster, image object, or array, which is converted
 
 
 <dl><dt id="arg-img">img<a class="anchor" aria-label="anchor" href="#arg-img"></a></dt>
-<dd><p>A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array.
+<dd><p>A character string (file path), <code>SpatRaster</code>, <code>RasterBrick</code>, <code>RasterLayer</code>, <code>cimg</code>, <code>magick-image</code>, or array.
 The input image to process.</p></dd>
 
 
 <dt id="arg-skeleton-method">skeleton_method<a class="anchor" aria-label="anchor" href="#arg-skeleton-method"></a></dt>
-<dd><p>Character. Currently unused — `skeletonize_image()`
+<dd><p>Character. Currently unused — <code><a href="skeletonize_image.html">skeletonize_image()</a></code>
 only implements LUT-based Zhang-Suen thinning. Kept for backward
-compatibility. Will be skipped if skeleton `SpatRaster` is provided.</p></dd>
+compatibility. Will be skipped if skeleton <code>SpatRaster</code> is provided.</p></dd>
 
 
 <dt id="arg-skeleton-img">skeleton_img<a class="anchor" aria-label="anchor" href="#arg-skeleton-img"></a></dt>
-<dd><p>A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.</p></dd>
+<dd><p>A character string (file path), <code>SpatRaster</code>, <code>RasterBrick</code>, <code>RasterLayer</code>, <code>cimg</code>, <code>magick-image</code>, or array. Uses this object instead of computing it from scratch.</p></dd>
 
 
 <dt id="arg-select-layer">select_layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
-<dd><p>Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.</p></dd>
+<dd><p>Integer. Specifies which layer to use if the input is a multi-band image. Default is <code>NULL</code>, which passes every layer to <code><a href="load_flexible_image.html">load_flexible_image()</a></code> rather than selecting one.</p></dd>
 
 
 <dt id="arg-diagnostics">diagnostics<a class="anchor" aria-label="anchor" href="#arg-diagnostics"></a></dt>
-<dd><p>Logical. If `TRUE`, enables diagnostic plots and logging. Default is `FALSE`.</p></dd>
+<dd><p>Logical. If <code>TRUE</code>, enables diagnostic plots and logging. Default is <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
@@ -110,48 +110,49 @@ compatibility. Will be skipped if skeleton `SpatRaster` is provided.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list containing:</p><dl><dt>quantiles</dt>
-<dd><p>Numeric vector of diameter quantiles (10th to 100th percentile).</p></dd>
+<dd><p>Named numeric vector of 11 diameter quantiles, the
+deciles from 0% (the thinnest skeleton pixel) to 100% (the thickest),
+as returned by <code>quantile(probs = seq(0, 1, 0.1))</code>.</p></dd>
 
-  <dt>mean_diameter</dt>
+<dt>mean_diameter</dt>
 <dd><p>Numeric. The mean root diameter.</p></dd>
 
-  <dt>median_diameter</dt>
+<dt>median_diameter</dt>
 <dd><p>Numeric. The median root diameter.</p></dd>
 
-  <dt>diameters</dt>
+<dt>diameters</dt>
 <dd><p>Numeric vector of all diameter values in the skeletonized regions.</p></dd>
 
-  <dt>skeleton_rast</dt>
-<dd><p>`SpatRaster`. Binary raster mask of skeletonized regions.</p></dd>
+<dt>skeleton_rast</dt>
+<dd><p><code>SpatRaster</code>. Binary raster mask of skeletonized regions.</p></dd>
 
-  <dt>diameter_rast</dt>
-<dd><p>`SpatRaster`. Raster showing diameters in the skeletonized regions.</p></dd>
+<dt>diameter_rast</dt>
+<dd><p><code>SpatRaster</code>. Raster showing diameters in the skeletonized regions.</p></dd>
 
-  <dt>distance_map_rast</dt>
-<dd><p>`SpatRaster`. Raster showing the distance transform values.</p></dd>
+<dt>distance_map_rast</dt>
+<dd><p><code>SpatRaster</code>. Raster showing the distance transform values.</p></dd>
 
-  <dt>root_volume</dt>
-<dd><p>Numeric. Total root volume, in `unit`^3. Each skeleton
-    pixel is modeled as a cylinder of radius `diameter / 2` and length 1
-    pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.</p></dd>
+<dt>root_volume</dt>
+<dd><p>Numeric. Total root volume, in <code>unit</code>^3. Each skeleton
+pixel is modeled as a cylinder of radius <code>diameter / 2</code> and length 1
+pixel; volumes (<code>pi * r^2 * l</code>) are summed and converted from px^3.</p></dd>
 
-  <dt>root_surface_area</dt>
+<dt>root_surface_area</dt>
 <dd><p>Numeric. Total root lateral surface area, in
-    `unit`^2. Each skeleton pixel's cylinder contributes a lateral surface
-    of `2 * pi * r * l = pi * d * l`; values are summed and converted from
-    px^2.</p></dd>
+<code>unit</code>^2. Each skeleton pixel's cylinder contributes a lateral surface
+of <code>2 * pi * r * l = pi * d * l</code>; values are summed and converted from
+px^2.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function works as follows:
-- Converts the input image to a binary format (`cimg`).
-- Applies a distance transform to compute the Euclidean distance for the foreground (root) pixels.
-- Skeletonizes the binary image to identify root centerlines.
-- Filters distance values to retain only those corresponding to the skeletonized regions.
-- Computes diameter statistics, including quantiles, mean, and median diameters.</p>
-<p>The function supports various input formats and normalizes image values to the range [0, 1] if needed. It uses the `terra` package for raster operations and the `imager` package for image processing.</p>
+    <p>The function works as follows:</p><ul><li><p>Converts the input image to a binary format (<code>cimg</code>).</p></li>
+<li><p>Applies a distance transform to compute the Euclidean distance for the foreground (root) pixels.</p></li>
+<li><p>Skeletonizes the binary image to identify root centerlines.</p></li>
+<li><p>Filters distance values to retain only those corresponding to the skeletonized regions.</p></li>
+<li><p>Computes diameter statistics, including quantiles, mean, and median diameters.</p></li>
+</ul><p>The function supports various input formats and normalizes image values to the range <code>[0, 1]</code> if needed. It uses the <code>terra</code> package for raster operations and the <code>imager</code> package for image processing.</p>
     </div>
 
     <div class="section level2">

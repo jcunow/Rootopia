@@ -44,14 +44,23 @@ List with:
 
 The computation proceeds as follows:
 
-1\. Raster values are converted into a numeric matrix. 2. A 1-pixel
-zero-padding border is added around the matrix. 3. For each pixel in the
-original image: - A 3x3 window is extracted from the padded matrix - The
-center pixel is excluded - Neighbor count is computed as the sum of
-remaining 8 values
+1.  Raster values are converted into a numeric matrix.
 
-Classification rules: - Endpoint: pixel == 1 AND neighbor count == 1 -
-Branch point: pixel == 1 AND neighbor count \> 2
+2.  A 1-pixel zero-padding border is added around the matrix.
+
+3.  For each pixel in the original image:
+
+    - A 3x3 window is extracted from the padded matrix
+
+    - The center pixel is excluded
+
+    - Neighbor count is computed as the sum of remaining 8 values
+
+Classification rules:
+
+- Endpoint: pixel == 1 AND neighbor count == 1
+
+- Branch point: pixel == 1 AND neighbor count \> 2
 
 Outputs are converted back into SpatRaster objects.
 

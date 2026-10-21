@@ -121,23 +121,23 @@ needed.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list with elements:</p><dl><dt><code>map</code></dt>
 <dd><p>A <code>SpatRaster</code> of integer class IDs with factor
-    levels set to class names. Level 0 = "unclassified". Same CRS, extent,
-    and resolution as <code>img</code>. Use directly with <code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">terra::zonal()</a></code>,
-    <code><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">terra::mask()</a></code>, <code><a href="https://rspatial.github.io/terra/reference/freq.html" class="external-link">terra::freq()</a></code>.</p></dd>
+levels set to class names. Level 0 = "unclassified". Same CRS, extent,
+and resolution as <code>img</code>. Use directly with <code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">terra::zonal()</a></code>,
+<code><a href="https://rspatial.github.io/terra/reference/mask.html" class="external-link">terra::mask()</a></code>, <code><a href="https://rspatial.github.io/terra/reference/freq.html" class="external-link">terra::freq()</a></code>.</p></dd>
 
-  <dt><code>metrics</code></dt>
+<dt><code>metrics</code></dt>
 <dd><p>A <code>data.frame</code> with per-class pixel counts,
-    area fractions (%), LAB and RGB means and SDs, mean distance to
-    centroid, and the actual mean color rendered as hex. <code>NULL</code> if
-    <code>compute_metrics = FALSE</code>.</p></dd>
+area fractions (%), LAB and RGB means and SDs, mean distance to
+centroid, and the actual mean color rendered as hex. <code>NULL</code> if
+<code>compute_metrics = FALSE</code>.</p></dd>
 
-  <dt><code>inter_dist</code></dt>
+<dt><code>inter_dist</code></dt>
 <dd><p>Numeric matrix of pairwise LAB distances between
-    class centroids.</p></dd>
+class centroids.</p></dd>
 
-  <dt><code>centroids</code></dt>
+<dt><code>centroids</code></dt>
 <dd><p>The centroid table used (useful when the default
-    was applied).</p></dd>
+was applied).</p></dd>
 
 
 </dl></div>
@@ -148,25 +148,25 @@ needed.</p></dd>
 <p>The <code>centroids</code> table has one row per material class and these
 columns:</p><dl><dt><code>class</code></dt>
 <dd><p>Character. Name of the class (e.g.
-    <code>"dark_soil"</code>, <code>"root"</code>). Becomes the factor level in
-    <code>result$map</code> and the <code>class</code> column of <code>result$metrics</code>.</p></dd>
+<code>"dark_soil"</code>, <code>"root"</code>). Becomes the factor level in
+<code>result$map</code> and the <code>class</code> column of <code>result$metrics</code>.</p></dd>
 
-  <dt><code>L</code>, <code>A</code>, <code>B</code></dt>
+<dt><code>L</code>, <code>A</code>, <code>B</code></dt>
 <dd><p>Numeric. The class centroid's
-    coordinates in CIE LAB color space (D65 illuminant): <code>L</code> is
-    lightness (0 = black, 100 = white), <code>A</code> is the green-red axis
-    (negative = green, positive = red), and <code>B</code> is the blue-yellow
-    axis (negative = blue, positive = yellow). These are the *mean* LAB
-    values of the representative pixels for that class.</p></dd>
+coordinates in CIE LAB color space (D65 illuminant): <code>L</code> is
+lightness (0 = black, 100 = white), <code>A</code> is the green-red axis
+(negative = green, positive = red), and <code>B</code> is the blue-yellow
+axis (negative = blue, positive = yellow). These are the <em>mean</em> LAB
+values of the representative pixels for that class.</p></dd>
 
-  <dt><code>MAX_DIST</code></dt>
+<dt><code>MAX_DIST</code></dt>
 <dd><p>Numeric. The per-class assignment radius, in
-    Euclidean LAB units. A pixel is assigned to the class whose centroid
-    is nearest in LAB space, but only if that distance is <code>&lt;=
+Euclidean LAB units. A pixel is assigned to the class whose centroid
+is nearest in LAB space, but only if that distance is <code>&lt;=
     MAX_DIST</code>; otherwise the pixel is labeled <code>"unclassified"</code>.
-    Larger values classify more pixels but risk merging visually distinct
-    materials; smaller values leave more pixels unclassified. Typical
-    values are roughly 10-30.</p></dd>
+Larger values classify more pixels but risk merging visually distinct
+materials; smaller values leave more pixels unclassified. Typical
+values are roughly 10-30.</p></dd>
 
 
 </dl><p>Pixel RGB values are converted to LAB internally before distances are

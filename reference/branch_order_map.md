@@ -11,7 +11,8 @@ aligned to the input. Lengths and diameters are reported in real units.
 branch_order_map(
   skel = NULL,
   mask = NULL,
-  order = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  order = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   unit = "cm",
   dpi = 300,
   length_method = "kimura",
@@ -40,8 +41,10 @@ branch_order_map(
 
 - order:
 
-  Which scheme labels `$class_map`/`$summary`: `"branch_order"`,
-  `"root_order"`, or `"tip_order"`.
+  Which scheme labels `$class_map`/`$summary`: `"strahler_order"`,
+  `"order_from_tip"`, `"root_max_order_from_tip"` or
+  `"order_from_base"`. The 1.1.0 spellings `"tip_order"`, `"root_order"`
+  and `"branch_order"` are accepted and resolved to these.
 
 - unit:
 
@@ -92,38 +95,60 @@ An object of class `"branchOrderMap"`: a list with `$edges`, `$summary`,
 
 ## Details
 
-All three order schemes are always computed and stored on `$edges`;
-`order` only selects which labels `$class_map` and `$summary`.
+All four order schemes are always computed and stored on `$edges`;
+`order` only selects which labels `$class_map` and `$summary`. Two label
+a single graph segment and two label a whole continuous root, which is
+what the column names say: a per-root column holds the same value on
+every segment of that root, so averaging it over segments weights long
+roots more.
 
-- `tip_order` (per segment):
+- `order_from_tip` (per segment):
 
-  Topological leaf-peeling depth. Every terminal segment is order 1;
-  peeling terminals away round by round, a segment's order is
-  `1 + max(child orders)`. Order rises toward the interior, so the
-  distal end of even a thick root is 1. This is centrifugal depth, not
-  strict Strahler ordering: Strahler only increments where two children
-  share the highest order, while this increments at every junction, so a
-  long chain of single laterals keeps climbing.
+  Leaf-peeling count. Every terminal segment is order 1; peeling
+  terminals away round by round, a segment's order is
+  `1 + max(child orders)`. It rises toward the interior, so the distal
+  end of even a thick root is 1. The count runs from the tips inward
+  (centripetal), the direction root ecology's morphometric
+  classification uses, but it is not strict Strahler ordering: it
+  increments at *every* junction, so an axis carrying ten single
+  laterals reaches 11.
 
-- `root_order` (per root):
+- `strahler_order` (per segment):
 
-  Segments are grouped into continuous roots (continuation rule below);
-  each root takes the *maximum* `tip_order` along it, so a thick main
-  axis keeps its high order out to its tip. Sensitive to how deep the
-  deepest subtree runs.
+  The same peeling with the strict rule: a segment's order rises only
+  where two of its children share the highest order, otherwise it
+  inherits that order unchanged. A lone thin lateral joining a thick
+  axis leaves the axis where it was.
 
-- `branch_order` (per root):
+- `root_max_order_from_tip` (per root):
 
-  Centrifugal generation. The thickest root (length-weighted mean
-  diameter) in each connected component is order 1; counting branching
-  hops outward, its laterals are 2, theirs 3, and so on. Independent of
-  subtree depth, so one heavily branched root does not inflate the rest.
+  No count of its own. Segments are grouped into continuous roots
+  (continuation rule below) and every segment of a root takes the
+  *largest* `order_from_tip` found along it – which, since that column
+  never falls as you move basally, is its value at the root's basal end.
+  A thick main axis therefore keeps its high value out to its tip
+  instead of dropping to 1. Sensitive to how deep the deepest subtree
+  runs.
 
-**Continuation rule** (groups segments into roots for `root_order` and
-`branch_order`): at each junction the two arms forming the same root are
-chosen by `straightness + diam_weight * diameter_similarity`.
-`diam_weight = 0` uses angle only; larger values let thickness dominate.
-The odd arm out is a lateral. `tip_order` does not use this rule.
+- `order_from_base` (per root):
+
+  Generation counting, the direction the developmental classification
+  uses. The thickest root (length-weighted mean diameter) in each
+  connected component is order 1; counting branching hops outward, its
+  laterals are 2, theirs 3, and so on. Independent of subtree depth, so
+  one heavily branched root does not inflate the rest. Order 1 is chosen
+  by thickness, not by knowing which root grew first.
+
+Up to Rootopia 1.1.0 these columns were called `tip_order`, `root_order`
+and `branch_order`. Those names are still returned, as copies of the
+columns above, and are still accepted by `order`, `order_col` and
+`value`.
+
+**Continuation rule** (groups segments into roots, for the two per-root
+columns): at each junction the two arms forming the same root are chosen
+by `straightness + diam_weight * diameter_similarity`. `diam_weight = 0`
+uses angle only; larger values let thickness dominate. The odd arm out
+is a lateral. The per-segment columns do not use this rule.
 
 ## See also
 
@@ -141,7 +166,7 @@ which both take the `$edges` table returned here.
 ``` r
 if (FALSE) { # \dontrun{
 skel <- skeletonize_image(mask)
-res  <- branch_order_map(skel, mask, order = "branch_order",
+res  <- branch_order_map(skel, mask, order = "order_from_base",
                          unit = "cm", dpi = 300, dt_backend = "imager")
 res$summary
 terra::plot(res$class_map, maxcell = Inf)

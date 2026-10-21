@@ -7,7 +7,7 @@ statistics. Background pixels are `NA`.
 ## Usage
 
 ``` r
-order_classification_map(et, template, value = "branch_order")
+order_classification_map(et, template, value = "order_from_base")
 ```
 
 ## Arguments
@@ -23,7 +23,7 @@ order_classification_map(et, template, value = "branch_order")
 
 - value:
 
-  Column of `et` to rasterise (e.g. `"branch_order"`,
+  Column of `et` to rasterise (e.g. `"order_from_base"`,
   `"mean_diameter"`).
 
 ## Value
@@ -44,8 +44,8 @@ statistics, not for measuring.
 
 ``` r
 if (FALSE) { # \dontrun{
-res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")
+res <- branch_order_map(skel, mask, order = "order_from_base", unit = "px")
 cmap <- order_classification_map(res$edges, template = skel,
-                                 value = "branch_order")
+                                 value = "order_from_base")
 } # }
 ```

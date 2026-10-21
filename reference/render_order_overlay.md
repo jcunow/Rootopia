@@ -12,6 +12,7 @@ render_order_overlay(
   dims,
   file,
   mask = NULL,
+  crop_offset = NULL,
   max_side = 2000,
   continuous = NA,
   value_label = NULL,
@@ -42,7 +43,16 @@ render_order_overlay(
 
 - mask:
 
-  Optional 0/1 mask drawn as a gray background.
+  Optional 0/1 mask drawn as a gray background. The pipeline traces in a
+  frame cropped to the foreground, so a full-size mask is usually larger
+  than `dims`; pass `crop_offset` as well and it is cut to match.
+  Without one, a mismatched mask is dropped with a warning rather than
+  drawn out of register.
+
+- crop_offset:
+
+  Optional length-2 (row, column) offset of the traced frame within
+  `mask`, as carried by `attr(et, "crop_offset")`.
 
 - max_side:
 

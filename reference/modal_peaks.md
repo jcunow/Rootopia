@@ -2,7 +2,7 @@
 
 This function detects local modes (peaks) in a univariate distribution
 using kernel density estimation and a prominence threshold. It can
-optionally apply model-based clustering using \`mclust\` to estimate the
+optionally apply model-based clustering using `mclust` to estimate the
 number and characteristics of distributional components.
 
 ## Usage
@@ -31,8 +31,8 @@ modal_peaks(
 
 - display_type:
 
-  Type of plot to display: \`"density"\` (default), \`"raw"\` for
-  colored points, or \`"none"\` for no plot.
+  Type of plot to display: `"density"` (default), `"raw"` for colored
+  points, or `"none"` for no plot.
 
 - adjust:
 
@@ -41,16 +41,17 @@ modal_peaks(
 
 - mclust:
 
-  Logical. If \`TRUE\`, performs model-based clustering using
-  \`mclust::Mclust\`.
+  Logical. If `TRUE`, performs model-based clustering using
+  [`mclust::Mclust`](https://mclust-org.github.io/mclust/reference/Mclust.html).
 
 - G:
 
-  Number of mixture components (clusters) for \`mclust::Mclust\`, used
-  only when `mclust = TRUE`. `NULL` (default) lets Mclust select the
-  number of components automatically over `G = 1:9` by BIC. Supply an
-  integer to fix the count (e.g. `G = 2` for fine vs coarse roots) or an
-  integer vector to restrict the BIC search (e.g. `G = 1:4`).
+  Number of mixture components (clusters) for
+  [`mclust::Mclust`](https://mclust-org.github.io/mclust/reference/Mclust.html),
+  used only when `mclust = TRUE`. `NULL` (default) lets Mclust select
+  the number of components automatically over `G = 1:9` by BIC. Supply
+  an integer to fix the count (e.g. `G = 2` for fine vs coarse roots) or
+  an integer vector to restrict the BIC search (e.g. `G = 1:4`).
 
 ## Value
 
@@ -98,11 +99,13 @@ along with a classification vector. By default the number of components
 is chosen automatically by BIC (`G = NULL`); set `G` to constrain or fix
 it.
 
-The classification strategy depends on `mclust`: - If `TRUE`, it returns
-cluster assignments from
-[`mclust::Mclust()`](https://mclust-org.github.io/mclust/reference/Mclust.html). -
-If `FALSE`, it classifies each observation by its nearest peak in the
-kernel density estimate.
+The classification strategy depends on `mclust`:
+
+- If `TRUE`, it returns cluster assignments from
+  [`mclust::Mclust()`](https://mclust-org.github.io/mclust/reference/Mclust.html).
+
+- If `FALSE`, it classifies each observation by its nearest peak in the
+  kernel density estimate.
 
 Both plots (density and uncertainty) share the same x-axis to support
 visual comparison.

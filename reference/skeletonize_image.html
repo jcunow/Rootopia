@@ -95,19 +95,18 @@ implementation of the Zhang-Suen skeletonization algorithm.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Processing steps:</p>
-<p>1. Input is converted to a single-layer binary SpatRaster using
-   `load_flexible_image()`.
-2. Foreground pixel count is computed.
-3. Skeletonization is performed using `lut_thin_fast()`:
-   - iterative removal of pixels based on 3x3 neighborhood codes
-   - lookup table determines pixel deletions in two sub-steps per iteration
-4. Output is the final thinned binary raster.
-5. Optionally, an overlay image is generated:
-   - original image marked as base layer
-   - skeleton pixels overlaid in a separate class
-   - saved using base R PNG plotting</p>
-    </div>
+    <p>Processing steps:</p><ol><li><p>Input is converted to a single-layer binary SpatRaster using
+<code><a href="load_flexible_image.html">load_flexible_image()</a></code>.</p></li>
+<li><p>Foreground pixel count is computed.</p></li>
+<li><p>Skeletonization is performed using <code><a href="lut_thin_fast.html">lut_thin_fast()</a></code>:</p><ul><li><p>iterative removal of pixels based on 3x3 neighborhood codes</p></li>
+<li><p>lookup table determines pixel deletions in two sub-steps per iteration</p></li>
+</ul></li>
+<li><p>Output is the final thinned binary raster.</p></li>
+<li><p>Optionally, an overlay image is generated:</p><ul><li><p>original image marked as base layer</p></li>
+<li><p>skeleton pixels overlaid in a separate class</p></li>
+<li><p>saved using base R PNG plotting</p></li>
+</ul></li>
+</ol></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

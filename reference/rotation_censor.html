@@ -90,13 +90,13 @@ a measured offset. Optionally previews what is kept versus cut.</p>
 <dt id="arg-center-offset">center_offset<a class="anchor" aria-label="anchor" href="#arg-center-offset"></a></dt>
 <dd><p>Numeric or character. Where to center the kept window
 (in fixed mode), given in one of three forms:</p><ul><li><p><strong>Absolute row</strong> - a number <code>&gt; 1</code>: the exact row to
-    center on (e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>).</p></li>
+center on (e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>).</p></li>
 <li><p><strong>Fraction</strong> - a number in <code>[0, 1]</code>: a fraction of the
-    image height. <code>0</code> = top, <code>0.25</code> = a quarter down,
-    <code>0.5</code> = middle, <code>1</code> = bottom (so the center row is
-    <code>center_offset * nrow</code>).</p></li>
+image height. <code>0</code> = top, <code>0.25</code> = a quarter down,
+<code>0.5</code> = middle, <code>1</code> = bottom (so the center row is
+<code>center_offset * nrow</code>).</p></li>
 <li><p><strong>Keyword</strong> - <code>"top"</code> (= 0), <code>"middle"</code> /
-    <code>"center"</code> / <code>"center"</code> (= 0.5), or <code>"bottom"</code> (= 1).</p></li>
+<code>"center"</code> / <code>"center"</code> (= 0.5), or <code>"bottom"</code> (= 1).</p></li>
 </ul><p>The default <code>0</code> centers on the top row.
 When <code>fixed_rotation = FALSE</code> the resolved value is used as the
 rotation shift in rows to trim (e.g. from
@@ -133,7 +133,7 @@ Default <code>FALSE</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A cropped <code>SpatRaster</code> (returned invisibly when
-  <code>overlay = TRUE</code>), or <code>NULL</code> if the result is empty.</p>
+<code>overlay = TRUE</code>), or <code>NULL</code> if the result is empty.</p>
     </div>
 
     <div class="section level2">

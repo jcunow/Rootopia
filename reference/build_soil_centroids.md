@@ -43,7 +43,7 @@ build_soil_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 
 - alpha:
 
-  Numeric in \[0, 1\]. Blend weight for the prior centroids. `alpha = 0`
+  Numeric in `[0, 1]`. Blend weight for the prior centroids. `alpha = 0`
   (default) ignores the prior entirely – centroids are derived purely
   from the new picks. `alpha = 1` returns the prior unchanged.
   `alpha = 0.5` weights old and new equally. Decrease `alpha`

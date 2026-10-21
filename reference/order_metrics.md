@@ -1,16 +1,16 @@
-# Aggregate root architecture by order, or split focal-vs-rest
+# Aggregate root architecture by order, or by groups of orders
 
 Flexible query over a `branch_order_map` result (or its `$edges` table):
-length, diameter, and branching architecture, either per order class or
-split into a focal group versus the rest. Diameter is length-weighted so
-it reflects how much root length sits at each width. Lengths/diameters
-are in the unit of `x`; counts are integers; `branching_frequency` is
-per unit length.
+length, diameter, and branching architecture, either one row per order
+class or one row per named group of orders. Diameter is length-weighted
+so it reflects how much root length sits at each width.
+Lengths/diameters are in the unit of `x`; counts are integers;
+`branching_frequency` is per unit length.
 
 ## Usage
 
 ``` r
-order_metrics(x, order_col = NULL, focal = NULL)
+order_metrics(x, order_col = NULL, groups = NULL, focal = NULL)
 ```
 
 ## Arguments
@@ -22,39 +22,53 @@ order_metrics(x, order_col = NULL, focal = NULL)
 - order_col:
 
   Order column to aggregate by; defaults to the object's `$order`, else
-  `"branch_order"`.
+  `"order_from_base"`. The 1.1.0 spellings are accepted and resolved to
+  the current ones.
+
+- groups:
+
+  How to pool orders into rows:
+
+  - `NULL` (default): one row per order class, ascending.
+
+  - A named list of order sets, e.g. `list(fine = 1:2, coarse = 3:5)`.
+    Each element holds values of `order_col` and its name becomes the
+    `group` label. Orders that no element lists are pooled into one
+    extra row named `"rest"`, so every ordered segment is counted
+    exactly once; when nothing is left over that row is absent, and a
+    group that catches no segment gets no row. Naming one order in two
+    groups is an error.
+
+  - `"thinnest"` or `"thickest"`: the one order class with the smallest
+    or largest length-weighted diameter, with the others pooled into
+    `"rest"`. The pick is by *diameter*, so it does not depend on how
+    the orders are numbered; the `orders` column reports which order
+    number(s) landed in each row.
 
 - focal:
 
-  Controls the split:
-
-  - `NULL` (default): one row per order class.
-
-  - `"thinnest"` / `"thickest"` (aliases `"finest"` / `"coarsest"`): the
-    order class with the smallest / largest length-weighted diameter,
-    versus all others. Selected by *diameter*, so it is independent of
-    the order numbering; the `orders` column reports which order
-    number(s) fell in each group.
-
-  - a numeric order value or vector (e.g. `1` or `c(4, 5)`): those
-    orders as the focal group versus the rest.
+  Deprecated spelling of `groups`, kept so existing calls still run. A
+  numeric value or vector is read as `groups = list(focal = focal)`;
+  `"thinnest"`, `"thickest"` and the aliases `"finest"` / `"coarsest"`
+  are read as the matching `groups` string.
 
 ## Value
 
-A data.frame with one row per group:
+A data.frame with one row per order class or per group:
 
-- `group`:
+- first column:
 
-  Order value (no split) or `"focal"`/`"rest"`.
+  Named after `order_col` and holding the order value when `groups` is
+  `NULL`; named `group` and holding the group label otherwise.
 
 - `orders`:
 
-  Comma-separated order numbers contained in the group (so a
-  thinnest/thickest split shows which orders it picked).
+  Comma-separated order numbers contained in the group. Present only
+  when `groups` is given.
 
 - `n_segments`:
 
-  Graph segments in the group.
+  Graph segments in the row.
 
 - `n_tips`:
 
@@ -62,7 +76,7 @@ A data.frame with one row per group:
 
 - `n_branch_points`:
 
-  Branching junctions on roots of the group.
+  Branching junctions on roots of the row.
 
 - `total_length`:
 
@@ -71,6 +85,17 @@ A data.frame with one row per group:
 - `length_fraction`:
 
   Share of total ordered length.
+
+- `cumulative_length`:
+
+  Running total of `total_length` over the rows above and including this
+  one. Present only when `groups` is `NULL`, where the rows ascend in
+  the order value.
+
+- `cumulative_fraction`:
+
+  `cumulative_length` over the total ordered length, so the last row
+  is 1. Present under the same condition.
 
 - `mean_segment_length`:
 
@@ -88,16 +113,21 @@ A data.frame with one row per group:
 
   Median of segment median diameters.
 
-`attr(., "n_unordered")` counts NA-order segments; for a split,
-`attr(., "focal_orders")` lists the focal order number(s).
+An order class with no segments has no row, so the per-order rows can
+skip values; the cumulative columns step from one present order to the
+next rather than inserting a zero, which would drag down any mean taken
+over the rows. `attr(., "n_unordered")` counts NA-order segments. When
+`groups` is given, `attr(., "groups")` holds the resolved list of order
+sets, `"rest"` included.
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-res <- branch_order_map(skel, mask, order = "branch_order", unit = "cm", dpi = 300)
-order_metrics(res)                       # per-order table
-order_metrics(res, focal = "thinnest")   # thinnest order class vs all others
-order_metrics(res, focal = c(1))         # order 1 vs the rest
+res <- branch_order_map(skel, mask, order = "order_from_base", unit = "cm", dpi = 300)
+order_metrics(res)                                   # per-order table
+order_metrics(res, groups = list(fine = 1:2))        # orders 1-2 vs "rest"
+order_metrics(res, groups = list(fine = 1:2, coarse = 3:4))
+order_metrics(res, groups = "thinnest")              # thinnest class vs "rest"
 } # }
 ```

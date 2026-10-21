@@ -96,8 +96,8 @@ whenever you know it.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>topology</code>, <code>traits</code>, <code>qc</code> and
-  <code>note</code>. An empty or zero-row input returns the same structure with
-  empty <code>traits</code> rather than an error.</p>
+<code>note</code>. An empty or zero-row input returns the same structure with
+empty <code>traits</code> rather than an error.</p>
     </div>
     <div class="section level2">
     <h2 id="why-the-topology-has-to-be-declared">Why the topology has to be declared<a class="anchor" aria-label="anchor" href="#why-the-topology-has-to-be-declared"></a></h2>
@@ -107,23 +107,23 @@ whenever you know it.</p></dd>
 the data are real.</p>
 <dl><dt><code>"reticulate"</code></dt>
 <dd><p>Loops are biology: fungal mycelium with
-    anastomoses, leaf venation, the endoplasmic reticulum, vasculature. The
-    cyclomatic number and the alpha coefficient measure redundancy, so they
-    are returned as traits.</p></dd>
+anastomoses, leaf venation, the endoplasmic reticulum, vasculature. The
+cyclomatic number and the alpha coefficient measure redundancy, so they
+are returned as traits.</p></dd>
 
-  <dt><code>"tree"</code></dt>
+<dt><code>"tree"</code></dt>
 <dd><p>Loops are impossible: a root system, a bronchial tree,
-    a river network. Then \(E = V - G\) holds by definition, so the
-    cyclomatic number is identically zero and the alpha coefficient carries
-    no information. They are returned under <code>$qc</code>, where a value above
-    zero means the input is not actually a forest.</p></dd>
+a river network. Then \(E = V - G\) holds by definition, so the
+cyclomatic number is identically zero and the alpha coefficient carries
+no information. They are returned under <code>$qc</code>, where a value above
+zero means the input is not actually a forest.</p></dd>
 
-  <dt><code>"projected_tree"</code></dt>
+<dt><code>"projected_tree"</code></dt>
 <dd><p>A tree photographed in two dimensions, which
-    is what a root scan is. Every loop is two roots crossing in projection,
-    so the cyclomatic number counts unresolved overlaps and belongs under
-    <code>$qc</code>. <code>artefact_rate</code> normalizes that count by network length
-    so it is comparable between images.</p></dd>
+is what a root scan is. Every loop is two roots crossing in projection,
+so the cyclomatic number counts unresolved overlaps and belongs under
+<code>$qc</code>. <code>artefact_rate</code> normalizes that count by network length
+so it is comparable between images.</p></dd>
 
 
 </dl><p>Reporting a meshedness of 0.002 as a biological result, when it is a count of

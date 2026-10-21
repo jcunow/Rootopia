@@ -98,7 +98,7 @@ The `centroids` table has one row per material class and these columns:
   illuminant): `L` is lightness (0 = black, 100 = white), `A` is the
   green-red axis (negative = green, positive = red), and `B` is the
   blue-yellow axis (negative = blue, positive = yellow). These are the
-  \*mean\* LAB values of the representative pixels for that class.
+  *mean* LAB values of the representative pixels for that class.
 
 - `MAX_DIST`:
 

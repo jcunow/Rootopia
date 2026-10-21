@@ -101,9 +101,13 @@ root_turnover(
 
 ## Value
 
-Depends on the method: - `"tc"`: data.frame with standing roots,
-production, and new-root percentages. - `"dpc"`: data.frame of pixel
-sums and ratios, or (if `im_return = TRUE`) a list of SpatRaster layers.
+Depends on the method:
+
+- `"tc"`: data.frame with standing roots, production, and new-root
+  percentages.
+
+- `"dpc"`: data.frame of pixel sums and ratios, or (if
+  `im_return = TRUE`) a list of SpatRaster layers.
 
 ## See also
 

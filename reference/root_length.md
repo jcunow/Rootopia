@@ -63,17 +63,18 @@ Root length in pixels or converted units
 Let Nd be the number of diagonal pixel connections and No the number of
 orthogonal pixel connections in the skeleton.
 
-Freeman methods treat the skeleton as a discrete chain-code path: -
-freeman_basic: L = sqrt(2) \* Nd + No
+Freeman methods treat the skeleton as a discrete chain-code path:
 
-\- freeman_corrected: L = 0.948 \* (sqrt(2) \* Nd + No)
+- freeman_basic: L = sqrt(2) \* Nd + No
+
+- freeman_corrected: L = 0.948 \* (sqrt(2) \* Nd + No)
 
 Kimura methods treat the skeleton as a discretized representation of an
 underlying continuous curve and reduce orientation bias:
 
-\- kimura1: L = sqrt(Nd^2 + (Nd + No)^2)
+- kimura1: L = sqrt(Nd^2 + (Nd + No)^2)
 
-\- kimura2 (default): L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2
+- kimura2 (default): L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2
 
 The Kimura2 estimator is generally preferred due to improved stability
 across object orientations and curvature distributions.

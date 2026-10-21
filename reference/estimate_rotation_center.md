@@ -46,7 +46,7 @@ estimate_rotation_center(
 - select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`NULL\`.
+  image. Default is `NULL`.
 
 ## Value
 
@@ -55,6 +55,8 @@ numeric Position of the center of extruding tape
 ## Examples
 
 ``` r
-img = seg_Oulanka2023_Session01_T067
-r0 = estimate_rotation_center(img)
+if (requireNamespace("RStoolbox", quietly = TRUE)) {
+  img = seg_Oulanka2023_Session01_T067
+  r0 = estimate_rotation_center(img)
+}
 ```

@@ -13,13 +13,13 @@ fill_holes(img, max_size = NULL)
 
 - img:
 
-  A \`cimg\` binary image (values 0 and 1).
+  A `cimg` binary image (values 0 and 1).
 
 - max_size:
 
-  Maximum hole size in pixels to fill. If \`NULL\` (default), all holes
+  Maximum hole size in pixels to fill. If `NULL` (default), all holes
   are filled regardless of size.
 
 ## Value
 
-A \`cimg\` with holes filled.
+A `cimg` with holes filled.

@@ -111,9 +111,9 @@ all arguments must be identical.</p></dd>
 <dt id="arg-rev-along">rev.along<a class="anchor" aria-label="anchor" href="#arg-rev-along"></a></dt>
 <dd><p>(optional)
 Alternate way to specify the dimension along which to bind the arrays:
- <code>along = N + 1 - rev.along</code>.  This is provided mainly to allow easy
+<code>along = N + 1 - rev.along</code>.  This is provided mainly to allow easy
 specification of <code>along = N + 1</code> (by supplying
-                                      <code>rev.along=0</code>).  If both <code>along</code> and <code>rev.along</code> are
+<code>rev.along=0</code>).  If both <code>along</code> and <code>rev.along</code> are
 supplied, the supplied value of <code>along</code> is ignored.</p></dd>
 
 
@@ -139,7 +139,7 @@ preserve).  Otherwise, abind will convert objects to class array.  Thus,
 to guarantee that an array object is returned, supply the argument
 <code>force.array=TRUE</code>.  Note that the use of rbind or cbind introduces
 some subtle changes in the way default dimension names are constructed:
- see the examples below.</p></dd>
+see the examples below.</p></dd>
 
 
 <dt id="arg-make-names">make.names<a class="anchor" aria-label="anchor" href="#arg-make-names"></a></dt>
@@ -148,7 +148,7 @@ If <code>TRUE</code>, the last resort for dimnames for the along
 dimension will be the deparsed versions of anonymous
 arguments.  This can result in cumbersome names when
 arguments are expressions.</p>
-<p>&lt;p&gt;The default is <code>FALSE</code>.</p></dd>
+<p>The default is <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-use-anon-names">use.anon.names<a class="anchor" aria-label="anchor" href="#arg-use-anon-names"></a></dt>
@@ -162,8 +162,8 @@ is a deprecated synonym for <code>make.names</code>.</p></dd>
 When dimension names are present on more than one
 argument, should dimension names for the result be take from
 the first available (the default is to take them from the
-                    last available, which is the same behavior as
-                    <code>rbind</code> and <code>cbind</code>.)</p></dd>
+last available, which is the same behavior as
+<code>rbind</code> and <code>cbind</code>.)</p></dd>
 
 
 <dt id="arg-hier-names">hier.names<a class="anchor" aria-label="anchor" href="#arg-hier-names"></a></dt>
@@ -210,13 +210,13 @@ arguments.  Names for each dimension are searched for in the
 following order: new.names, argument name, dimnames (or
 names) attribute of last argument, dimnames (or names)
 attribute of second last argument, etc.  (Supplying the
-                                         argument <code>use.first.dimnames=TRUE</code> changes this to
-                                         cause <code>abind</code> to use dimnames or names from the
-                                         first argument first.  The default behavior is the same as
-                                         for <code>rbind</code> and <code>cbind</code>: use dimnames
-                                         from later arguments.)  If some names are supplied for the
+argument <code>use.first.dimnames=TRUE</code> changes this to
+cause <code>abind</code> to use dimnames or names from the
+first argument first.  The default behavior is the same as
+for <code>rbind</code> and <code>cbind</code>: use dimnames
+from later arguments.)  If some names are supplied for the
 along dimension (either as argument names or dimnames in
-                arguments), names are constructed for anonymous arguments
+arguments), names are constructed for anonymous arguments
 unless <code>use.anon.names=FALSE</code>.</p>
 <p>sourced from the 'abind' package:  https://doi.org/10.32614/CRAN.package.abind under MIT-license</p>
     </div>

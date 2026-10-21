@@ -2,8 +2,8 @@
 
 Core engine: crops to the foreground, computes the distance transform,
 traces segments with junction contraction, resolves crossings,
-optionally prunes weak tips, and assigns all three order schemes.
-Returns a per-segment edge table in *pixels*; use
+optionally prunes weak tips, and assigns all four order schemes. Returns
+a per-segment edge table in *pixels*; use
 [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 for a unit-aware wrapper.
 
@@ -23,7 +23,8 @@ root_graph_pipeline(
   splice_passthrough = TRUE,
   crossing_straight = -0.5,
   crossing_diam_ratio = 0,
-  color_by = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  color_by = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   diam_weight = 0.5,
   prune_min_length = 0,
   prune_min_diameter = 0,
@@ -120,12 +121,13 @@ pixels, carrying `attr`s `crop_offset`, `dims`, and (if requested)
 
 ## Details
 
-Three order columns are produced (see
+Four order columns are produced (see
 [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
-for the full rules): `tip_order` (per-segment leaf-peeling),
-`root_order` (per-root max tip_order), `branch_order` (per-root
-centrifugal generation from the thickest root). `color_by` selects which
-one the overlay uses.
+for the full rules): `order_from_tip` and `strahler_order` per segment,
+`root_max_order_from_tip` and `order_from_base` per continuous root.
+`color_by` selects which one the overlay uses. The spellings used up to
+Rootopia 1.1.0 – `tip_order`, `root_order`, `branch_order` – are kept as
+copies of those columns and are still accepted by `color_by`.
 
 ## See also
 

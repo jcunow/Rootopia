@@ -46,7 +46,7 @@ tail_weighted_wasserstein_distance(
 
 - baseline.weight:
 
-  Numeric in \[0,1\]. Minimum weight.
+  Numeric in `[0,1]`. Minimum weight.
 
 - inverse:
 

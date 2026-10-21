@@ -42,13 +42,22 @@ turnover_tc(
 - select_layer:
 
   Integer specifying the layer to use in both timesteps if `img` is a
-  multi-layer \`SpatRaster\`. Defaults to 2.
+  multi-layer `SpatRaster`. Defaults to 2.
 
 ## Value
 
-data.frame containing: - standingroot_t1: Standing roots at first
-timepoint - standingroot_t2: Standing roots at second timepoint -
-production: Root production between timepoints - newroot - newroot
+data.frame containing:
+
+- standingroot_t1: Standing roots at first timepoint
+
+- standingroot_t2: Standing roots at second timepoint
+
+- production: Root production between timepoints
+
+- newroot%per_t1: Percentage of new roots compared to starting
+  conditions
+
+- newroot%per_t2: Percentage of new roots at second timepoint
 
 ## Examples
 

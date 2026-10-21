@@ -64,7 +64,7 @@ lengths and diameters are in the unit of <code>et</code> (see
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">summarize_orders</span><span class="op">(</span><span class="va">et</span>, order_col <span class="op">=</span> <span class="st">"branch_order"</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">summarize_orders</span><span class="op">(</span><span class="va">et</span>, order_col <span class="op">=</span> <span class="st">"order_from_base"</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -85,30 +85,40 @@ lengths and diameters are in the unit of <code>et</code> (see
     <p>A data.frame with one row per order:</p><dl><dt><code>order</code></dt>
 <dd><p>The order class value.</p></dd>
 
-    <dt><code>n_segments</code></dt>
+<dt><code>n_segments</code></dt>
 <dd><p>Number of graph segments (edges between nodes).</p></dd>
 
-    <dt><code>n_tips</code></dt>
+<dt><code>n_tips</code></dt>
 <dd><p>Number of root tips/apices (degree-1 endpoints).</p></dd>
 
-    <dt><code>n_branch_points</code></dt>
+<dt><code>n_branch_points</code></dt>
 <dd><p>Number of branching junctions on roots of this
-      order (= number of laterals departing, for ordinary 3-way forks).</p></dd>
+order (= number of laterals departing, for ordinary 3-way forks).</p></dd>
 
-    <dt><code>total_length</code></dt>
+<dt><code>total_length</code></dt>
 <dd><p>Summed root length.</p></dd>
 
-    <dt><code>mean_segment_length</code></dt>
+<dt><code>cumulative_length</code></dt>
+<dd><p>Running total of <code>total_length</code> from
+the first row down to this one. Rows ascend in <code>order</code>, and an order
+with no segments has no row, so the running total steps from one present
+order to the next rather than inserting a zero.</p></dd>
+
+<dt><code>cumulative_fraction</code></dt>
+<dd><p><code>cumulative_length</code> over the total
+ordered length, so the last row is 1.</p></dd>
+
+<dt><code>mean_segment_length</code></dt>
 <dd><p>Mean length per segment.</p></dd>
 
-    <dt><code>branching_frequency</code></dt>
+<dt><code>branching_frequency</code></dt>
 <dd><p>Branch points per unit length
-      (<code>n_branch_points / total_length</code>).</p></dd>
+(<code>n_branch_points / total_length</code>).</p></dd>
 
-    <dt><code>mean_diameter</code></dt>
+<dt><code>mean_diameter</code></dt>
 <dd><p>Length-weighted mean diameter.</p></dd>
 
-    <dt><code>median_diameter</code></dt>
+<dt><code>median_diameter</code></dt>
 <dd><p>Median of segment median diameters.</p></dd>
 
 

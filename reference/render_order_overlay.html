@@ -67,6 +67,7 @@ NA are drawn in red so failures stay visible."></head><body>
 <span>  <span class="va">dims</span>,</span>
 <span>  <span class="va">file</span>,</span>
 <span>  mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  crop_offset <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  max_side <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  continuous <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  value_label <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -97,7 +98,17 @@ per-segment quantity such as those added by <code><a href="root_transport.html">
 
 
 <dt id="arg-mask">mask<a class="anchor" aria-label="anchor" href="#arg-mask"></a></dt>
-<dd><p>Optional 0/1 mask drawn as a gray background.</p></dd>
+<dd><p>Optional 0/1 mask drawn as a gray background. The pipeline
+traces in a frame cropped to the foreground, so a full-size mask is
+usually larger than <code>dims</code>; pass <code>crop_offset</code> as well and it
+is cut to match. Without one, a mismatched mask is dropped with a warning
+rather than drawn out of register.</p></dd>
+
+
+<dt id="arg-crop-offset">crop_offset<a class="anchor" aria-label="anchor" href="#arg-crop-offset"></a></dt>
+<dd><p>Optional length-2 (row, column) offset of the traced
+frame within <code>mask</code>, as carried by
+<code>attr(et, "crop_offset")</code>.</p></dd>
 
 
 <dt id="arg-max-side">max_side<a class="anchor" aria-label="anchor" href="#arg-max-side"></a></dt>

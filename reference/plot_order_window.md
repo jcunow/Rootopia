@@ -16,7 +16,7 @@ plot_order_window(
   c_range,
   scale = 3,
   file = "window.png",
-  order_col = "root_order"
+  order_col = "root_max_order_from_tip"
 )
 ```
 
@@ -46,7 +46,8 @@ plot_order_window(
 
 - order_col:
 
-  Which order column to color by (default `"root_order"`).
+  Which order column to color by. The 1.1.0 spellings are accepted and
+  resolved to the current ones.
 
 ## Value
 
@@ -56,7 +57,7 @@ Invisibly, `file`.
 
 ``` r
 if (FALSE) { # \dontrun{
-res <- branch_order_map(skel, mask, order = "root_order", unit = "px")
+res <- branch_order_map(skel, mask, order = "root_max_order_from_tip", unit = "px")
 plot_order_window(res$edges, skel, r_range = c(1, 500), c_range = c(1, 500),
                   file = tempfile(fileext = ".png"))
 } # }

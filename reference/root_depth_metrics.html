@@ -123,7 +123,8 @@ is dropped and listed in a warning at the end.</p>
 <span>  calc_color_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_angles <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  order_scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"branch_order"</span>, <span class="st">"root_order"</span>, <span class="st">"tip_order"</span><span class="op">)</span>,</span>
+<span>  order_scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"order_from_base"</span>, <span class="st">"root_max_order_from_tip"</span>,</span>
+<span>    <span class="st">"order_from_tip"</span><span class="op">)</span>,</span>
 <span>  diam_weight <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  prune_spur_length_cm <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  prune_spur_iter <span class="op">=</span> <span class="fl">1L</span>,</span>
@@ -172,7 +173,8 @@ is dropped and listed in a warning at the end.</p>
 <span>  calc_color_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_angles <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  calc_root_order_metrics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  order_scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"branch_order"</span>, <span class="st">"root_order"</span>, <span class="st">"tip_order"</span><span class="op">)</span>,</span>
+<span>  order_scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"order_from_base"</span>, <span class="st">"root_max_order_from_tip"</span>,</span>
+<span>    <span class="st">"order_from_tip"</span><span class="op">)</span>,</span>
 <span>  diam_weight <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  prune_spur_length_cm <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  prune_spur_iter <span class="op">=</span> <span class="fl">1L</span>,</span>
@@ -232,7 +234,8 @@ in <strong>degrees measured from horizontal</strong> – <code>90</code> is a ve
 tube, <code>45</code> a tube pushed in at 45 degrees.  This is the convention
 <code><a href="create_depthmap.html">create_depthmap()</a></code> uses for <code>tilt</code>, and it is the opposite of
 the "degrees from vertical" wording used by some minirhizotron software,
-so convert before passing it in.  Values must be strictly between 0 and 90.
+so convert before passing it in.  Values must be greater than 0 and at
+most 90; <code>90</code> means a vertical tube and is allowed.
 Supplying this argument switches the run to minirhizotron geometry (see
 <strong>Geometry</strong>).  Default <code>NULL</code> (flatbed).</p></dd>
 
@@ -245,16 +248,16 @@ Default <code>0</code>.</p></dd>
 
 <dt id="arg-tube-names">tube_names<a class="anchor" aria-label="anchor" href="#arg-tube-names"></a></dt>
 <dd><p>Character or <code>NULL</code>. Sample/tube identifiers added as
-  the <code>Tube</code> column.  If <code>NULL</code>, names are derived from characters
-  3-5 from the right of the segmented file name, prefixed with <code>"T"</code>
-  (e.g. <code>"T042"</code>).  Adjust if your naming convention differs.</p>
+the <code>Tube</code> column.  If <code>NULL</code>, names are derived from characters
+3-5 from the right of the segmented file name, prefixed with <code>"T"</code>
+(e.g. <code>"T042"</code>).  Adjust if your naming convention differs.</p>
 <p>Names must be <strong>unique</strong>, one per image, and the run stops if they are
-  not.  They key the tube-level joins, where two images sharing a name are
-  read as one tube and their rows are multiplied out.  The derived default
-  collides whenever the files share a suffix – a directory of
-  <code>"CLAS1A10-15fine.tif"</code> names every image <code>"Tfin"</code> – so flatbed
-  scans generally need this argument.
-  Default <code>NULL</code>.</p></dd>
+not.  They key the tube-level joins, where two images sharing a name are
+read as one tube and their rows are multiplied out.  The derived default
+collides whenever the files share a suffix – a directory of
+<code>"CLAS1A10-15fine.tif"</code> names every image <code>"Tfin"</code> – so flatbed
+scans generally need this argument.
+Default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-session">session<a class="anchor" aria-label="anchor" href="#arg-session"></a></dt>
@@ -459,7 +462,7 @@ Uses <code><a href="deep_drive.html">deep_drive()</a></code>.  Default <code>FAL
 graph via <code><a href="branch_order_map.html">branch_order_map()</a></code> and summarize it both per depth bin
 and per tube.  Adds <code>mean.&lt;scheme&gt;</code> and <code>max.&lt;scheme&gt;</code> for the
 scheme named by <code>order_scheme</code> (e.g. <code>mean.strahler_order</code>),
-plus <code>mean.root_order</code> and <code>lateral_root_fraction</code> per depth
+plus <code>mean.root_max_order_from_tip</code> and <code>lateral_root_fraction</code> per depth
 bin, tube-level <code>main_root.*</code> / <code>lateral_roots.*</code> columns
 (length, diameter, branching frequency, etc.), and <code>n_root_orders</code>
 (the highest order found).  Requires a skeleton.  <strong>Slow</strong>:
@@ -469,23 +472,27 @@ builds one segment graph per image.  Default <code>FALSE</code>.</p></dd>
 <dt id="arg-order-scheme">order_scheme<a class="anchor" aria-label="anchor" href="#arg-order-scheme"></a></dt>
 <dd><p>Character. Which ordering labels the per-bin order
 columns and the main-root split.  <code>"strahler_order"</code> (default) is the
-convention of the fine-root literature (Pregitzer et al. 2002; Fitter):
-every distal unbranched root is order 1, and the order rises only where two
-roots of equal order meet.  <code>"tip_order"</code> is the same leaf-peeling
-with the order raised at <em>every</em> junction, so an axis carrying ten
-laterals reaches order 11.  <code>"branch_order"</code> counts the other way –
-the thickest root of each component is 1 and its laterals 2 – and
-<code>"root_order"</code> gives each continuous root the maximum
-<code>tip_order</code> along it.  All four are computed regardless; this only
-picks which one is reported.  See <code><a href="branch_order_map.html">branch_order_map</a></code>.</p></dd>
+morphometric, or stream-order, convention of the fine-root literature
+(Pregitzer et al. 2002): every distal unbranched root is order 1, and the
+order rises only where two roots of equal order meet.
+<code>"order_from_tip"</code> is the same leaf-peeling with the order raised at
+<em>every</em> junction, so an axis carrying ten laterals reaches order 11.
+<code>"order_from_base"</code> counts the other way – the thickest root of each
+component is 1 and its laterals 2 – and <code>"root_max_order_from_tip"</code>
+gives each continuous root the largest <code>order_from_tip</code> along it.
+All four are computed regardless; this only picks which one is reported.
+The spellings used up to Rootopia 1.1.0 (<code>"tip_order"</code>,
+<code>"root_order"</code>, <code>"branch_order"</code>) are accepted and resolved to
+these.  See <code><a href="branch_order_map.html">branch_order_map</a></code>.</p></dd>
 
 
 <dt id="arg-diam-weight">diam_weight<a class="anchor" aria-label="anchor" href="#arg-diam-weight"></a></dt>
 <dd><p>Numeric &gt;= 0. At a junction, which two arms are read as
 the same root continuing: <code>straightness + diam_weight *
-diameter_similarity</code>.  <code>0</code> uses the angle alone, larger values let
-thickness decide.  Affects <code>root_order</code>, <code>branch_order</code> and the
-segment grouping, not <code>strahler_order</code> or <code>tip_order</code>.
+  diameter_similarity</code>.  <code>0</code> uses the angle alone, larger values let
+thickness decide.  Affects <code>root_max_order_from_tip</code>,
+<code>order_from_base</code> and the segment grouping, not
+<code>strahler_order</code> or <code>order_from_tip</code>.
 Default <code>0.5</code>.</p></dd>
 
 
@@ -564,10 +571,10 @@ predicted clock-time of completion.  Default <code>TRUE</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data frame with one row per tube x depth-bin combination.  Always
-  present columns: <code>Tube</code>, <code>Session</code>, <code>Plot</code>, <code>depth</code>.
-  All other columns depend on which metric groups are enabled; disabled or
-  failed metrics appear as <code>NA</code> rather than being absent.  Returns
-  <code>NULL</code> invisibly if every image failed.</p>
+present columns: <code>Tube</code>, <code>Session</code>, <code>Plot</code>, <code>depth</code>.
+All other columns depend on which metric groups are enabled; disabled or
+failed metrics appear as <code>NA</code> rather than being absent.  Returns
+<code>NULL</code> invisibly if every image failed.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -610,17 +617,17 @@ directories if necessary.</p>
 <dl><dt><code>path_seg</code></dt>
 <dd><p>Always required.</p></dd>
 
-  <dt><code>path_skl</code></dt>
+<dt><code>path_skl</code></dt>
 <dd><p>Optional. Used by <code>calc_root_length</code>,
-    <code>calc_diameter_stats</code>, <code>calc_diameter_quantiles</code>,
-    <code>calc_root_angles</code>, and <code>calc_root_order_metrics</code> when
-    supplied. If <code>path_skl</code> is <code>NULL</code> or a skeleton file is
-    missing for an image, the skeleton is computed internally from the
-    segmented image via <code><a href="skeletonize_image.html">skeletonize_image()</a></code>.</p></dd>
+<code>calc_diameter_stats</code>, <code>calc_diameter_quantiles</code>,
+<code>calc_root_angles</code>, and <code>calc_root_order_metrics</code> when
+supplied. If <code>path_skl</code> is <code>NULL</code> or a skeleton file is
+missing for an image, the skeleton is computed internally from the
+segmented image via <code><a href="skeletonize_image.html">skeletonize_image()</a></code>.</p></dd>
 
-  <dt><code>path_rgb</code></dt>
+<dt><code>path_rgb</code></dt>
 <dd><p>Required when <code>calc_color_metrics</code> is
-    <code>TRUE</code>.</p></dd>
+<code>TRUE</code>.</p></dd>
 
 
 </dl></div>
@@ -638,21 +645,21 @@ images) or a vector of length equal to the number of images.</p>
 <p>There is no geometry switch.  The geometry follows from whether you supply
 tube parameters:</p><dl><dt>Flatbed (default)</dt>
 <dd><p>Neither <code>insertion_angles</code> nor
-    <code>tube_diameter_cm</code> is supplied.  The scan is treated as a flat
-    surface imaged head-on: no sinusoidal curvature correction
-    (<code>sinoid = FALSE</code>), no foreshortening of the depth axis (one pixel
-    along the image width is one pixel of depth), and no
-    <code><a href="rotation_censor.html">rotation_censor()</a></code> crop, since there is no tube interior to crop
-    to.</p></dd>
+<code>tube_diameter_cm</code> is supplied.  The scan is treated as a flat
+surface imaged head-on: no sinusoidal curvature correction
+(<code>sinoid = FALSE</code>), no foreshortening of the depth axis (one pixel
+along the image width is one pixel of depth), and no
+<code><a href="rotation_censor.html">rotation_censor()</a></code> crop, since there is no tube interior to crop
+to.</p></dd>
 
-  <dt>Minirhizotron</dt>
+<dt>Minirhizotron</dt>
 <dd><p>Either argument is supplied.  The sinusoidal
-    curvature correction is switched on, the depth axis is foreshortened by
-    <code>sin(insertion_angles)</code>, and each image is cropped to
-    <code>rotation_fixed_width</code> rows about its center.  An argument you
-    leave out falls back to a neutral default: <code>tube_diameter_cm = 7</code>
-    and <code>insertion_angles = 90</code> (vertical tube), both announced in the
-    run log.</p></dd>
+curvature correction is switched on, the depth axis is foreshortened by
+<code>sin(insertion_angles)</code>, and each image is cropped to
+<code>rotation_fixed_width</code> rows about its center.  An argument you
+leave out falls back to a neutral default: <code>tube_diameter_cm = 7</code>
+and <code>insertion_angles = 90</code> (vertical tube), both announced in the
+run log.</p></dd>
 
 
 </dl><p>In both cases depth runs along the image <strong>width</strong> (left to right),
@@ -692,18 +699,18 @@ to a flatbed scan, with no warning when you tune one that is inert.  The
 <em>Batch Processing</em> vignette has the full tier list for both geometries;
 in short:</p><dl><dt>Flatbed</dt>
 <dd><p>Set <code>dpi</code>, <code>tube_names</code> and
-    <code>depth_interval_cm = NULL</code>, plus <code>binarize_threshold</code> and
-    <code>dark_roots</code> for unsegmented scans.  <code>insertion_angles</code>,
-    <code>tube_diameter_cm</code>, <code>tube_center_offset</code>,
-    <code>rotation_fixed_width</code>, <code>soil_starts</code> and <code>bin_round</code>
-    do nothing here.</p></dd>
+<code>depth_interval_cm = NULL</code>, plus <code>binarize_threshold</code> and
+<code>dark_roots</code> for unsegmented scans.  <code>insertion_angles</code>,
+<code>tube_diameter_cm</code>, <code>tube_center_offset</code>,
+<code>rotation_fixed_width</code>, <code>soil_starts</code> and <code>bin_round</code>
+do nothing here.</p></dd>
 
-  <dt>Minirhizotron</dt>
+<dt>Minirhizotron</dt>
 <dd><p>Set <code>dpi</code>, <code>insertion_angles</code> (degrees from
-    <em>horizontal</em>), <code>tube_diameter_cm</code>, <code>soil_starts</code>,
-    <code>tube_names</code>, <code>depth_interval_cm</code> and <code>bin_round</code>, and
-    look at <code>rotation_fixed_width</code> – how much of the tube's curved edge
-    to trim is a property of your scanner that no default can guess.</p></dd>
+<em>horizontal</em>), <code>tube_diameter_cm</code>, <code>soil_starts</code>,
+<code>tube_names</code>, <code>depth_interval_cm</code> and <code>bin_round</code>, and
+look at <code>rotation_fixed_width</code> – how much of the tube's curved edge
+to trim is a property of your scanner that no default can guess.</p></dd>
 
 
 </dl><p>The per-image arguments – <code>insertion_angles</code>, <code>soil_starts</code>,

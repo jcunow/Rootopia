@@ -40,7 +40,10 @@ root_transport(et, eta = 1, min_radius = NULL)
 
 `et` with the six columns above added. Segments on a cycle get `NA` for
 the downstream columns, since they have no subtree, and a warning names
-how many there were.
+how many there were. A component with no free end at all – a pure ring,
+which a root system does not produce – has no proximal end to root at,
+so an arbitrary node is used and its `path_*` values are measured from a
+meaningless start.
 
 ## What the columns mean
 

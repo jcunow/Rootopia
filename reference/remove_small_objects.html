@@ -69,25 +69,25 @@ image border.</p>
 
 
 <dl><dt id="arg-img">img<a class="anchor" aria-label="anchor" href="#arg-img"></a></dt>
-<dd><p>A `cimg` binary image (values 0 and 1).</p></dd>
+<dd><p>A <code>cimg</code> binary image (values 0 and 1).</p></dd>
 
 
 <dt id="arg-max-size">max_size<a class="anchor" aria-label="anchor" href="#arg-max-size"></a></dt>
-<dd><p>Maximum artifact size in pixels to remove.  If `NULL`,
+<dd><p>Maximum artifact size in pixels to remove.  If <code>NULL</code>,
 all candidate white regions are removed.</p></dd>
 
 
 <dt id="arg-protect-border">protect_border<a class="anchor" aria-label="anchor" href="#arg-protect-border"></a></dt>
-<dd><p>Logical.  If `TRUE`, white regions touching the image
+<dd><p>Logical.  If <code>TRUE</code>, white regions touching the image
 border are never removed (they are assumed to be roots leaving the frame).
-If `FALSE` (default), border-touching regions are subject to the same
-`max_size` test as any other region, so edge specks are removed too.
+If <code>FALSE</code> (default), border-touching regions are subject to the same
+<code>max_size</code> test as any other region, so edge specks are removed too.
 Border location confers no protection on its own.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A `cimg` with artifacts removed.</p>
+    <p>A <code>cimg</code> with artifacts removed.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -86,23 +86,21 @@ lookup-table encoding of 3x3 neighborhood configurations.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The algorithm operates as follows:</p>
-<p>1. Raster values are extracted once into a numeric vector.
-2. Each iteration reconstructs a matrix representation of the image.
-3. A zero-padded border is added around the image.
-4. For each pixel equal to 1:
-   - The 3x3 neighborhood is extracted
-   - A weighted sum (mask encoding) produces a unique neighborhood code
-5. The code is used as an index into a 256-entry lookup table:
-   - LUT value 1 or 3 -&gt; pixel removed in first sub-step
-   - LUT value 2 or 3 -&gt; pixel removed in second sub-step
-6. Pixels are updated in-place in the vector representation
-7. Iteration stops when no pixels are removed or max_iter is reached</p>
-<p>Important properties of implementation:
-- Raster is only written back once at the end
-- All intermediate steps operate on in-memory matrix/vector data
-- Neighborhood encoding is performed via explicit loops over image pixels</p>
-    </div>
+    <p>The algorithm operates as follows:</p><ol><li><p>Raster values are extracted once into a numeric vector.</p></li>
+<li><p>Each iteration reconstructs a matrix representation of the image.</p></li>
+<li><p>A zero-padded border is added around the image.</p></li>
+<li><p>For each pixel equal to 1:</p><ul><li><p>The 3x3 neighborhood is extracted</p></li>
+<li><p>A weighted sum (mask encoding) produces a unique neighborhood code</p></li>
+</ul></li>
+<li><p>The code is used as an index into a 256-entry lookup table:</p><ul><li><p>LUT value 1 or 3 -&gt; pixel removed in first sub-step</p></li>
+<li><p>LUT value 2 or 3 -&gt; pixel removed in second sub-step</p></li>
+</ul></li>
+<li><p>Pixels are updated in-place in the vector representation</p></li>
+<li><p>Iteration stops when no pixels are removed or max_iter is reached</p></li>
+</ol><p>Important properties of implementation:</p><ul><li><p>Raster is only written back once at the end</p></li>
+<li><p>All intermediate steps operate on in-memory matrix/vector data</p></li>
+<li><p>Neighborhood encoding is performed via explicit loops over image pixels</p></li>
+</ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

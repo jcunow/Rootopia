@@ -1,12 +1,16 @@
 # Clean a binary root image
 
 Performs three sequential cleaning operations on a binary segmented
-image: 1. \*\*Hole filling\*\* – fills black regions enclosed by white
-(segmentation gaps inside roots). 2. \*\*Speck removal\*\* – deletes
-isolated foreground blobs not connected to the image border
-(false-positive root detections). 3. \*\*Edge smoothing\*\* \*(optional,
-off by default)\* – applies morphological closing to smooth jagged root
-edges.
+image:
+
+1.  **Hole filling** – fills black regions enclosed by white
+    (segmentation gaps inside roots).
+
+2.  **Speck removal** – deletes isolated foreground blobs not connected
+    to the image border (false-positive root detections).
+
+3.  **Edge smoothing** *(optional, off by default)* – applies
+    morphological closing to smooth jagged root edges.
 
 ## Usage
 
@@ -34,122 +38,124 @@ clean_image(
 
 - img:
 
-  A \`cimg\` object, \`SpatRaster\`, matrix, or file path (binary mask).
+  A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).
 
 - fill_holes_upto:
 
   Largest enclosed hole that gets filled; anything bigger is left alone.
-  \`NULL\` (default) fills every enclosed hole. Units are set by
-  \`size_unit\`. See \*\*Choosing thresholds\*\* above.
+  `NULL` (default) fills every enclosed hole. Units are set by
+  `size_unit`. See **Choosing thresholds** above.
 
 - drop_objects_upto:
 
   Largest disconnected foreground blob that gets deleted; anything
-  bigger is kept. \`NULL\` (default) deletes every candidate blob. Units
-  are set by \`size_unit\`.
+  bigger is kept. `NULL` (default) deletes every candidate blob. Units
+  are set by `size_unit`.
 
 - size_unit:
 
-  Unit of the two thresholds above: \`"px"\` (default, pixel count) or
-  \`"mm2"\` (square millimetres, which requires \`dpi\`).
+  Unit of the two thresholds above: `"px"` (default, pixel count) or
+  `"mm2"` (square millimetres, which requires `dpi`).
 
 - dpi:
 
-  Scan resolution, required when \`size_unit = "mm2"\` and ignored
+  Scan resolution, required when `size_unit = "mm2"` and ignored
   otherwise.
 
 - protect_border:
 
-  Logical. If \`TRUE\`, white regions touching the image border are kept
-  regardless of size (roots leaving the frame). If \`FALSE\` (default),
-  border-touching specks are removed by the same \`drop_objects_upto\`
+  Logical. If `TRUE`, white regions touching the image border are kept
+  regardless of size (roots leaving the frame). If `FALSE` (default),
+  border-touching specks are removed by the same `drop_objects_upto`
   test as anything else – being at the edge does not protect an
   artifact.
 
 - edge_smooth:
 
   Logical. Apply morphological closing after hole/artifact cleaning.
-  Default \`FALSE\`.
+  Default `FALSE`.
 
 - kernel_shape:
 
-  Structuring element shape for edge smoothing: \`"disk"\` (default),
-  \`"square"\`, or \`"diamond"\`.
+  Structuring element shape for edge smoothing: `"disk"` (default),
+  `"square"`, or `"diamond"`.
 
 - kernel_size:
 
-  Structuring element size (odd integer). Default \`3\`.
+  Structuring element size (odd integer). Default `3`.
 
 - iterations:
 
-  Number of closing iterations for edge smoothing. Default \`1\`.
+  Number of closing iterations for edge smoothing. Default `1`.
 
 - select_layer:
 
-  Integer or \`NULL\`. Which layer to use for multi-layer inputs.
+  Integer or `NULL`. Which layer to use for multi-layer inputs.
 
 - output_format:
 
-  Character. Format of the returned object. One of \`"spatrast"\`
-  (default), \`"cimg"\`, or \`"matrix"\`. Using \`"spatrast"\` means the
-  result can be passed directly to \`terra::plot()\`,
-  \`skeletonize_image()\`, \`root_length()\`, etc. without any further
-  conversion.
+  Character. Format of the returned object. One of `"spatrast"`
+  (default), `"cimg"`, or `"matrix"`. Using `"spatrast"` means the
+  result can be passed directly to
+  [`terra::plot()`](https://rspatial.github.io/terra/reference/plot.html),
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md),
+  [`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md),
+  etc. without any further conversion.
 
 - report:
 
-  Logical. If \`TRUE\`, also calls
+  Logical. If `TRUE`, also calls
   [`report_image_components`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
-  on the \*original\* (uncleaned) image before cleaning. When
-  \`output_format = "spatrast"\` (default), the cleaned raster is
-  returned directly even when \`report = TRUE\`; the report is printed
-  as a side effect. Default \`FALSE\`.
+  on the *original* (uncleaned) image before cleaning. When
+  `output_format = "spatrast"` (default), the cleaned raster is returned
+  directly even when `report = TRUE`; the report is printed as a side
+  effect. Default `FALSE`.
 
 - max_hole_size, max_artifact_size:
 
-  Deprecated names for \`fill_holes_upto\` and \`drop_objects_upto\`.
+  Deprecated names for `fill_holes_upto` and `drop_objects_upto`.
   Supplying either warns and sets the corresponding new argument.
 
 ## Value
 
-A cleaned image in the format specified by \`output_format\`
-(\`SpatRaster\`, \`cimg\`, or matrix).
+A cleaned image in the format specified by `output_format`
+(`SpatRaster`, `cimg`, or matrix).
 
 ## Why clean before skeletonisation
 
-\`skeletonize_image()\` uses the Medial Axis Transform, which is driven
-by the distance transform. Small holes inside a root inflate the local
-distance values and force the medial axis to bifurcate around the hole,
-producing spurious branching points. Isolated artifact pixels produce
-phantom skeleton segments. Cleaning first yields a much cleaner
-skeleton.
+[`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
+uses the Medial Axis Transform, which is driven by the distance
+transform. Small holes inside a root inflate the local distance values
+and force the medial axis to bifurcate around the hole, producing
+spurious branching points. Isolated artifact pixels produce phantom
+skeleton segments. Cleaning first yields a much cleaner skeleton.
 
 ## Choosing thresholds
 
 Call
 [`report_image_components`](https://jcunow.github.io/Rootopia/reference/report_image_components.md)
 on your image first to see the actual pixel counts of all holes and
-specks. At 300 dpi, sensible starting values are \`fill_holes_upto =
-50\` and \`drop_objects_upto = 10\` pixels.
+specks. At 300 dpi, sensible starting values are `fill_holes_upto = 50`
+and `drop_objects_upto = 10` pixels.
 
 A pixel threshold means a different physical size at every scan
 resolution: 50 px is 0.36 mm\\^2\\ at 300 dpi but 0.022 mm\\^2\\ at 1200
 dpi, so a call tuned on one dataset cleans differently on another. Set
-\`size_unit = "mm2"\` and supply \`dpi\` to give the thresholds a fixed
+`size_unit = "mm2"` and supply `dpi` to give the thresholds a fixed
 physical meaning that carries across resolutions.
 
 ## Edge smoothing caution
 
-\`edge_smooth = TRUE\` applies a morphological closing that slightly
+`edge_smooth = TRUE` applies a morphological closing that slightly
 dilates then erodes root edges. This can merge closely adjacent roots
 and alter root diameter measurements. Only use it when the segmentation
-output has very jagged edges; leave it off (\`FALSE\`, the default)
+output has very jagged edges; leave it off (`FALSE`, the default)
 otherwise.
 
 ## Input must be binary
 
-\`clean_image()\` operates on a binary mask (root = 1, background = 0).
-If your input is a raw probability / grayscale image from a segmentation
+`clean_image()` operates on a binary mask (root = 1, background = 0). If
+your input is a raw probability / grayscale image from a segmentation
 model, binarize it first with
 [`image_threshold`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
 and pass the result here.

@@ -23,32 +23,34 @@ root_diameter(
 
 - img:
 
-  A character string (file path), \`SpatRaster\`, \`RasterBrick\`,
-  \`RasterLayer\`, \`cimg\`, \`magick-image\`, or array. The input image
-  to process.
+  A character string (file path), `SpatRaster`, `RasterBrick`,
+  `RasterLayer`, `cimg`, `magick-image`, or array. The input image to
+  process.
 
 - skeleton_method:
 
-  Character. Currently unused — \`skeletonize_image()\` only implements
-  LUT-based Zhang-Suen thinning. Kept for backward compatibility. Will
-  be skipped if skeleton \`SpatRaster\` is provided.
+  Character. Currently unused —
+  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
+  only implements LUT-based Zhang-Suen thinning. Kept for backward
+  compatibility. Will be skipped if skeleton `SpatRaster` is provided.
 
 - skeleton_img:
 
-  A character string (file path), \`SpatRaster\`, \`RasterBrick\`,
-  \`RasterLayer\`, \`cimg\`, \`magick-image\`, or array. Uses this
-  object instead of computing it from scratch.
+  A character string (file path), `SpatRaster`, `RasterBrick`,
+  `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object
+  instead of computing it from scratch.
 
 - select_layer:
 
   Integer. Specifies which layer to use if the input is a multi-band
-  image. Default is \`NULL\`, which passes every layer to
-  \`load_flexible_image()\` rather than selecting one.
+  image. Default is `NULL`, which passes every layer to
+  [`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
+  rather than selecting one.
 
 - diagnostics:
 
-  Logical. If \`TRUE\`, enables diagnostic plots and logging. Default is
-  \`FALSE\`.
+  Logical. If `TRUE`, enables diagnostic plots and logging. Default is
+  `FALSE`.
 
 - unit:
 
@@ -64,7 +66,9 @@ A list containing:
 
 - quantiles:
 
-  Numeric vector of diameter quantiles (10th to 100th percentile).
+  Named numeric vector of 11 diameter quantiles, the deciles from 0%
+  (the thinnest skeleton pixel) to 100% (the thickest), as returned by
+  `quantile(probs = seq(0, 1, 0.1))`.
 
 - mean_diameter:
 
@@ -80,40 +84,49 @@ A list containing:
 
 - skeleton_rast:
 
-  \`SpatRaster\`. Binary raster mask of skeletonized regions.
+  `SpatRaster`. Binary raster mask of skeletonized regions.
 
 - diameter_rast:
 
-  \`SpatRaster\`. Raster showing diameters in the skeletonized regions.
+  `SpatRaster`. Raster showing diameters in the skeletonized regions.
 
 - distance_map_rast:
 
-  \`SpatRaster\`. Raster showing the distance transform values.
+  `SpatRaster`. Raster showing the distance transform values.
 
 - root_volume:
 
-  Numeric. Total root volume, in \`unit\`^3. Each skeleton pixel is
-  modeled as a cylinder of radius \`diameter / 2\` and length 1 pixel;
-  volumes (\`pi \* r^2 \* l\`) are summed and converted from px^3.
+  Numeric. Total root volume, in `unit`^3. Each skeleton pixel is
+  modeled as a cylinder of radius `diameter / 2` and length 1 pixel;
+  volumes (`pi * r^2 * l`) are summed and converted from px^3.
 
 - root_surface_area:
 
-  Numeric. Total root lateral surface area, in \`unit\`^2. Each skeleton
-  pixel's cylinder contributes a lateral surface of \`2 \* pi \* r \* l
-  = pi \* d \* l\`; values are summed and converted from px^2.
+  Numeric. Total root lateral surface area, in `unit`^2. Each skeleton
+  pixel's cylinder contributes a lateral surface of
+  `2 * pi * r * l = pi * d * l`; values are summed and converted from
+  px^2.
 
 ## Details
 
-The function works as follows: - Converts the input image to a binary
-format (\`cimg\`). - Applies a distance transform to compute the
-Euclidean distance for the foreground (root) pixels. - Skeletonizes the
-binary image to identify root centerlines. - Filters distance values to
-retain only those corresponding to the skeletonized regions. - Computes
-diameter statistics, including quantiles, mean, and median diameters.
+The function works as follows:
+
+- Converts the input image to a binary format (`cimg`).
+
+- Applies a distance transform to compute the Euclidean distance for the
+  foreground (root) pixels.
+
+- Skeletonizes the binary image to identify root centerlines.
+
+- Filters distance values to retain only those corresponding to the
+  skeletonized regions.
+
+- Computes diameter statistics, including quantiles, mean, and median
+  diameters.
 
 The function supports various input formats and normalizes image values
-to the range \[0, 1\] if needed. It uses the \`terra\` package for
-raster operations and the \`imager\` package for image processing.
+to the range `[0, 1]` if needed. It uses the `terra` package for raster
+operations and the `imager` package for image processing.
 
 ## Examples
 

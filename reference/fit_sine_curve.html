@@ -85,11 +85,11 @@ to data points (x, y) using nonlinear least squares.</p>
 
 
 <dt id="arg-par-start">par_start<a class="anchor" aria-label="anchor" href="#arg-par-start"></a></dt>
-<dd><p>Named list of starting values for parameters:
-- amp: Amplitude (default 3)
-- phase: Phase shift (default 0)
-- offset: Vertical offset (default 0)
-- period: Period (default 24)</p></dd>
+<dd><p>Named list of starting values for parameters:</p><ul><li><p>amp: Amplitude (default 3)</p></li>
+<li><p>phase: Phase shift (default 0)</p></li>
+<li><p>offset: Vertical offset (default 0)</p></li>
+<li><p>period: Period (default 24)</p></li>
+</ul></dd>
 
 
 <dt id="arg-fix-period">fix_period<a class="anchor" aria-label="anchor" href="#arg-fix-period"></a></dt>
@@ -99,19 +99,18 @@ and not estimated. If NULL (default), period is estimated.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing:
-  - amp: Estimated amplitude
-  - phase: Estimated phase (modulo period)
-  - offset: Estimated offset
-  - period: Estimated or fixed period
-  - tss: Total sum of squares
-  - rss: Residual sum of squares
-  - R2: Coefficient of determination
-  - residual_se: Residual standard error
-  - df_residual: Residual degrees of freedom
-  - predicted: Fitted values
-  - residuals: Residuals (y - predicted)</p>
-    </div>
+    <p>A list containing:</p><ul><li><p>amp: Estimated amplitude</p></li>
+<li><p>phase: Estimated phase (modulo period)</p></li>
+<li><p>offset: Estimated offset</p></li>
+<li><p>period: Estimated or fixed period</p></li>
+<li><p>tss: Total sum of squares</p></li>
+<li><p>rss: Residual sum of squares</p></li>
+<li><p>R2: Coefficient of determination</p></li>
+<li><p>residual_se: Residual standard error</p></li>
+<li><p>df_residual: Residual degrees of freedom</p></li>
+<li><p>predicted: Fitted values</p></li>
+<li><p>residuals: Residuals (y - predicted)</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

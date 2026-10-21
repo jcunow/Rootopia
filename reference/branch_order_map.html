@@ -70,7 +70,8 @@ and diameters are reported in real units.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">branch_order_map</span><span class="op">(</span></span>
 <span>  skel <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  order <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"branch_order"</span>, <span class="st">"root_order"</span>, <span class="st">"tip_order"</span><span class="op">)</span>,</span>
+<span>  order <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strahler_order"</span>, <span class="st">"order_from_base"</span>, <span class="st">"root_max_order_from_tip"</span>,</span>
+<span>    <span class="st">"order_from_tip"</span><span class="op">)</span>,</span>
 <span>  unit <span class="op">=</span> <span class="st">"cm"</span>,</span>
 <span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>  length_method <span class="op">=</span> <span class="st">"kimura"</span>,</span>
@@ -100,7 +101,10 @@ diameters collapse to ~1 px. Required if <code>skel</code> is <code>NULL</code>.
 
 <dt id="arg-order">order<a class="anchor" aria-label="anchor" href="#arg-order"></a></dt>
 <dd><p>Which scheme labels <code>$class_map</code>/<code>$summary</code>:
-<code>"branch_order"</code>, <code>"root_order"</code>, or <code>"tip_order"</code>.</p></dd>
+<code>"strahler_order"</code>, <code>"order_from_tip"</code>,
+<code>"root_max_order_from_tip"</code> or <code>"order_from_base"</code>. The 1.1.0
+spellings <code>"tip_order"</code>, <code>"root_order"</code> and
+<code>"branch_order"</code> are accepted and resolved to these.</p></dd>
 
 
 <dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
@@ -144,55 +148,72 @@ the diameter-vs-angle weight for the continuation rule, &gt;= 0).</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"branchOrderMap"</code>: a list with <code>$edges</code>,
-  <code>$summary</code>, <code>$class_map</code> (<code>SpatRaster</code>; chosen order per pixel,
-  <code>NA</code> off-root), and <code>$order</code>, <code>$unit</code>, <code>$dpi</code>,
-  <code>$length_method</code>.</p>
+<code>$summary</code>, <code>$class_map</code> (<code>SpatRaster</code>; chosen order per pixel,
+<code>NA</code> off-root), and <code>$order</code>, <code>$unit</code>, <code>$dpi</code>,
+<code>$length_method</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>All three order schemes are always computed and stored on <code>$edges</code>;
-<code>order</code> only selects which labels <code>$class_map</code> and <code>$summary</code>.</p><dl><dt><code>tip_order</code> (per segment)</dt>
-<dd><p>Topological leaf-peeling depth. Every
-    terminal segment is order 1; peeling terminals away round by round, a
-    segment's order is <code>1 + max(child orders)</code>. Order rises toward the
-    interior, so the distal end of even a thick root is 1. This is centrifugal
-    depth, not strict Strahler ordering: Strahler only increments where two
-    children share the highest order, while this increments at every junction,
-    so a long chain of single laterals keeps climbing.</p></dd>
+    <p>All four order schemes are always computed and stored on <code>$edges</code>;
+<code>order</code> only selects which labels <code>$class_map</code> and <code>$summary</code>.
+Two label a single graph segment and two label a whole continuous root, which
+is what the column names say: a per-root column holds the same value on every
+segment of that root, so averaging it over segments weights long roots more.</p><dl><dt><code>order_from_tip</code> (per segment)</dt>
+<dd><p>Leaf-peeling count. Every terminal
+segment is order 1; peeling terminals away round by round, a segment's
+order is <code>1 + max(child orders)</code>. It rises toward the interior, so the
+distal end of even a thick root is 1. The count runs from the tips inward
+(centripetal), the direction root ecology's morphometric classification
+uses, but it is not strict Strahler ordering: it increments at
+<em>every</em> junction, so an axis carrying ten single laterals reaches 11.</p></dd>
 
-  <dt><code>root_order</code> (per root)</dt>
-<dd><p>Segments are grouped into continuous roots
-    (continuation rule below); each root takes the <em>maximum</em> <code>tip_order</code>
-    along it, so a thick main axis keeps its high order out to its tip. Sensitive
-    to how deep the deepest subtree runs.</p></dd>
+<dt><code>strahler_order</code> (per segment)</dt>
+<dd><p>The same peeling with the strict
+rule: a segment's order rises only where two of its children share the
+highest order, otherwise it inherits that order unchanged. A lone thin
+lateral joining a thick axis leaves the axis where it was.</p></dd>
 
-  <dt><code>branch_order</code> (per root)</dt>
-<dd><p>Centrifugal generation. The thickest root
-    (length-weighted mean diameter) in each connected component is order 1;
-    counting branching hops outward, its laterals are 2, theirs 3, and so on.
-    Independent of subtree depth, so one heavily branched root does not inflate
-    the rest.</p></dd>
+<dt><code>root_max_order_from_tip</code> (per root)</dt>
+<dd><p>No count of its own. Segments
+are grouped into continuous roots (continuation rule below) and every
+segment of a root takes the <em>largest</em> <code>order_from_tip</code> found
+along it – which, since that column never falls as you move basally, is
+its value at the root's basal end. A thick main axis therefore keeps its
+high value out to its tip instead of dropping to 1. Sensitive to how deep
+the deepest subtree runs.</p></dd>
+
+<dt><code>order_from_base</code> (per root)</dt>
+<dd><p>Generation counting, the direction
+the developmental classification uses. The thickest root (length-weighted
+mean diameter) in each connected component is order 1; counting branching
+hops outward, its laterals are 2, theirs 3, and so on. Independent of
+subtree depth, so one heavily branched root does not inflate the rest.
+Order 1 is chosen by thickness, not by knowing which root grew first.</p></dd>
 
 
-</dl><p><strong>Continuation rule</strong> (groups segments into roots for <code>root_order</code> and
-<code>branch_order</code>): at each junction the two arms forming the same root are
-chosen by <code>straightness + diam_weight * diameter_similarity</code>.
+</dl><p>Up to Rootopia 1.1.0 these columns were called <code>tip_order</code>,
+<code>root_order</code> and <code>branch_order</code>. Those names are still returned, as
+copies of the columns above, and are still accepted by <code>order</code>,
+<code>order_col</code> and <code>value</code>.</p>
+<p><strong>Continuation rule</strong> (groups segments into roots, for the two per-root
+columns): at each junction the two arms forming the same root are chosen by
+<code>straightness + diam_weight * diameter_similarity</code>.
 <code>diam_weight = 0</code> uses angle only; larger values let thickness dominate.
-The odd arm out is a lateral. <code>tip_order</code> does not use this rule.</p>
+The odd arm out is a lateral. The per-segment columns do not use this rule.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="root_graph_pipeline.html">root_graph_pipeline</a></code>, <code><a href="order_classification_map.html">order_classification_map</a></code>,
-  <code><a href="summarize_orders.html">summarize_orders</a></code>, <code><a href="convert_root_units.html">convert_root_units</a></code>,
-  <code><a href="root_transport.html">root_transport</a></code> and <code><a href="network_metrics.html">network_metrics</a></code>, which both
-  take the <code>$edges</code> table returned here.</p></div>
+<code><a href="summarize_orders.html">summarize_orders</a></code>, <code><a href="convert_root_units.html">convert_root_units</a></code>,
+<code><a href="root_transport.html">root_transport</a></code> and <code><a href="network_metrics.html">network_metrics</a></code>, which both
+take the <code>$edges</code> table returned here.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">skel</span> <span class="op">&lt;-</span> <span class="fu"><a href="skeletonize_image.html">skeletonize_image</a></span><span class="op">(</span><span class="va">mask</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">res</span>  <span class="op">&lt;-</span> <span class="fu">branch_order_map</span><span class="op">(</span><span class="va">skel</span>, <span class="va">mask</span>, order <span class="op">=</span> <span class="st">"branch_order"</span>,</span></span>
+<span class="r-in"><span><span class="va">res</span>  <span class="op">&lt;-</span> <span class="fu">branch_order_map</span><span class="op">(</span><span class="va">skel</span>, <span class="va">mask</span>, order <span class="op">=</span> <span class="st">"order_from_base"</span>,</span></span>
 <span class="r-in"><span>                         unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span>, dt_backend <span class="op">=</span> <span class="st">"imager"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">res</span><span class="op">$</span><span class="va">summary</span></span></span>
 <span class="r-in"><span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">class_map</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>

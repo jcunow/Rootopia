@@ -84,7 +84,7 @@ abind2(
   dimension will be the deparsed versions of anonymous arguments. This
   can result in cumbersome names when arguments are expressions.
 
-  \<p\>The default is `FALSE`.
+  The default is `FALSE`.
 
 - use.anon.names:
 

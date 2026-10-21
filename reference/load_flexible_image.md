@@ -29,10 +29,10 @@ load_flexible_image(
 
 - scale:
 
-  Character, the value rescaling to apply. One of \`"to_01"\` (0-255 -\>
-  0-1, the default), \`"to_255"\` (0-1 -\> 0-255), \`"binary"\`
-  (strictly 0/1), or \`"none"\` (leave values untouched). Each
-  conversion is a no-op if the data is already in the target range.
+  Character, the value rescaling to apply. One of `"to_01"` (0-255 -\>
+  0-1, the default), `"to_255"` (0-1 -\> 0-255), `"binary"` (strictly
+  0/1), or `"none"` (leave values untouched). Each conversion is a no-op
+  if the data is already in the target range.
 
 - select_layer:
 
@@ -40,8 +40,8 @@ load_flexible_image(
 
 - normalize, binarize, denormalize:
 
-  Deprecated logical flags kept for backward compatibility; use
-  \`scale\` instead. \`normalize = TRUE\` maps to \`scale = "to_01"\`,
-  \`denormalize = TRUE\` to \`"to_255"\`, and \`binarize = TRUE\` to
-  \`"binary"\`. Supplying these together with \`scale\`, or setting both
-  \`normalize\` and \`denormalize\`, is an error.
+  Deprecated logical flags kept for backward compatibility; use `scale`
+  instead. `normalize = TRUE` maps to `scale = "to_01"`,
+  `denormalize = TRUE` to `"to_255"`, and `binarize = TRUE` to
+  `"binary"`. Supplying these together with `scale`, or setting both
+  `normalize` and `denormalize`, is an error.

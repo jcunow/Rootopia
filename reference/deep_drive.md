@@ -28,50 +28,59 @@ deep_drive(
 - RootMap:
 
   Optional. A binary SpatRast indicating root presence. Used to infer
-  \`AngleMap\` if not provided.
+  `AngleMap` if not provided.
 
 - AngleMap:
 
   Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If
-  missing, inferred from \`RootMap\` and \`DepthMap\`.
+  missing, inferred from `RootMap` and `DepthMap`.
 
 - select_layer_rm:
 
-  Integer. Which layer to use from \`RootMap\` if it has multiple bands.
-  Default is \`NULL\`, which passes every layer to
-  \`load_flexible_image()\` rather than selecting one.
+  Integer. Which layer to use from `RootMap` if it has multiple bands.
+  Default is `NULL`, which passes every layer to
+  [`load_flexible_image()`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
+  rather than selecting one.
 
 - select_layer_dm:
 
-  Integer. Which layer to use from \`DepthMap\`. Default is \`NULL\`.
+  Integer. Which layer to use from `DepthMap`. Default is `NULL`.
 
 - select_layer_am:
 
-  Integer. Which layer to use from \`AngleMap\`. Default is \`NULL\`.
+  Integer. Which layer to use from `AngleMap`. Default is `NULL`.
 
 - return:
 
-  Character. \`"value"\` (default) returns a single numeric proportion.
-  \`"all"\` returns a list with spatial outputs for visualization.
+  Character. `"value"` (default) returns a single numeric proportion.
+  `"all"` returns a list with spatial outputs for visualization.
 
 ## Value
 
-\- If \`return = "value"\`: A numeric value between 0 and 1. - \`1\`
-means all root pixels align with the local steepest downward
-direction. - \`0\` means none of the root pixels align with local depth
-gradients.
+- If `return = "value"`: A numeric value between 0 and 1.
 
-\- If \`return = "all"\`: A named list with: - \`deep_drive\`: numeric
-proportion (same as above) - \`angle_map\`: the root direction map used
-(SpatRast) - \`optimal_angle_map\`: the steepest downward direction from
-\`DepthMap\` (SpatRast) - \`aligned_roots\`: binary SpatRast showing
-root pixels aligned with the steepest local depth descent
+  - `1` means all root pixels align with the local steepest downward
+    direction.
+
+  - `0` means none of the root pixels align with local depth gradients.
+
+- If `return = "all"`: A named list with:
+
+  - `deep_drive`: numeric proportion (same as above)
+
+  - `angle_map`: the root direction map used (SpatRast)
+
+  - `optimal_angle_map`: the steepest downward direction from `DepthMap`
+    (SpatRast)
+
+  - `aligned_roots`: binary SpatRast showing root pixels aligned with
+    the steepest local depth descent
 
 ## Details
 
-It uses a depth raster (\`DepthMap\`) and a root direction raster
-(\`AngleMap\`) or estimates one from a binary root presence map
-(\`RootMap\`). Directions are compared using a D8 neighborhood scheme.
+It uses a depth raster (`DepthMap`) and a root direction raster
+(`AngleMap`) or estimates one from a binary root presence map
+(`RootMap`). Directions are compared using a D8 neighborhood scheme.
 
 ## Examples
 

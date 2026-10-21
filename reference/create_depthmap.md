@@ -55,7 +55,7 @@ create_depthmap(
 
 - center_offset:
 
-  Numeric in \[0, 1\]; where the top of the tube – the shallowest line
+  Numeric in `[0, 1]`; where the top of the tube – the shallowest line
   of the curvature wave – sits across the image height, as a fraction of
   one full tube circumference. `0` puts it on the first row, `0.5`
   halfway down, `1` on the last row. `0` and `1` are the same point on

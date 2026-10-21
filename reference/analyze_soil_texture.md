@@ -18,7 +18,7 @@ analyze_soil_texture(
 - img.color:
 
   Three-band raster (RGB) or path to image. Internally converted to a
-  \`raster::RasterBrick\` as required by the \`glcm\` package.
+  `raster::RasterBrick` as required by the `glcm` package.
 
 - grays:
 
@@ -28,7 +28,7 @@ analyze_soil_texture(
 - window:
 
   Window size for GLCM calculation as a length-2 vector of odd positive
-  integers, e.g. \`c(9, 9)\`. Default is \`c(9, 9)\`.
+  integers, e.g. `c(9, 9)`. Default is `c(9, 9)`.
 
 - metrics:
 

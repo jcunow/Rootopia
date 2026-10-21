@@ -26,9 +26,15 @@ fit_sine_curve(
 
 - par_start:
 
-  Named list of starting values for parameters: - amp: Amplitude
-  (default 3) - phase: Phase shift (default 0) - offset: Vertical offset
-  (default 0) - period: Period (default 24)
+  Named list of starting values for parameters:
+
+  - amp: Amplitude (default 3)
+
+  - phase: Phase shift (default 0)
+
+  - offset: Vertical offset (default 0)
+
+  - period: Period (default 24)
 
 - fix_period:
 
@@ -37,12 +43,29 @@ fit_sine_curve(
 
 ## Value
 
-A list containing: - amp: Estimated amplitude - phase: Estimated phase
-(modulo period) - offset: Estimated offset - period: Estimated or fixed
-period - tss: Total sum of squares - rss: Residual sum of squares - R2:
-Coefficient of determination - residual_se: Residual standard error -
-df_residual: Residual degrees of freedom - predicted: Fitted values -
-residuals: Residuals (y - predicted)
+A list containing:
+
+- amp: Estimated amplitude
+
+- phase: Estimated phase (modulo period)
+
+- offset: Estimated offset
+
+- period: Estimated or fixed period
+
+- tss: Total sum of squares
+
+- rss: Residual sum of squares
+
+- R2: Coefficient of determination
+
+- residual_se: Residual standard error
+
+- df_residual: Residual degrees of freedom
+
+- predicted: Fitted values
+
+- residuals: Residuals (y - predicted)
 
 ## Examples
 

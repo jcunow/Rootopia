@@ -83,8 +83,8 @@
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
 <dd><p>Character, the value rescaling to apply. One of
-`"to_01"` (0-255 -&gt; 0-1, the default), `"to_255"` (0-1 -&gt; 0-255),
-`"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
+<code>"to_01"</code> (0-255 -&gt; 0-1, the default), <code>"to_255"</code> (0-1 -&gt; 0-255),
+<code>"binary"</code> (strictly 0/1), or <code>"none"</code> (leave values untouched). Each
 conversion is a no-op if the data is already in the target range.</p></dd>
 
 
@@ -94,10 +94,10 @@ conversion is a no-op if the data is already in the target range.</p></dd>
 
 <dt id="arg-normalize-binarize-denormalize">normalize, binarize, denormalize<a class="anchor" aria-label="anchor" href="#arg-normalize-binarize-denormalize"></a></dt>
 <dd><p>Deprecated logical flags kept for
-backward compatibility; use `scale` instead. `normalize = TRUE` maps to
-`scale = "to_01"`, `denormalize = TRUE` to `"to_255"`, and
-`binarize = TRUE` to `"binary"`. Supplying these together with `scale`, or
-setting both `normalize` and `denormalize`, is an error.</p></dd>
+backward compatibility; use <code>scale</code> instead. <code>normalize = TRUE</code> maps to
+<code>scale = "to_01"</code>, <code>denormalize = TRUE</code> to <code>"to_255"</code>, and
+<code>binarize = TRUE</code> to <code>"binary"</code>. Supplying these together with <code>scale</code>, or
+setting both <code>normalize</code> and <code>denormalize</code>, is an error.</p></dd>
 
 </dl></div>
 

@@ -41,7 +41,7 @@ tail_weight_function(
 
 - baseline.weight:
 
-  Numeric in \[0,1\]. Minimum weight applied.
+  Numeric in `[0,1]`. Minimum weight applied.
 
 - inverse:
 

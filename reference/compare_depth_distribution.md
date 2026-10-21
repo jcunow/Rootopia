@@ -71,7 +71,7 @@ compare_depth_distribution(
 
 - baseline.weight:
 
-  Numeric in \[0,1\]. Minimum weight applied.
+  Numeric in `[0,1]`. Minimum weight applied.
 
 ## Value
 

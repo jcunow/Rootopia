@@ -52,7 +52,8 @@ root_depth_metrics(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
-  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  order_scheme = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   diam_weight = 0.5,
   prune_spur_length_cm = 0,
   prune_spur_iter = 1L,
@@ -101,7 +102,8 @@ batch_root_traits(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
-  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  order_scheme = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   diam_weight = 0.5,
   prune_spur_length_cm = 0,
   prune_spur_iter = 1L,
@@ -160,9 +162,10 @@ batch_root_traits(
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
   uses for `tilt`, and it is the opposite of the "degrees from vertical"
   wording used by some minirhizotron software, so convert before passing
-  it in. Values must be strictly between 0 and 90. Supplying this
-  argument switches the run to minirhizotron geometry (see
-  **Geometry**). Default `NULL` (flatbed).
+  it in. Values must be greater than 0 and at most 90; `90` means a
+  vertical tube and is allowed. Supplying this argument switches the run
+  to minirhizotron geometry (see **Geometry**). Default `NULL`
+  (flatbed).
 
 - soil_starts:
 
@@ -392,7 +395,7 @@ batch_root_traits(
   [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
   and summarize it both per depth bin and per tube. Adds `mean.<scheme>`
   and `max.<scheme>` for the scheme named by `order_scheme` (e.g.
-  `mean.strahler_order`), plus `mean.root_order` and
+  `mean.strahler_order`), plus `mean.root_max_order_from_tip` and
   `lateral_root_fraction` per depth bin, tube-level `main_root.*` /
   `lateral_roots.*` columns (length, diameter, branching frequency,
   etc.), and `n_root_orders` (the highest order found). Requires a
@@ -402,15 +405,18 @@ batch_root_traits(
 - order_scheme:
 
   Character. Which ordering labels the per-bin order columns and the
-  main-root split. `"strahler_order"` (default) is the convention of the
-  fine-root literature (Pregitzer et al. 2002; Fitter): every distal
-  unbranched root is order 1, and the order rises only where two roots
-  of equal order meet. `"tip_order"` is the same leaf-peeling with the
-  order raised at *every* junction, so an axis carrying ten laterals
-  reaches order 11. `"branch_order"` counts the other way – the thickest
-  root of each component is 1 and its laterals 2 – and `"root_order"`
-  gives each continuous root the maximum `tip_order` along it. All four
-  are computed regardless; this only picks which one is reported. See
+  main-root split. `"strahler_order"` (default) is the morphometric, or
+  stream-order, convention of the fine-root literature (Pregitzer et al.
+  2002): every distal unbranched root is order 1, and the order rises
+  only where two roots of equal order meet. `"order_from_tip"` is the
+  same leaf-peeling with the order raised at *every* junction, so an
+  axis carrying ten laterals reaches order 11. `"order_from_base"`
+  counts the other way – the thickest root of each component is 1 and
+  its laterals 2 – and `"root_max_order_from_tip"` gives each continuous
+  root the largest `order_from_tip` along it. All four are computed
+  regardless; this only picks which one is reported. The spellings used
+  up to Rootopia 1.1.0 (`"tip_order"`, `"root_order"`, `"branch_order"`)
+  are accepted and resolved to these. See
   [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md).
 
 - diam_weight:
@@ -418,8 +424,8 @@ batch_root_traits(
   Numeric \>= 0. At a junction, which two arms are read as the same root
   continuing: `straightness + diam_weight * diameter_similarity`. `0`
   uses the angle alone, larger values let thickness decide. Affects
-  `root_order`, `branch_order` and the segment grouping, not
-  `strahler_order` or `tip_order`. Default `0.5`.
+  `root_max_order_from_tip`, `order_from_base` and the segment grouping,
+  not `strahler_order` or `order_from_tip`. Default `0.5`.
 
 - prune_spur_length_cm:
 

@@ -547,9 +547,10 @@ the image-visible area. Ratio is the length-weighted mean of local 2/r
 <td>Per bin: <code>mean.&lt;scheme&gt;</code>,
 <code>max.&lt;scheme&gt;</code> for the <code>order_scheme</code> in use
 (e.g. <code>mean.strahler_order</code>), plus
-<code>mean.root_order</code> and <code>lateral_root_fraction</code>. Per
-tube: <code>main_root.*</code> / <code>lateral_roots.*</code> (length,
-diameter, branching frequency, …), <code>n_root_orders</code>
+<code>mean.root_max_order_from_tip</code> and
+<code>lateral_root_fraction</code>. Per tube: <code>main_root.*</code> /
+<code>lateral_roots.*</code> (length, diameter, branching frequency, …),
+<code>n_root_orders</code>
 </td>
 <td>
 <strong>Slow</strong> — builds one segment graph per image. Requires
@@ -605,10 +606,14 @@ roots:</p>
 </h3>
 <p><code>calc_root_order_metrics = TRUE</code> builds a segment graph
 from the skeleton of each image (via <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code>)
-and assigns every root segment a <strong>branching order</strong>:
-segments on the thickest, most central path of each connected component
-are order 1, the branches coming off them are order 2, their branches
-order 3, and so on. See the <a href="FlatBedScans_vignettes.html#7b-branch-order">Flatbed Scans</a>
+and labels every root segment with all four <strong>order
+schemes</strong> — <code>strahler_order</code> and
+<code>order_from_tip</code> per segment,
+<code>root_max_order_from_tip</code> and <code>order_from_base</code>
+per continuous root. <code>order_scheme</code> picks which one is
+reported here; it defaults to <code>"strahler_order"</code>, where every
+distal unbranched root is order 1 and the number rises only where two
+roots of equal order meet. See the <a href="FlatBedScans_vignettes.html#7b-branch-order">Flatbed Scans</a>
 vignette for a worked example of the underlying pipeline.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
@@ -631,27 +636,35 @@ depth:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>mean.branch_order</code></td>
-<td>Mean branch order of skeleton pixels in the bin</td>
+<td><code>mean.&lt;order_scheme&gt;</code></td>
+<td>Mean order of the ordered skeleton pixels in the bin, named after
+the scheme in use (<code>mean.strahler_order</code> by default)</td>
 </tr>
 <tr class="even">
-<td><code>max.branch_order</code></td>
-<td>Highest branch order reached in the bin</td>
+<td><code>max.&lt;order_scheme&gt;</code></td>
+<td>Highest order reached in the bin, named the same way</td>
 </tr>
 <tr class="odd">
-<td><code>mean.root_order</code></td>
-<td>Mean root order (max tip-order along each root) in the bin</td>
+<td><code>mean.root_max_order_from_tip</code></td>
+<td>Mean of <code>root_max_order_from_tip</code> — the largest
+<code>order_from_tip</code> along each continuous root — over the bin’s
+pixels. Always present, whichever scheme is chosen</td>
 </tr>
 <tr class="even">
 <td><code>lateral_root_fraction</code></td>
-<td>Fraction of skeleton pixels belonging to branch order &gt; 1
-(laterals)</td>
+<td>Fraction of the bin’s ordered skeleton pixels that fall
+<strong>outside</strong> the thickest order class, i.e. everything the
+main-root split calls lateral</td>
 </tr>
 </tbody>
 </table>
+<p>Where a scheme has a spelling from Rootopia 1.1.0
+(<code>branch_order</code>, <code>tip_order</code>,
+<code>root_order</code>), the column is repeated under that name as
+well, so scripts written against the old names keep working.</p>
 <p><strong>Per tube</strong> (repeated on every row of that tube) — the
 thickest order-1 path vs. all higher-order branches, split by
-<code>order_metrics(..., focal = "thickest")</code>:</p>
+<code>order_metrics(..., groups = "thickest")</code>:</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -678,7 +691,9 @@ thickest order-1 path vs. all higher-order branches, split by
 </tr>
 <tr class="odd">
 <td><code>n_root_orders</code></td>
-<td>Highest branch order found in the image</td>
+<td>Highest order found in the image, under
+<code>order_scheme</code>
+</td>
 </tr>
 </tbody>
 </table>
@@ -694,7 +709,7 @@ thickest order-1 path vs. all higher-order branches, split by
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"Lateral Root Fraction by Depth"</span>,</span>
 <span>    x     <span class="op">=</span> <span class="st">"Soil Depth (cm)"</span>,</span>
-<span>    y     <span class="op">=</span> <span class="st">"Fraction of skeleton pixels with branch order &gt; 1"</span></span>
+<span>    y     <span class="op">=</span> <span class="st">"Fraction of ordered skeleton pixels outside the main-root class"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 <blockquote>
 <p><strong>Slow.</strong> This builds one segment graph per image, which

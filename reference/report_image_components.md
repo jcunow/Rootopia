@@ -2,16 +2,15 @@
 
 Reports the size distribution of the two component types that
 [`clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
-acts on, to help you choose \`fill_holes_upto\` and
-\`drop_objects_upto\`:
+acts on, to help you choose `fill_holes_upto` and `drop_objects_upto`:
 
-- \*\*holes\*\* — \`background (0)\` regions fully enclosed by \`root
-  (1)\` (segmentation gaps inside roots). Regions touching the image
-  border are background, not holes, and are excluded.
+- **holes** — `background (0)` regions fully enclosed by `root (1)`
+  (segmentation gaps inside roots). Regions touching the image border
+  are background, not holes, and are excluded.
 
-- \*\*root components\*\* — connected \`root (1)\` regions. The whole
-  root system is usually one large component; genuine artifacts are the
-  small components at the low end of this distribution.
+- **root components** — connected `root (1)` regions. The whole root
+  system is usually one large component; genuine artifacts are the small
+  components at the low end of this distribution.
 
 ## Usage
 
@@ -23,39 +22,40 @@ report_image_components(img, plot = TRUE, breaks = 30, select_layer = NULL)
 
 - img:
 
-  A binary image (\`SpatRaster\`, \`cimg\`, matrix, or file path); any
+  A binary image (`SpatRaster`, `cimg`, matrix, or file path); any
   format accepted by
   [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md).
 
 - plot:
 
   Logical. Draw size-distribution histograms (log10 x-axis, with mean
-  and median marked). Default \`TRUE\`.
+  and median marked). Default `TRUE`.
 
 - breaks:
 
-  Number of histogram breaks. Default \`30\`.
+  Number of histogram breaks. Default `30`.
 
 - select_layer:
 
-  Integer or \`NULL\`. Layer to use for multi-layer inputs.
+  Integer or `NULL`. Layer to use for multi-layer inputs.
 
 ## Value
 
-Invisibly, a list with numeric vectors \`holes\` and \`objects\` giving
-the size (in pixels) of every enclosed hole and every root component.
+Invisibly, a list with numeric vectors `holes` and `objects` giving the
+size (in pixels) of every enclosed hole and every root component.
 
 ## No size threshold here
 
-This function applies \*\*no\*\* size cutoff — it characterizes
-\*every\* component. There is therefore nothing special separating a
-"big root" from an "artifact": both are root components, distinguished
-only by size. Use the printed summary and the histograms to pick the
-\`fill_holes_upto\` and \`drop_objects_upto\` values you then pass to
+This function applies **no** size cutoff — it characterizes *every*
+component. There is therefore nothing special separating a "big root"
+from an "artifact": both are root components, distinguished only by
+size. Use the printed summary and the histograms to pick the
+`fill_holes_upto` and `drop_objects_upto` values you then pass to
 [`clean_image`](https://jcunow.github.io/Rootopia/reference/clean_image.md).
-Counts here are in pixels, so they match \`clean_image()\`'s default
-\`size_unit = "px"\` directly; divide by \\(dpi/25.4)^2\\ to express one
-in mm\\^2\\.
+Counts here are in pixels, so they match
+[`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)'s
+default `size_unit = "px"` directly; divide by \\(dpi/25.4)^2\\ to
+express one in mm\\^2\\.
 
 ## Examples
 

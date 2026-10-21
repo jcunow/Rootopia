@@ -8,7 +8,7 @@ counts are integers.
 ## Usage
 
 ``` r
-summarize_orders(et, order_col = "branch_order")
+summarize_orders(et, order_col = "order_from_base")
 ```
 
 ## Arguments
@@ -48,6 +48,18 @@ A data.frame with one row per order:
 - `total_length`:
 
   Summed root length.
+
+- `cumulative_length`:
+
+  Running total of `total_length` from the first row down to this one.
+  Rows ascend in `order`, and an order with no segments has no row, so
+  the running total steps from one present order to the next rather than
+  inserting a zero.
+
+- `cumulative_fraction`:
+
+  `cumulative_length` over the total ordered length, so the last row is
+  1.
 
 - `mean_segment_length`:
 

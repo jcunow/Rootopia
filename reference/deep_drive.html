@@ -84,44 +84,45 @@ explore the vertical soil profile.</p>
 
 
 <dt id="arg-rootmap">RootMap<a class="anchor" aria-label="anchor" href="#arg-rootmap"></a></dt>
-<dd><p>Optional. A binary SpatRast indicating root presence. Used to infer `AngleMap` if not provided.</p></dd>
+<dd><p>Optional. A binary SpatRast indicating root presence. Used to infer <code>AngleMap</code> if not provided.</p></dd>
 
 
 <dt id="arg-anglemap">AngleMap<a class="anchor" aria-label="anchor" href="#arg-anglemap"></a></dt>
-<dd><p>Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from `RootMap` and `DepthMap`.</p></dd>
+<dd><p>Optional. A SpatRast of root angles in D8 format (0, 45, ..., 315). If missing, inferred from <code>RootMap</code> and <code>DepthMap</code>.</p></dd>
 
 
 <dt id="arg-select-layer-rm">select_layer_rm<a class="anchor" aria-label="anchor" href="#arg-select-layer-rm"></a></dt>
-<dd><p>Integer. Which layer to use from `RootMap` if it has multiple bands. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.</p></dd>
+<dd><p>Integer. Which layer to use from <code>RootMap</code> if it has multiple bands. Default is <code>NULL</code>, which passes every layer to <code><a href="load_flexible_image.html">load_flexible_image()</a></code> rather than selecting one.</p></dd>
 
 
 <dt id="arg-select-layer-dm">select_layer_dm<a class="anchor" aria-label="anchor" href="#arg-select-layer-dm"></a></dt>
-<dd><p>Integer. Which layer to use from `DepthMap`. Default is `NULL`.</p></dd>
+<dd><p>Integer. Which layer to use from <code>DepthMap</code>. Default is <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-select-layer-am">select_layer_am<a class="anchor" aria-label="anchor" href="#arg-select-layer-am"></a></dt>
-<dd><p>Integer. Which layer to use from `AngleMap`. Default is `NULL`.</p></dd>
+<dd><p>Integer. Which layer to use from <code>AngleMap</code>. Default is <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-return">return<a class="anchor" aria-label="anchor" href="#arg-return"></a></dt>
-<dd><p>Character. `"value"` (default) returns a single numeric proportion. `"all"` returns a list with spatial outputs for visualization.</p></dd>
+<dd><p>Character. <code>"value"</code> (default) returns a single numeric proportion. <code>"all"</code> returns a list with spatial outputs for visualization.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>- If `return = "value"`: A numeric value between 0 and 1.
-  - `1` means all root pixels align with the local steepest downward direction.
-  - `0` means none of the root pixels align with local depth gradients.</p>
-<p>- If `return = "all"`: A named list with:
-  - `deep_drive`: numeric proportion (same as above)
-  - `angle_map`: the root direction map used (SpatRast)
-  - `optimal_angle_map`: the steepest downward direction from `DepthMap` (SpatRast)
-  - `aligned_roots`: binary SpatRast showing root pixels aligned with the steepest local depth descent</p>
-    </div>
+
+<ul><li><p>If <code>return = "value"</code>: A numeric value between 0 and 1.</p><ul><li><p><code>1</code> means all root pixels align with the local steepest downward direction.</p></li>
+<li><p><code>0</code> means none of the root pixels align with local depth gradients.</p></li>
+</ul></li>
+<li><p>If <code>return = "all"</code>: A named list with:</p><ul><li><p><code>deep_drive</code>: numeric proportion (same as above)</p></li>
+<li><p><code>angle_map</code>: the root direction map used (SpatRast)</p></li>
+<li><p><code>optimal_angle_map</code>: the steepest downward direction from <code>DepthMap</code> (SpatRast)</p></li>
+<li><p><code>aligned_roots</code>: binary SpatRast showing root pixels aligned with the steepest local depth descent</p></li>
+</ul></li>
+</ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>It uses a depth raster (`DepthMap`) and a root direction raster (`AngleMap`)
-or estimates one from a binary root presence map (`RootMap`). Directions are
+    <p>It uses a depth raster (<code>DepthMap</code>) and a root direction raster (<code>AngleMap</code>)
+or estimates one from a binary root presence map (<code>RootMap</code>). Directions are
 compared using a D8 neighborhood scheme.</p>
     </div>
 

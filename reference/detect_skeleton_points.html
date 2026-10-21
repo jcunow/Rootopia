@@ -96,17 +96,15 @@ segmented mask and reduced to a skeleton internally via
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The computation proceeds as follows:</p>
-<p>1. Raster values are converted into a numeric matrix.
-2. A 1-pixel zero-padding border is added around the matrix.
-3. For each pixel in the original image:
-   - A 3x3 window is extracted from the padded matrix
-   - The center pixel is excluded
-   - Neighbor count is computed as the sum of remaining 8 values</p>
-<p>Classification rules:
-- Endpoint: pixel == 1 AND neighbor count == 1
-- Branch point: pixel == 1 AND neighbor count &gt; 2</p>
-<p>Outputs are converted back into SpatRaster objects.</p>
+    <p>The computation proceeds as follows:</p><ol><li><p>Raster values are converted into a numeric matrix.</p></li>
+<li><p>A 1-pixel zero-padding border is added around the matrix.</p></li>
+<li><p>For each pixel in the original image:</p><ul><li><p>A 3x3 window is extracted from the padded matrix</p></li>
+<li><p>The center pixel is excluded</p></li>
+<li><p>Neighbor count is computed as the sum of remaining 8 values</p></li>
+</ul></li>
+</ol><p>Classification rules:</p><ul><li><p>Endpoint: pixel == 1 AND neighbor count == 1</p></li>
+<li><p>Branch point: pixel == 1 AND neighbor count &gt; 2</p></li>
+</ul><p>Outputs are converted back into SpatRaster objects.</p>
     </div>
 
     <div class="section level2">

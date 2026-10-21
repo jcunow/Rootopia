@@ -733,7 +733,7 @@ explain.</p>
 <p>One call does everything:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span><span class="va">skel</span>, mask <span class="op">=</span> <span class="va">cleaned</span>,</span>
-<span>                        order <span class="op">=</span> <span class="st">"branch_order"</span>,</span>
+<span>                        order <span class="op">=</span> <span class="st">"order_from_base"</span>,</span>
 <span>                        unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">summary</span>     <span class="co"># one row per order class</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">edges</span>       <span class="co"># one row per segment</span></span>
@@ -749,14 +749,17 @@ prune_terminal_segments()   optional, off by default
    |
 build_edge_table()      measure length and diameter per segment
    |
-compute_tip_order()     assign tip_order
+compute_tip_order()     assign order_from_tip
    |
-assign_root_order()     group segments into roots; root_order, branch_order</code></pre>
+compute_strahler_order()    assign strahler_order
+   |
+assign_root_order()     group segments into roots; root_max_order_from_tip,
+                        order_from_base</code></pre>
 <p>Then <code><a href="../reference/convert_root_units.html">convert_root_units()</a></code> rescales to cm,
 <code><a href="../reference/summarize_orders.html">summarize_orders()</a></code> aggregates, and
 <code><a href="../reference/order_classification_map.html">order_classification_map()</a></code> paints the result back onto the
 image.</p>
-<p>Those seven steps are internal — they are named here so the order of
+<p>Those eight steps are internal — they are named here so the order of
 operations is visible, not because you call them. The two entry points
 are <code><a href="../reference/branch_order_map.html">branch_order_map()</a></code> and, if you want the segment table
 in pixels without the unit conversion and summary,
@@ -777,29 +780,81 @@ runs of two-neighbor pixels between nodes.</p>
 junction, reaching from the segment’s last pixel to the center of the
 junction cluster. Without that stub, every branch point would quietly
 eat about a pixel of root from each arm that meets it.</p>
-<p><strong>Three order schemes are always computed</strong>, and they
-answer different questions:</p>
+<p><strong>Four order schemes are always computed</strong>, and they
+answer different questions. Read the column name as <em>what gets the
+number</em>, then <em>where the counting starts</em>: two of them label
+a single graph segment, two label a whole continuous root.</p>
+<p>Per segment:</p>
 <ul>
 <li>
-<code>tip_order</code> — counted inward from the tips. Every
-terminal segment is 1; peeling terminals away round by round, a
-segment’s order is one more than the highest of its children. This is
-centrifugal depth, <em>not</em> strict Strahler ordering: it increments
-at every junction, so a long chain of single laterals keeps
-climbing.</li>
+<code>order_from_tip</code> — counted inward from the tips
+(centripetal). Every terminal segment is 1; peeling terminals away round
+by round, a segment’s number is one more than the highest of its
+children. It is <em>not</em> strict Strahler ordering: it increments at
+<em>every</em> junction, so an axis carrying ten single laterals reaches
+11.</li>
 <li>
-<code>root_order</code> — segments are first grouped into continuous
-roots (below), then each root takes the highest <code>tip_order</code>
-along it. A thick main axis therefore keeps its high order all the way
-out to its tip.</li>
-<li>
-<code>branch_order</code> — generation counting. The thickest root
-in each disconnected piece of the image is order 1; its laterals are 2,
-theirs 3, and so on. Independent of how deep any one subtree runs.</li>
+<code>strahler_order</code> — the same peeling under the strict
+rule: the number rises only where two children share the highest order.
+A lone thin lateral joining a thick axis leaves the axis where it
+was.</li>
 </ul>
-<p><code>order =</code> only chooses which of the three labels the
-summary and the map; all three are always present in
+<p>Per continuous root:</p>
+<ul>
+<li>
+<code>root_max_order_from_tip</code> — not a count of its own.
+Segments are grouped into continuous roots (below) and every segment of
+a root is stamped with the <em>largest</em> <code>order_from_tip</code>
+found along it. Because that column never falls as you move basally, the
+largest value is simply the one at the root’s basal end. So a thick main
+axis keeps its high number all the way out to its tip instead of
+dropping to 1.</li>
+<li>
+<code>order_from_base</code> — generation counting. The thickest
+root in each disconnected piece of the image is order 1; its laterals
+are 2, theirs 3, and so on. Independent of how deep any one subtree
+runs.</li>
+</ul>
+<p><code>order =</code> only chooses which of the four labels the
+summary and the map; all four are always present in
 <code>res$edges</code>.</p>
+<p>Because a per-root column repeats the same number on every segment of
+that root, averaging it across segments weights long roots more heavily
+than short ones. That is the right thing if you want “the average order
+of a centimetre of root” and the wrong thing if you want “the average
+order of a root”, so it is worth knowing which of the two you asked
+for.</p>
+<p>Up to Rootopia 1.1.0 these columns were called
+<code>tip_order</code>, <code>root_order</code> and
+<code>branch_order</code>. Those names are still returned as copies, and
+still accepted wherever a column is named, so old scripts keep
+running.</p>
+<p><strong>How these line up with root ecology’s vocabulary.</strong>
+Freschet <em>et al.</em> (2021, <em>New Phytologist</em> 232: 973-1122)
+describe three classifications that root ecologists use, and they
+disagree about which end counts as one, so a number on its own is
+ambiguous unless you say which scheme produced it:</p>
+<ul>
+<li>the <strong>morphometric</strong> (also stream-order) classification
+numbers the most distal segments first-order and works inward — the
+direction <code>order_from_tip</code> and <code>strahler_order</code>
+count in, with <code>strahler_order</code> following the strict
+stream-order rule;</li>
+<li>the <strong>topological</strong> classification also starts at the
+tips but adds the orders of the two child links at a junction instead of
+taking the higher one;</li>
+<li>the <strong>developmental</strong> classification starts at the
+parent axis, so the most distal roots carry the <em>highest</em> number
+— the direction <code>order_from_base</code> counts in.</li>
+</ul>
+<p>Freschet <em>et al.</em> note that “first-order root” is used
+contradictorily between these schemes, and in their own handbook it
+refers to the most distal root, the root tip. Rootopia takes no side: it
+reports all three columns and leaves the choice of scheme to you. One
+caveat on the mapping: Rootopia’s <code>order_from_base</code> picks the
+order-1 axis by thickness in each connected component, not by knowing
+which root germinated first, so it reproduces the developmental
+<em>direction</em> of counting without reconstructing development.</p>
 <p><strong>Grouping segments into roots.</strong> At a junction with
 three or more arms, two of them are judged to be the same root
 continuing through, and the rest are laterals. The pair chosen is the
@@ -814,6 +869,57 @@ thickness is the thinner arm divided by the thickest arm at that node.
 The last term is what stops two identical thin laterals from beating the
 parent axis, which they otherwise would by scoring a perfect similarity
 of 1.</p>
+<p><strong>Summarising by order, two ways.</strong>
+<code>res$summary</code> already gives one row per order class, which is
+<code><a href="../reference/summarize_orders.html">summarize_orders()</a></code> run for you.
+<code><a href="../reference/order_metrics.html">order_metrics()</a></code> is the same question asked more flexibly,
+and it is where most reporting ends up:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                                <span class="co"># one row per order class</span></span>
+<span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">res</span>, groups <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>fine <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>     <span class="co"># orders 1-2, and a "rest" row</span></span>
+<span><span class="fu"><a href="../reference/order_metrics.html">order_metrics</a></span><span class="op">(</span><span class="va">res</span>, groups <span class="op">=</span> <span class="st">"thinnest"</span><span class="op">)</span>           <span class="co"># thinnest class, and "rest"</span></span></code></pre></div>
+<p><strong>Groups of orders</strong> are the useful part. Fine-root
+questions are usually not “what does order 3 do” but “how do the fine
+roots differ from the rest”, and a group is how you ask that:
+<code>groups = list(fine = 1:2, coarse = 3:5)</code> gives one row per
+name you chose. Any order you do not list still holds root length, so it
+is pooled into one extra row called <code>rest</code> rather than
+quietly dropped — that way the rows always add up to the whole ordered
+network. Listing the same order in two groups is an error, because then
+the rows would double-count it. A group that catches no segment gets no
+row at all, rather than a row of zeros that would drag down any average
+you take over the table.</p>
+<p>Groups are aggregated from the segments themselves, not from the
+per-order table, so a group’s <code>mean_diameter</code> and
+<code>median_diameter</code> are the real values for all the root length
+in that group, not an average of averages.</p>
+<p>Which order number counts as “fine” changes between species, images
+and ordering schemes, so <code>groups = "thinnest"</code> picks the
+class by its length-weighted diameter instead of by its number, and the
+same call then means the same thing across a dataset. The
+<code>orders</code> column tells you which order numbers each row
+actually contains, so the choice stays visible.</p>
+<p>(<code>focal =</code> is the older spelling of the same idea. It
+still works and warns.)</p>
+<p><strong>Cumulative length</strong> answers a different question: not
+“how much root is at order 3” but “how much root have I accounted for by
+the time I reach order 3”. The per-order table carries it as
+<code>cumulative_length</code>, with <code>cumulative_fraction</code> as
+the same number divided by the total, so the last row is 1. Rows ascend
+in the order value. If an order has no segments it has no row, and the
+running total simply steps to the next order that does — no zero is
+inserted, because a zero row would pull down any mean taken over the
+table.</p>
+<p>Two conventions worth knowing. <strong>Diameter is
+length-weighted</strong>: a long thin segment counts more than a short
+one, so <code>mean_diameter</code> describes the diameter of the root
+length rather than the average of segment numbers.
+<strong><code>branching_frequency</code> is per unit length</strong>,
+not per segment, so it can be compared between groups that contain very
+different amounts of root.</p>
+<p>Segments whose order could not be determined are excluded and counted
+in <code>attr(., "n_unordered")</code> — check it when a total looks
+low.</p>
 <p><strong>Crossings versus branches.</strong> Where two roots cross in
 the image they form a node with four arms, but they are not connected in
 reality. At such nodes the three possible pairings are scored by
@@ -842,7 +948,7 @@ of the largest circle that fits inside the root there. Diameter is twice
 that.</p>
 This is why <code>mask =</code> matters. Pass only a skeleton and every
 diameter collapses to about 1 px, and every diameter-dependent rule
-above — the continuation choice, <code>branch_order</code>’s
+above — the continuation choice, <code>order_from_base</code>’s
 thickest-root seed — degenerates with it.
 </details><details><summary><b>Edge cases</b>
 </summary><table class="table">
@@ -907,18 +1013,268 @@ included</td>
 </div>
 </div>
 <div class="section level4">
-<h4 id="size-traits">Size traits<a class="anchor" aria-label="anchor" href="#size-traits"></a>
+<h4 id="network-shape-and-transport">Network shape and transport<a class="anchor" aria-label="anchor" href="#network-shape-and-transport"></a>
 </h4>
 <div class="section level5">
 <h5 id="what-it-is-for-6">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-6"></a>
+</h5>
+<p>Two questions the per-segment table can answer once it exists, both
+working on <code>res$edges</code> from the branching module rather than
+on the image.</p>
+<p><code><a href="../reference/network_metrics.html">network_metrics()</a></code> describes the <strong>shape of the
+whole network</strong>: how many segments and junctions, how many
+separate pieces, how many tips, and how branchy it is overall.</p>
+<p><code><a href="../reference/root_transport.html">root_transport()</a></code> describes <strong>what each segment has
+to carry</strong>. Water entering a root system at the base travels
+outward through branch after branch, so a segment near the base feeds a
+lot of root and a segment near a tip feeds almost none. This puts a
+number on that for every segment.</p>
+</div>
+<div class="section level5">
+<h5 id="the-flow-6">The flow<a class="anchor" aria-label="anchor" href="#the-flow-6"></a>
+</h5>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/branch_order_map.html">branch_order_map</a></span><span class="op">(</span><span class="va">skel</span>, mask <span class="op">=</span> <span class="va">cleaned</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/network_metrics.html">network_metrics</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">edges</span>, topology <span class="op">=</span> <span class="st">"projected_tree"</span><span class="op">)</span></span>
+<span><span class="va">et</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_transport.html">root_transport</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">edges</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/root_transport.html">root_transport()</a></code> adds columns to the table, so it can be
+painted straight onto the image:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/render_order_overlay.html">render_order_overlay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"segments"</span><span class="op">)</span>, <span class="va">et</span><span class="op">$</span><span class="va">path_resistance</span>,</span>
+<span>                     <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"dims"</span><span class="op">)</span>, <span class="st">"transport.png"</span>,</span>
+<span>                     mask <span class="op">=</span> <span class="va">cleaned</span>, value_label <span class="op">=</span> <span class="st">"path resistance"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level5">
+<h5 id="the-rules-6">The rules<a class="anchor" aria-label="anchor" href="#the-rules-6"></a>
+</h5>
+<p><strong>A loop in a root scan is usually not a loop.</strong> A root
+system branches outward, so it is a tree in the mathematical sense:
+paths divide and do not rejoin. Roots <em>can</em> fuse — grafting
+between woody roots undergoing secondary thickening is real — but that
+happens in coarse structural roots, not in the fine roots a
+minirhizotron or a washed-root scan typically shows. For the images this
+package is built for, a closed circuit in the data is almost never one
+the plant grew.</p>
+<p>What it usually is: a scan is a flat photograph of something
+three-dimensional, and two roots that merely cross in front of one
+another touch in the image. The skeleton then joins them, and the join
+closes a circuit.</p>
+<p>This is why <code><a href="../reference/network_metrics.html">network_metrics()</a></code> makes you say what kind of
+network you have:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th><code>topology</code></th>
+<th>What loops mean</th>
+<th>Where loop counts go</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>"tree"</code></td>
+<td>impossible</td>
+<td>
+<code>$qc</code> — any loop means the input is not a tree</td>
+</tr>
+<tr class="even">
+<td><code>"projected_tree"</code></td>
+<td>crossings in projection, i.e. segmentation artifacts</td>
+<td>
+<code>$qc</code> — a count of unresolved overlaps</td>
+</tr>
+<tr class="odd">
+<td><code>"reticulate"</code></td>
+<td>real, e.g. fungal mycelium or leaf veins</td>
+<td>
+<code>$traits</code> — a genuine measurement</td>
+</tr>
+</tbody>
+</table>
+<p>The same arithmetic lands in <code>$traits</code> or in
+<code>$qc</code> depending on that answer, and nothing else changes.
+Reporting a loop count as a biological result when it is really a tally
+of root crossings your segmentation failed to separate is the one
+mistake this is meant to prevent. <code>"auto"</code> guesses — no loops
+means a tree, any loop means a projected tree — so say which you have
+when you know.</p>
+<p><strong>For a network whose loops are real, say so.</strong>
+<code><a href="../reference/network_metrics.html">network_metrics()</a></code> is not limited to roots. Anything you can
+express as a list of segments with two end labels will work: fungal
+mycelium with anastomoses, leaf venation, a blood vessel cast, a stream
+network. For those, loops are the biology rather than a defect, and
+<code>topology = "reticulate"</code> moves the loop counts into
+<code>$traits</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># any edge table with `from`, `to` and (optionally) `length`</span></span>
+<span><span class="va">hyphae</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>from   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>, <span class="st">"d"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
+<span>                     to     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="st">"c"</span>, <span class="st">"d"</span>, <span class="st">"a"</span>, <span class="st">"d"</span><span class="op">)</span>,</span>
+<span>                     length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12</span>, <span class="fl">9</span>, <span class="fl">14</span>, <span class="fl">11</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/network_metrics.html">network_metrics</a></span><span class="op">(</span><span class="va">hyphae</span>, topology <span class="op">=</span> <span class="st">"reticulate"</span><span class="op">)</span></span>
+<span><span class="va">net</span><span class="op">$</span><span class="va">traits</span><span class="op">$</span><span class="va">cyclomatic</span>        <span class="co"># how many independent loops</span></span>
+<span><span class="va">net</span><span class="op">$</span><span class="va">traits</span><span class="op">$</span><span class="va">alpha_meshedness</span>  <span class="co"># how loopy, relative to the most a flat network could be</span></span></code></pre></div>
+<p>Read those two together. The <strong>cyclomatic number</strong>
+counts independent closed circuits — how many extra connections exist
+beyond the bare minimum needed to hold the network together. It grows
+with network size, so it is not comparable between a small network and a
+large one. <strong>Alpha</strong> divides it by the most a flat network
+of the same node count could have, giving 0 for a network with no loops
+and approaching 1 for a densely cross-linked one, which <em>is</em>
+comparable. A mycelium that reconnects often scores high; a branching
+structure that never rejoins scores 0.</p>
+<p>If you are working with a root scan, this is the wrong setting — it
+would report your segmentation’s crossings as biology. That is the whole
+reason the argument exists.</p>
+<p><strong><code>artefact_rate</code> makes crossing counts
+comparable.</strong> A big root system has more crossings than a small
+one simply because it has more root, so the raw count says as much about
+size as about quality. Dividing by total length gives crossings per unit
+of root, which can be compared between images.</p>
+<p><strong>A root system has to be given a base before anything can
+flow.</strong> A skeleton on its own has no direction: the thick
+proximal end of the main axis and a fine root tip are both just loose
+ends. <code><a href="../reference/root_transport.html">root_transport()</a></code> picks the <strong>thickest loose
+end</strong> of each separate piece as the base, which on a scan is the
+proximal end, and then measures outward from there. This is the same
+rule the Strahler ordering uses, so the two agree about which end is the
+start.</p>
+<p><strong>What each column means.</strong> For every segment:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Column</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>path_length</code></td>
+<td>distance from the base of its root system to the far end of this
+segment</td>
+</tr>
+<tr class="even">
+<td><code>path_resistance</code></td>
+<td>the same journey, weighted by how hard the water has to work</td>
+</tr>
+<tr class="odd">
+<td><code>downstream_tips</code></td>
+<td>how many root tips lie beyond this segment</td>
+</tr>
+<tr class="even">
+<td><code>downstream_length</code></td>
+<td>how much root length lies beyond it</td>
+</tr>
+<tr class="odd">
+<td><code>downstream_surface</code></td>
+<td>how much root surface lies beyond it</td>
+</tr>
+<tr class="even">
+<td><code>resistance</code></td>
+<td>the segment’s own contribution to resistance</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>downstream_*</code> columns peak at the base, where one
+segment serves the whole system, and fall to a single tip’s worth at the
+ends.</p>
+<p><strong>Resistance is weighted by the fourth power of
+radius.</strong> A pipe twice as wide carries water about sixteen times
+more easily, so halving a root’s diameter makes the same length roughly
+sixteen times harder to push water through. That is why
+<code>path_resistance</code> and <code>path_length</code> rank segments
+differently: a long thick root can be an easier path than a short thin
+one. Treat it as a relative ranking, not a physical measurement — it
+models a root as an open pipe, while a real root’s resistance is set by
+its internal plumbing.</p>
+<p><strong>Segments on a loop get <code>NA</code>.</strong> A segment
+inside a closed circuit has no single “beyond”, because there is more
+than one way round, so the transport columns cannot be defined for it
+and a warning says how many were affected. A high count here is the same
+signal <code><a href="../reference/network_metrics.html">network_metrics()</a></code> reports as
+<code>artefact_cycles</code>: the segmentation merged crossing
+roots.</p>
+<details><summary><b>Under the hood</b>
+</summary><p><code><a href="../reference/network_metrics.html">network_metrics()</a></code> reports node and edge counts,
+components, tips, branch points, the tip ratio, and the three standard
+connectivity coefficients: beta (edges per node), alpha (meshedness,
+loops relative to the most a flat network could have) and gamma (edges
+relative to the most a flat network could have). On a tree alpha is
+identically zero and gamma is a function of the counts, which is why
+they are reported as quality control there rather than as traits.</p>
+<code><a href="../reference/root_transport.html">root_transport()</a></code> roots each component at its thickest
+degree-1 node, walks the resulting tree outward once to accumulate
+<code>path_*</code>, and walks it back inward once to accumulate
+<code>downstream_*</code>. Resistance per segment is the
+Hagen-Poiseuille term, 8 eta L / (pi r^4), with <code>eta = 1</code> by
+default so the values are relative; a radius floor keeps a segment with
+no measurable diameter from producing an infinite resistance, and by
+default that floor is the thinnest radius actually present in the table,
+so it carries the table’s own unit.
+</details><details><summary><b>Edge cases</b>
+</summary><table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Situation</th>
+<th>What happens</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Edge table with no rows</td>
+<td>Returns without error; <code><a href="../reference/network_metrics.html">network_metrics()</a></code> gives an empty
+summary, <code><a href="../reference/root_transport.html">root_transport()</a></code> hands the table back
+unchanged</td>
+</tr>
+<tr class="even">
+<td>A component that is one segment</td>
+<td>It is its own base and its own tip</td>
+</tr>
+<tr class="odd">
+<td>A component with no loose end at all (a pure ring)</td>
+<td>There is no proximal end to root at, so an arbitrary node is used
+and the <code>path_*</code> values start from a meaningless place. Roots
+do not grow rings; a ring in the data is a segmentation artifact</td>
+</tr>
+<tr class="even">
+<td>Several separate root systems in one image</td>
+<td>Each is rooted and measured on its own</td>
+</tr>
+<tr class="odd">
+<td>Table converted to cm before <code><a href="../reference/root_transport.html">root_transport()</a></code>
+</td>
+<td>Lengths and resistances come out in those units</td>
+</tr>
+<tr class="even">
+<td>
+<code>from</code>/<code>to</code> containing <code>NA</code>
+</td>
+<td>Both stop, naming the columns</td>
+</tr>
+</tbody>
+</table></details>
+</div>
+</div>
+<div class="section level4">
+<h4 id="size-traits">Size traits<a class="anchor" aria-label="anchor" href="#size-traits"></a>
+</h4>
+<div class="section level5">
+<h5 id="what-it-is-for-7">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-7"></a>
 </h5>
 <p>The three quantities most analyses end up reporting: how much root
 there is (pixels), how long it is (cm), and how thick it is (cm).</p>
 </div>
 <div class="section level5">
-<h5 id="the-flow-6">The flow<a class="anchor" aria-label="anchor" href="#the-flow-6"></a>
+<h5 id="the-flow-7">The flow<a class="anchor" aria-label="anchor" href="#the-flow-7"></a>
 </h5>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/count_pixels.html">count_pixels</a></span><span class="op">(</span><span class="va">skel</span><span class="op">)</span>                                  <span class="co"># raw foreground count</span></span>
 <span><span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skel</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span>           <span class="co"># length</span></span>
 <span><span class="fu"><a href="../reference/root_diameter.html">root_diameter</a></span><span class="op">(</span><span class="va">cleaned</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span>      <span class="co"># thickness</span></span>
@@ -928,7 +1284,7 @@ diameter from the solid mask.</strong> Swapping them silently gives
 wrong answers rather than an error.</p>
 </div>
 <div class="section level5">
-<h5 id="the-rules-6">The rules<a class="anchor" aria-label="anchor" href="#the-rules-6"></a>
+<h5 id="the-rules-7">The rules<a class="anchor" aria-label="anchor" href="#the-rules-7"></a>
 </h5>
 <p><strong>Length is estimated, not counted.</strong> Counting skeleton
 pixels underestimates length, because a diagonal step covers √2 pixels
@@ -1027,10 +1383,123 @@ first</td>
 </h3>
 <p>Placing those measurements on a real depth axis.</p>
 <div class="section level4">
+<h4 id="finding-the-soil-surface">Finding the soil surface<a class="anchor" aria-label="anchor" href="#finding-the-soil-surface"></a>
+</h4>
+<div class="section level5">
+<h5 id="what-it-is-for-8">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-8"></a>
+</h5>
+<p>Depth is measured from the soil surface, so something has to say
+where in the image that surface is. On a minirhizotron tube the part
+above ground is covered with tape, and the end of that tape is the soil
+line. <code><a href="../reference/estimate_soil_surface.html">estimate_soil_surface()</a></code> finds it and reports its
+pixel position, which is what <code>start_soil</code> in
+<code><a href="../reference/create_depthmap.html">create_depthmap()</a></code> expects.</p>
+<p>Get this wrong and every depth in the output is shifted by the same
+amount, so it is worth checking once per campaign rather than trusting a
+default.</p>
+</div>
+<div class="section level5">
+<h5 id="the-flow-8">The flow<a class="anchor" aria-label="anchor" href="#the-flow-8"></a>
+</h5>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">est</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate_soil_surface.html">estimate_soil_surface</a></span><span class="op">(</span><span class="va">rgb_image</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
+<span><span class="va">est</span><span class="op">$</span><span class="va">soil0</span>        <span class="co"># pixel position of the soil surface along the depth axis</span></span>
+<span><span class="va">est</span><span class="op">$</span><span class="va">tape.end</span>     <span class="co"># pixel position where the tape stops</span></span>
+<span></span>
+<span><span class="va">depthmap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_depthmap.html">create_depthmap</a></span><span class="op">(</span><span class="va">img</span>, start_soil <span class="op">=</span> <span class="va">est</span><span class="op">$</span><span class="va">soil0</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level5">
+<h5 id="the-rules-8">The rules<a class="anchor" aria-label="anchor" href="#the-rules-8"></a>
+</h5>
+<p><strong>It expects the package’s orientation.</strong> Like the rest
+of the minirhizotron pipeline, it assumes the scan has been rotated so
+that <strong>depth runs along the image width</strong> and the tube’s
+circumference runs down the height. A scan with the soil surface at the
+top has to be turned a quarter turn before it is passed in.</p>
+<p><strong>It looks for tape, not for soil.</strong> The image is
+clustered into a few brightness classes and the brightest class is taken
+to be tape (set <code>inverse = TRUE</code> if your markers are dark
+instead). The function then steps along the depth axis one slice at a
+time and asks what fraction of that slice’s circumference is tape. While
+the tube is above ground that fraction is high; once the tube enters the
+soil it drops. The first slice where coverage falls below
+<code>tape_thresh</code> is read as the end of the tape.</p>
+<p><strong>It only searches the shallow part of the scan.</strong>
+<code>search_area</code> is the fraction of the depth axis examined,
+because the soil line is near the start of the tube. If the tape reaches
+past that fraction, the search ends without ever seeing coverage
+drop.</p>
+<p><strong>A missing answer is reported, not invented.</strong> If
+coverage never falls below the threshold anywhere in the search area,
+the tape was probably not fully inside it, and the function returns
+<code>NA</code> with a warning rather than a number. <code>NA</code> is
+the honest answer: any row index it could return would be
+indistinguishable from a real detection, and a reader could not tell the
+difference.</p>
+<p><strong><code>tape_overlap</code> is a safety margin.</strong> Tape
+is usually wrapped slightly below the soil line so it does not peel.
+That overlap, given in centimetres, is subtracted so <code>soil0</code>
+lands on the soil rather than on the bottom edge of the tape.</p>
+<details><summary><b>Under the hood</b>
+</summary><p>Clustering is unsupervised classification from the
+<code>RStoolbox</code> package, which is a suggested dependency rather
+than a required one: if it is not installed,
+<code><a href="../reference/estimate_soil_surface.html">estimate_soil_surface()</a></code> and
+<code><a href="../reference/estimate_rotation_center.html">estimate_rotation_center()</a></code> stop with a message saying so,
+and the rest of Rootopia is unaffected.</p>
+<code>tape_brightness</code> and <code>tape_quantile</code> control
+which cluster counts as tape; raise <code>tape_brightness</code> if soil
+is being read as tape, lower it if pale tape is being missed.
+</details><details><summary><b>Edge cases</b>
+</summary><table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Situation</th>
+<th>What happens</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Tape extends past <code>search_area</code>
+</td>
+<td>Returns <code>NA</code> with a warning; raise
+<code>search_area</code> or lower <code>tape_thresh</code>
+</td>
+</tr>
+<tr class="even">
+<td>Scan not rotated to the package’s orientation</td>
+<td>Measures along the wrong axis and the result is meaningless, without
+erroring</td>
+</tr>
+<tr class="odd">
+<td>No pixels bright enough to be tape</td>
+<td>Returns <code>NA</code> with a warning</td>
+</tr>
+<tr class="even">
+<td>
+<code>RStoolbox</code> not installed</td>
+<td>Stops with a message naming the package</td>
+</tr>
+<tr class="odd">
+<td>Dark markers instead of bright tape</td>
+<td>Set <code>inverse = TRUE</code>
+</td>
+</tr>
+<tr class="even">
+<td>Computed position lands above the image top</td>
+<td>Warns about a negative position</td>
+</tr>
+</tbody>
+</table></details>
+</div>
+</div>
+<div class="section level4">
 <h4 id="depth-mapping">Depth mapping<a class="anchor" aria-label="anchor" href="#depth-mapping"></a>
 </h4>
 <div class="section level5">
-<h5 id="what-it-is-for-7">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-7"></a>
+<h5 id="what-it-is-for-9">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-9"></a>
 </h5>
 <p>A minirhizotron tube goes into the soil at an angle, and the scanner
 unrolls its curved surface into a flat rectangle. A pixel’s position in
@@ -1040,9 +1509,9 @@ centimetres, so traits can be reported per depth interval rather than
 per pixel row.</p>
 </div>
 <div class="section level5">
-<h5 id="the-flow-7">The flow<a class="anchor" aria-label="anchor" href="#the-flow-7"></a>
+<h5 id="the-flow-9">The flow<a class="anchor" aria-label="anchor" href="#the-flow-9"></a>
 </h5>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dmap</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_depthmap.html">create_depthmap</a></span><span class="op">(</span><span class="va">img</span>, tilt <span class="op">=</span> <span class="fl">45</span>, dpi <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>                         tube_thicc <span class="op">=</span> <span class="fl">7</span>, start_soil <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="va">bins</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/binning.html">binning</a></span><span class="op">(</span><span class="va">dmap</span>, nn <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>               <span class="co"># continuous cm -&gt; 5 cm bins</span></span>
@@ -1060,7 +1529,7 @@ image, such as root length. Compute for one depth, then loop.</li>
 </ul>
 </div>
 <div class="section level5">
-<h5 id="the-rules-7">The rules<a class="anchor" aria-label="anchor" href="#the-rules-7"></a>
+<h5 id="the-rules-9">The rules<a class="anchor" aria-label="anchor" href="#the-rules-9"></a>
 </h5>
 <p><strong>Two axes, two corrections.</strong> Depth increases along the
 image <strong>width</strong> (columns). The tube’s curvature varies
@@ -1135,7 +1604,7 @@ wrong</td>
 <h4 id="root-angle">Root angle<a class="anchor" aria-label="anchor" href="#root-angle"></a>
 </h4>
 <div class="section level5">
-<h5 id="what-it-is-for-8">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-8"></a>
+<h5 id="what-it-is-for-10">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-10"></a>
 </h5>
 <p><code><a href="../reference/deep_drive.html">deep_drive()</a></code> asks a single question: of all the root
 pixels in an image, what fraction are growing in the direction that
@@ -1144,9 +1613,9 @@ a compact measure of how directly a root system dives rather than
 spreading sideways.</p>
 </div>
 <div class="section level5">
-<h5 id="the-flow-8">The flow<a class="anchor" aria-label="anchor" href="#the-flow-8"></a>
+<h5 id="the-flow-10">The flow<a class="anchor" aria-label="anchor" href="#the-flow-10"></a>
 </h5>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span>DepthMap <span class="op">=</span> <span class="va">dmap</span>, RootMap <span class="op">=</span> <span class="va">skel</span><span class="op">)</span>          <span class="co"># just the number</span></span>
 <span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span>DepthMap <span class="op">=</span> <span class="va">dmap</span>, RootMap <span class="op">=</span> <span class="va">skel</span>,</span>
 <span>                 return <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span>                            <span class="co"># plus the maps</span></span></code></pre></div>
@@ -1155,7 +1624,7 @@ spreading sideways.</p>
 route.</p>
 </div>
 <div class="section level5">
-<h5 id="the-rules-8">The rules<a class="anchor" aria-label="anchor" href="#the-rules-8"></a>
+<h5 id="the-rules-10">The rules<a class="anchor" aria-label="anchor" href="#the-rules-10"></a>
 </h5>
 <p><strong>Two direction maps are compared, pixel by pixel.</strong></p>
 <ol style="list-style-type: decimal">
@@ -1217,18 +1686,18 @@ optimal counts the same as one heading 180° away.</p>
 <h4 id="distribution-indices">Distribution indices<a class="anchor" aria-label="anchor" href="#distribution-indices"></a>
 </h4>
 <div class="section level5">
-<h5 id="what-it-is-for-9">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-9"></a>
+<h5 id="what-it-is-for-11">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-11"></a>
 </h5>
 <p>Summarizing <em>where</em> roots are rather than how many there are:
 how deep the center of mass sits, whether two profiles differ, whether
 there is a repeating pattern around the tube.</p>
 </div>
 <div class="section level5">
-<h5 id="the-flow-9">The flow<a class="anchor" aria-label="anchor" href="#the-flow-9"></a>
+<h5 id="the-flow-11">The flow<a class="anchor" aria-label="anchor" href="#the-flow-11"></a>
 </h5>
 <p>These are ordinary numeric functions — they take vectors, not images,
 so they come after a depth profile has been built.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/MRD.html">MRD</a></span><span class="op">(</span>w <span class="op">=</span> <span class="va">depth</span>, roots <span class="op">=</span> <span class="va">rootlength.density</span><span class="op">)</span>          <span class="co"># mean rooting depth</span></span>
 <span><span class="fu"><a href="../reference/compare_depth_distribution.html">compare_depth_distribution</a></span><span class="op">(</span><span class="va">P</span>, <span class="va">Q</span>, metric <span class="op">=</span> <span class="st">"wasserstein"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_accumulation.html">root_accumulation</a></span><span class="op">(</span><span class="va">df</span>, group <span class="op">=</span> <span class="st">"Tube"</span>, depth <span class="op">=</span> <span class="st">"depth"</span>,</span>
@@ -1238,7 +1707,7 @@ so they come after a depth profile has been built.</p>
 <span><span class="fu"><a href="../reference/modal_peaks.html">modal_peaks</a></span><span class="op">(</span><span class="va">diameters</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
-<h5 id="the-rules-9">The rules<a class="anchor" aria-label="anchor" href="#the-rules-9"></a>
+<h5 id="the-rules-11">The rules<a class="anchor" aria-label="anchor" href="#the-rules-11"></a>
 </h5>
 <p><strong>Mean rooting depth</strong> is the depth average weighted by
 root amount: <code>sum(depth × roots) / sum(roots)</code>. One number,
@@ -1264,6 +1733,13 @@ slice index with the period fixed to the number of slices, it tests
 whether roots are distributed evenly around the tube circumference. That
 is a <em>spatial</em> use of a tool normally introduced for time
 series.</p>
+<p><code><a href="../reference/rhythmicity.html">rhythmicity()</a></code> does the testing; the curve itself is
+fitted by <code><a href="../reference/fit_sine_curve.html">fit_sine_curve()</a></code>, which is exported so you can
+fit without the hypothesis test. Fixing the period with
+<code>fix_period</code> is the usual choice when you already know it —
+the number of slices around a tube, or a known sampling interval — and
+leaving it <code>NULL</code> estimates it from the data at the cost of
+one degree of freedom.</p>
 <p><strong>Circular mean</strong> averages angles correctly. The
 ordinary mean of 350° and 10° is 180°, which is exactly wrong; the
 circular mean gives 0°.</p>
@@ -1313,6 +1789,45 @@ values</td>
 </table></details><hr>
 </div>
 </div>
+<div class="section level4">
+<h4 id="looking-at-the-results">Looking at the results<a class="anchor" aria-label="anchor" href="#looking-at-the-results"></a>
+</h4>
+<div class="section level5">
+<h5 id="what-it-is-for-12">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-12"></a>
+</h5>
+<p>Three helpers that draw rather than measure. None of them changes a
+number; they exist so you can check that the numbers describe the image
+you think they do.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">cleaned</span>, frac <span class="op">=</span> <span class="fl">0.2</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="fl">0.7</span><span class="op">)</span><span class="op">)</span>   <span class="co"># inspect a corner</span></span>
+<span><span class="fu"><a href="../reference/render_order_overlay.html">render_order_overlay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"segments"</span><span class="op">)</span>, <span class="va">et</span><span class="op">$</span><span class="va">order_from_base</span>,</span>
+<span>                     <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"dims"</span><span class="op">)</span>, <span class="st">"orders.png"</span>, mask <span class="op">=</span> <span class="va">cleaned</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot_order_window.html">plot_order_window</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">edges</span>, <span class="va">skel</span>, r_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">400</span>, <span class="fl">800</span><span class="op">)</span>,</span>
+<span>                  c_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">600</span><span class="op">)</span>, file <span class="op">=</span> <span class="st">"window.png"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level5">
+<h5 id="the-rules-12">The rules<a class="anchor" aria-label="anchor" href="#the-rules-12"></a>
+</h5>
+<p><strong><code><a href="../reference/zoom_plot.html">zoom_plot()</a></code></strong> shows a fraction of an
+image at full resolution, with a small overview beside it marking where
+the detail sits. Use it before setting cleaning thresholds: specks and
+holes are invisible at whole-image zoom.</p>
+<p><strong><code><a href="../reference/render_order_overlay.html">render_order_overlay()</a></code></strong> paints one value
+per segment over the mask. It picks its legend from the data — a handful
+of small integers gets one labelled swatch per class, anything else gets
+a colour ramp with a scale bar — so the same call works for branch
+orders and for continuous quantities such as the transport columns.
+Segments with no value are drawn in red, which makes failures visible
+instead of silently absent.</p>
+<p><strong><code><a href="../reference/plot_order_window.html">plot_order_window()</a></code></strong> renders a chosen
+rectangle at native resolution, magnified, with no downsampling. It
+draws the skeleton in gray and the traced, ordered segments in colour on
+top — so <strong>bare gray is skeleton the graph missed</strong>. That
+is the check to run when a trait looks wrong and you want to see whether
+the tracing actually followed the roots, rather than judging it from a
+whole-image overlay where a few pixels are invisible.</p>
+</div>
+</div>
 </div>
 <div class="section level3">
 <h3 id="specialised">Specialised<a class="anchor" aria-label="anchor" href="#specialised"></a>
@@ -1322,16 +1837,16 @@ values</td>
 <h4 id="turnover">Turnover<a class="anchor" aria-label="anchor" href="#turnover"></a>
 </h4>
 <div class="section level5">
-<h5 id="what-it-is-for-10">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-10"></a>
+<h5 id="what-it-is-for-13">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-13"></a>
 </h5>
 <p>How much root was produced, how much died, and how much stayed,
 between two points in time.</p>
 </div>
 <div class="section level5">
-<h5 id="the-flow-10">The flow<a class="anchor" aria-label="anchor" href="#the-flow-10"></a>
+<h5 id="the-flow-12">The flow<a class="anchor" aria-label="anchor" href="#the-flow-12"></a>
 </h5>
 <p>Two methods, for two kinds of input:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># two separate sessions</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">img1</span>, <span class="va">img2</span>, method <span class="op">=</span> <span class="st">"tc"</span>, tc_method <span class="op">=</span> <span class="st">"kimura"</span>,</span>
 <span>              unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
@@ -1340,7 +1855,7 @@ between two points in time.</p>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">dpc_img</span>, method <span class="op">=</span> <span class="st">"dpc"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
-<h5 id="the-rules-10">The rules<a class="anchor" aria-label="anchor" href="#the-rules-10"></a>
+<h5 id="the-rules-13">The rules<a class="anchor" aria-label="anchor" href="#the-rules-13"></a>
 </h5>
 <p><strong>Temporal comparison (<code>"tc"</code>)</strong> measures
 root amount in each image and takes the difference.
@@ -1415,16 +1930,16 @@ visual checking</td>
 <h4 id="soil-and-color">Soil and color<a class="anchor" aria-label="anchor" href="#soil-and-color"></a>
 </h4>
 <div class="section level5">
-<h5 id="what-it-is-for-11">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-11"></a>
+<h5 id="what-it-is-for-14">What it is for<a class="anchor" aria-label="anchor" href="#what-it-is-for-14"></a>
 </h5>
 <p>Everything that uses color rather than shape: classifying what each
 pixel is made of, summarizing tube color, quantifying surface texture,
 and building a rhizosphere zone around roots.</p>
 </div>
 <div class="section level5">
-<h5 id="the-flow-11">The flow<a class="anchor" aria-label="anchor" href="#the-flow-11"></a>
+<h5 id="the-flow-13">The flow<a class="anchor" aria-label="anchor" href="#the-flow-13"></a>
 </h5>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">rgb_img</span><span class="op">)</span>                 <span class="co"># per-pixel class</span></span>
 <span><span class="fu"><a href="../reference/plot_soil_classification.html">plot_soil_classification</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span>                                       <span class="co"># per-class statistics</span></span>
@@ -1435,7 +1950,7 @@ and building a rhizosphere zone around roots.</p>
 <span><span class="va">halo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">seg</span>, width <span class="op">=</span> <span class="fl">3</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level5">
-<h5 id="the-rules-11">The rules<a class="anchor" aria-label="anchor" href="#the-rules-11"></a>
+<h5 id="the-rules-14">The rules<a class="anchor" aria-label="anchor" href="#the-rules-14"></a>
 </h5>
 <p><strong>Classification is nearest-centroid in CIE LAB.</strong> Each
 pixel is converted from RGB to LAB — a color space where Euclidean

@@ -1,7 +1,8 @@
 # Create a morphological structuring element
 
-Returns a \`cimg\` kernel of a given shape for use with
-\`imager::dilate()\` / \`imager::erode()\`.
+Returns a `cimg` kernel of a given shape for use with
+[`imager::dilate()`](https://rdrr.io/pkg/imager/man/erode.html) /
+[`imager::erode()`](https://rdrr.io/pkg/imager/man/erode.html).
 
 ## Usage
 
@@ -13,7 +14,7 @@ create_kernel(shape = "disk", size = 3)
 
 - shape:
 
-  One of \`"disk"\` (default), \`"square"\`, or \`"diamond"\`.
+  One of `"disk"` (default), `"square"`, or `"diamond"`.
 
 - size:
 
@@ -22,4 +23,4 @@ create_kernel(shape = "disk", size = 3)
 
 ## Value
 
-A \`cimg\` kernel.
+A `cimg` kernel.

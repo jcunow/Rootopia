@@ -188,7 +188,7 @@ order, and summarise root architecture by order class.
 - [`root_graph_pipeline()`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md)
   : Skeleton-to-graph root ordering pipeline (pixel units)
 - [`order_metrics()`](https://jcunow.github.io/Rootopia/reference/order_metrics.md)
-  : Aggregate root architecture by order, or split focal-vs-rest
+  : Aggregate root architecture by order, or by groups of orders
 - [`summarize_orders()`](https://jcunow.github.io/Rootopia/reference/summarize_orders.md)
   : Per-order summary of length and diameter
 - [`convert_root_units()`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md)
