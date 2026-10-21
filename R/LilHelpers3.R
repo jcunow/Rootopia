@@ -701,7 +701,11 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
 #' @param group Character vector specifying grouping variable(s)
 #' @param depth Character string specifying depth column name
 #' @param variable Character string specifying accumulating values column
-#' @param stdrz Character string specifying standardization method
+#' @param stdrz Character string naming the denominator applied to the
+#'   cumulative sum: \code{"counts"} (default) returns it raw,
+#'   \code{"additive"} divides by its maximum so each group's curve ends at 1,
+#'   and \code{"relative"} divides by the sum of the cumulative values. Use
+#'   \code{"additive"} to compare the shape of profiles between groups
 #' @export
 #'
 #' @return Numeric vector of accumulated values
