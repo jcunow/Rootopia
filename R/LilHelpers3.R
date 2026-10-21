@@ -56,7 +56,7 @@
 #'arguments.  This can result in cumbersome names when
 #'arguments are expressions.
 #'
-#'<p>The default is \code{FALSE}.
+#'The default is \code{FALSE}.
 #' @param use.anon.names (optional)
 #'\code{use.anon.names}
 #'is a deprecated synonym for \code{make.names}.
@@ -885,7 +885,7 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #'   \item{valley_x}{Vector of x-values for local minima between peaks (if any).}
 #'   \item{valley_y}{Vector of y-values for local minima between peaks (if any).}
 #'   \item{prominences}{Vector of prominence values corresponding to each detected peak.}
-#'   \item{mclust}{A list of Mclust model results if \code{mclust = TRUE}, including means, SDs, standard errors, cluster sizes, and 95\% CI.}
+#'   \item{mclust}{A list of Mclust model results if \code{mclust = TRUE}, including means, SDs, standard errors, cluster sizes, and 95% CI.}
 #'   \item{classifications}{A vector assigning each observation in \code{x} to a cluster. Based on Mclust if \code{mclust = TRUE}, otherwise based on closest peak from prominence method.}
 #' }
 #'
