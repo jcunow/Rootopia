@@ -92,7 +92,7 @@ Key parameters:
 | `tape_brightness` | Brightness threshold (0–1) for classifying tape pixels |
 | `search_area` | Fraction of image width to analyze (tape is near one edge) |
 | `nclasses` | Number of unsupervised clustering classes |
-| `tape_quantile` | Quantile used to align the brightness scale |
+| `tape_quantile` | Quantile of the image used as the bright reference for tape |
 
 ---
 
@@ -207,11 +207,12 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binar
                                   output_format = "spatrast")
 
 
-# rotation trim: drop the top 33% of rows
+# Trim the shallowest quarter of the depth axis (columns), where the tape and
+# the noisiest soil sit. The rotation axis is left whole, since that is what the
+# slices below are cut along.
 e <- terra::ext(root_layer)
-root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
+root_layer <- terra::crop(root_layer, terra::ext(e[1] + e[2] / 4, e[2], e[3], e[4]))
 terra::plot(root_layer, maxcell = Inf)
-# --> the trimming avoids noisy deep layer and tape artifacts at the top
 
 # create circumferential zones
 n_slices <- 48
@@ -238,18 +239,19 @@ slice_traits$rld <- slice_traits$rootlen /
 ### Test for a circumferential (top-down) pattern
 
 ```{r, eval=TRUE}
+# With a numeric `fix_period` the period is not estimated, so `par_start` is
+# not used -- the three remaining parameters are fitted from the data.
 res <- rhythmicity(
   x          = slice_traits$slice,
   y          = slice_traits$rld,
   fix_period = n_slices,
-  method     = "F",
-  par_start   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootlen),
-                     period = n_slices)
+  method     = "F"
 )
 
 cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
-cat("The top-down difference is", round((res$amplitude*2) / res$offset,2), " -> circa twice as large as the mean"    )
+cat(sprintf("Peak-to-trough spread is %.2f x the mean root length density\n",
+            (res$amplitude * 2) / res$offset))
 ```
 
 A significant, non-trivial amplitude indicates that root abundance varies
@@ -303,12 +305,13 @@ ggplot(slice_traits, aes(slice, rld + inner)) +
 
 ```
 
-> **Going further**: the same slice loop can be combined with `slice_rotation(mode =
-> "both")` to additionally split each circumferential slice by depth bin,
-> producing a slice x depth grid. Fitting `rhythmicity()` separately within
-> each depth bin (x = slice, y = trait per slice) tests whether the
-> circumferential pattern is consistent with depth or changes from shallow to
-> deep — i.e. a genuine *top-down amplitude* gradient.
+> **Going further**: the same slice loop can be nested inside `depth_zoning()`
+> to split each circumferential slice by depth bin, producing a slice x depth
+> grid — `slice_rotation()` the image, then `depth_zoning()` each slice, or the
+> other way round. Fitting `rhythmicity()` separately within each depth bin
+> (x = slice, y = trait per slice) tests whether the circumferential pattern is
+> consistent with depth or changes from shallow to deep — i.e. a genuine
+> *top-down amplitude* gradient.
 
 ---
 
