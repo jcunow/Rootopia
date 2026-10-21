@@ -43,8 +43,8 @@ branch_order_map(
 
   Which scheme labels `$class_map`/`$summary`: `"strahler_order"`,
   `"order_from_tip"`, `"root_max_order_from_tip"` or
-  `"order_from_base"`. The 1.1.0 spellings `"tip_order"`, `"root_order"`
-  and `"branch_order"` are accepted and resolved to these.
+  `"order_from_base"`. The deprecated aliases `"tip_order"`,
+  `"root_order"` and `"branch_order"` resolve to these.
 
 - unit:
 
@@ -63,8 +63,8 @@ branch_order_map(
   horizontal, vertical or 45-degree segment and differ only where a
   chain mixes orthogonal and diagonal steps. See
   [`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md)
-  for the definition. Use `"polyline"` to reproduce output from Rootopia
-  1.1.0 and earlier.
+  for the definition. Use `"polyline"` to match software that reports
+  the chain code.
 
 - template:
 
@@ -139,10 +139,10 @@ roots more.
   one heavily branched root does not inflate the rest. Order 1 is chosen
   by thickness, not by knowing which root grew first.
 
-Up to Rootopia 1.1.0 these columns were called `tip_order`, `root_order`
-and `branch_order`. Those names are still returned, as copies of the
-columns above, and are still accepted by `order`, `order_col` and
-`value`.
+`tip_order`, `root_order` and `branch_order` are deprecated aliases for
+`order_from_tip`, `root_max_order_from_tip` and `order_from_base`.
+`$edges` carries them as copies of those columns, and `order`,
+`order_col` and `value` accept them.
 
 **Continuation rule** (groups segments into roots, for the two per-root
 columns): at each junction the two arms forming the same root are chosen

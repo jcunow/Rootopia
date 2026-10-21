@@ -102,9 +102,9 @@ diameters collapse to ~1 px. Required if <code>skel</code> is <code>NULL</code>.
 <dt id="arg-order">order<a class="anchor" aria-label="anchor" href="#arg-order"></a></dt>
 <dd><p>Which scheme labels <code>$class_map</code>/<code>$summary</code>:
 <code>"strahler_order"</code>, <code>"order_from_tip"</code>,
-<code>"root_max_order_from_tip"</code> or <code>"order_from_base"</code>. The 1.1.0
-spellings <code>"tip_order"</code>, <code>"root_order"</code> and
-<code>"branch_order"</code> are accepted and resolved to these.</p></dd>
+<code>"root_max_order_from_tip"</code> or <code>"order_from_base"</code>. The
+deprecated aliases <code>"tip_order"</code>, <code>"root_order"</code> and
+<code>"branch_order"</code> resolve to these.</p></dd>
 
 
 <dt id="arg-unit">unit<a class="anchor" aria-label="anchor" href="#arg-unit"></a></dt>
@@ -123,7 +123,7 @@ estimator corrects for that and is the better estimate. The two agree
 exactly on a perfectly horizontal, vertical or 45-degree segment and
 differ only where a chain mixes orthogonal and diagonal steps. See
 <code><a href="convert_root_units.html">convert_root_units</a></code> for the definition. Use
-<code>"polyline"</code> to reproduce output from Rootopia 1.1.0 and earlier.</p></dd>
+<code>"polyline"</code> to match software that reports the chain code.</p></dd>
 
 
 <dt id="arg-template">template<a class="anchor" aria-label="anchor" href="#arg-template"></a></dt>
@@ -191,10 +191,10 @@ subtree depth, so one heavily branched root does not inflate the rest.
 Order 1 is chosen by thickness, not by knowing which root grew first.</p></dd>
 
 
-</dl><p>Up to Rootopia 1.1.0 these columns were called <code>tip_order</code>,
-<code>root_order</code> and <code>branch_order</code>. Those names are still returned, as
-copies of the columns above, and are still accepted by <code>order</code>,
-<code>order_col</code> and <code>value</code>.</p>
+</dl><p><code>tip_order</code>, <code>root_order</code> and <code>branch_order</code> are deprecated
+aliases for <code>order_from_tip</code>, <code>root_max_order_from_tip</code> and
+<code>order_from_base</code>. <code>$edges</code> carries them as copies of those
+columns, and <code>order</code>, <code>order_col</code> and <code>value</code> accept them.</p>
 <p><strong>Continuation rule</strong> (groups segments into roots, for the two per-root
 columns): at each junction the two arms forming the same root are chosen by
 <code>straightness + diam_weight * diameter_similarity</code>.

@@ -824,11 +824,11 @@ than short ones. That is the right thing if you want “the average order
 of a centimetre of root” and the wrong thing if you want “the average
 order of a root”, so it is worth knowing which of the two you asked
 for.</p>
-<p>Up to Rootopia 1.1.0 these columns were called
-<code>tip_order</code>, <code>root_order</code> and
-<code>branch_order</code>. Those names are still returned as copies, and
-still accepted wherever a column is named, so old scripts keep
-running.</p>
+<p><code>tip_order</code>, <code>root_order</code> and
+<code>branch_order</code> are deprecated aliases for
+<code>order_from_tip</code>, <code>root_max_order_from_tip</code> and
+<code>order_from_base</code>. The edge table carries them as copies, and
+any argument that names a column accepts them.</p>
 <p><strong>How these line up with root ecology’s vocabulary.</strong>
 Freschet <em>et al.</em> (2021, <em>New Phytologist</em> 232: 973-1122)
 describe three classifications that root ecologists use, and they
@@ -899,8 +899,8 @@ class by its length-weighted diameter instead of by its number, and the
 same call then means the same thing across a dataset. The
 <code>orders</code> column tells you which order numbers each row
 actually contains, so the choice stays visible.</p>
-<p>(<code>focal =</code> is the older spelling of the same idea. It
-still works and warns.)</p>
+<p>(<code>focal =</code> is a deprecated alias for
+<code>groups =</code>. It warns when used.)</p>
 <p><strong>Cumulative length</strong> answers a different question: not
 “how much root is at order 3” but “how much root have I accounted for by
 the time I reach order 3”. The per-order table carries it as

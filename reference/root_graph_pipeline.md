@@ -125,9 +125,9 @@ Four order columns are produced (see
 [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
 for the full rules): `order_from_tip` and `strahler_order` per segment,
 `root_max_order_from_tip` and `order_from_base` per continuous root.
-`color_by` selects which one the overlay uses. The spellings used up to
-Rootopia 1.1.0 – `tip_order`, `root_order`, `branch_order` – are kept as
-copies of those columns and are still accepted by `color_by`.
+`color_by` selects which one the overlay uses. The deprecated aliases
+`tip_order`, `root_order` and `branch_order` are copies of those columns
+and `color_by` accepts them too.
 
 ## See also
 

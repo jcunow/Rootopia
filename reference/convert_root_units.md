@@ -49,9 +49,8 @@ convert_root_units(
   measures follow whatever path the skeleton takes, so neither can
   recover length the skeleton does not have.
 
-  Use `"polyline"` to reproduce output from Rootopia 1.1.0 and earlier,
-  which defaulted to it, or to compare against software that reports the
-  chain code.
+  Use `"polyline"` to compare against software that reports the chain
+  code.
 
 ## Value
 

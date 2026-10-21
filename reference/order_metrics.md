@@ -22,8 +22,8 @@ order_metrics(x, order_col = NULL, groups = NULL, focal = NULL)
 - order_col:
 
   Order column to aggregate by; defaults to the object's `$order`, else
-  `"order_from_base"`. The 1.1.0 spellings are accepted and resolved to
-  the current ones.
+  `"order_from_base"`. A deprecated alias resolves to the column it
+  names.
 
 - groups:
 
@@ -47,10 +47,10 @@ order_metrics(x, order_col = NULL, groups = NULL, focal = NULL)
 
 - focal:
 
-  Deprecated spelling of `groups`, kept so existing calls still run. A
-  numeric value or vector is read as `groups = list(focal = focal)`;
-  `"thinnest"`, `"thickest"` and the aliases `"finest"` / `"coarsest"`
-  are read as the matching `groups` string.
+  Deprecated alias for `groups`; it warns. A numeric value or vector is
+  read as `groups = list(focal = focal)`; `"thinnest"`, `"thickest"` and
+  the aliases `"finest"` / `"coarsest"` are read as the matching
+  `groups` string.
 
 ## Value
 

@@ -86,8 +86,8 @@ length.</p>
 
 <dt id="arg-order-col">order_col<a class="anchor" aria-label="anchor" href="#arg-order-col"></a></dt>
 <dd><p>Order column to aggregate by; defaults to the object's
-<code>$order</code>, else <code>"order_from_base"</code>. The 1.1.0 spellings are
-accepted and resolved to the current ones.</p></dd>
+<code>$order</code>, else <code>"order_from_base"</code>. A deprecated alias resolves
+to the column it names.</p></dd>
 
 
 <dt id="arg-groups">groups<a class="anchor" aria-label="anchor" href="#arg-groups"></a></dt>
@@ -108,8 +108,8 @@ number(s) landed in each row.</p></li>
 
 
 <dt id="arg-focal">focal<a class="anchor" aria-label="anchor" href="#arg-focal"></a></dt>
-<dd><p>Deprecated spelling of <code>groups</code>, kept so existing calls
-still run. A numeric value or vector is read as
+<dd><p>Deprecated alias for <code>groups</code>; it warns. A numeric value
+or vector is read as
 <code>groups = list(focal = focal)</code>; <code>"thinnest"</code>, <code>"thickest"</code>
 and the aliases <code>"finest"</code> / <code>"coarsest"</code> are read as the matching
 <code>groups</code> string.</p></dd>

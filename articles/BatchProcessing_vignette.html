@@ -658,10 +658,9 @@ main-root split calls lateral</td>
 </tr>
 </tbody>
 </table>
-<p>Where a scheme has a spelling from Rootopia 1.1.0
-(<code>branch_order</code>, <code>tip_order</code>,
-<code>root_order</code>), the column is repeated under that name as
-well, so scripts written against the old names keep working.</p>
+<p>Where a scheme has a deprecated alias (<code>branch_order</code>,
+<code>tip_order</code>, <code>root_order</code>), the column is repeated
+under that name too, so code indexing either name finds it.</p>
 <p><strong>Per tube</strong> (repeated on every row of that tube) — the
 thickest order-1 path vs. all higher-order branches, split by
 <code>order_metrics(..., groups = "thickest")</code>:</p>

@@ -414,9 +414,9 @@ batch_root_traits(
   counts the other way – the thickest root of each component is 1 and
   its laterals 2 – and `"root_max_order_from_tip"` gives each continuous
   root the largest `order_from_tip` along it. All four are computed
-  regardless; this only picks which one is reported. The spellings used
-  up to Rootopia 1.1.0 (`"tip_order"`, `"root_order"`, `"branch_order"`)
-  are accepted and resolved to these. See
+  regardless; this only picks which one is reported. The deprecated
+  aliases `"tip_order"`, `"root_order"` and `"branch_order"` resolve to
+  these. See
   [`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md).
 
 - diam_weight:

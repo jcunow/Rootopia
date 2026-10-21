@@ -46,8 +46,8 @@ plot_order_window(
 
 - order_col:
 
-  Which order column to color by. The 1.1.0 spellings are accepted and
-  resolved to the current ones.
+  Which order column to color by. A deprecated alias resolves to the
+  column it names.
 
 ## Value
 
