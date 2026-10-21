@@ -10,6 +10,8 @@ stitch_root_scans(
   group_regex = "T0\\\\d{2}",
   select = NULL,
   tubes = NULL,
+  order_by = NULL,
+  decreasing = FALSE,
   out_dir = NULL,
   out_prefix = "",
   out_format = "png",
@@ -46,6 +48,19 @@ tube list (e.g. \code{1:36}), a character
 vector of tube names (e.g. \code{c("T037", "T040")}), or the string
 \code{"ask"} to print the tubes and choose a range interactively in one
 call (interactive sessions only). \code{NULL} keeps all tubes.}
+
+\item{order_by}{Optional regular expression (PCRE) whose match in each path
+is the key the frames of a tube are sorted on. \code{NULL} (default) sorts
+by file name, which is lexicographic and therefore puts \code{_10} before
+\code{_2} when frame numbers are not zero-padded. Use
+\code{"\\\\d+(?=\\\\.)"} to sort on the number before the extension.
+A match that parses as a number sorts numerically, otherwise as text; a
+file the pattern does not match stops the run, because its place in the
+sequence would be arbitrary.}
+
+\item{decreasing}{Logical. Reverse the frame order within each tube, for
+sequences numbered from the far end of the tube back. Default
+\code{FALSE}.}
 
 \item{out_dir}{Optional directory to write one mosaic per tube to (named
 \code{<out_prefix><tube>.<ext>}). Created if needed. \code{NULL} (default)
@@ -149,6 +164,10 @@ aggregate(peak ~ tube, res$report, mean)
 # 3) A named subset, written straight to PNG
 stitch_root_scans("path/to/scans", pattern = ".tiff",
                   tubes = c("T037", "T040"), out_dir = "path/to/output")
+
+# 4) Frame numbers that are not zero-padded: sort on the number itself
+stitch_root_scans("path/to/scans", pattern = ".tiff",
+                  order_by = "\\\\\\\\d+(?=\\\\\\\\.)")
 }
 }
 \seealso{

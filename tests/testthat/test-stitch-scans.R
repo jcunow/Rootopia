@@ -226,3 +226,37 @@ test_that("stitch_image_pair passes the bracket down to the alignment", {
   expect_equal(max(abs(m - base)), 0)
   expect_equal(as.numeric(attr(m, "offset")[["dx"]]), 120L - ov)
 })
+
+
+test_that("stitch_order_frames sorts on the key, numerically where it can", {
+  # Unpadded frame numbers are exactly where the default name sort goes wrong:
+  # "_10" sorts before "_2" as text.
+  p <- c("scan_T067_2.tif", "scan_T067_10.tif", "scan_T067_1.tif")
+
+  expect_equal(stitch_order_frames(p),
+               c("scan_T067_1.tif", "scan_T067_10.tif", "scan_T067_2.tif"))
+
+  expect_equal(stitch_order_frames(p, order_by = "\\d+(?=\\.)"),
+               c("scan_T067_1.tif", "scan_T067_2.tif", "scan_T067_10.tif"))
+
+  expect_equal(stitch_order_frames(p, order_by = "\\d+(?=\\.)", decreasing = TRUE),
+               c("scan_T067_10.tif", "scan_T067_2.tif", "scan_T067_1.tif"))
+})
+
+test_that("stitch_order_frames falls back to text for non-numeric keys", {
+  p <- c("tube_c.tif", "tube_a.tif", "tube_b.tif")
+  expect_equal(stitch_order_frames(p, order_by = "[a-z](?=\\.)"),
+               c("tube_a.tif", "tube_b.tif", "tube_c.tif"))
+})
+
+test_that("stitch_order_frames stops when a file has no key", {
+  # An unmatched path has no defined place in the sequence, and guessing one
+  # would put a frame in the wrong part of the mosaic.
+  p <- c("scan_1.tif", "scan_2.tif", "notes.txt")
+  expect_error(stitch_order_frames(p, order_by = "\\d+(?=\\.)"), "notes.txt")
+  expect_error(stitch_order_frames(p, order_by = 7), "regular expression")
+})
+
+test_that("stitch_order_frames passes a single frame through", {
+  expect_equal(stitch_order_frames("only.tif", order_by = "\\d+"), "only.tif")
+})

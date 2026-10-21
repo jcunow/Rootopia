@@ -108,6 +108,17 @@ list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #'   vector of tube names (e.g. \code{c("T037", "T040")}), or the string
 #'   \code{"ask"} to print the tubes and choose a range interactively in one
 #'   call (interactive sessions only). \code{NULL} keeps all tubes.
+#' @param order_by Optional regular expression (PCRE) whose match in each path
+#'   is the key the frames of a tube are sorted on. \code{NULL} (default) sorts
+#'   by file name, which is lexicographic and therefore puts \code{_10} before
+#'   \code{_2} when frame numbers are not zero-padded. Use
+#'   \code{"\\\\d+(?=\\\\.)"} to sort on the number before the extension.
+#'   A match that parses as a number sorts numerically, otherwise as text; a
+#'   file the pattern does not match stops the run, because its place in the
+#'   sequence would be arbitrary.
+#' @param decreasing Logical. Reverse the frame order within each tube, for
+#'   sequences numbered from the far end of the tube back. Default
+#'   \code{FALSE}.
 #' @param out_dir Optional directory to write one mosaic per tube to (named
 #'   \code{<out_prefix><tube>.<ext>}). Created if needed. \code{NULL} (default)
 #'   returns mosaics only.
@@ -140,9 +151,15 @@ list_scan_files <- function(input, pattern = NULL, group_regex = "T0\\d{2}") {
 #' # 3) A named subset, written straight to PNG
 #' stitch_root_scans("path/to/scans", pattern = ".tiff",
 #'                   tubes = c("T037", "T040"), out_dir = "path/to/output")
+#'
+#' # 4) Frame numbers that are not zero-padded: sort on the number itself
+#' stitch_root_scans("path/to/scans", pattern = ".tiff",
+#'                   order_by = "\\\\d+(?=\\\\.)")
 #' }
 stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
-                              select = NULL, tubes = NULL, out_dir = NULL,
+                              select = NULL, tubes = NULL,
+                              order_by = NULL, decreasing = FALSE,
+                              out_dir = NULL,
                               out_prefix = "", out_format = "png", method = "phase",
                               edge_width = 250, vertical_region = 1000,
                               vertical_offset = 300, direction = "horizontal",
@@ -207,7 +224,7 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
 
     for (gi in seq_along(unique_groups)) {
       g <- unique_groups[gi]
-      members <- sort(files[groups == g])
+      members <- stitch_order_frames(files[groups == g], order_by, decreasing)
       if (verbose) message("[", gi, "/", length(unique_groups), "] ", g,
                            " - ", length(members), " frame(s)")
 
@@ -745,6 +762,52 @@ stitch_discover_files <- function(input, pattern = NULL) {
   }
   if (!is.null(pattern)) files <- files[grepl(pattern, files, fixed = TRUE)]
   sort(files)
+}
+
+#' Order the frames of one tube
+#'
+#' Frames are stitched in the order given, so this decides the sequence. The
+#' default key is the file name, which sorts lexicographically and therefore
+#' puts \code{_10} before \code{_2} when frame numbers are not zero-padded.
+#' \code{order_by} extracts a key from each path instead: a number if the match
+#' parses as one, otherwise the matched text.
+#'
+#' @param paths Character vector of file paths for one tube.
+#' @param order_by Optional PCRE pattern whose match in each path is the sort
+#'   key, e.g. \code{"\\d+(?=\\.)"} for the number before the extension.
+#'   \code{NULL} sorts by the whole path.
+#' @param decreasing Logical; reverse the order.
+#' @return \code{paths}, reordered.
+#' @keywords internal
+stitch_order_frames <- function(paths, order_by = NULL, decreasing = FALSE) {
+  if (length(paths) < 2L) return(paths)
+  if (is.null(order_by)) return(sort(paths, decreasing = decreasing))
+
+  if (!is.character(order_by) || length(order_by) != 1L || is.na(order_by))
+    stop("'order_by' must be a single regular expression, or NULL.", call. = FALSE)
+
+  m   <- regexpr(order_by, paths, perl = TRUE)
+  key <- rep(NA_character_, length(paths))
+  key[m != -1L] <- regmatches(paths, m)
+
+  # A path the pattern does not match has no key to sort on. Ordering it
+  # arbitrarily would put a frame in the wrong place in the mosaic, which is
+  # the failure this argument exists to prevent, so it stops instead.
+  if (anyNA(key))
+    stop("'order_by' matched no key in ", sum(is.na(key)), " of ",
+         length(paths), " file(s), so their position in the sequence is ",
+         "undefined: ", paste(basename(paths[is.na(key)]), collapse = ", "),
+         call. = FALSE)
+
+  num <- suppressWarnings(as.numeric(key))
+  # Numeric keys must sort numerically -- sorting "10" against "2" as text is
+  # the very thing the default key gets wrong.
+  ord <- if (!anyNA(num)) {
+    order(num, decreasing = decreasing)
+  } else {
+    order(key, decreasing = decreasing)
+  }
+  paths[ord]
 }
 
 #' Load any supported image to a (height, width, channel) array in 0-255
