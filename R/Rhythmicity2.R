@@ -156,7 +156,7 @@ fit_sine_curve <- function(x, y, par_start = list(amp=3, phase=0, offset=0, peri
 #'   \item \code{phase}: Fitted phase
 #'   \item \code{offset}: Fitted offset
 #'   \item \code{period}: Fitted or fixed period
-#'   \item \code{peakTime}: Peak time (phase + period/4)
+#'   \item \code{peakTime}: Position of the first peak, \code{(period/4 - phase) mod period}
 #'   \item \code{R2}: Coefficient of determination
 #'   \item \code{residual_se}: Residual standard error (F-test only)
 #'   \item \code{df_residual}: Residual degrees of freedom (F-test only)
