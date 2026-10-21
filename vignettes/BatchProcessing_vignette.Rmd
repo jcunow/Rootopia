@@ -245,7 +245,7 @@ result <- root_depth_metrics(
 | `calc_landscape_metrics` | `enn_mn`, `joinent`, `relmutinf`, `np`, `contag`, `np_density` | **Slow** — one call per depth bin |
 | `calc_color_metrics` | `rcc_root`, `gcc_root`, ..., `rcc_bg`, `gcc_bg`, ... | Requires `path_rgb` |
 | `calc_root_angles` | `deep_drive`, `mean.steepness.angle`, `sd.steepness.angle` | Requires `calc_root_length` |
-| `calc_root_order_metrics` | Per bin: `mean.<scheme>`, `max.<scheme>` for the `order_scheme` in use (e.g. `mean.strahler_order`), plus `mean.root_order` and `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, ...), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length`. See `order_scheme` for which ordering is reported |
+| `calc_root_order_metrics` | Per bin: `mean.<scheme>`, `max.<scheme>` for the `order_scheme` in use (e.g. `mean.strahler_order`), plus `mean.root_max_order_from_tip` and `lateral_root_fraction`. Per tube: `main_root.*` / `lateral_roots.*` (length, diameter, branching frequency, ...), `n_root_orders` | **Slow** — builds one segment graph per image. Requires `calc_root_length`. See `order_scheme` for which ordering is reported |
 | `calc_density_metrics` | `rootpx.density`, `rootlength.density` | Auto-enables pixels + length |
 | `calc_distribution_indices` | `mrd`, `total.length.density` | Tube-level summary |
 | `calc_advanced_metrics` | `rootlength.fraction`, `mean.var.diameter` | Auto-enables distribution indices + diameter stats |
@@ -273,10 +273,12 @@ result <- root_depth_metrics(
 ## Root branching order
 
 `calc_root_order_metrics = TRUE` builds a segment graph from the skeleton of
-each image (via `branch_order_map()`) and assigns every root segment a
-**branching order**: segments on the thickest, most central path of each
-connected component are order 1, the branches coming off them are order 2,
-their branches order 3, and so on. See the
+each image (via `branch_order_map()`) and labels every root segment with all
+four **order schemes** — `strahler_order` and `order_from_tip` per segment,
+`root_max_order_from_tip` and `order_from_base` per continuous root.
+`order_scheme` picks which one is reported here; it defaults to
+`"strahler_order"`, where every distal unbranched root is order 1 and the
+number rises only where two roots of equal order meet. See the
 [Flatbed Scans](FlatBedScans_vignettes.html#7b-branch-order)
 vignette for a worked example of the underlying pipeline.
 
@@ -295,20 +297,24 @@ This adds two kinds of columns:
 
 | Column | Meaning |
 |---|---|
-| `mean.branch_order` | Mean branch order of skeleton pixels in the bin |
-| `max.branch_order` | Highest branch order reached in the bin |
-| `mean.root_order` | Mean root order (max tip-order along each root) in the bin |
-| `lateral_root_fraction` | Fraction of skeleton pixels belonging to branch order > 1 (laterals) |
+| `mean.<order_scheme>` | Mean order of the ordered skeleton pixels in the bin, named after the scheme in use (`mean.strahler_order` by default) |
+| `max.<order_scheme>` | Highest order reached in the bin, named the same way |
+| `mean.root_max_order_from_tip` | Mean of `root_max_order_from_tip` — the largest `order_from_tip` along each continuous root — over the bin's pixels. Always present, whichever scheme is chosen |
+| `lateral_root_fraction` | Fraction of the bin's ordered skeleton pixels that fall **outside** the thickest order class, i.e. everything the main-root split calls lateral |
+
+Where a scheme has a spelling from Rootopia 1.1.0 (`branch_order`,
+`tip_order`, `root_order`), the column is repeated under that name as well, so
+scripts written against the old names keep working.
 
 **Per tube** (repeated on every row of that tube) — the thickest order-1
 path vs. all higher-order branches, split by
-`order_metrics(..., focal = "thickest")`:
+`order_metrics(..., groups = "thickest")`:
 
 | Column prefix | Meaning |
 |---|---|
 | `main_root.*` | Totals/means for the thickest (order-1) root(s): `total_length`, `mean_diameter`, `median_diameter`, `n_segments`, `n_tips`, `n_branch_points`, `length_fraction`, `mean_segment_length`, `branching_frequency` |
 | `lateral_roots.*` | The same set of statistics for everything else (order >= 2) |
-| `n_root_orders` | Highest branch order found in the image |
+| `n_root_orders` | Highest order found in the image, under `order_scheme` |
 
 ```{r order-plot, fig.alt="Bar chart of lateral root length fraction against depth."}
 library(ggplot2)
@@ -322,7 +328,7 @@ ggplot(result, aes(x = depth, y = lateral_root_fraction, color = Tube)) +
   labs(
     title = "Lateral Root Fraction by Depth",
     x     = "Soil Depth (cm)",
-    y     = "Fraction of skeleton pixels with branch order > 1"
+    y     = "Fraction of ordered skeleton pixels outside the main-root class"
   )
 ```
 

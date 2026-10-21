@@ -316,19 +316,21 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 ### 7b. Branch order
 
 `branch_order_map()` goes one step further than `detect_skeleton_points()`:
-it builds a full segment graph from the skeleton and assigns every segment a
-**branching order**. Segments on the thickest, most central path of each
-connected component are order 1; the branches coming off them are order 2,
-their branches order 3, and so on — so the order simply counts how many
-branching events separate a segment from the root's main path, rather than
-labeling roots as "main" or "lateral". Because flatbed scans have no depth
-dimension, this is computed once for the whole image.
+it builds a full segment graph from the skeleton and labels every segment with
+four order schemes. `order =` picks which one the summary and the map report.
+The one used below, `order_from_base`, counts generations outward: segments on
+the thickest, most central path of each connected component are order 1, the
+branches coming off them are order 2, their branches order 3, and so on — so
+the number counts how many branching events separate a segment from the root's
+main path, rather than labeling roots as "main" or "lateral". The others count
+inward from the tips; `?branch_order_map` defines all four. Because flatbed
+scans have no depth dimension, this is computed once for the whole image.
 
 ```{r, eval=FALSE}
 order_res <- branch_order_map(
   skel  = skl,    # skeleton from step 2
   mask  = seg,    # filled root mask, same grid — used for diameters
-  order = "branch_order",
+  order = "order_from_base",
   unit  = "cm",
   dpi   = 150
 )
@@ -340,27 +342,34 @@ order_res$summary
 zoom_plot(order_res$class_map, main = "Branch order")
 ```
 
-`order_metrics()` can split the architecture into the thickest order-1
-path(s) versus all higher-order branches (selected by diameter, so it works
-regardless of how many order classes were found):
+`order_metrics()` can pool the architecture into the thickest order-1
+path(s) versus all higher-order branches. `groups = "thickest"` selects that
+group by diameter rather than by order number, so it works regardless of how
+many order classes were found, and everything it does not select is pooled into
+a row called `rest`:
 
 ```{r, eval=FALSE}
-main_vs_lateral <- order_metrics(order_res, focal = "thickest")
+main_vs_lateral <- order_metrics(order_res, groups = "thickest")
 print(main_vs_lateral)
 
 # Fraction of total root length in higher-order branches (order >= 2)
 lateral_length_fraction <- main_vs_lateral$length_fraction[main_vs_lateral$group == "rest"]
 ```
 
-`order_metrics()` also accepts a numeric `focal` to split one specific order
-class off from the rest:
+`groups` also takes a named list, so you can name the order sets yourself.
+Orders you leave out go to `rest`, which keeps the rows adding up to the whole
+ordered network:
 
 ```{r, eval=FALSE}
-# Per-order-class table (same as order_res$summary)
+# Per-order-class table (same as order_res$summary), with a running total of
+# length across the orders in `cumulative_length`
 order_metrics(order_res)
 
 # Order 1 (thickest central path) vs. everything else
-order_metrics(order_res, focal = 1)
+order_metrics(order_res, groups = list(main = 1))
+
+# Two named sets; any remaining order still shows up as `rest`
+order_metrics(order_res, groups = list(main = 1, fine = 2:3))
 ```
 
 To check the classification visually, write a color-coded overlay PNG, or
@@ -370,11 +379,10 @@ re-plot a sub-window at native resolution for QC:
 order_res2 <- branch_order_map(
   skel          = skl,
   mask          = seg,
-  order         = "branch_order",
+  order         = "order_from_base",
   unit          = "cm",
   dpi           = 300,
-  overlay_png   = "branch_order_overlay.png",
-  keep_segments = TRUE
+  overlay_png   = "branch_order_overlay.png"
 )
 
 # Zoom into a 200x200 px window at 3x magnification
@@ -426,7 +434,7 @@ results <- data.frame(
   mean_diameter_cm   = mean(diam_vals),
   sd_diameter_cm     = sd(diam_vals),
   lateral_length_fraction = lateral_length_fraction,
-  n_root_orders      = max(order_res$edges$branch_order, na.rm = TRUE)
+  n_root_orders      = max(order_res$edges$order_from_base, na.rm = TRUE)
 )
 
 write.csv(results, "flatbed_results.csv", row.names = FALSE)

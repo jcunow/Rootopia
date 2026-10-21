@@ -476,7 +476,7 @@ One call does everything:
 
 ```{r}
 res <- branch_order_map(skel, mask = cleaned,
-                        order = "branch_order",
+                        order = "order_from_base",
                         unit = "cm", dpi = 300)
 res$summary     # one row per order class
 res$edges       # one row per segment
@@ -496,15 +496,18 @@ prune_terminal_segments()   optional, off by default
    |
 build_edge_table()      measure length and diameter per segment
    |
-compute_tip_order()     assign tip_order
+compute_tip_order()     assign order_from_tip
    |
-assign_root_order()     group segments into roots; root_order, branch_order
+compute_strahler_order()    assign strahler_order
+   |
+assign_root_order()     group segments into roots; root_max_order_from_tip,
+                        order_from_base
 ```
 
 Then `convert_root_units()` rescales to cm, `summarize_orders()` aggregates, and
 `order_classification_map()` paints the result back onto the image.
 
-Those seven steps are internal — they are named here so the order of operations
+Those eight steps are internal — they are named here so the order of operations
 is visible, not because you call them. The two entry points are
 `branch_order_map()` and, if you want the segment table in pixels without the
 unit conversion and summary, `root_graph_pipeline()`.
@@ -523,22 +526,69 @@ each end that lands on a merged junction, reaching from the segment's last pixel
 to the center of the junction cluster. Without that stub, every branch point
 would quietly eat about a pixel of root from each arm that meets it.
 
-**Three order schemes are always computed**, and they answer different questions:
+**Four order schemes are always computed**, and they answer different
+questions. Read the column name as *what gets the number*, then *where the
+counting starts*: two of them label a single graph segment, two label a whole
+continuous root.
 
-* `tip_order` — counted inward from the tips. Every terminal segment is 1;
-  peeling terminals away round by round, a segment's order is one more than the
-  highest of its children. This is centrifugal depth, *not* strict Strahler
-  ordering: it increments at every junction, so a long chain of single laterals
-  keeps climbing.
-* `root_order` — segments are first grouped into continuous roots (below), then
-  each root takes the highest `tip_order` along it. A thick main axis therefore
-  keeps its high order all the way out to its tip.
-* `branch_order` — generation counting. The thickest root in each disconnected
-  piece of the image is order 1; its laterals are 2, theirs 3, and so on.
-  Independent of how deep any one subtree runs.
+Per segment:
 
-`order =` only chooses which of the three labels the summary and the map; all
-three are always present in `res$edges`.
+* `order_from_tip` — counted inward from the tips (centripetal). Every terminal
+  segment is 1; peeling terminals away round by round, a segment's number is one
+  more than the highest of its children. It is *not* strict Strahler ordering:
+  it increments at *every* junction, so an axis carrying ten single laterals
+  reaches 11.
+* `strahler_order` — the same peeling under the strict rule: the number rises
+  only where two children share the highest order. A lone thin lateral joining
+  a thick axis leaves the axis where it was.
+
+Per continuous root:
+
+* `root_max_order_from_tip` — not a count of its own. Segments are grouped into
+  continuous roots (below) and every segment of a root is stamped with the
+  *largest* `order_from_tip` found along it. Because that column never falls as
+  you move basally, the largest value is simply the one at the root's basal end.
+  So a thick main axis keeps its high number all the way out to its tip instead
+  of dropping to 1.
+* `order_from_base` — generation counting. The thickest root in each
+  disconnected piece of the image is order 1; its laterals are 2, theirs 3, and
+  so on. Independent of how deep any one subtree runs.
+
+`order =` only chooses which of the four labels the summary and the map; all
+four are always present in `res$edges`.
+
+Because a per-root column repeats the same number on every segment of that
+root, averaging it across segments weights long roots more heavily than short
+ones. That is the right thing if you want "the average order of a centimetre of
+root" and the wrong thing if you want "the average order of a root", so it is
+worth knowing which of the two you asked for.
+
+Up to Rootopia 1.1.0 these columns were called `tip_order`, `root_order` and
+`branch_order`. Those names are still returned as copies, and still accepted
+wherever a column is named, so old scripts keep running.
+
+**How these line up with root ecology's vocabulary.** Freschet *et al.* (2021,
+*New Phytologist* 232: 973-1122) describe three classifications that root
+ecologists use, and they disagree about which end counts as one, so a number on
+its own is ambiguous unless you say which scheme produced it:
+
+* the **morphometric** (also stream-order) classification numbers the most
+  distal segments first-order and works inward — the direction `order_from_tip`
+  and `strahler_order` count in, with `strahler_order` following the strict
+  stream-order rule;
+* the **topological** classification also starts at the tips but adds the orders
+  of the two child links at a junction instead of taking the higher one;
+* the **developmental** classification starts at the parent axis, so the most
+  distal roots carry the *highest* number — the direction `order_from_base`
+  counts in.
+
+Freschet *et al.* note that "first-order root" is used contradictorily between
+these schemes, and in their own handbook it refers to the most distal root, the
+root tip. Rootopia takes no side: it reports all three columns and leaves the
+choice of scheme to you. One caveat on the mapping: Rootopia's `order_from_base`
+picks the order-1 axis by thickness in each connected component, not by
+knowing which root germinated first, so it reproduces the developmental
+*direction* of counting without reconstructing development.
 
 **Grouping segments into roots.** At a junction with three or more arms, two of
 them are judged to be the same root continuing through, and the rest are
@@ -551,6 +601,55 @@ thinner arm divided by the thicker, and relative thickness is the thinner arm
 divided by the thickest arm at that node. The last term is what stops two
 identical thin laterals from beating the parent axis, which they otherwise would
 by scoring a perfect similarity of 1.
+
+**Summarising by order, two ways.** `res$summary` already gives one row per
+order class, which is `summarize_orders()` run for you. `order_metrics()` is
+the same question asked more flexibly, and it is where most reporting ends up:
+
+```{r}
+order_metrics(res)                                # one row per order class
+order_metrics(res, groups = list(fine = 1:2))     # orders 1-2, and a "rest" row
+order_metrics(res, groups = "thinnest")           # thinnest class, and "rest"
+```
+
+**Groups of orders** are the useful part. Fine-root questions are usually not
+"what does order 3 do" but "how do the fine roots differ from the rest", and a
+group is how you ask that: `groups = list(fine = 1:2, coarse = 3:5)` gives one
+row per name you chose. Any order you do not list still holds root length, so
+it is pooled into one extra row called `rest` rather than quietly dropped —
+that way the rows always add up to the whole ordered network. Listing the same
+order in two groups is an error, because then the rows would double-count it.
+A group that catches no segment gets no row at all, rather than a row of zeros
+that would drag down any average you take over the table.
+
+Groups are aggregated from the segments themselves, not from the per-order
+table, so a group's `mean_diameter` and `median_diameter` are the real values
+for all the root length in that group, not an average of averages.
+
+Which order number counts as "fine" changes between species, images and
+ordering schemes, so `groups = "thinnest"` picks the class by its
+length-weighted diameter instead of by its number, and the same call then means
+the same thing across a dataset. The `orders` column tells you which order
+numbers each row actually contains, so the choice stays visible.
+
+(`focal =` is the older spelling of the same idea. It still works and warns.)
+
+**Cumulative length** answers a different question: not "how much root is at
+order 3" but "how much root have I accounted for by the time I reach order 3".
+The per-order table carries it as `cumulative_length`, with
+`cumulative_fraction` as the same number divided by the total, so the last row
+is 1. Rows ascend in the order value. If an order has no segments it has no
+row, and the running total simply steps to the next order that does — no zero
+is inserted, because a zero row would pull down any mean taken over the table.
+
+Two conventions worth knowing. **Diameter is length-weighted**: a long thin
+segment counts more than a short one, so `mean_diameter` describes the diameter
+of the root length rather than the average of segment numbers.
+**`branching_frequency` is per unit length**, not per segment, so it can be
+compared between groups that contain very different amounts of root.
+
+Segments whose order could not be determined are excluded and counted in
+`attr(., "n_unordered")` — check it when a total looks low.
 
 **Crossings versus branches.** Where two roots cross in the image they form a
 node with four arms, but they are not connected in reality. At such nodes the
@@ -586,7 +685,7 @@ inside the root there. Diameter is twice that.
 
 This is why `mask =` matters. Pass only a skeleton and every diameter collapses
 to about 1 px, and every diameter-dependent rule above — the continuation
-choice, `branch_order`'s thickest-root seed — degenerates with it.
+choice, `order_from_base`'s thickest-root seed — degenerates with it.
 </details>
 
 <details>
@@ -602,6 +701,172 @@ choice, `branch_order`'s thickest-root seed — degenerates with it.
 | Perfectly symmetric fork | The continuation score genuinely ties and the first pair enumerated wins. The `"fork"` validation phantom is excluded from per-root scoring for this reason |
 | `class_map` pixel counts below the skeleton | Expected: merged junction interiors belong to no segment, leaving one unpainted pixel per branch point. Read lengths from `res$edges$length` |
 | Pruning enabled | Thresholds use the same length definition the table reports, stub included |
+</details>
+
+### Network shape and transport
+
+#### What it is for
+
+Two questions the per-segment table can answer once it exists, both working on
+`res$edges` from the branching module rather than on the image.
+
+`network_metrics()` describes the **shape of the whole network**: how many
+segments and junctions, how many separate pieces, how many tips, and how
+branchy it is overall.
+
+`root_transport()` describes **what each segment has to carry**. Water entering
+a root system at the base travels outward through branch after branch, so a
+segment near the base feeds a lot of root and a segment near a tip feeds almost
+none. This puts a number on that for every segment.
+
+#### The flow
+
+```{r}
+res <- branch_order_map(skel, mask = cleaned, unit = "cm", dpi = 300)
+
+network_metrics(res$edges, topology = "projected_tree")
+et <- root_transport(res$edges)
+```
+
+`root_transport()` adds columns to the table, so it can be painted straight
+onto the image:
+
+```{r}
+render_order_overlay(attr(et, "segments"), et$path_resistance,
+                     attr(et, "dims"), "transport.png",
+                     mask = cleaned, value_label = "path resistance")
+```
+
+#### The rules
+
+**A loop in a root scan is usually not a loop.** A root system branches
+outward, so it is a tree in the mathematical sense: paths divide and do not
+rejoin. Roots *can* fuse — grafting between woody roots undergoing secondary
+thickening is real — but that happens in coarse structural roots, not in the
+fine roots a minirhizotron or a washed-root scan typically shows. For the
+images this package is built for, a closed circuit in the data is almost never
+one the plant grew.
+
+What it usually is: a scan is a flat photograph of something
+three-dimensional, and two roots that merely cross in front of one another
+touch in the image. The skeleton then joins them, and the join closes a
+circuit.
+
+This is why `network_metrics()` makes you say what kind of network you have:
+
+| `topology` | What loops mean | Where loop counts go |
+|---|---|---|
+| `"tree"` | impossible | `$qc` — any loop means the input is not a tree |
+| `"projected_tree"` | crossings in projection, i.e. segmentation artifacts | `$qc` — a count of unresolved overlaps |
+| `"reticulate"` | real, e.g. fungal mycelium or leaf veins | `$traits` — a genuine measurement |
+
+The same arithmetic lands in `$traits` or in `$qc` depending on that answer,
+and nothing else changes. Reporting a loop count as a biological result when it
+is really a tally of root crossings your segmentation failed to separate is the
+one mistake this is meant to prevent. `"auto"` guesses — no loops means a tree,
+any loop means a projected tree — so say which you have when you know.
+
+**For a network whose loops are real, say so.** `network_metrics()` is not
+limited to roots. Anything you can express as a list of segments with two end
+labels will work: fungal mycelium with anastomoses, leaf venation, a blood
+vessel cast, a stream network. For those, loops are the biology rather than a
+defect, and `topology = "reticulate"` moves the loop counts into `$traits`:
+
+```{r}
+# any edge table with `from`, `to` and (optionally) `length`
+hyphae <- data.frame(from   = c("a", "b", "c", "d", "b"),
+                     to     = c("b", "c", "d", "a", "d"),
+                     length = c(12, 9, 14, 11, 7))
+
+net <- network_metrics(hyphae, topology = "reticulate")
+net$traits$cyclomatic        # how many independent loops
+net$traits$alpha_meshedness  # how loopy, relative to the most a flat network could be
+```
+
+Read those two together. The **cyclomatic number** counts independent closed
+circuits — how many extra connections exist beyond the bare minimum needed to
+hold the network together. It grows with network size, so it is not comparable
+between a small network and a large one. **Alpha** divides it by the most a
+flat network of the same node count could have, giving 0 for a network with no
+loops and approaching 1 for a densely cross-linked one, which *is* comparable.
+A mycelium that reconnects often scores high; a branching structure that never
+rejoins scores 0.
+
+If you are working with a root scan, this is the wrong setting — it would
+report your segmentation's crossings as biology. That is the whole reason the
+argument exists.
+
+**`artefact_rate` makes crossing counts comparable.** A big root system has
+more crossings than a small one simply because it has more root, so the raw
+count says as much about size as about quality. Dividing by total length gives
+crossings per unit of root, which can be compared between images.
+
+**A root system has to be given a base before anything can flow.** A skeleton
+on its own has no direction: the thick proximal end of the main axis and a fine
+root tip are both just loose ends. `root_transport()` picks the **thickest loose
+end** of each separate piece as the base, which on a scan is the proximal end,
+and then measures outward from there. This is the same rule the Strahler
+ordering uses, so the two agree about which end is the start.
+
+**What each column means.** For every segment:
+
+| Column | Meaning |
+|---|---|
+| `path_length` | distance from the base of its root system to the far end of this segment |
+| `path_resistance` | the same journey, weighted by how hard the water has to work |
+| `downstream_tips` | how many root tips lie beyond this segment |
+| `downstream_length` | how much root length lies beyond it |
+| `downstream_surface` | how much root surface lies beyond it |
+| `resistance` | the segment's own contribution to resistance |
+
+The `downstream_*` columns peak at the base, where one segment serves the whole
+system, and fall to a single tip's worth at the ends.
+
+**Resistance is weighted by the fourth power of radius.** A pipe twice as wide
+carries water about sixteen times more easily, so halving a root's diameter
+makes the same length roughly sixteen times harder to push water through. That
+is why `path_resistance` and `path_length` rank segments differently: a long
+thick root can be an easier path than a short thin one. Treat it as a relative
+ranking, not a physical measurement — it models a root as an open pipe, while a
+real root's resistance is set by its internal plumbing.
+
+**Segments on a loop get `NA`.** A segment inside a closed circuit has no
+single "beyond", because there is more than one way round, so the transport
+columns cannot be defined for it and a warning says how many were affected. A
+high count here is the same signal `network_metrics()` reports as
+`artefact_cycles`: the segmentation merged crossing roots.
+
+<details>
+<summary><b>Under the hood</b></summary>
+
+`network_metrics()` reports node and edge counts, components, tips, branch
+points, the tip ratio, and the three standard connectivity coefficients: beta
+(edges per node), alpha (meshedness, loops relative to the most a flat network
+could have) and gamma (edges relative to the most a flat network could have).
+On a tree alpha is identically zero and gamma is a function of the counts, which
+is why they are reported as quality control there rather than as traits.
+
+`root_transport()` roots each component at its thickest degree-1 node, walks the
+resulting tree outward once to accumulate `path_*`, and walks it back inward once
+to accumulate `downstream_*`. Resistance per segment is the Hagen-Poiseuille
+term, 8 eta L / (pi r^4), with `eta = 1` by default so the values are relative;
+a radius floor keeps a segment with no measurable diameter from producing an
+infinite resistance, and by default that floor is the thinnest radius actually
+present in the table, so it carries the table's own unit.
+</details>
+
+<details>
+<summary><b>Edge cases</b></summary>
+
+| Situation | What happens |
+|---|---|
+| Edge table with no rows | Returns without error; `network_metrics()` gives an empty summary, `root_transport()` hands the table back unchanged |
+| A component that is one segment | It is its own base and its own tip |
+| A component with no loose end at all (a pure ring) | There is no proximal end to root at, so an arbitrary node is used and the `path_*` values start from a meaningless place. Roots do not grow rings; a ring in the data is a segmentation artifact |
+| Several separate root systems in one image | Each is rooted and measured on its own |
+| Table converted to cm before `root_transport()` | Lengths and resistances come out in those units |
+| `from`/`to` containing `NA` | Both stop, naming the columns |
+
 </details>
 
 ### Size traits
@@ -677,6 +942,88 @@ which does the actual work; see that package for what each metric means.
 ## Depth-resolved analysis
 
 Placing those measurements on a real depth axis.
+
+### Finding the soil surface
+
+#### What it is for
+
+Depth is measured from the soil surface, so something has to say where in the
+image that surface is. On a minirhizotron tube the part above ground is covered
+with tape, and the end of that tape is the soil line.
+`estimate_soil_surface()` finds it and reports its pixel position, which is what
+`start_soil` in `create_depthmap()` expects.
+
+Get this wrong and every depth in the output is shifted by the same amount, so
+it is worth checking once per campaign rather than trusting a default.
+
+#### The flow
+
+```{r}
+est <- estimate_soil_surface(rgb_image, dpi = 300)
+est$soil0        # pixel position of the soil surface along the depth axis
+est$tape.end     # pixel position where the tape stops
+
+depthmap <- create_depthmap(img, start_soil = est$soil0, dpi = 300)
+```
+
+#### The rules
+
+**It expects the package's orientation.** Like the rest of the minirhizotron
+pipeline, it assumes the scan has been rotated so that **depth runs along the
+image width** and the tube's circumference runs down the height. A scan with the
+soil surface at the top has to be turned a quarter turn before it is passed in.
+
+**It looks for tape, not for soil.** The image is clustered into a few
+brightness classes and the brightest class is taken to be tape (set
+`inverse = TRUE` if your markers are dark instead). The function then steps
+along the depth axis one slice at a time and asks what fraction of that slice's
+circumference is tape. While the tube is above ground that fraction is high;
+once the tube enters the soil it drops. The first slice where coverage falls
+below `tape_thresh` is read as the end of the tape.
+
+**It only searches the shallow part of the scan.** `search_area` is the
+fraction of the depth axis examined, because the soil line is near the start of
+the tube. If the tape reaches past that fraction, the search ends without ever
+seeing coverage drop.
+
+**A missing answer is reported, not invented.** If coverage never falls below
+the threshold anywhere in the search area, the tape was probably not fully
+inside it, and the function returns `NA` with a warning rather than a number.
+`NA` is the honest answer: any row index it could return would be
+indistinguishable from a real detection, and a reader could not tell the
+difference.
+
+**`tape_overlap` is a safety margin.** Tape is usually wrapped slightly below
+the soil line so it does not peel. That overlap, given in centimetres, is
+subtracted so `soil0` lands on the soil rather than on the bottom edge of the
+tape.
+
+<details>
+<summary><b>Under the hood</b></summary>
+
+Clustering is unsupervised classification from the `RStoolbox` package, which
+is a suggested dependency rather than a required one: if it is not installed,
+`estimate_soil_surface()` and `estimate_rotation_center()` stop with a message
+saying so, and the rest of Rootopia is unaffected.
+
+`tape_brightness` and `tape_quantile` control which cluster counts as tape;
+raise `tape_brightness` if soil is being read as tape, lower it if pale tape is
+being missed.
+</details>
+
+<details>
+<summary><b>Edge cases</b></summary>
+
+| Situation | What happens |
+|---|---|
+| Tape extends past `search_area` | Returns `NA` with a warning; raise `search_area` or lower `tape_thresh` |
+| Scan not rotated to the package's orientation | Measures along the wrong axis and the result is meaningless, without erroring |
+| No pixels bright enough to be tape | Returns `NA` with a warning |
+| `RStoolbox` not installed | Stops with a message naming the package |
+| Dark markers instead of bright tape | Set `inverse = TRUE` |
+| Computed position lands above the image top | Warns about a negative position |
+
+</details>
 
 ### Depth mapping
 
@@ -843,6 +1190,13 @@ period fixed to the number of slices, it tests whether roots are distributed
 evenly around the tube circumference. That is a *spatial* use of a tool normally
 introduced for time series.
 
+`rhythmicity()` does the testing; the curve itself is fitted by
+`fit_sine_curve()`, which is exported so you can fit without the hypothesis
+test. Fixing the period with `fix_period` is the usual choice when you already
+know it — the number of slices around a tube, or a known sampling interval —
+and leaving it `NULL` estimates it from the data at the cost of one degree of
+freedom.
+
 **Circular mean** averages angles correctly. The ordinary mean of 350° and 10° is
 180°, which is exactly wrong; the circular mean gives 0°.
 
@@ -864,6 +1218,42 @@ via `mclust`.
 </details>
 
 ---
+
+### Looking at the results
+
+#### What it is for
+
+Three helpers that draw rather than measure. None of them changes a number;
+they exist so you can check that the numbers describe the image you think they
+do.
+
+```{r}
+zoom_plot(cleaned, frac = 0.2, center = c(0.6, 0.7))   # inspect a corner
+render_order_overlay(attr(et, "segments"), et$order_from_base,
+                     attr(et, "dims"), "orders.png", mask = cleaned)
+plot_order_window(res$edges, skel, r_range = c(400, 800),
+                  c_range = c(200, 600), file = "window.png")
+```
+
+#### The rules
+
+**`zoom_plot()`** shows a fraction of an image at full resolution, with a small
+overview beside it marking where the detail sits. Use it before setting
+cleaning thresholds: specks and holes are invisible at whole-image zoom.
+
+**`render_order_overlay()`** paints one value per segment over the mask. It
+picks its legend from the data — a handful of small integers gets one labelled
+swatch per class, anything else gets a colour ramp with a scale bar — so the
+same call works for branch orders and for continuous quantities such as the
+transport columns. Segments with no value are drawn in red, which makes
+failures visible instead of silently absent.
+
+**`plot_order_window()`** renders a chosen rectangle at native resolution,
+magnified, with no downsampling. It draws the skeleton in gray and the traced,
+ordered segments in colour on top — so **bare gray is skeleton the graph
+missed**. That is the check to run when a trait looks wrong and you want to see
+whether the tracing actually followed the roots, rather than judging it from a
+whole-image overlay where a few pixels are invisible.
 
 ## Specialised
 
