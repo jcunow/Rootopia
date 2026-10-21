@@ -169,21 +169,21 @@ seg_censored <- rotation_censor(
 ### 3. Create the depth map
 
 `create_depthmap()` assigns a soil depth value (cm) to every pixel based on
-tube geometry (diameter, tilt angle, DPI) and a sinusoidal correction for
+tube geometry (diameter, insertion angle, DPI) and a sinusoidal correction for
 the curvature of cylindrical tubes.
 
 **Important parameters:**
 
 | Parameter | Description |
 |---|---|
-| `sinoid` | `TRUE` for cylindrical minirhizotron tubes; `FALSE` for flat windows |
+| `geometry` | `"tube"` for cylindrical minirhizotron tubes, `"window"` for a flat rhizotron window, `"flat"` for a surface with no depth axis at all |
 | `tube_thicc` | Inner tube diameter in cm (typically 4.4 or 7 cm) |
-| `tilt` | Insertion angle from **horizontal** in degrees; `90` is a vertical tube. A tube installed at the common 30–45° from vertical is 45–60° here. |
+| `angle_from_vertical` | Insertion angle from **vertical** in degrees, in `[0, 90]`; `0` is an upright tube, `90` a horizontal one. A tube installed at the common 30–45° from vertical is 30–45° here — the number field notes record. |
 | `dpi` | Scanner resolution |
 | `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
 | `center_offset` | Where the top of the tube sits across the image height, as a fraction of one full circumference (0–1). 0 = first row, 0.5 = halfway down, 1 = last row. |
 
-```{r fig.alt="Depth map in centimetres, shading from shallow at one end to deep at the other."}
+```{r fig.alt="Depth map in centimeters, shading from shallow at one end to deep at the other."}
 # `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth
 # attribution. Here it is derived from the RootDetector layers.
 mask <- seg_img[[1]] - seg_img[[2]]
@@ -192,9 +192,9 @@ mask[mask == 255] <- NA
 depth_map <- create_depthmap(
   img           = seg_img,
   mask          = mask,
-  sinoid        = TRUE,
+  geometry      = "tube",
   tube_thicc    = 7,       # cm — measure your own tube
-  tilt          = 45,      # degrees
+  angle_from_vertical = 45, # degrees from vertical
   dpi           = 150,
   start_soil    = 2.9,     # cm — from in-situ calibration
   center_offset = 0.5      # tube top halfway down the image
@@ -306,6 +306,7 @@ diam_result <- root_diameter(
   root_layer,
   skeleton_img = skl,
   unit         = "cm",
+  dpi          = 150,   # not optional: the default is 300
   select_layer = NULL
 )
 terra::ext(diam_result$diameter_rast) <- terra::ext(depth_bins)
@@ -391,7 +392,7 @@ color_df <- do.call(rbind, color_list)   # NULLs from empty bins are dropped
 
 > Looking for **root branching order** (segments grouped by branching order)?
 > That analysis has no depth dimension, so it lives in the
-> [Flatbed Scans](FlatBedScans_vignettes.html#7b-branch-order)
+> [Flatbed Scans](FlatBedScans_vignettes.html#branch-order)
 > vignette. You can still run it on a minirhizotron skeleton — just compute it
 > once for the whole image rather than per depth bin.
 
@@ -425,7 +426,7 @@ depth_data$rootpx.cumulative <- root_accumulation(
   group    = "Tube",
   depth    = "depth",
   variable = "rootpx",
-  stdrz    = "relative"   # "counts" (raw), "additive" (/max), or "relative" (/sum)
+  stdrz    = "additive"   # "counts" (raw), "additive" (/max), "relative" (/sum)
 )
 
 library(ggplot2)
@@ -435,12 +436,15 @@ ggplot(depth_data, aes(x = depth, y = rootpx.cumulative)) +
   theme_minimal() +
   labs(x = "Depth (cm)", y = "Cumulative root pixel fraction",
        title = "Root accumulation with depth")
-# remember, Depth 0 is rounded and contains -2.5 to +2.5 cm depth. You can change this in `binning()` with the argument: rounding = "ceiling" 
+# remember, Depth 0 is rounded and contains -2.5 to +2.5 cm depth. You can change this in `binning()` with the argument: round_option = "ceiling" 
 ```
 
-`stdrz = "relative"` rescales the cumulative curve to end at 1, which makes
-accumulation curves directly comparable between tubes that differ in total
-root abundance — only the *shape* of the depth distribution is compared.
+`stdrz` picks the denominator, and only one of the three ends at 1.
+`"additive"` divides the cumulative curve by its own maximum, so each group's
+curve ends at 1 and curves from tubes with very different total root abundance
+can be compared by shape alone — that is the one to use here. `"counts"` leaves
+the raw cumulative sum, and `"relative"` divides by the sum of the cumulative
+values, which is a different scale and does not end at 1.
 
 ---
 
