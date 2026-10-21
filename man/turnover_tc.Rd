@@ -32,9 +32,13 @@ data.frame containing:
 \item standingroot_t1: Standing roots at first timepoint
 \item standingroot_t2: Standing roots at second timepoint
 \item production: Root production between timepoints
-\item newroot\%per_t1: Percentage of new roots compared to starting conditions
-\item newroot\%per_t2: Percentage of new roots at second timepoint
+\item newroot.per_t1: Percentage of new roots compared to starting conditions
+\item newroot.per_t2: Percentage of new roots at second timepoint
 }
+
+The last two names carry a dot where the percent sign would read more
+naturally: \code{data.frame()} makes the names syntactic, so index them as
+\code{newroot.per_t1}.
 }
 \description{
 Calculate global root production and root turnover from temporal comparison
