@@ -37,7 +37,7 @@
 #'
 #' @param path_seg Character. Path to directory of binary segmented images
 #'   (foreground/root pixel = 1, background = 0).
-#' @param path_skl Character or \code{NULL}. Path to directory of skeletonised
+#' @param path_skl Character or \code{NULL}. Path to directory of skeletonized
 #'   images (one-pixel-wide centerlines of roots), used for length, diameter,
 #'   angle, and branching-order metrics. If \code{NULL} or a file is missing,
 #'   the skeleton is computed internally via \code{skeletonize_image()}.
@@ -58,17 +58,29 @@
 #' images) or a vector of length equal to the number of images.
 #'
 #' @param insertion_angles Numeric or \code{NULL}. Insertion angle of the tube,
-#'   in \strong{degrees measured from horizontal} -- \code{90} is a vertical
-#'   tube, \code{45} a tube pushed in at 45 degrees.  This is the convention
-#'   \code{create_depthmap()} uses for \code{tilt}, and it is the opposite of
-#'   the "degrees from vertical" wording used by some minirhizotron software,
-#'   so convert before passing it in.  Values must be greater than 0 and at
-#'   most 90; \code{90} means a vertical tube and is allowed.
-#'   Supplying this argument switches the run to minirhizotron geometry (see
-#'   \strong{Geometry}).  Default \code{NULL} (flatbed).
-#' @param soil_starts Numeric. Pixel row (in the original, un-rotated image)
-#'   at which the soil surface begins.  Used to set the zero-depth reference.
-#'   Default \code{0}.
+#'   in \strong{degrees measured from vertical} -- \code{0} is an upright tube
+#'   and \code{90} a horizontal one, so the number is how far the tube leans
+#'   over.  This is the convention field notes usually record and the one
+#'   \code{create_depthmap()} takes as \code{angle_from_vertical}.  Values
+#'   must be in \code{[0, 90]}; one value, or one per image.
+#'   Supplying this argument switches the run to minirhizotron geometry unless
+#'   \code{geometry} says otherwise (see \strong{Geometry}).  Default
+#'   \code{NULL} (flatbed).
+#' @param geometry Character or \code{NULL}. The shape being imaged: one of
+#'   \code{"tube"}, \code{"window"} or \code{"flat"}, passed to
+#'   \code{create_depthmap()}.  Overrides the geometry inferred from
+#'   \code{insertion_angles} / \code{tube_diameter_cm} -- see
+#'   \strong{Geometry}.  Default \code{NULL} (infer).
+#' @param soil_starts Numeric. Depth offset in \strong{centimeters}, passed to
+#'   \code{create_depthmap()} as \code{start_soil} and subtracted from every
+#'   depth, so it sets where depth zero sits.  A positive value moves the zero
+#'   point deeper into the scan, which is what you want when the top of the
+#'   image is above the soil surface.  One value, or one per image.  Default
+#'   \code{0}, which reads depths relative to the top of the scan.
+#'
+#'   \code{estimate_soil_surface()} reports the soil line as a \strong{pixel}
+#'   position along the depth axis, so convert before passing it here:
+#'   \code{soil_starts = soil0 * 2.54 / dpi}.
 #' @param tube_names Character or \code{NULL}. Sample/tube identifiers added as
 #'   the \code{Tube} column.  If \code{NULL}, names are derived from characters
 #'   3-5 from the right of the segmented file name, prefixed with \code{"T"}
@@ -87,7 +99,7 @@
 # --- Scan and geometry settings ---
 #' @inheritParams create_depthmap
 #' @param tube_diameter_cm Numeric or \code{NULL}. Inner diameter of the
-#'   minirhizotron tube in \strong{centimetres}.  Passed to
+#'   minirhizotron tube in \strong{centimeters}.  Passed to
 #'   \code{create_depthmap()} as \code{tube_thicc}, where it sets the amplitude
 #'   and wavelength of the sinusoidal curvature correction.  Supplying this
 #'   argument switches the run to minirhizotron geometry (see
@@ -99,10 +111,10 @@
 #'   point on the tube, the image seam.  Set it if your scanner's rotational
 #'   reference differs, or the depth assigned to a root will be offset by up to a
 #'   full tilted tube diameter
-#'   (\code{tube_diameter_cm * sin(insertion_angle)}), the shallowest-to-deepest
+#'   (\code{tube_diameter_cm * sin(insertion_angles)}), the shallowest-to-deepest
 #'   range of the wave.  Minirhizotron only.
 #' @param depth_interval_cm Numeric or \code{NULL}. Size of each depth bin in
-#'   \strong{centimetres}.  Passed as \code{nn} to \code{binning()}.
+#'   \strong{centimeters}.  Passed as \code{nn} to \code{binning()}.
 #'   \code{NULL} switches on whole-image mode, where the scan is treated as a
 #'   single bin and summarized in one row (see \strong{Whole-image mode}).
 #'   Default \code{5}.
@@ -129,23 +141,36 @@
 #'   full width.  Default \code{1800}.
 #'
 #' @section Geometry:
-#' There is no geometry switch.  The geometry follows from whether you supply
-#' tube parameters:
+#' The geometry follows from whether you supply tube parameters, and
+#' \code{geometry} overrides that inference when the shape is not what those
+#' arguments imply:
 #' \describe{
 #'   \item{Flatbed (default)}{Neither \code{insertion_angles} nor
 #'     \code{tube_diameter_cm} is supplied.  The scan is treated as a flat
-#'     surface imaged head-on: no sinusoidal curvature correction
-#'     (\code{sinoid = FALSE}), no foreshortening of the depth axis (one pixel
-#'     along the image width is one pixel of depth), and no
-#'     \code{rotation_censor()} crop, since there is no tube interior to crop
-#'     to.}
+#'     surface imaged head-on: no curvature correction, no foreshortening of
+#'     the depth axis (one pixel along the image width is one pixel of depth),
+#'     and no \code{rotation_censor()} crop, since there is no tube interior to
+#'     crop to.}
 #'   \item{Minirhizotron}{Either argument is supplied.  The sinusoidal
 #'     curvature correction is switched on, the depth axis is foreshortened by
-#'     \code{sin(insertion_angles)}, and each image is cropped to
+#'     \code{cos(insertion_angles)}, and each image is cropped to
 #'     \code{rotation_fixed_width} rows about its center.  An argument you
 #'     leave out falls back to a neutral default: \code{tube_diameter_cm = 7}
-#'     and \code{insertion_angles = 90} (vertical tube), both announced in the
+#'     and \code{insertion_angles = 0} (upright tube), both announced in the
 #'     run log.}
+#'   \item{\code{geometry = "flat"}}{No depth axis at all.  Every pixel of a
+#'     scan shares one depth, so the profile collapses to a single bin whatever
+#'     \code{depth_interval_cm} says, and no curvature or foreshortening is
+#'     applied.  This is the shortcut for a tray of washed roots; it is also
+#'     what \code{depth_interval_cm = NULL} achieves, stated as a property of
+#'     the sample rather than of the binning.}
+#'   \item{\code{geometry = "window"}}{A planar rhizotron window that does have
+#'     a depth axis.  The depth axis is foreshortened by
+#'     \code{cos(insertion_angles)} as for a tube, but no curvature wave is
+#'     added and no tube-interior crop is applied.  This is the one case the
+#'     inference above cannot reach, because supplying an angle would otherwise
+#'     switch the curvature correction on.}
+#'   \item{\code{geometry = "tube"}}{States the minirhizotron case explicitly.}
 #' }
 #' In both cases depth runs along the image \strong{width} (left to right),
 #' which is the orientation minirhizotron scanners produce.  A flatbed scan with
@@ -186,7 +211,7 @@
 #'     \code{rotation_fixed_width}, \code{soil_starts} and \code{bin_round}
 #'     do nothing here.}
 #'   \item{Minirhizotron}{Set \code{dpi}, \code{insertion_angles} (degrees from
-#'     \emph{horizontal}), \code{tube_diameter_cm}, \code{soil_starts},
+#'     \emph{vertical}), \code{tube_diameter_cm}, \code{soil_starts},
 #'     \code{tube_names}, \code{depth_interval_cm} and \code{bin_round}, and
 #'     look at \code{rotation_fixed_width} -- how much of the tube's curved edge
 #'     to trim is a property of your scanner that no default can guess.}
@@ -331,7 +356,7 @@
 #'   \code{strahler_order} or \code{order_from_tip}.
 #'   Default \code{0.5}.
 #' @param prune_spur_length_cm Numeric. Remove terminal skeleton branches
-#'   ("spurs") shorter than this, in \strong{centimetres}, before any trait is
+#'   ("spurs") shorter than this, in \strong{centimeters}, before any trait is
 #'   measured; \code{0} (default) prunes nothing.  Thinning leaves short stubs
 #'   where roots are wide or ragged, and each one is counted as a root tip and
 #'   adds a little length, so the pruning applies to the skeleton every metric
@@ -428,7 +453,7 @@
 #' result <- root_depth_metrics(
 #'   path_seg         = "scans/segmented/2022_02/",
 #'   path_skl         = "scans/skeleton/2022_02/",
-#'   insertion_angles = tube_meta$angle,   # degrees from horizontal
+#'   insertion_angles = tube_meta$angle,   # degrees from vertical
 #'   tube_diameter_cm = 7,
 #'   session          = "2022_02"
 #' )
@@ -440,7 +465,7 @@
 #'   path_rgb                = "scans/blended/2022_02/",
 #'   rgb_file_index          = 37:72,
 #'   insertion_angles        = tube_meta$angle,
-#'   soil_starts             = tube_meta$soil_row,
+#'   soil_starts             = tube_meta$soil_cm,   # centimeters
 #'   session                 = "2022_02",
 #'   calc_diameter_quantiles = TRUE,
 #'   calc_root_angles        = TRUE,
@@ -483,6 +508,7 @@ root_depth_metrics <- function(
   
   # ---------- scan / geometry ------------------------------------------------
   dpi                     = 300,
+  geometry                = NULL,
   tube_diameter_cm        = NULL,
   tube_center_offset      = 0.5,
   depth_interval_cm       = 5,
@@ -659,13 +685,26 @@ root_depth_metrics <- function(
   # ===========================================================================
   # 0b. Geometry: flatbed unless tube parameters were supplied
   # ===========================================================================
-  # There is no toggle. Asking for a tube diameter or an insertion angle is
-  # what makes this a minirhizotron run; asking for neither makes it a flatbed
-  # run. The two paths differ in three places: the sinusoidal curvature
-  # correction, the foreshortening of the depth axis, and the rotation_censor()
-  # crop to the tube interior.
+  # The shape is inferred by default: asking for a tube diameter or an insertion
+  # angle makes this a minirhizotron run, asking for neither makes it a flatbed
+  # run. The paths differ in three places: the sinusoidal curvature correction,
+  # the foreshortening of the depth axis, and the rotation_censor() crop to the
+  # tube interior. `geometry` names the shape outright for the cases the
+  # inference cannot reach -- a planar window, and a tray with no depth axis.
   tube_geometry <- !is.null(insertion_angles) || !is.null(tube_diameter_cm)
-  
+
+  # `geometry` overrides that inference when the shape is not what the supplied
+  # arguments imply: a planar window that must not get a curvature wave, or a
+  # tray that has no depth axis to foreshorten.
+  if (!is.null(geometry)) {
+    geometry <- match.arg(geometry, c("tube", "window", "flat"))
+    tube_geometry <- geometry == "tube"
+  }
+  # The shape passed to create_depthmap() per image. Without an explicit
+  # `geometry`, a tube run is a tube and a flatbed run is a planar window: one
+  # pixel of width is one pixel of depth, which is what sin(90) gives.
+  geo <- if (!is.null(geometry)) geometry else if (tube_geometry) "tube" else "window"
+
   if (tube_geometry) {
     if (is.null(tube_diameter_cm)) {
       tube_diameter_cm <- 7
@@ -673,27 +712,40 @@ root_depth_metrics <- function(
            tube_diameter_cm)
     }
     if (is.null(insertion_angles)) {
-      insertion_angles <- 90
-      .msg("[Rootopia] Minirhizotron geometry: no insertion_angles given, assuming a vertical tube (90 degrees from horizontal).")
+      insertion_angles <- 0
+      .msg("[Rootopia] Minirhizotron geometry: no insertion_angles given, assuming an upright tube (0 degrees from vertical).")
     }
     if (!is.numeric(insertion_angles) || any(is.na(insertion_angles)) ||
-        any(insertion_angles <= 0 | insertion_angles > 90))
-      stop(paste0("'insertion_angles' must be numeric and in (0, 90], measured from ",
-                  "horizontal (90 = vertical tube). Note this is the opposite of the ",
-                  "'degrees from vertical' convention some software uses."),
+        any(insertion_angles < 0 | insertion_angles > 90))
+      stop(paste0("'insertion_angles' must be numeric and in [0, 90], measured from ",
+                  "vertical (0 = upright tube, 90 = horizontal tube)."),
            call. = FALSE)
-    .msg("[Rootopia] Minirhizotron geometry: %g cm tube, insertion angle(s) %s degrees from horizontal.",
+    .msg("[Rootopia] Minirhizotron geometry: %g cm tube, insertion angle(s) %s degrees from vertical.",
          tube_diameter_cm, paste(unique(insertion_angles), collapse = ", "))
   } else {
-    # Flat surface imaged head-on: one pixel along the width is one pixel of
-    # depth, so the depth axis must not be foreshortened. create_depthmap()
-    # scales it by sin(tilt), which makes 90 the neutral value. tube_thicc is
-    # unused when sinoid = FALSE but must still be a positive number.
-    insertion_angles <- 90
-    tube_diameter_cm <- 7
-    .msg(paste0("[Rootopia] Flatbed geometry: neither insertion_angles nor tube_diameter_cm given, ",
-                "so no tube curvature correction and no tube-interior crop. ",
-                "Supply either one for minirhizotron scans."))
+    # A planar surface. Imaged head-on, one pixel along the width is one pixel
+    # of depth, so the depth axis must not be foreshortened: create_depthmap()
+    # scales it by cos(angle_from_vertical), which makes 0 the neutral value. A
+    # window pushed in at an angle keeps the angle it was given. tube_thicc is
+    # unused here but must still be a positive number.
+    if (is.null(insertion_angles)) insertion_angles <- 0
+    if (!is.numeric(insertion_angles) || any(is.na(insertion_angles)) ||
+        any(insertion_angles < 0 | insertion_angles > 90))
+      stop(paste0("'insertion_angles' must be numeric and in [0, 90], measured from ",
+                  "vertical (0 = head-on)."), call. = FALSE)
+    if (is.null(tube_diameter_cm)) tube_diameter_cm <- 7
+    if (identical(geometry, "flat")) {
+      .msg(paste0("[Rootopia] Flat geometry: no depth axis, so every pixel of a scan ",
+                  "shares one depth and the profile collapses to a single bin."))
+    } else if (identical(geometry, "window")) {
+      .msg("[Rootopia] Window geometry: planar, no tube curvature correction, insertion angle(s) %s degrees from vertical.",
+           paste(unique(insertion_angles), collapse = ", "))
+    } else {
+      .msg(paste0("[Rootopia] Flatbed geometry: neither insertion_angles nor tube_diameter_cm given, ",
+                  "so no tube curvature correction and no tube-interior crop. ",
+                  "Supply either one for minirhizotron scans, or geometry = \"flat\" ",
+                  "for a tray with no depth axis."))
+    }
   }
   
   # ===========================================================================
@@ -1037,11 +1089,11 @@ root_depth_metrics <- function(
     DepthMap <- if (need_depthmap) .safe("create_depthmap", {
       dm <- create_depthmap(
         img         = im,
-        sinoid      = tube_geometry,
+        geometry    = geo,
         dpi         = dpi,
         start_soil  = soil0,
         center_offset = tube_center_offset,
-        tilt        = angle,
+        angle_from_vertical = angle,
         tube_thicc  = tube_diameter_cm
       )
       # create_depthmap() returns a map on `im`'s grid, so only the extent has
@@ -1101,9 +1153,12 @@ root_depth_metrics <- function(
     if (do_length) {
       rl_res <- .safe("root length", {
         
-        # Flat depth map (sinoid = FALSE) used to derive flow directions for
-        # length calculation -- the sinusoidal correction is for the depth axis
-        # only, not for path-length geometry.
+        # A planar ramp along the columns, used only to derive flow directions
+        # for the length calculation -- the curvature correction describes the
+        # depth axis, not path-length geometry. D8 compares neighbors, so only
+        # the ramp's direction matters and not its slope; the angle is therefore
+        # fixed upright here rather than following the insertion angle, which
+        # also keeps a horizontal installation from flattening the ramp.
         #
         # This builds a per-pixel length map rather than calling root_length()
         # per depth bin, and that is deliberate: root_length() uses the Kimura2
@@ -1112,10 +1167,10 @@ root_depth_metrics <- function(
         # what a depth profile needs, at the cost of Kimura's correction.
         dm_flat <- create_depthmap(
           img           = im,
-          sinoid        = FALSE,
+          geometry      = "window",
           dpi           = dpi,
           start_soil    = soil0,
-          tilt          = angle,
+          angle_from_vertical = 0,
           tube_thicc    = tube_diameter_cm
         )
         # create_depthmap() is already aligned with `im` (no transpose).
