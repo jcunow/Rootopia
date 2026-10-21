@@ -17,7 +17,8 @@ root_graph_pipeline(
   splice_passthrough = TRUE,
   crossing_straight = -0.5,
   crossing_diam_ratio = 0,
-  color_by = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  color_by = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   diam_weight = 0.5,
   prune_min_length = 0,
   prune_min_diameter = 0,
@@ -75,20 +76,23 @@ pruning (off when \code{prune_iter = 0}); see \code{\link{prune_terminal_segment
 }
 \value{
 A per-segment edge table (data.frame) with order and diameter columns
-  in pixels, carrying \code{attr}s \code{crop_offset}, \code{dims}, and
-  (if requested) \code{segments}.
+in pixels, carrying \code{attr}s \code{crop_offset}, \code{dims}, and
+(if requested) \code{segments}.
 }
 \description{
 Core engine: crops to the foreground, computes the distance transform, traces
 segments with junction contraction, resolves crossings, optionally prunes weak
-tips, and assigns all three order schemes. Returns a per-segment edge table in
+tips, and assigns all four order schemes. Returns a per-segment edge table in
 \emph{pixels}; use \code{\link{branch_order_map}} for a unit-aware wrapper.
 }
 \details{
-Three order columns are produced (see \code{\link{branch_order_map}} for the
-full rules): \code{tip_order} (per-segment leaf-peeling), \code{root_order}
-(per-root max tip_order), \code{branch_order} (per-root centrifugal generation
-from the thickest root). \code{color_by} selects which one the overlay uses.
+Four order columns are produced (see \code{\link{branch_order_map}} for the
+full rules): \code{order_from_tip} and \code{strahler_order} per segment,
+\code{root_max_order_from_tip} and \code{order_from_base} per continuous root.
+\code{color_by} selects which one the overlay uses. The spellings used up to
+Rootopia 1.1.0 -- \code{tip_order}, \code{root_order}, \code{branch_order} --
+are kept as copies of those columns and are still accepted by
+\code{color_by}.
 }
 \seealso{
 \code{\link{branch_order_map}}
