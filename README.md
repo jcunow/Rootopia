@@ -63,8 +63,8 @@ img <- load_flexible_image(seg_Oulanka2023_Session01_T067,
                            scale         = "binary",
                            select_layer  = 2)
 
-# Preprocess and skeletonise
-cleaned <- clean_image(img, max_artifact_size = 5, max_hole_size = 5)
+# Preprocess and skeletonize
+cleaned <- clean_image(img, drop_objects_upto = 5, fill_holes_upto = 5)
 skel    <- skeletonize_image(cleaned, verbose = FALSE)
 
 # Length and diameter
@@ -78,10 +78,10 @@ root_tips     <- count_pixels(points$endpoints)
 root_branches <- count_pixels(points$branching_points)
 
 # Branch order (most informative for flatbed scans)
-order_res <- branch_order_map(skel, mask = cleaned, order = "root_order",
+order_res <- branch_order_map(skel, mask = cleaned, order = "order_from_base",
                               unit = "cm", dpi = 150)
 order_res$summary
-order_metrics(order_res, focal = "thinnest")
+order_metrics(order_res, groups = "thinnest")
 
 # Visualize
 zoom_plot(diam_map$diameter_rast)
