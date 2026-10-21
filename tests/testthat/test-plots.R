@@ -18,6 +18,17 @@ test_that("render_order_overlay writes a PNG", {
   expect_true(file.exists(f))
 })
 
+test_that("render_order_overlay refuses an empty segment list", {
+  # With no segments there is nothing to paint, and the function used to write
+  # a picture of the mask with no overlay on it: a blank result that looked
+  # like success. `segs` is NULL whenever the edge table came from
+  # root_graph_pipeline() without keep_segments = TRUE.
+  expect_error(render_order_overlay(NULL, 1:3, c(40L, 40L), tempfile()),
+               "nothing to paint")
+  expect_error(render_order_overlay(list(), 1:3, c(40L, 40L), tempfile()),
+               "nothing to paint")
+})
+
 test_that("plot_order_window writes a PNG", {
   res <- make_order_map_for_plots()
   f <- tempfile(fileext = ".png")
