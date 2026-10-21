@@ -255,7 +255,7 @@ report_image_components <- function(img, plot = TRUE, breaks = 30,
 #'
 #' Applies a morphological closing (dilation then erosion) to smooth the
 #' edges of binary objects.  Intended as a post-cleaning step before
-#' skeletonisation; do **not** apply after skeletonisation.
+#' skeletonization; do **not** apply after skeletonization.
 #'
 #' @param img A `cimg` binary image or any format accepted by
 #'   \code{\link{load_flexible_image}}.
@@ -300,7 +300,7 @@ smooth_root_edges <- function(img,
 #' 3. **Edge smoothing** *(optional, off by default)* -- applies morphological
 #'    closing to smooth jagged root edges.
 #'
-#' @section Why clean before skeletonisation:
+#' @section Why clean before skeletonization:
 #' `skeletonize_image()` uses the Medial Axis Transform, which is driven by
 #' the distance transform.  Small holes inside a root inflate the local
 #' distance values and force the medial axis to bifurcate around the hole,

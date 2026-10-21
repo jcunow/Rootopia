@@ -567,9 +567,9 @@ compute_strahler_order <- function(edge_tbl) {
 #'
 #' Two legends are available and the right one is chosen from the data. A
 #' branch order is a handful of small integers and reads as named classes, so
-#' it gets one labelled swatch per order. A transport quantity -- path
+#' it gets one labeled swatch per order. A transport quantity -- path
 #' resistance, path length from the base, the root length a segment serves --
-#' is continuous and gets a colour ramp with a scale bar instead. Pass
+#' is continuous and gets a color ramp with a scale bar instead. Pass
 #' \code{continuous} to override the choice.
 #'
 #' @param segs Segment list (kept via \code{keep_segments = TRUE}).
@@ -589,9 +589,9 @@ compute_strahler_order <- function(edge_tbl) {
 #' @param continuous \code{NA} (default) picks the legend from the data:
 #'   continuous when any value has a fractional part or there are more than 24
 #'   distinct values, discrete otherwise. \code{TRUE} or \code{FALSE} forces it.
-#' @param value_label Optional title drawn above the colour bar, e.g.
+#' @param value_label Optional title drawn above the color bar, e.g.
 #'   \code{"path resistance"}. Continuous legend only.
-#' @param n_bins Number of colour steps in the continuous ramp.
+#' @param n_bins Number of color steps in the continuous ramp.
 #' @param tip_order Deprecated name for \code{values}.
 #' @return Invisibly, \code{file}.
 #' @seealso \code{\link{root_transport}} for quantities worth painting.
@@ -675,7 +675,7 @@ render_order_overlay <- function(segs, values, dims, file,
     # A constant-valued map has a zero-width range, which gives breaks that are
     # not strictly increasing; widen it so image() still has something to bin.
     # With no finite value at all there is nothing to scale to, so the bar is
-    # labelled 0-1 and nothing is painted.
+    # labeled 0-1 and nothing is painted.
     if (!all(is.finite(rng))) rng <- c(0, 1)
     else if (diff(rng) <= 0)  rng <- c(rng[1] - 0.5, rng[1] + 0.5)
     brk <- seq(rng[1], rng[2], length.out = nb + 1L)
@@ -694,7 +694,7 @@ render_order_overlay <- function(segs, values, dims, file,
                     add = TRUE, useRaster = TRUE)
 
   if (continuous) {
-    # vertical colour bar, labelled at both ends and the middle
+    # vertical color bar, labeled at both ends and the middle
     nb <- length(pal); y0 <- 0.55; y1 <- 0.97
     yy <- seq(y0, y1, length.out = nb + 1L)
     for (k in seq_len(nb))
@@ -1174,7 +1174,7 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
     # laterals score a perfect 1 while two near-identical thick arms score
     # slightly less, so at a 4-way node the laterals outscore the parent axis.
     # The diameter term is therefore scaled by how thick the pair is relative
-    # to the node (`dmag`), which breaks that tie in favour of the thick axis
+    # to the node (`dmag`), which breaks that tie in favor of the thick axis
     # among equally straight, equally consistent candidates.
     dmax <- max(diam[inc[, 1]], na.rm = TRUE)
     bi <- NA_integer_; bj <- NA_integer_; best <- -Inf

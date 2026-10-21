@@ -92,7 +92,7 @@
 #' }
 #'
 #' Lengths and diameters are used in whatever unit the edge table carries, so
-#' run \code{\link{convert_root_units}} first if you want centimetres.
+#' run \code{\link{convert_root_units}} first if you want centimeters.
 #'
 #' @param et Edge table from \code{\link{root_graph_pipeline}} or
 #'   \code{\link{branch_order_map}}, needing \code{from}, \code{to},
@@ -118,7 +118,7 @@
 #' res <- branch_order_map(skel, mask, unit = "cm", dpi = 300)
 #' et  <- root_transport(res$edges)
 #'
-#' # a transport map: colour every segment by its path resistance
+#' # a transport map: color every segment by its path resistance
 #' render_order_overlay(attr(et, "segments"), et$path_resistance,
 #'                      attr(et, "dims"), "transport.png",
 #'                      value_label = "path resistance")
@@ -137,7 +137,7 @@ root_transport <- function(et, eta = 1, min_radius = NULL) {
   r <- et$mean_diameter / 2
   bad <- !is.finite(r) | r <= 0
   if (is.null(min_radius)) {
-    # The table may be in pixels, centimetres or inches, so a fixed floor would
+    # The table may be in pixels, centimeters or inches, so a fixed floor would
     # mean something different in each. The thinnest root actually measured is
     # in the right unit by construction.
     min_radius <- if (all(bad)) NA_real_ else min(r[!bad])

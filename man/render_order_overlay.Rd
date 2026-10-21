@@ -44,10 +44,10 @@ frame within \code{mask}, as carried by
 continuous when any value has a fractional part or there are more than 24
 distinct values, discrete otherwise. \code{TRUE} or \code{FALSE} forces it.}
 
-\item{value_label}{Optional title drawn above the colour bar, e.g.
+\item{value_label}{Optional title drawn above the color bar, e.g.
 \code{"path resistance"}. Continuous legend only.}
 
-\item{n_bins}{Number of colour steps in the continuous ramp.}
+\item{n_bins}{Number of color steps in the continuous ramp.}
 
 \item{tip_order}{Deprecated name for \code{values}.}
 }
@@ -61,9 +61,9 @@ Colors each segment by any value you supply, over the mask. Segments with
 \details{
 Two legends are available and the right one is chosen from the data. A
 branch order is a handful of small integers and reads as named classes, so
-it gets one labelled swatch per order. A transport quantity -- path
+it gets one labeled swatch per order. A transport quantity -- path
 resistance, path length from the base, the root length a segment serves --
-is continuous and gets a colour ramp with a scale bar instead. Pass
+is continuous and gets a color ramp with a scale bar instead. Pass
 \code{continuous} to override the choice.
 }
 \seealso{

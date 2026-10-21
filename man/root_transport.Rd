@@ -52,7 +52,7 @@ These peak at the base.}
 }
 
 Lengths and diameters are used in whatever unit the edge table carries, so
-run \code{\link{convert_root_units}} first if you want centimetres.
+run \code{\link{convert_root_units}} first if you want centimeters.
 }
 
 \examples{
@@ -60,7 +60,7 @@ run \code{\link{convert_root_units}} first if you want centimetres.
 res <- branch_order_map(skel, mask, unit = "cm", dpi = 300)
 et  <- root_transport(res$edges)
 
-# a transport map: colour every segment by its path resistance
+# a transport map: color every segment by its path resistance
 render_order_overlay(attr(et, "segments"), et$path_resistance,
                      attr(et, "dims"), "transport.png",
                      value_label = "path resistance")

@@ -136,7 +136,7 @@ normalize_array <- function(arr, scale = "none") {
   }
   if (max_val > 255) warning("Maximum value exceeds 255, rescaling might be incorrect")
   # An image with no foreground has max_val == 0, and ceiling(0/0) is NaN --
-  # an all-background image must binarise to all zeros, not all NaN.
+  # an all-background image must binarize to all zeros, not all NaN.
   if (identical(scale, "binary") && max_val == 0) return(arr * 0)
   switch(scale,
     binary = ceiling(arr / max_val),

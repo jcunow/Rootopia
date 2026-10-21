@@ -19,7 +19,7 @@ data(flatbed_scan_example)
 }
 \description{
 A segmented flatbed root scan used to demonstrate the depth-independent
-flatbed workflow (skeletonisation, root length, diameter, branching, and
+flatbed workflow (skeletonization, root length, diameter, branching, and
 branch order). Roots are foreground, background is 0.
 }
 \details{

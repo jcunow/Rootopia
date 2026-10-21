@@ -23,6 +23,6 @@ A \code{cimg} binary image.
 \description{
 Applies a morphological closing (dilation then erosion) to smooth the
 edges of binary objects.  Intended as a post-cleaning step before
-skeletonisation; do \strong{not} apply after skeletonisation.
+skeletonization; do \strong{not} apply after skeletonization.
 }
 \keyword{internal}

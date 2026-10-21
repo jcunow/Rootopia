@@ -90,7 +90,7 @@ the image border (false-positive root detections).
 closing to smooth jagged root edges.
 }
 }
-\section{Why clean before skeletonisation}{
+\section{Why clean before skeletonization}{
 
 \code{skeletonize_image()} uses the Medial Axis Transform, which is driven by
 the distance transform.  Small holes inside a root inflate the local
