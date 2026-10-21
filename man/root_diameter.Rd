@@ -43,7 +43,9 @@ as returned by \code{quantile(probs = seq(0, 1, 0.1))}.}
 \item{diameters}{Numeric vector of all diameter values in the skeletonized regions.}
 \item{skeleton_rast}{\code{SpatRaster}. Binary raster mask of skeletonized regions.}
 \item{diameter_rast}{\code{SpatRaster}. Raster showing diameters in the skeletonized regions.}
-\item{distance_map_rast}{\code{SpatRaster}. Raster showing the distance transform values.}
+\item{distance_map_rast}{\code{SpatRaster}. Local diameter in \strong{pixels}
+over the whole mask -- twice the distance transform, and not converted to
+\code{unit}. Use \code{diameter_rast} for skeleton-only diameters in \code{unit}.}
 \item{root_volume}{Numeric. Total root volume, in \code{unit}^3. Each skeleton
 pixel is modeled as a cylinder of radius \code{diameter / 2} and length 1
 pixel; volumes (\code{pi * r^2 * l}) are summed and converted from px^3.}

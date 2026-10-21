@@ -34,7 +34,9 @@
 #'   \item{diameters}{Numeric vector of all diameter values in the skeletonized regions.}
 #'   \item{skeleton_rast}{`SpatRaster`. Binary raster mask of skeletonized regions.}
 #'   \item{diameter_rast}{`SpatRaster`. Raster showing diameters in the skeletonized regions.}
-#'   \item{distance_map_rast}{`SpatRaster`. Raster showing the distance transform values.}
+#'   \item{distance_map_rast}{`SpatRaster`. Local diameter in \strong{pixels}
+#'     over the whole mask -- twice the distance transform, and not converted to
+#'     `unit`. Use `diameter_rast` for skeleton-only diameters in `unit`.}
 #'   \item{root_volume}{Numeric. Total root volume, in `unit`^3. Each skeleton
 #'     pixel is modeled as a cylinder of radius `diameter / 2` and length 1
 #'     pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.}
