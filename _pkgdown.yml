@@ -20,6 +20,8 @@ home:
 
 navbar:
   left:
+    - text: Overview
+      href: articles/Rootopia_Overview_vignette.html
     - text: Tutorial
       menu:
         - text: "Start here: Minirhizotron Scans (step-by-step)"
@@ -31,7 +33,7 @@ navbar:
           href: articles/Stitching_vignette.html
         - text: "Rotation Bias Correction"
           href: articles/Rotation_Bias_vignettes.html
-        - text: "Special Topics (soil colour, texture, halos, turnover)"
+        - text: "Special Topics (soil color, texture, halos, turnover)"
           href: articles/SpecialTopics_vignette.html
         - text: "-------"
         - text: "Batch Processing (whole folders at once, one function)"
@@ -84,7 +86,7 @@ reference:
 
   - title: "Root branching order"
     desc: "Convert a root skeleton into a segment graph, assign tip/root/branch
-      order, and summarise root architecture by order class."
+      order, and summarize root architecture by order class."
     contents:
       - branch_order_map
       - root_graph_pipeline
@@ -123,8 +125,8 @@ reference:
       - estimate_rotation_center
       - estimate_rotation_shift
 
-  - title: "Soil and colour characterisation"
-    desc: "Colour metrics, soil classification, and texture analysis."
+  - title: "Soil and color characterization"
+    desc: "Color metrics, soil classification, and texture analysis."
     contents:
       - create_root_buffer
       - tube_coloration
@@ -134,7 +136,7 @@ reference:
       - plot_soil_classification
 
   - title: "Distribution analysis"
-    desc: "Statistical indices summarising root distribution with depth."
+    desc: "Statistical indices summarizing root distribution with depth."
     contents:
       - MRD
       - modal_peaks
@@ -145,7 +147,7 @@ reference:
 
 
   - title: "Rotation bias"
-    desc: "Detect and correct for rotational artefacts in minirhizotron tube scans."
+    desc: "Detect and correct for rotational artifacts in minirhizotron tube scans."
     contents:
       - slice_rotation
       - fit_sine_curve
