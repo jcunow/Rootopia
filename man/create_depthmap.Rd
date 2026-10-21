@@ -2,17 +2,19 @@
 % Please edit documentation in R/CreateDepthmap3.R
 \name{create_depthmap}
 \alias{create_depthmap}
-\title{Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map}
+\title{Assign a soil depth in centimeters to every pixel}
 \usage{
 create_depthmap(
   img,
   mask = NULL,
   sinoid = TRUE,
   tube_thicc = 7,
-  tilt = 45,
+  tilt = NULL,
   dpi = 300,
   start_soil = 0,
-  center_offset = 0.5
+  center_offset = 0.5,
+  geometry = NULL,
+  angle_from_vertical = 45
 )
 }
 \arguments{
@@ -21,15 +23,19 @@ images, specify band_index parameter}
 
 \item{mask}{Raster mask indicating foreign objects (1 = mask, 0 or NA = keep)}
 
-\item{sinoid}{Logical; if TRUE, accounts for tube curvature in depth calculation}
+\item{sinoid}{Logical. Superseded by \code{geometry}, and kept so existing
+code runs unchanged: \code{TRUE} means \code{geometry = "tube"},
+\code{FALSE} means \code{geometry = "window"}. Ignored when
+\code{geometry} is given.}
 
-\item{tube_thicc}{Numeric; diameter of minirhizotron tube in cm}
+\item{tube_thicc}{Numeric; diameter of minirhizotron tube in cm. Used by
+\code{geometry = "tube"} only}
 
-\item{tilt}{Numeric; insertion angle in degrees measured from horizontal,
-in (0, 90]. The depth axis is scaled by \code{sin(tilt)}, so 90 is the
-head-on case (vertical tube, or a flatbed scan) with no foreshortening.
-Minirhizotron tubes are commonly installed 30-45 degrees from vertical,
-which is 45-60 in this convention}
+\item{tilt}{Numeric. Superseded by \code{angle_from_vertical}, which states
+the convention in its name. Degrees from \emph{horizontal}, the opposite
+reference, so \code{tilt = t} is \code{angle_from_vertical = 90 - t}. Given
+it, the conversion is applied and a warning says so. \code{45} is the same
+angle either way}
 
 \item{dpi}{Numeric; image resolution in dots per inch}
 
@@ -39,27 +45,73 @@ which is 45-60 in this convention}
 shallowest line of the curvature wave -- sits across the image height, as a
 fraction of one full tube circumference. \code{0} puts it on the first row,
 \code{0.5} halfway down, \code{1} on the last row. \code{0} and \code{1}
-are the same point on the tube, the image seam}
+are the same point on the tube, the image seam. Used by
+\code{geometry = "tube"} only}
+
+\item{geometry}{Character; the shape being imaged. One of \code{"tube"}
+(default), \code{"window"} or \code{"flat"} -- see \strong{Geometries}.}
+
+\item{angle_from_vertical}{Numeric; insertion angle in degrees measured
+\strong{from vertical}, in \code{[0, 90]}. \code{0} is an upright tube and
+\code{90} a horizontal one, so the number is how far the tube leans over --
+the convention field notes usually record ("installed at 45 degrees").
+Used by \code{geometry = "tube"} and \code{"window"}.
+
+The angle splits a tube's depth between its two axes, and the two terms are
+complements. The depth gained along the tube's length scales by
+\code{cos(angle_from_vertical)}: an upright tube gains a full centimeter of
+depth per centimeter of tube, a horizontal one gains none. The depth spread
+around its circumference scales by \code{sin(angle_from_vertical)}: an
+upright tube's cross-section is horizontal, so its whole circumference sits
+at one depth, while a horizontal tube's upper side is a full diameter above
+its lower side.}
 }
 \value{
 terra raster object containing the depth map
 }
 \description{
-This function generates a depth map for minirhizotron images, accounting for tube geometry
-and insertion angle.
+Builds a per-pixel depth map from the imaging geometry. \code{geometry}
+selects the shape being imaged, and the shape decides which of the two
+corrections apply: foreshortening of the depth axis by the insertion angle,
+and the depth spread across a curved surface.
 }
+\section{Geometries}{
+
+\describe{
+\item{\code{"tube"}}{A cylindrical minirhizotron tube, unrolled by the
+scanner. Depth increases along the image width and is scaled by
+\code{cos(angle_from_vertical)}; a curvature wave spanning one
+circumference is added across the image height, scaled by
+\code{sin(angle_from_vertical)}. Needs \code{tube_thicc},
+\code{angle_from_vertical} and \code{center_offset}.}
+\item{\code{"window"}}{A planar rhizotron window. Depth increases along
+the image width and is scaled by \code{cos(angle_from_vertical)}, with
+no curvature term. \code{tube_thicc} and \code{center_offset} are
+unused.}
+\item{\code{"flat"}}{A surface with no depth axis at all -- a flatbed
+scan of washed roots on a tray. Every pixel is at the same depth,
+\code{-start_soil}, so a profile over this map collapses to one depth
+bin. \code{tube_thicc}, \code{angle_from_vertical} and
+\code{center_offset} are unused.}
+}
+}
+
 \examples{
 data(seg_Oulanka2023_Session01_T067)
 seg_Oulanka2023_Session01_T067 = terra::rast(seg_Oulanka2023_Session01_T067)
 img = seg_Oulanka2023_Session01_T067
 mask = seg_Oulanka2023_Session01_T067[[1]] - seg_Oulanka2023_Session01_T067[[2]]
 mask[mask == 255] <- NA
-map = create_depthmap(img,mask,start_soil = 0.1,
-  sinoid = TRUE,
+map = create_depthmap(img, mask, start_soil = 0.1,
+  geometry = "tube",
   tube_thicc = 7,
-  tilt = 45,
+  angle_from_vertical = 45,
   dpi = 300,
   center_offset = 0.1 )
+
+# A tray of washed roots: no depth axis, so every pixel gets one depth
+flat = create_depthmap(img, geometry = "flat", dpi = 300)
+terra::minmax(flat)
 }
 \author{
 Johannes Cunow, Robert Weigel

@@ -3,7 +3,8 @@
 test_that("create_depthmap returns a raster matching the input grid", {
   skip_if_not_installed("terra")
   img <- make_binary_spatraster()
-  dm  <- create_depthmap(img, sinoid = TRUE, tube_thicc = 7, tilt = 45, dpi = 300)
+  dm  <- create_depthmap(img, sinoid = TRUE, tube_thicc = 7,
+                         angle_from_vertical = 45, dpi = 300)
   expect_s4_class(dm, "SpatRaster")
   # the depth map carries the input grid: same dims, same extent/res/CRS
   expect_equal(dim(dm)[1:2], dim(img)[1:2])
@@ -13,9 +14,117 @@ test_that("create_depthmap returns a raster matching the input grid", {
 test_that("create_depthmap validates parameters", {
   skip_if_not_installed("terra")
   img <- make_binary_spatraster()
-  expect_error(create_depthmap(img, tilt = 0))
+  expect_error(create_depthmap(img, angle_from_vertical = -1))
+  expect_error(create_depthmap(img, angle_from_vertical = 91))
   expect_error(create_depthmap(img, tube_thicc = -1))
   expect_error(create_depthmap(img, center_offset = 2))   # must be in [0,1]
+  expect_error(create_depthmap(img, geometry = "cylinder"))
+})
+
+test_that("both ends of the angle range are real cases, not errors", {
+  skip_if_not_installed("terra")
+  img <- make_binary_spatraster()
+  # Upright: one pixel of width is one pixel of depth, so the axis spans
+  # ncol * 2.54/dpi. Horizontal: the axis stays at a single depth.
+  span <- function(x) unname(diff(terra::minmax(x)[, 1]))
+
+  upright <- create_depthmap(img, geometry = "window",
+                             angle_from_vertical = 0, dpi = 300)
+  expect_equal(span(upright), (terra::ncol(img) - 1) * 2.54 / 300,
+               tolerance = 1e-9)
+
+  horizontal <- create_depthmap(img, geometry = "window",
+                                angle_from_vertical = 90, dpi = 300)
+  expect_equal(span(horizontal), 0)
+})
+
+test_that("the length and circumference terms are complements of each other", {
+  skip_if_not_installed("terra")
+  # One full turn of the wave, so the spread down a column is the whole
+  # curvature term and the spread across a row is the whole axis term.
+  tube <- 7; dpi <- 30
+  nr   <- round(tube * pi * dpi / 2.54, 0) - 1
+  img  <- make_binary_spatraster(nr = nr, nc = 120)
+
+  terms <- function(a) {
+    m <- terra::as.matrix(
+      create_depthmap(img, geometry = "tube", tube_thicc = tube,
+                      angle_from_vertical = a, dpi = dpi, center_offset = 0),
+      wide = TRUE)
+    c(circumference = diff(range(m[, 1])), length = diff(range(m[1, ])))
+  }
+
+  # Upright: all of the depth is along the length, none around the tube.
+  up <- terms(0)
+  expect_equal(unname(up["circumference"]), 0)
+  expect_gt(unname(up["length"]), 0)
+
+  # Horizontal: the reverse, and the circumference spans a full diameter.
+  flat <- terms(90)
+  expect_equal(unname(flat["length"]), 0)
+  expect_equal(unname(flat["circumference"]), tube, tolerance = 1e-3)
+
+  # The ratio has to move with the angle. If both terms carried the same factor
+  # it would be constant, and the angle would only rescale the map.
+  r <- vapply(c(20, 45, 70), function(a) {
+    t <- terms(a); unname(t["circumference"] / t["length"])
+  }, numeric(1))
+  expect_false(isTRUE(all.equal(r[1], r[3])))
+  expect_true(!is.unsorted(r))          # leaning over shifts depth to the tube
+})
+
+test_that("tilt is converted from the horizontal convention, with a warning", {
+  skip_if_not_installed("terra")
+  img <- make_binary_spatraster()
+  expect_warning(dm <- create_depthmap(img, tilt = 30), "angle_from_vertical")
+  expect_equal(terra::as.matrix(dm, wide = TRUE),
+               terra::as.matrix(create_depthmap(img, angle_from_vertical = 60),
+                                wide = TRUE))
+  # 45 is the same angle under either reference.
+  expect_equal(
+    terra::as.matrix(suppressWarnings(create_depthmap(img, tilt = 45)), wide = TRUE),
+    terra::as.matrix(create_depthmap(img, angle_from_vertical = 45), wide = TRUE))
+  # Given both and disagreeing, it stops rather than silently picking one.
+  expect_error(create_depthmap(img, tilt = 30, angle_from_vertical = 10),
+               "different angles")
+})
+
+test_that("geometry = 'flat' puts every pixel at one depth", {
+  skip_if_not_installed("terra")
+  img <- make_binary_spatraster()
+  # No curvature and no depth axis, so the map is constant at -start_soil
+  # whatever the tube arguments say -- and a profile over it has one bin.
+  dm <- create_depthmap(img, geometry = "flat", angle_from_vertical = 45,
+                        tube_thicc = 7, dpi = 300, start_soil = 2.5)
+  expect_true(terra::compareGeom(img, dm, stopOnError = FALSE))
+  expect_equal(unname(terra::minmax(dm)[, 1]), c(-2.5, -2.5))
+  expect_length(unique(terra::values(binning(dm, nn = 5), mat = FALSE)), 1L)
+})
+
+test_that("geometry = 'window' drops the curvature but keeps the depth axis", {
+  skip_if_not_installed("terra")
+  img <- make_binary_spatraster()
+  win <- create_depthmap(img, geometry = "window", angle_from_vertical = 45,
+                         dpi = 300)
+  wmat <- terra::as.matrix(win, wide = TRUE)
+  # Curvature varies down the rows; without it every row is identical.
+  expect_equal(wmat[1, ], wmat[nrow(wmat), ])
+  # The depth axis survives: columns still increase left to right.
+  expect_false(is.unsorted(wmat[1, ]))
+  expect_gt(diff(range(wmat[1, ])), 0)
+})
+
+test_that("geometry supersedes sinoid, and disagreement warns", {
+  skip_if_not_installed("terra")
+  img <- make_binary_spatraster()
+  # The old argument keeps working on its own.
+  expect_equal(terra::as.matrix(create_depthmap(img, sinoid = FALSE), wide = TRUE),
+               terra::as.matrix(create_depthmap(img, geometry = "window"), wide = TRUE))
+  expect_equal(terra::as.matrix(create_depthmap(img, sinoid = TRUE), wide = TRUE),
+               terra::as.matrix(create_depthmap(img, geometry = "tube"), wide = TRUE))
+  # Given both, geometry wins and says so rather than silently picking one.
+  expect_warning(create_depthmap(img, sinoid = TRUE, geometry = "window"),
+                 "geometry")
 })
 
 test_that("center_offset sweeps the tube top over the full image height", {
@@ -27,7 +136,8 @@ test_that("center_offset sweeps the tube top over the full image height", {
   # row 1 + (nr - 1) * center_offset.
   img <- make_binary_spatraster(nr = 129)
   tube_top_row <- function(offset) {
-    dm <- create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5, tilt = 45,
+    dm <- create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5,
+                          angle_from_vertical = 45,
                           dpi = 30, center_offset = offset)
     which.min(terra::as.matrix(dm, wide = TRUE)[, 1])
   }
@@ -48,7 +158,7 @@ test_that("center_offset 0 and 1 are the same point on the tube", {
   img <- make_binary_spatraster(nr = 129)
   dm <- function(offset) {
     terra::as.matrix(create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5,
-                                     tilt = 45, dpi = 30,
+                                     angle_from_vertical = 45, dpi = 30,
                                      center_offset = offset), wide = TRUE)
   }
   expect_equal(dm(0), dm(1))
