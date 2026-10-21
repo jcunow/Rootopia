@@ -133,14 +133,17 @@ zoom_plot(seg_clean, main = "After Cleaning",center = c(0.6,0.7), overview = F)
 > grayscale image, binarize it with `image_threshold()` first.
 
 ```{r eval=FALSE}
-grayscale <- load_flexible_image("path/to/scan.tif", scale = "to_01")
+grayscale <- load_flexible_image("path/to/scan.tif", scale = "to_01",
+                                output_format = "spatrast")
 
 # even illumination: one level for the whole scan
-mask <- image_threshold(grayscale, threshold = 0.3, method = "global")
+mask <- image_threshold(grayscale, threshold = 0.3, method = "global",
+                        select_layer = NULL)
 
 # bright center, dark corners: a level that follows the local brightness
 mask <- image_threshold(grayscale, method = "adaptive",
-                        adaptive_k = 1.15, window_size = 51)
+                        adaptive_k = 1.15, window_size = 51,
+                        select_layer = NULL)
 ```
 
 For the adaptive method, two numbers decide whether it works, and both are
@@ -285,7 +288,7 @@ root_area_pct <- root_px / (root_px + void_px) * 100
 cat(sprintf("Root area coverage: %.2f %%\n", root_area_pct))
 
 # Root length density (cm root per cm² scan area)
-scan_area_cm2 <- (root_px + void_px) / (300 / 2.54)^2
+scan_area_cm2 <- (root_px + void_px) / (1200 / 2.54)^2
 rl_density    <- rl / scan_area_cm2
 cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
 ```
@@ -313,7 +316,7 @@ cat(sprintf("Branching frequency: %.1f per 100 cm\n", branch_freq))
 
 ---
 
-### 7b. Branch order
+### 7b. Branch order {#branch-order}
 
 `branch_order_map()` goes one step further than `detect_skeleton_points()`:
 it builds a full segment graph from the skeleton and labels every segment with
