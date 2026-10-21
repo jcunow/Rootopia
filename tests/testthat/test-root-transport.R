@@ -118,3 +118,21 @@ test_that("a single segment is its own base and tip", {
   expect_equal(out$downstream_length, 4)
   expect_equal(out$path_length, 4)
 })
+
+test_that("malformed node columns stop with a message naming them", {
+  et <- tree5()
+  et$from[2] <- NA
+  expect_error(root_transport(et), "must not contain NA")
+})
+
+test_that("a component with no free end still returns, with the cycle edge NA", {
+  # a pure ring: no proximal end exists, so the base is arbitrary. Roots do not
+  # grow rings, so this only arises from a segmentation artifact; the point of
+  # the test is that it does not error.
+  ring <- data.frame(from = c("A", "B", "C"), to = c("B", "C", "A"),
+                     length = rep(5, 3), mean_diameter = rep(2, 3),
+                     stringsAsFactors = FALSE)
+  expect_warning(out <- root_transport(ring), "cycle")
+  expect_equal(nrow(out), 3L)
+  expect_equal(sum(is.na(out$downstream_tips)), 1L)
+})

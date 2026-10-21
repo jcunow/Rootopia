@@ -107,7 +107,10 @@
 #'   floor yourself, in the table's length unit.
 #' @return \code{et} with the six columns above added. Segments on a cycle get
 #'   \code{NA} for the downstream columns, since they have no subtree, and a
-#'   warning names how many there were.
+#'   warning names how many there were. A component with no free end at all --
+#'   a pure ring, which a root system does not produce -- has no proximal end
+#'   to root at, so an arbitrary node is used and its \code{path_*} values are
+#'   measured from a meaningless start.
 #' @export
 #' @seealso \code{\link{render_order_overlay}} to paint any of these columns.
 #' @examples
@@ -126,6 +129,9 @@ root_transport <- function(et, eta = 1, min_radius = NULL) {
   miss <- setdiff(need, names(et))
   if (length(miss))
     stop(sprintf("`et` is missing: %s", paste(miss, collapse = ", ")), call. = FALSE)
+
+  if (anyNA(et$from) || anyNA(et$to))
+    stop("`from` and `to` must not contain NA.", call. = FALSE)
 
   E <- nrow(et)
   r <- et$mean_diameter / 2

@@ -23,8 +23,11 @@ floor yourself, in the table's length unit.}
 }
 \value{
 \code{et} with the six columns above added. Segments on a cycle get
-  \code{NA} for the downstream columns, since they have no subtree, and a
-  warning names how many there were.
+\code{NA} for the downstream columns, since they have no subtree, and a
+warning names how many there were. A component with no free end at all --
+a pure ring, which a root system does not produce -- has no proximal end
+to root at, so an arbitrary node is used and its \code{path_*} values are
+measured from a meaningless start.
 }
 \description{
 Adds, for every segment, how far and through how much resistance water would
@@ -35,17 +38,17 @@ onto the image with \code{\link{render_order_overlay}}.
 \section{What the columns mean}{
 
 \describe{
-  \item{\code{resistance}}{Hagen-Poiseuille resistance of the segment alone,
-    \eqn{8 \eta L / (\pi r^4)}. A geometric proxy: it treats the root as an
-    open pipe, where real resistance is set by xylem anatomy. The viscosity
-    cancels in every comparison, so the default \code{eta = 1} leaves the
-    values relative.}
-  \item{\code{path_length}, \code{path_resistance}}{Cumulative from the base
-    of the component to the far end of this segment.}
-  \item{\code{downstream_tips}, \code{downstream_length},
-    \code{downstream_surface}}{How many tips, how much root length, and how
-    much lateral surface area lie beyond this segment -- what it serves.
-    These peak at the base.}
+\item{\code{resistance}}{Hagen-Poiseuille resistance of the segment alone,
+\eqn{8 \eta L / (\pi r^4)}. A geometric proxy: it treats the root as an
+open pipe, where real resistance is set by xylem anatomy. The viscosity
+cancels in every comparison, so the default \code{eta = 1} leaves the
+values relative.}
+\item{\code{path_length}, \code{path_resistance}}{Cumulative from the base
+of the component to the far end of this segment.}
+\item{\code{downstream_tips}, \code{downstream_length},
+\code{downstream_surface}}{How many tips, how much root length, and how
+much lateral surface area lie beyond this segment -- what it serves.
+These peak at the base.}
 }
 
 Lengths and diameters are used in whatever unit the edge table carries, so
