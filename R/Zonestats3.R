@@ -226,8 +226,10 @@ root_length <- function(img,
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
-#' RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
-#'                                        metrics = c("lsm_c_ca"))
+#' if (requireNamespace("landscapemetrics", quietly = TRUE)) {
+#'   RootScapeObject <- root_scape_metrics(img, index_d = 80, select_layer = 2,
+#'                                         metrics = c("lsm_c_ca"))
+#' }
 root_scape_metrics <- function(img, index_d = NA, select_layer = NULL,
                                 metrics = c("lsm_c_ca", "lsm_l_ent", "lsm_c_pd",
                                             "lsm_c_np", "lsm_c_pland",
