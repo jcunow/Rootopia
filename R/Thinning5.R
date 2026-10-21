@@ -19,9 +19,10 @@
 #' This is a Zhang-Suen \emph{variant}, not the published table, and the
 #' difference is deliberate: it disagrees with the textbook conditions at 25 of
 #' the 256 codes. Twelve are more conservative -- the textbook deletes in both
-#' sub-iterations, this deletes in only one. The other thirteen are the
-#' staircase corners: a pixel whose only neighbors are two orthogonal ones that
-#' already touch each other diagonally. Zhang-Suen's crossing-number test scores
+#' sub-iterations, this deletes in only one. The other thirteen each
+#' contain a staircase corner: two orthogonal neighbors that already touch each
+#' other diagonally, in four cases on their own and otherwise alongside one or
+#' two further neighbors. Zhang-Suen's crossing-number test scores
 #' those as A = 2 and keeps them, leaving a redundant pixel on every 90-degree
 #' bend; deleting them gives a cleaner diagonal skeleton and cannot disconnect
 #' anything.
