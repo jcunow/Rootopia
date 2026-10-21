@@ -4,7 +4,7 @@
 \alias{order_classification_map}
 \title{Rasterise a per-segment value onto the image grid}
 \usage{
-order_classification_map(et, template, value = "branch_order")
+order_classification_map(et, template, value = "order_from_base")
 }
 \arguments{
 \item{et}{An \code{edges} table carrying \code{attr(., "segments")} and
@@ -12,12 +12,12 @@ order_classification_map(et, template, value = "branch_order")
 
 \item{template}{\code{SpatRaster} (or matrix) defining the output grid/extent.}
 
-\item{value}{Column of \code{et} to rasterise (e.g. \code{"branch_order"},
+\item{value}{Column of \code{et} to rasterise (e.g. \code{"order_from_base"},
 \code{"mean_diameter"}).}
 }
 \value{
 A \code{SpatRaster} (or matrix) of \code{value} per root pixel, \code{NA}
-  elsewhere, aligned to \code{template}.
+elsewhere, aligned to \code{template}.
 }
 \description{
 Writes any per-segment column (default the order class) back onto the full
@@ -34,8 +34,8 @@ statistics, not for measuring.
 }
 \examples{
 \dontrun{
-res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")
+res <- branch_order_map(skel, mask, order = "order_from_base", unit = "px")
 cmap <- order_classification_map(res$edges, template = skel,
-                                 value = "branch_order")
+                                 value = "order_from_base")
 }
 }

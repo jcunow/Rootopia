@@ -40,7 +40,8 @@ root_depth_metrics(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
-  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  order_scheme = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   diam_weight = 0.5,
   prune_spur_length_cm = 0,
   prune_spur_iter = 1L,
@@ -89,7 +90,8 @@ batch_root_traits(
   calc_color_metrics = FALSE,
   calc_root_angles = FALSE,
   calc_root_order_metrics = FALSE,
-  order_scheme = c("strahler_order", "branch_order", "root_order", "tip_order"),
+  order_scheme = c("strahler_order", "order_from_base", "root_max_order_from_tip",
+    "order_from_tip"),
   diam_weight = 0.5,
   prune_spur_length_cm = 0,
   prune_spur_iter = 1L,
@@ -132,7 +134,8 @@ in \strong{degrees measured from horizontal} -- \code{90} is a vertical
 tube, \code{45} a tube pushed in at 45 degrees.  This is the convention
 \code{create_depthmap()} uses for \code{tilt}, and it is the opposite of
 the "degrees from vertical" wording used by some minirhizotron software,
-so convert before passing it in.  Values must be strictly between 0 and 90.
+so convert before passing it in.  Values must be greater than 0 and at
+most 90; \code{90} means a vertical tube and is allowed.
 Supplying this argument switches the run to minirhizotron geometry (see
 \strong{Geometry}).  Default \code{NULL} (flatbed).}
 
@@ -141,17 +144,17 @@ at which the soil surface begins.  Used to set the zero-depth reference.
 Default \code{0}.}
 
 \item{tube_names}{Character or \code{NULL}. Sample/tube identifiers added as
-  the \code{Tube} column.  If \code{NULL}, names are derived from characters
-  3-5 from the right of the segmented file name, prefixed with \code{"T"}
-  (e.g. \code{"T042"}).  Adjust if your naming convention differs.
+the \code{Tube} column.  If \code{NULL}, names are derived from characters
+3-5 from the right of the segmented file name, prefixed with \code{"T"}
+(e.g. \code{"T042"}).  Adjust if your naming convention differs.
 
-  Names must be \strong{unique}, one per image, and the run stops if they are
-  not.  They key the tube-level joins, where two images sharing a name are
-  read as one tube and their rows are multiplied out.  The derived default
-  collides whenever the files share a suffix -- a directory of
-  \code{"CLAS1A10-15fine.tif"} names every image \code{"Tfin"} -- so flatbed
-  scans generally need this argument.
-  Default \code{NULL}.}
+Names must be \strong{unique}, one per image, and the run stops if they are
+not.  They key the tube-level joins, where two images sharing a name are
+read as one tube and their rows are multiplied out.  The derived default
+collides whenever the files share a suffix -- a directory of
+\code{"CLAS1A10-15fine.tif"} names every image \code{"Tfin"} -- so flatbed
+scans generally need this argument.
+Default \code{NULL}.}
 
 \item{session}{Character. Session or campaign label added as the
 \code{Session} column, e.g. \code{"2022_02"}.  Default \code{""}.}
@@ -308,7 +311,7 @@ Uses \code{deep_drive()}.  Default \code{FALSE}.}
 graph via \code{branch_order_map()} and summarize it both per depth bin
 and per tube.  Adds \code{mean.<scheme>} and \code{max.<scheme>} for the
 scheme named by \code{order_scheme} (e.g. \code{mean.strahler_order}),
-plus \code{mean.root_order} and \code{lateral_root_fraction} per depth
+plus \code{mean.root_max_order_from_tip} and \code{lateral_root_fraction} per depth
 bin, tube-level \code{main_root.*} / \code{lateral_roots.*} columns
 (length, diameter, branching frequency, etc.), and \code{n_root_orders}
 (the highest order found).  Requires a skeleton.  \strong{Slow}:
@@ -316,21 +319,25 @@ builds one segment graph per image.  Default \code{FALSE}.}
 
 \item{order_scheme}{Character. Which ordering labels the per-bin order
 columns and the main-root split.  \code{"strahler_order"} (default) is the
-convention of the fine-root literature (Pregitzer et al. 2002; Fitter):
-every distal unbranched root is order 1, and the order rises only where two
-roots of equal order meet.  \code{"tip_order"} is the same leaf-peeling
-with the order raised at \emph{every} junction, so an axis carrying ten
-laterals reaches order 11.  \code{"branch_order"} counts the other way --
-the thickest root of each component is 1 and its laterals 2 -- and
-\code{"root_order"} gives each continuous root the maximum
-\code{tip_order} along it.  All four are computed regardless; this only
-picks which one is reported.  See \code{\link{branch_order_map}}.}
+morphometric, or stream-order, convention of the fine-root literature
+(Pregitzer et al. 2002): every distal unbranched root is order 1, and the
+order rises only where two roots of equal order meet.
+\code{"order_from_tip"} is the same leaf-peeling with the order raised at
+\emph{every} junction, so an axis carrying ten laterals reaches order 11.
+\code{"order_from_base"} counts the other way -- the thickest root of each
+component is 1 and its laterals 2 -- and \code{"root_max_order_from_tip"}
+gives each continuous root the largest \code{order_from_tip} along it.
+All four are computed regardless; this only picks which one is reported.
+The spellings used up to Rootopia 1.1.0 (\code{"tip_order"},
+\code{"root_order"}, \code{"branch_order"}) are accepted and resolved to
+these.  See \code{\link{branch_order_map}}.}
 
 \item{diam_weight}{Numeric >= 0. At a junction, which two arms are read as
 the same root continuing: \code{straightness + diam_weight *
-diameter_similarity}.  \code{0} uses the angle alone, larger values let
-thickness decide.  Affects \code{root_order}, \code{branch_order} and the
-segment grouping, not \code{strahler_order} or \code{tip_order}.
+  diameter_similarity}.  \code{0} uses the angle alone, larger values let
+thickness decide.  Affects \code{root_max_order_from_tip},
+\code{order_from_base} and the segment grouping, not
+\code{strahler_order} or \code{order_from_tip}.
 Default \code{0.5}.}
 
 \item{prune_spur_length_cm}{Numeric. Remove terminal skeleton branches
@@ -387,10 +394,10 @@ predicted clock-time of completion.  Default \code{TRUE}.}
 }
 \value{
 A data frame with one row per tube x depth-bin combination.  Always
-  present columns: \code{Tube}, \code{Session}, \code{Plot}, \code{depth}.
-  All other columns depend on which metric groups are enabled; disabled or
-  failed metrics appear as \code{NA} rather than being absent.  Returns
-  \code{NULL} invisibly if every image failed.
+present columns: \code{Tube}, \code{Session}, \code{Plot}, \code{depth}.
+All other columns depend on which metric groups are enabled; disabled or
+failed metrics appear as \code{NA} rather than being absent.  Returns
+\code{NULL} invisibly if every image failed.
 }
 \description{
 Processes a directory of root images and returns a tidy data frame of root
@@ -445,15 +452,15 @@ directories if necessary.
 \section{Which paths are required for which metrics}{
 
 \describe{
-  \item{\code{path_seg}}{Always required.}
-  \item{\code{path_skl}}{Optional. Used by \code{calc_root_length},
-    \code{calc_diameter_stats}, \code{calc_diameter_quantiles},
-    \code{calc_root_angles}, and \code{calc_root_order_metrics} when
-    supplied. If \code{path_skl} is \code{NULL} or a skeleton file is
-    missing for an image, the skeleton is computed internally from the
-    segmented image via \code{skeletonize_image()}.}
-  \item{\code{path_rgb}}{Required when \code{calc_color_metrics} is
-    \code{TRUE}.}
+\item{\code{path_seg}}{Always required.}
+\item{\code{path_skl}}{Optional. Used by \code{calc_root_length},
+\code{calc_diameter_stats}, \code{calc_diameter_quantiles},
+\code{calc_root_angles}, and \code{calc_root_order_metrics} when
+supplied. If \code{path_skl} is \code{NULL} or a skeleton file is
+missing for an image, the skeleton is computed internally from the
+segmented image via \code{skeletonize_image()}.}
+\item{\code{path_rgb}}{Required when \code{calc_color_metrics} is
+\code{TRUE}.}
 }
 }
 
@@ -468,20 +475,20 @@ images) or a vector of length equal to the number of images.
 There is no geometry switch.  The geometry follows from whether you supply
 tube parameters:
 \describe{
-  \item{Flatbed (default)}{Neither \code{insertion_angles} nor
-    \code{tube_diameter_cm} is supplied.  The scan is treated as a flat
-    surface imaged head-on: no sinusoidal curvature correction
-    (\code{sinoid = FALSE}), no foreshortening of the depth axis (one pixel
-    along the image width is one pixel of depth), and no
-    \code{rotation_censor()} crop, since there is no tube interior to crop
-    to.}
-  \item{Minirhizotron}{Either argument is supplied.  The sinusoidal
-    curvature correction is switched on, the depth axis is foreshortened by
-    \code{sin(insertion_angles)}, and each image is cropped to
-    \code{rotation_fixed_width} rows about its center.  An argument you
-    leave out falls back to a neutral default: \code{tube_diameter_cm = 7}
-    and \code{insertion_angles = 90} (vertical tube), both announced in the
-    run log.}
+\item{Flatbed (default)}{Neither \code{insertion_angles} nor
+\code{tube_diameter_cm} is supplied.  The scan is treated as a flat
+surface imaged head-on: no sinusoidal curvature correction
+(\code{sinoid = FALSE}), no foreshortening of the depth axis (one pixel
+along the image width is one pixel of depth), and no
+\code{rotation_censor()} crop, since there is no tube interior to crop
+to.}
+\item{Minirhizotron}{Either argument is supplied.  The sinusoidal
+curvature correction is switched on, the depth axis is foreshortened by
+\code{sin(insertion_angles)}, and each image is cropped to
+\code{rotation_fixed_width} rows about its center.  An argument you
+leave out falls back to a neutral default: \code{tube_diameter_cm = 7}
+and \code{insertion_angles = 90} (vertical tube), both announced in the
+run log.}
 }
 In both cases depth runs along the image \strong{width} (left to right),
 which is the orientation minirhizotron scanners produce.  A flatbed scan with
@@ -519,17 +526,17 @@ to a flatbed scan, with no warning when you tune one that is inert.  The
 \emph{Batch Processing} vignette has the full tier list for both geometries;
 in short:
 \describe{
-  \item{Flatbed}{Set \code{dpi}, \code{tube_names} and
-    \code{depth_interval_cm = NULL}, plus \code{binarize_threshold} and
-    \code{dark_roots} for unsegmented scans.  \code{insertion_angles},
-    \code{tube_diameter_cm}, \code{tube_center_offset},
-    \code{rotation_fixed_width}, \code{soil_starts} and \code{bin_round}
-    do nothing here.}
-  \item{Minirhizotron}{Set \code{dpi}, \code{insertion_angles} (degrees from
-    \emph{horizontal}), \code{tube_diameter_cm}, \code{soil_starts},
-    \code{tube_names}, \code{depth_interval_cm} and \code{bin_round}, and
-    look at \code{rotation_fixed_width} -- how much of the tube's curved edge
-    to trim is a property of your scanner that no default can guess.}
+\item{Flatbed}{Set \code{dpi}, \code{tube_names} and
+\code{depth_interval_cm = NULL}, plus \code{binarize_threshold} and
+\code{dark_roots} for unsegmented scans.  \code{insertion_angles},
+\code{tube_diameter_cm}, \code{tube_center_offset},
+\code{rotation_fixed_width}, \code{soil_starts} and \code{bin_round}
+do nothing here.}
+\item{Minirhizotron}{Set \code{dpi}, \code{insertion_angles} (degrees from
+\emph{horizontal}), \code{tube_diameter_cm}, \code{soil_starts},
+\code{tube_names}, \code{depth_interval_cm} and \code{bin_round}, and
+look at \code{rotation_fixed_width} -- how much of the tube's curved edge
+to trim is a property of your scanner that no default can guess.}
 }
 The per-image arguments -- \code{insertion_angles}, \code{soil_starts},
 \code{binarize_threshold}, \code{dark_roots}, \code{tube_names} -- each take

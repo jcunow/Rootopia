@@ -22,11 +22,13 @@
 #' - Filters distance values to retain only those corresponding to the skeletonized regions.
 #' - Computes diameter statistics, including quantiles, mean, and median diameters.
 #'
-#' The function supports various input formats and normalizes image values to the range [0, 1] if needed. It uses the `terra` package for raster operations and the `imager` package for image processing.
+#' The function supports various input formats and normalizes image values to the range `[0, 1]` if needed. It uses the `terra` package for raster operations and the `imager` package for image processing.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{quantiles}{Numeric vector of diameter quantiles (10th to 100th percentile).}
+#'   \item{quantiles}{Named numeric vector of 11 diameter quantiles, the
+#'     deciles from 0% (the thinnest skeleton pixel) to 100% (the thickest),
+#'     as returned by \code{quantile(probs = seq(0, 1, 0.1))}.}
 #'   \item{mean_diameter}{Numeric. The mean root diameter.}
 #'   \item{median_diameter}{Numeric. The median root diameter.}
 #'   \item{diameters}{Numeric vector of all diameter values in the skeletonized regions.}

@@ -2,60 +2,84 @@
 % Please edit documentation in R/RootBranching.R
 \name{order_metrics}
 \alias{order_metrics}
-\title{Aggregate root architecture by order, or split focal-vs-rest}
+\title{Aggregate root architecture by order, or by groups of orders}
 \usage{
-order_metrics(x, order_col = NULL, focal = NULL)
+order_metrics(x, order_col = NULL, groups = NULL, focal = NULL)
 }
 \arguments{
 \item{x}{A \code{"branchOrderMap"} object or an \code{edges} data.frame.}
 
 \item{order_col}{Order column to aggregate by; defaults to the object's
-\code{$order}, else \code{"branch_order"}.}
+\code{$order}, else \code{"order_from_base"}. The 1.1.0 spellings are
+accepted and resolved to the current ones.}
 
-\item{focal}{Controls the split:
+\item{groups}{How to pool orders into rows:
 \itemize{
-  \item \code{NULL} (default): one row per order class.
-  \item \code{"thinnest"} / \code{"thickest"} (aliases \code{"finest"} /
-    \code{"coarsest"}): the order class with the smallest / largest
-    length-weighted diameter, versus all others. Selected by \emph{diameter},
-    so it is independent of the order numbering; the \code{orders} column
-    reports which order number(s) fell in each group.
-  \item a numeric order value or vector (e.g. \code{1} or \code{c(4, 5)}):
-    those orders as the focal group versus the rest.
+\item \code{NULL} (default): one row per order class, ascending.
+\item A named list of order sets, e.g. \code{list(fine = 1:2,
+      coarse = 3:5)}. Each element holds values of \code{order_col} and its
+name becomes the \code{group} label. Orders that no element lists are
+pooled into one extra row named \code{"rest"}, so every ordered segment
+is counted exactly once; when nothing is left over that row is absent,
+and a group that catches no segment gets no row. Naming one order in two
+groups is an error.
+\item \code{"thinnest"} or \code{"thickest"}: the one order class with the
+smallest or largest length-weighted diameter, with the others pooled into
+\code{"rest"}. The pick is by \emph{diameter}, so it does not depend on
+how the orders are numbered; the \code{orders} column reports which order
+number(s) landed in each row.
 }}
+
+\item{focal}{Deprecated spelling of \code{groups}, kept so existing calls
+still run. A numeric value or vector is read as
+\code{groups = list(focal = focal)}; \code{"thinnest"}, \code{"thickest"}
+and the aliases \code{"finest"} / \code{"coarsest"} are read as the matching
+\code{groups} string.}
 }
 \value{
-A data.frame with one row per group:
-  \describe{
-    \item{\code{group}}{Order value (no split) or \code{"focal"}/\code{"rest"}.}
-    \item{\code{orders}}{Comma-separated order numbers contained in the group
-      (so a thinnest/thickest split shows which orders it picked).}
-    \item{\code{n_segments}}{Graph segments in the group.}
-    \item{\code{n_tips}}{Root tips/apices (degree-1 endpoints).}
-    \item{\code{n_branch_points}}{Branching junctions on roots of the group.}
-    \item{\code{total_length}}{Summed root length.}
-    \item{\code{length_fraction}}{Share of total ordered length.}
-    \item{\code{mean_segment_length}}{Mean length per segment.}
-    \item{\code{branching_frequency}}{Branch points per unit length.}
-    \item{\code{mean_diameter}}{Length-weighted mean diameter.}
-    \item{\code{median_diameter}}{Median of segment median diameters.}
-  }
-  \code{attr(., "n_unordered")} counts NA-order segments; for a split,
-  \code{attr(., "focal_orders")} lists the focal order number(s).
+A data.frame with one row per order class or per group:
+\describe{
+\item{first column}{Named after \code{order_col} and holding the order
+value when \code{groups} is \code{NULL}; named \code{group} and holding
+the group label otherwise.}
+\item{\code{orders}}{Comma-separated order numbers contained in the group.
+Present only when \code{groups} is given.}
+\item{\code{n_segments}}{Graph segments in the row.}
+\item{\code{n_tips}}{Root tips/apices (degree-1 endpoints).}
+\item{\code{n_branch_points}}{Branching junctions on roots of the row.}
+\item{\code{total_length}}{Summed root length.}
+\item{\code{length_fraction}}{Share of total ordered length.}
+\item{\code{cumulative_length}}{Running total of \code{total_length} over
+the rows above and including this one. Present only when \code{groups} is
+\code{NULL}, where the rows ascend in the order value.}
+\item{\code{cumulative_fraction}}{\code{cumulative_length} over the total
+ordered length, so the last row is 1. Present under the same condition.}
+\item{\code{mean_segment_length}}{Mean length per segment.}
+\item{\code{branching_frequency}}{Branch points per unit length.}
+\item{\code{mean_diameter}}{Length-weighted mean diameter.}
+\item{\code{median_diameter}}{Median of segment median diameters.}
+}
+An order class with no segments has no row, so the per-order rows can skip
+values; the cumulative columns step from one present order to the next rather
+than inserting a zero, which would drag down any mean taken over the rows.
+\code{attr(., "n_unordered")} counts NA-order segments. When \code{groups} is
+given, \code{attr(., "groups")} holds the resolved list of order sets,
+\code{"rest"} included.
 }
 \description{
 Flexible query over a \code{branch_order_map} result (or its \code{$edges}
-table): length, diameter, and branching architecture, either per order class
-or split into a focal group versus the rest. Diameter is length-weighted so it
+table): length, diameter, and branching architecture, either one row per order
+class or one row per named group of orders. Diameter is length-weighted so it
 reflects how much root length sits at each width. Lengths/diameters are in the
 unit of \code{x}; counts are integers; \code{branching_frequency} is per unit
 length.
 }
 \examples{
 \dontrun{
-res <- branch_order_map(skel, mask, order = "branch_order", unit = "cm", dpi = 300)
-order_metrics(res)                       # per-order table
-order_metrics(res, focal = "thinnest")   # thinnest order class vs all others
-order_metrics(res, focal = c(1))         # order 1 vs the rest
+res <- branch_order_map(skel, mask, order = "order_from_base", unit = "cm", dpi = 300)
+order_metrics(res)                                   # per-order table
+order_metrics(res, groups = list(fine = 1:2))        # orders 1-2 vs "rest"
+order_metrics(res, groups = list(fine = 1:2, coarse = 3:4))
+order_metrics(res, groups = "thinnest")              # thinnest class vs "rest"
 }
 }

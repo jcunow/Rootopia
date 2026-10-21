@@ -3,13 +3,13 @@
 # + junction-cluster contraction + order-colored validation PNG
 # ------------------------------------------------------------
 # For FRAGMENTED ("broken") roots: no base/origin assumed; each
-# component handled independently; tip_order via leaf-peeling.
+# component handled independently; order_from_tip via leaf-peeling.
 #
 # Contraction: connected clumps of junction pixels (degree >= 3)
 # are merged into a single graph node BEFORE tracing. This
 # dissolves the 2-px "ladder" segments and spurious micro-cycles
 # that an imperfectly-thinned skeleton produces (which otherwise
-# leave tip_order = NA).
+# leave order_from_tip = NA).
 #
 # Deps: base R + grDevices/graphics. terra only for SpatRaster
 #       input. imager used for the DT if installed (else pure-R fallback).
@@ -189,7 +189,7 @@ trace_segments <- function(skel) {
   # Absorb degree-2 pixels that bridge two pixels of the SAME junction cluster.
   # A 90-degree bend in an 8-connected skeleton leaves such a pixel wedged
   # between two contracted junction pixels; tracing it produced a 3-px J->J
-  # self-loop (a spurious micro-cycle: NA tip_order + a phantom branch point).
+  # self-loop (a spurious micro-cycle: NA order_from_tip + a phantom branch point).
   # Folding it into the cluster removes the artifact at its source.
   d2 <- which(deg == 2L)
   if (length(d2)) {
@@ -385,14 +385,54 @@ build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
 }
 
 
-#' Topological tip order by leaf-peeling
+# Each order column has one current name and one from Rootopia 1.1.0 and
+# earlier. The current name says what the number counts over: `order_from_tip`
+# and `strahler_order` label a single segment, `order_from_base` and
+# `root_max_order_from_tip` label a whole continuous root. The edge table
+# carries both spellings -- the current one computed, the earlier one copied
+# from it -- and every argument that names an order column takes either.
+.ORDER_LEGACY <- c(tip_order    = "order_from_tip",
+                   root_order   = "root_max_order_from_tip",
+                   branch_order = "order_from_base")
+
+.ORDER_COLS <- c("strahler_order", "order_from_tip",
+                 "root_max_order_from_tip", "order_from_base")
+
+# Resolves one column name, so a 1.1.0 spelling reaching any argument lands on
+# the column that is actually computed. A name that is not an order column is
+# passed through: `order_col` and `value` accept any column of the table.
+.order_col <- function(x) {
+  x <- as.character(x)[1L]
+  if (x %in% names(.ORDER_LEGACY)) unname(.ORDER_LEGACY[x]) else x
+}
+
+# For the arguments that must name one of the four schemes.
+.order_scheme <- function(x) {
+  x <- .order_col(x)
+  if (!x %in% .ORDER_COLS)
+    stop(sprintf("Order scheme must be one of %s.",
+                 paste(.ORDER_COLS, collapse = ", ")), call. = FALSE)
+  x
+}
+
+.add_legacy_order_cols <- function(et) {
+  for (old in names(.ORDER_LEGACY)) {
+    cur <- .ORDER_LEGACY[[old]]
+    if (!is.null(et[[cur]])) et[[old]] <- et[[cur]]
+  }
+  et
+}
+
+
+#' Topological order counted from the tips, by leaf-peeling
 #'
-#' Assigns \code{tip_order} per segment: terminal segments are 1; peeling
-#' terminals away round by round gives \code{1 + max(child orders)} inward.
-#' Cyclic components without endpoints receive \code{NA}.
+#' Assigns \code{order_from_tip} per segment: terminal segments are 1; peeling
+#' terminals away round by round gives \code{1 + max(child orders)} inward, so
+#' the count rises at every junction. Cyclic components without endpoints
+#' receive \code{NA}.
 #'
 #' @param edge_tbl Edge table from \code{\link{build_edge_table}}.
-#' @return \code{edge_tbl} with an added integer \code{tip_order} column.
+#' @return \code{edge_tbl} with an added integer \code{order_from_tip} column.
 #' @keywords internal
 #' @noRd
 #' @name compute_tip_order
@@ -409,9 +449,10 @@ compute_tip_order <- function(edge_tbl) {
     if (!any(leaf)) break
     peel <- peel + 1L; ord[leaf] <- peel; active[leaf] <- FALSE
   }
-  edge_tbl$tip_order <- ord
+  edge_tbl$order_from_tip <- ord
   if (any(is.na(ord)))
-    warning(sprintf("%d segment(s) NA tip_order (genuine cycle, no endpoints).", sum(is.na(ord))))
+    warning(sprintf("%d segment(s) NA order_from_tip (genuine cycle, no endpoints).",
+                    sum(is.na(ord))))
   edge_tbl
 }
 
@@ -420,10 +461,11 @@ compute_tip_order <- function(edge_tbl) {
 #'
 #' Assigns \code{strahler_order} per segment: every terminal segment is 1, and a
 #' segment's order rises only where two of its children share the highest order
-#' -- otherwise it inherits that highest order unchanged. This is the convention
-#' the fine-root literature means by root order (Pregitzer et al. 2002; Fitter's
-#' topological ordering), where first-order roots are the distal, unbranched
-#' absorptive roots.
+#' -- otherwise it inherits that highest order unchanged. This is the
+#' morphometric, or stream-order, classification of the fine-root literature
+#' (Pregitzer et al. 2002), where first-order roots are the distal, unbranched
+#' absorptive roots. It is not the topological classification, which adds the
+#' orders of the two child links at a junction instead of taking the higher one.
 #'
 #' It shares the peeling loop with \code{compute_tip_order()} but not its rule:
 #' there, order climbs at every junction, so an axis carrying ten laterals
@@ -437,7 +479,7 @@ compute_tip_order <- function(edge_tbl) {
 #' which on a root scan is the proximal end of the main axis. That node is held
 #' back from the peeling, so its segment is scored last, from its children, as a
 #' rooted traversal would. Components with no free end at all (a pure cycle)
-#' receive \code{NA}, as for \code{tip_order}.
+#' receive \code{NA}, as for \code{order_from_tip}.
 #'
 #' @param edge_tbl Edge table from \code{\link{build_edge_table}}. Uses
 #'   \code{mean_diameter} to root each component, falling back to \code{length}
@@ -535,7 +577,14 @@ compute_strahler_order <- function(edge_tbl) {
 #'   per-segment quantity such as those added by \code{\link{root_transport}}.
 #' @param dims Integer length-2 vector, the (cropped) raster dimensions.
 #' @param file Output PNG path.
-#' @param mask Optional 0/1 mask drawn as a gray background.
+#' @param mask Optional 0/1 mask drawn as a gray background. The pipeline
+#'   traces in a frame cropped to the foreground, so a full-size mask is
+#'   usually larger than \code{dims}; pass \code{crop_offset} as well and it
+#'   is cut to match. Without one, a mismatched mask is dropped with a warning
+#'   rather than drawn out of register.
+#' @param crop_offset Optional length-2 (row, column) offset of the traced
+#'   frame within \code{mask}, as carried by
+#'   \code{attr(et, "crop_offset")}.
 #' @param max_side Long-side cap (px) for the output image.
 #' @param continuous \code{NA} (default) picks the legend from the data:
 #'   continuous when any value has a fractional part or there are more than 24
@@ -548,7 +597,8 @@ compute_strahler_order <- function(edge_tbl) {
 #' @seealso \code{\link{root_transport}} for quantities worth painting.
 #' @export
 render_order_overlay <- function(segs, values, dims, file,
-                                 mask = NULL, max_side = 2000,
+                                 mask = NULL, crop_offset = NULL,
+                                 max_side = 2000,
                                  continuous = NA, value_label = NULL,
                                  n_bins = 64L, tip_order = NULL) {
   if (!is.null(tip_order)) {
@@ -556,6 +606,14 @@ render_order_overlay <- function(segs, values, dims, file,
     if (missing(values)) values <- tip_order
   }
   nr <- dims[1]; nc <- dims[2]
+  # Without segments there is nothing to paint, and the result would be a
+  # picture of the mask with no overlay on it -- a silent blank rather than a
+  # failure. Say which argument is missing and where it comes from.
+  if (is.null(segs) || length(segs) == 0L)
+    stop("`segs` is empty, so there is nothing to paint. Pass ",
+         "attr(et, \"segments\"), which root_graph_pipeline() attaches only ",
+         "when called with keep_segments = TRUE; branch_order_map() sets that ",
+         "for you.", call. = FALSE)
   if (length(values) < length(segs))
     stop("`values` is shorter than `segs`: one value per segment is needed.",
          call. = FALSE)
@@ -578,7 +636,28 @@ render_order_overlay <- function(segs, values, dims, file,
   rng  <- suppressWarnings(range(values[is.finite(values)]))
   maxo <- suppressWarnings(max(values, na.rm = TRUE)); if (!is.finite(maxo)) maxo <- 1L
   val_f <- .flip_matrix(val_img); na_f <- .flip_matrix(na_img)
-  mk_f  <- if (!is.null(mask)) .flip_matrix((.to_binary_matrix(mask) > 0) * 1) else .flip_matrix(matrix(0, nr, nc))
+  # Segment coordinates are in the cropped frame the pipeline traced in, so a
+  # mask straight from the user is usually larger. Cut it down with the offset
+  # the edge table carries; without one there is no way to line the two up, so
+  # the background is dropped rather than drawn in the wrong place.
+  if (!is.null(mask)) {
+    mk <- (.to_binary_matrix(mask) > 0) * 1
+    if (!identical(dim(mk), c(as.integer(nr), as.integer(nc)))) {
+      if (!is.null(crop_offset) && length(crop_offset) == 2L) {
+        r0 <- as.integer(crop_offset[1]); c0 <- as.integer(crop_offset[2])
+        if (r0 + nr <= nrow(mk) && c0 + nc <= ncol(mk))
+          mk <- mk[r0 + seq_len(nr), c0 + seq_len(nc), drop = FALSE]
+      }
+      if (!identical(dim(mk), c(as.integer(nr), as.integer(nc)))) {
+        warning(sprintf(paste("`mask` is %dx%d but the segments span %dx%d;",
+                              "drawing without the background. Pass",
+                              "crop_offset = attr(et, \"crop_offset\") to align them."),
+                        nrow(mk), ncol(mk), nr, nc), call. = FALSE)
+        mk <- matrix(0, nr, nc)
+      }
+    }
+  } else mk <- matrix(0, nr, nc)
+  mk_f <- .flip_matrix(mk)
   xs <- seq(0, 1, length.out = nrow(val_f)); ys <- seq(0, 1, length.out = ncol(val_f))
 
   scale <- min(1, max_side / max(nr, nc))
@@ -650,14 +729,17 @@ render_order_overlay <- function(segs, values, dims, file,
 #'
 #' Core engine: crops to the foreground, computes the distance transform, traces
 #' segments with junction contraction, resolves crossings, optionally prunes weak
-#' tips, and assigns all three order schemes. Returns a per-segment edge table in
+#' tips, and assigns all four order schemes. Returns a per-segment edge table in
 #' \emph{pixels}; use \code{\link{branch_order_map}} for a unit-aware wrapper.
 #'
 #' @details
-#' Three order columns are produced (see \code{\link{branch_order_map}} for the
-#' full rules): \code{tip_order} (per-segment leaf-peeling), \code{root_order}
-#' (per-root max tip_order), \code{branch_order} (per-root centrifugal generation
-#' from the thickest root). \code{color_by} selects which one the overlay uses.
+#' Four order columns are produced (see \code{\link{branch_order_map}} for the
+#' full rules): \code{order_from_tip} and \code{strahler_order} per segment,
+#' \code{root_max_order_from_tip} and \code{order_from_base} per continuous root.
+#' \code{color_by} selects which one the overlay uses. The spellings used up to
+#' Rootopia 1.1.0 -- \code{tip_order}, \code{root_order}, \code{branch_order} --
+#' are kept as copies of those columns and are still accepted by
+#' \code{color_by}.
 #'
 #' @param skel Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
 #'   matrix. Do not pre-convert a raster with \code{as.matrix()}. If
@@ -703,10 +785,11 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
                                 keep_segments = FALSE,
                                 resolve_overlaps = TRUE, splice_passthrough = TRUE,
                                 crossing_straight = -0.5, crossing_diam_ratio = 0,
-                                color_by = c("strahler_order", "branch_order", "root_order", "tip_order"),
+                                color_by = c("strahler_order", "order_from_base",
+                                             "root_max_order_from_tip", "order_from_tip"),
                                 diam_weight = 0.5,
                                 prune_min_length = 0, prune_min_diameter = 0, prune_iter = 0L) {
-  color_by <- match.arg(color_by)
+  color_by <- .order_scheme(color_by)
   t0 <- Sys.time()
   if (is.null(skel)) {
     if (is.null(mask)) stop("Either 'skel' or 'mask' must be supplied.")
@@ -771,6 +854,7 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
   edge_tbl <- compute_tip_order(edge_tbl)
   edge_tbl <- compute_strahler_order(edge_tbl)
   edge_tbl <- assign_root_order(segs, edge_tbl, diam_weight = diam_weight)
+  edge_tbl <- .add_legacy_order_cols(edge_tbl)
   
   attr(edge_tbl, "crop_offset") <- c(row = ro, col = co)
   attr(edge_tbl, "dims") <- dims
@@ -782,10 +866,10 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
                          mask = mask, max_side = max_side)
   }
   if (verbose) {
-    ok <- !is.na(edge_tbl$tip_order)
+    ok <- !is.na(edge_tbl$order_from_tip)
     cat(sprintf("Done in %.2fs. %d segments, max order %d, total length %.1f px\n",
                 as.numeric(difftime(Sys.time(), t0, units = "secs")), nrow(edge_tbl),
-                if (any(ok)) max(edge_tbl$tip_order[ok]) else 0L, sum(edge_tbl$length)))
+                if (any(ok)) max(edge_tbl$order_from_tip[ok]) else 0L, sum(edge_tbl$length)))
   }
   edge_tbl
 }
@@ -798,7 +882,7 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
 #                                  dt_backend  = "imager",
 #                                  overlay_png = "order_validation.png")
 # # Re-plot later (needs keep_segments = TRUE on the call above):
-# # render_order_overlay(attr(edge_tbl,"segments"), edge_tbl$tip_order,
+# # render_order_overlay(attr(edge_tbl,"segments"), edge_tbl$order_from_tip,
 # #                      attr(edge_tbl,"dims"), "order_validation.png", mask = mask_rast)
 
 
@@ -815,20 +899,22 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
 #' @param r_range,c_range Integer length-2 row/column ranges (original coordinates).
 #' @param scale Magnification factor (device px per image px).
 #' @param file Output PNG path.
-#' @param order_col Which order column to color by (default \code{"root_order"}).
+#' @param order_col Which order column to color by. The 1.1.0 spellings are
+#'   accepted and resolved to the current ones.
 #' @return Invisibly, \code{file}.
 #' @examples
 #' \dontrun{
-#' res <- branch_order_map(skel, mask, order = "root_order", unit = "px")
+#' res <- branch_order_map(skel, mask, order = "root_max_order_from_tip", unit = "px")
 #' plot_order_window(res$edges, skel, r_range = c(1, 500), c_range = c(1, 500),
 #'                   file = tempfile(fileext = ".png"))
 #' }
 #' @export
 plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "window.png",
-                              order_col = "root_order") {
+                              order_col = "root_max_order_from_tip") {
   segs <- attr(et, "segments")
   if (is.null(segs)) stop("Re-run root_graph_pipeline(..., keep_segments = TRUE).")
-  if (!order_col %in% names(et)) order_col <- "tip_order"
+  order_col <- .order_col(order_col)
+  if (!order_col %in% names(et)) order_col <- "order_from_tip"
   ord_vec <- et[[order_col]]
   off <- attr(et, "crop_offset"); ro <- as.integer(off["row"]); co <- as.integer(off["col"])
   smat <- .to_binary_matrix(skel)
@@ -1040,22 +1126,23 @@ resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
 }
 
 
-#' Group segments into roots and assign root_order and branch_order
+#' Group segments into roots and assign the two per-root order columns
 #'
 #' Segments are grouped into continuous roots: at each junction the continuation
 #' pair is the two arms maximizing \code{straightness + diam_weight * diameter
 #' consistency}, where consistency combines how alike the two arms are with how
-#' thick they are relative to the node; the odd arm out is a lateral. \code{root_order} is the maximum
-#' \code{tip_order} along each root. \code{branch_order} is a centrifugal
-#' generation: the thickest root (length-weighted mean diameter) in each
-#' connected component is 1, counting branching hops outward.
+#' thick they are relative to the node; the odd arm out is a lateral.
+#' \code{root_max_order_from_tip} is the largest \code{order_from_tip} found
+#' along a root, stamped on every segment of it. \code{order_from_base} counts
+#' generations outward: the thickest root (length-weighted mean diameter) in each
+#' connected component is 1, its laterals 2, and so on.
 #'
 #' @param segs Segment list (post crossing-resolution).
-#' @param edge_tbl Edge table with \code{tip_order} already assigned.
+#' @param edge_tbl Edge table with \code{order_from_tip} already assigned.
 #' @param diam_weight Diameter-vs-angle weight for the continuation choice (>= 0).
 #' @param look Pixels used to estimate endpoint tangents.
-#' @return \code{edge_tbl} with added \code{root_order}, \code{branch_order},
-#'   and \code{root_id} columns.
+#' @return \code{edge_tbl} with added \code{root_max_order_from_tip},
+#'   \code{order_from_base} and \code{root_id} columns.
 #' @keywords internal
 #' @noRd
 assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
@@ -1111,12 +1198,13 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
   rid <- match(root, roots_u)                          # 1..n_roots per segment
   n_roots <- length(roots_u)
   
-  # (2) root_order: max tip_order along each root (thick main axis stays high)
-  grp_max <- tapply(edge_tbl$tip_order, rid,
+  # (2) root_max_order_from_tip: the largest order_from_tip along each root, so
+  # a thick main axis keeps its high value out to its tip
+  grp_max <- tapply(edge_tbl$order_from_tip, rid,
                     function(v) if (all(is.na(v))) NA_integer_ else max(v, na.rm = TRUE))
-  edge_tbl$root_order <- as.integer(grp_max[as.character(rid)])
+  edge_tbl$root_max_order_from_tip <- as.integer(grp_max[as.character(rid)])
   
-  # (3) branch_order: generation, THICKEST root in each connected component = 1,
+  # (3) order_from_base: generation, THICKEST root in each connected component = 1,
   # counting up by branching hops outward. parent = continuation root at a
   # junction; child = each lateral root. Component connectivity is undirected.
   ep <- integer(0); ec <- integer(0)
@@ -1156,7 +1244,7 @@ assign_root_order <- function(segs, edge_tbl, diam_weight = 0.5, look = 5L) {
     }
     gen[comp] <- d[comp] + 1L
   }
-  edge_tbl$branch_order <- as.integer(gen[rid])
+  edge_tbl$order_from_base <- as.integer(gen[rid])
   
   # (4) architecture counts: tips (degree-1 endpoints) and branch points.
   # A branch point is a branching junction on the parent (continuation) root;
@@ -1352,19 +1440,20 @@ prune_skeleton <- function(skel, mask = NULL,
 #' @param et An \code{edges} table carrying \code{attr(., "segments")} and
 #'   \code{attr(., "crop_offset")} (run with \code{keep_segments = TRUE}).
 #' @param template \code{SpatRaster} (or matrix) defining the output grid/extent.
-#' @param value Column of \code{et} to rasterise (e.g. \code{"branch_order"},
+#' @param value Column of \code{et} to rasterise (e.g. \code{"order_from_base"},
 #'   \code{"mean_diameter"}).
 #' @return A \code{SpatRaster} (or matrix) of \code{value} per root pixel, \code{NA}
 #'   elsewhere, aligned to \code{template}.
 #' @examples
 #' \dontrun{
-#' res <- branch_order_map(skel, mask, order = "branch_order", unit = "px")
+#' res <- branch_order_map(skel, mask, order = "order_from_base", unit = "px")
 #' cmap <- order_classification_map(res$edges, template = skel,
-#'                                  value = "branch_order")
+#'                                  value = "order_from_base")
 #' }
 #' @export
-order_classification_map <- function(et, template, value = "branch_order") {
+order_classification_map <- function(et, template, value = "order_from_base") {
   segs <- attr(et, "segments")
+  value <- .order_col(value)
   if (is.null(segs)) stop("Run with keep_segments = TRUE (branch_order_map does this).")
   if (!value %in% names(et)) stop(sprintf("'%s' is not a column of et.", value))
   off <- attr(et, "crop_offset"); ro <- as.integer(off["row"]); co <- as.integer(off["col"])
@@ -1404,6 +1493,12 @@ order_classification_map <- function(et, template, value = "branch_order") {
 #'     \item{\code{n_branch_points}}{Number of branching junctions on roots of this
 #'       order (= number of laterals departing, for ordinary 3-way forks).}
 #'     \item{\code{total_length}}{Summed root length.}
+#'     \item{\code{cumulative_length}}{Running total of \code{total_length} from
+#'       the first row down to this one. Rows ascend in \code{order}, and an order
+#'       with no segments has no row, so the running total steps from one present
+#'       order to the next rather than inserting a zero.}
+#'     \item{\code{cumulative_fraction}}{\code{cumulative_length} over the total
+#'       ordered length, so the last row is 1.}
 #'     \item{\code{mean_segment_length}}{Mean length per segment.}
 #'     \item{\code{branching_frequency}}{Branch points per unit length
 #'       (\code{n_branch_points / total_length}).}
@@ -1412,13 +1507,16 @@ order_classification_map <- function(et, template, value = "branch_order") {
 #'   }
 #'   Unordered (NA) segments are excluded and counted in \code{attr(., "n_unordered")}.
 #' @export
-summarize_orders <- function(et, order_col = "branch_order") {
-  # Thin wrapper over order_metrics() (focal = NULL) so the per-order
+summarize_orders <- function(et, order_col = "order_from_base") {
+  # Thin wrapper over order_metrics() with no grouping, so the per-order
   # aggregation lives in one place. The columns are reshaped to this
   # function's output format: a leading integer `order` column and no
   # `length_fraction` (which order_metrics adds).
   if (is.null(et)) return(data.frame())
-  out <- order_metrics(et, order_col = order_col, focal = NULL)
+  # Resolved here as well as inside order_metrics(), because the attribute
+  # below reports which column was aggregated and must name the real one.
+  order_col <- .order_col(order_col)
+  out <- order_metrics(et, order_col = order_col)
   if (nrow(out) == 0L) return(out)
 
   n_unordered <- attr(out, "n_unordered")
@@ -1429,7 +1527,8 @@ summarize_orders <- function(et, order_col = "branch_order") {
   out$n_tips          <- as.integer(out$n_tips)
   out$n_branch_points <- as.integer(out$n_branch_points)
   out <- out[, c("order", "n_segments", "n_tips", "n_branch_points",
-                 "total_length", "mean_segment_length", "branching_frequency",
+                 "total_length", "cumulative_length", "cumulative_fraction",
+                 "mean_segment_length", "branching_frequency",
                  "mean_diameter", "median_diameter")]
   rownames(out) <- NULL
   attr(out, "order_col")   <- order_col
@@ -1507,31 +1606,47 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' and diameters are reported in real units.
 #'
 #' @details
-#' All three order schemes are always computed and stored on \code{$edges};
+#' All four order schemes are always computed and stored on \code{$edges};
 #' \code{order} only selects which labels \code{$class_map} and \code{$summary}.
+#' Two label a single graph segment and two label a whole continuous root, which
+#' is what the column names say: a per-root column holds the same value on every
+#' segment of that root, so averaging it over segments weights long roots more.
 #' \describe{
-#'   \item{\code{tip_order} (per segment)}{Topological leaf-peeling depth. Every
-#'     terminal segment is order 1; peeling terminals away round by round, a
-#'     segment's order is \code{1 + max(child orders)}. Order rises toward the
-#'     interior, so the distal end of even a thick root is 1. This is centrifugal
-#'     depth, not strict Strahler ordering: Strahler only increments where two
-#'     children share the highest order, while this increments at every junction,
-#'     so a long chain of single laterals keeps climbing.}
-#'   \item{\code{root_order} (per root)}{Segments are grouped into continuous roots
-#'     (continuation rule below); each root takes the \emph{maximum} \code{tip_order}
-#'     along it, so a thick main axis keeps its high order out to its tip. Sensitive
-#'     to how deep the deepest subtree runs.}
-#'   \item{\code{branch_order} (per root)}{Centrifugal generation. The thickest root
-#'     (length-weighted mean diameter) in each connected component is order 1;
-#'     counting branching hops outward, its laterals are 2, theirs 3, and so on.
-#'     Independent of subtree depth, so one heavily branched root does not inflate
-#'     the rest.}
+#'   \item{\code{order_from_tip} (per segment)}{Leaf-peeling count. Every terminal
+#'     segment is order 1; peeling terminals away round by round, a segment's
+#'     order is \code{1 + max(child orders)}. It rises toward the interior, so the
+#'     distal end of even a thick root is 1. The count runs from the tips inward
+#'     (centripetal), the direction root ecology's morphometric classification
+#'     uses, but it is not strict Strahler ordering: it increments at
+#'     \emph{every} junction, so an axis carrying ten single laterals reaches 11.}
+#'   \item{\code{strahler_order} (per segment)}{The same peeling with the strict
+#'     rule: a segment's order rises only where two of its children share the
+#'     highest order, otherwise it inherits that order unchanged. A lone thin
+#'     lateral joining a thick axis leaves the axis where it was.}
+#'   \item{\code{root_max_order_from_tip} (per root)}{No count of its own. Segments
+#'     are grouped into continuous roots (continuation rule below) and every
+#'     segment of a root takes the \emph{largest} \code{order_from_tip} found
+#'     along it -- which, since that column never falls as you move basally, is
+#'     its value at the root's basal end. A thick main axis therefore keeps its
+#'     high value out to its tip instead of dropping to 1. Sensitive to how deep
+#'     the deepest subtree runs.}
+#'   \item{\code{order_from_base} (per root)}{Generation counting, the direction
+#'     the developmental classification uses. The thickest root (length-weighted
+#'     mean diameter) in each connected component is order 1; counting branching
+#'     hops outward, its laterals are 2, theirs 3, and so on. Independent of
+#'     subtree depth, so one heavily branched root does not inflate the rest.
+#'     Order 1 is chosen by thickness, not by knowing which root grew first.}
 #' }
-#' \strong{Continuation rule} (groups segments into roots for \code{root_order} and
-#' \code{branch_order}): at each junction the two arms forming the same root are
-#' chosen by \code{straightness + diam_weight * diameter_similarity}.
+#' Up to Rootopia 1.1.0 these columns were called \code{tip_order},
+#' \code{root_order} and \code{branch_order}. Those names are still returned, as
+#' copies of the columns above, and are still accepted by \code{order},
+#' \code{order_col} and \code{value}.
+#'
+#' \strong{Continuation rule} (groups segments into roots, for the two per-root
+#' columns): at each junction the two arms forming the same root are chosen by
+#' \code{straightness + diam_weight * diameter_similarity}.
 #' \code{diam_weight = 0} uses angle only; larger values let thickness dominate.
-#' The odd arm out is a lateral. \code{tip_order} does not use this rule.
+#' The odd arm out is a lateral. The per-segment columns do not use this rule.
 #'
 #' @param skel Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
 #'   matrix. Pass the raster directly; do not pre-convert with \code{as.matrix()}.
@@ -1541,7 +1656,10 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'   distance transform / diameters. If \code{NULL}, the skeleton is used and
 #'   diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.
 #' @param order Which scheme labels \code{$class_map}/\code{$summary}:
-#'   \code{"branch_order"}, \code{"root_order"}, or \code{"tip_order"}.
+#'   \code{"strahler_order"}, \code{"order_from_tip"},
+#'   \code{"root_max_order_from_tip"} or \code{"order_from_base"}. The 1.1.0
+#'   spellings \code{"tip_order"}, \code{"root_order"} and
+#'   \code{"branch_order"} are accepted and resolved to these.
 #' @param unit Reporting unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
 #' @param dpi Scan resolution (dots per inch); required for cm/inch.
 #' @param length_method \code{"kimura"} (default) or \code{"polyline"}.
@@ -1552,7 +1670,7 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'   differ only where a chain mixes orthogonal and diagonal steps. See
 #'   \code{\link{convert_root_units}} for the definition. Use
 #'   \code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier.
-
+#'
 #' @param template \code{SpatRaster} defining the \code{$class_map} grid; defaults
 #'   to \code{skel} when it is a raster.
 #' @param overlay_png Optional path; writes the order-colored validation PNG.
@@ -1571,17 +1689,18 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #' @examples
 #' \dontrun{
 #' skel <- skeletonize_image(mask)
-#' res  <- branch_order_map(skel, mask, order = "branch_order",
+#' res  <- branch_order_map(skel, mask, order = "order_from_base",
 #'                          unit = "cm", dpi = 300, dt_backend = "imager")
 #' res$summary
 #' terra::plot(res$class_map, maxcell = Inf)
 #' }
 #' @export
 branch_order_map <- function(skel = NULL, mask = NULL,
-                             order = c("strahler_order", "branch_order", "root_order", "tip_order"),
+                             order = c("strahler_order", "order_from_base",
+                                       "root_max_order_from_tip", "order_from_tip"),
                              unit = "cm", dpi = 300, length_method = "kimura",
                              template = NULL, overlay_png = NULL, return_map = TRUE, ...) {
-  order <- match.arg(order)
+  order <- .order_scheme(order)
   et <- root_graph_pipeline(skel, mask, color_by = order, keep_segments = TRUE,
                             overlay_png = overlay_png, ...)
   et <- convert_root_units(et, unit = unit, dpi = dpi, length_method = length_method)
@@ -1605,61 +1724,85 @@ branch_order_map <- function(skel = NULL, mask = NULL,
 }
 
 
-#' Aggregate root architecture by order, or split focal-vs-rest
+#' Aggregate root architecture by order, or by groups of orders
 #'
 #' Flexible query over a \code{branch_order_map} result (or its \code{$edges}
-#' table): length, diameter, and branching architecture, either per order class
-#' or split into a focal group versus the rest. Diameter is length-weighted so it
+#' table): length, diameter, and branching architecture, either one row per order
+#' class or one row per named group of orders. Diameter is length-weighted so it
 #' reflects how much root length sits at each width. Lengths/diameters are in the
 #' unit of \code{x}; counts are integers; \code{branching_frequency} is per unit
 #' length.
 #'
 #' @param x A \code{"branchOrderMap"} object or an \code{edges} data.frame.
 #' @param order_col Order column to aggregate by; defaults to the object's
-#'   \code{$order}, else \code{"branch_order"}.
-#' @param focal Controls the split:
+#'   \code{$order}, else \code{"order_from_base"}. The 1.1.0 spellings are
+#'   accepted and resolved to the current ones.
+#' @param groups How to pool orders into rows:
 #'   \itemize{
-#'     \item \code{NULL} (default): one row per order class.
-#'     \item \code{"thinnest"} / \code{"thickest"} (aliases \code{"finest"} /
-#'       \code{"coarsest"}): the order class with the smallest / largest
-#'       length-weighted diameter, versus all others. Selected by \emph{diameter},
-#'       so it is independent of the order numbering; the \code{orders} column
-#'       reports which order number(s) fell in each group.
-#'     \item a numeric order value or vector (e.g. \code{1} or \code{c(4, 5)}):
-#'       those orders as the focal group versus the rest.
+#'     \item \code{NULL} (default): one row per order class, ascending.
+#'     \item A named list of order sets, e.g. \code{list(fine = 1:2,
+#'       coarse = 3:5)}. Each element holds values of \code{order_col} and its
+#'       name becomes the \code{group} label. Orders that no element lists are
+#'       pooled into one extra row named \code{"rest"}, so every ordered segment
+#'       is counted exactly once; when nothing is left over that row is absent,
+#'       and a group that catches no segment gets no row. Naming one order in two
+#'       groups is an error.
+#'     \item \code{"thinnest"} or \code{"thickest"}: the one order class with the
+#'       smallest or largest length-weighted diameter, with the others pooled into
+#'       \code{"rest"}. The pick is by \emph{diameter}, so it does not depend on
+#'       how the orders are numbered; the \code{orders} column reports which order
+#'       number(s) landed in each row.
 #'   }
-#' @return A data.frame with one row per group:
+#' @param focal Deprecated spelling of \code{groups}, kept so existing calls
+#'   still run. A numeric value or vector is read as
+#'   \code{groups = list(focal = focal)}; \code{"thinnest"}, \code{"thickest"}
+#'   and the aliases \code{"finest"} / \code{"coarsest"} are read as the matching
+#'   \code{groups} string.
+#' @return A data.frame with one row per order class or per group:
 #'   \describe{
-#'     \item{\code{group}}{Order value (no split) or \code{"focal"}/\code{"rest"}.}
-#'     \item{\code{orders}}{Comma-separated order numbers contained in the group
-#'       (so a thinnest/thickest split shows which orders it picked).}
-#'     \item{\code{n_segments}}{Graph segments in the group.}
+#'     \item{first column}{Named after \code{order_col} and holding the order
+#'       value when \code{groups} is \code{NULL}; named \code{group} and holding
+#'       the group label otherwise.}
+#'     \item{\code{orders}}{Comma-separated order numbers contained in the group.
+#'       Present only when \code{groups} is given.}
+#'     \item{\code{n_segments}}{Graph segments in the row.}
 #'     \item{\code{n_tips}}{Root tips/apices (degree-1 endpoints).}
-#'     \item{\code{n_branch_points}}{Branching junctions on roots of the group.}
+#'     \item{\code{n_branch_points}}{Branching junctions on roots of the row.}
 #'     \item{\code{total_length}}{Summed root length.}
 #'     \item{\code{length_fraction}}{Share of total ordered length.}
+#'     \item{\code{cumulative_length}}{Running total of \code{total_length} over
+#'       the rows above and including this one. Present only when \code{groups} is
+#'       \code{NULL}, where the rows ascend in the order value.}
+#'     \item{\code{cumulative_fraction}}{\code{cumulative_length} over the total
+#'       ordered length, so the last row is 1. Present under the same condition.}
 #'     \item{\code{mean_segment_length}}{Mean length per segment.}
 #'     \item{\code{branching_frequency}}{Branch points per unit length.}
 #'     \item{\code{mean_diameter}}{Length-weighted mean diameter.}
 #'     \item{\code{median_diameter}}{Median of segment median diameters.}
 #'   }
-#'   \code{attr(., "n_unordered")} counts NA-order segments; for a split,
-#'   \code{attr(., "focal_orders")} lists the focal order number(s).
+#'   An order class with no segments has no row, so the per-order rows can skip
+#'   values; the cumulative columns step from one present order to the next rather
+#'   than inserting a zero, which would drag down any mean taken over the rows.
+#'   \code{attr(., "n_unordered")} counts NA-order segments. When \code{groups} is
+#'   given, \code{attr(., "groups")} holds the resolved list of order sets,
+#'   \code{"rest"} included.
 #' @examples
 #' \dontrun{
-#' res <- branch_order_map(skel, mask, order = "branch_order", unit = "cm", dpi = 300)
-#' order_metrics(res)                       # per-order table
-#' order_metrics(res, focal = "thinnest")   # thinnest order class vs all others
-#' order_metrics(res, focal = c(1))         # order 1 vs the rest
+#' res <- branch_order_map(skel, mask, order = "order_from_base", unit = "cm", dpi = 300)
+#' order_metrics(res)                                   # per-order table
+#' order_metrics(res, groups = list(fine = 1:2))        # orders 1-2 vs "rest"
+#' order_metrics(res, groups = list(fine = 1:2, coarse = 3:4))
+#' order_metrics(res, groups = "thinnest")              # thinnest class vs "rest"
 #' }
 #' @export
-order_metrics <- function(x, order_col = NULL, focal = NULL) {
+order_metrics <- function(x, order_col = NULL, groups = NULL, focal = NULL) {
   et <- if (inherits(x, "branchOrderMap")) x$edges else x
   # An empty pipeline (e.g. an image with no roots) yields NULL / 0-row edges;
   # return an empty summary rather than erroring on the missing order column.
   if (is.null(et) || nrow(et) == 0L) return(data.frame())
   if (is.null(order_col))
-    order_col <- if (inherits(x, "branchOrderMap")) x$order else "branch_order"
+    order_col <- if (inherits(x, "branchOrderMap")) x$order else "order_from_base"
+  order_col <- .order_col(order_col)
   if (!order_col %in% names(et)) stop(sprintf("'%s' is not a column of the edge table.", order_col))
   
   o <- et[[order_col]]; keep <- !is.na(o)
@@ -1670,8 +1813,7 @@ order_metrics <- function(x, order_col = NULL, focal = NULL) {
   if (length(o) == 0L) return(data.frame())
   total_len <- sum(len)
   
-  agg <- function(g) {
-    gl <- if (is.numeric(g)) sort(unique(g)) else unique(g)
+  agg <- function(g, gl = if (is.numeric(g)) sort(unique(g)) else unique(g)) {
     do.call(rbind, lapply(gl, function(k) {
       ix <- g == k; w <- len[ix]; L <- sum(w)
       data.frame(
@@ -1691,22 +1833,62 @@ order_metrics <- function(x, order_col = NULL, focal = NULL) {
     }))
   }
   
-  if (is.null(focal)) {
+  if (!is.null(focal)) {
+    warning("`focal` is deprecated; use `groups`.", call. = FALSE)
+    if (is.null(groups))
+      groups <- if (is.character(focal)) focal[1] else list(focal = focal)
+  }
+
+  if (is.null(groups)) {
     res <- agg(o); res$orders <- NULL; names(res)[1] <- order_col   # group == order here
+    # Rows ascend in the order value and an absent order stays absent, so the
+    # running total steps from one present order to the next.
+    res$cumulative_length   <- cumsum(res$total_length)
+    res$cumulative_fraction <- res$cumulative_length / total_len
+    res <- res[, c(order_col, "n_segments", "n_tips", "n_branch_points",
+                   "total_length", "length_fraction", "cumulative_length",
+                   "cumulative_fraction", "mean_segment_length",
+                   "branching_frequency", "mean_diameter", "median_diameter")]
   } else {
-    if (is.character(focal) && tolower(focal[1]) %in% c("thinnest","thickest","finest","coarsest")) {
-      want_thin <- tolower(focal[1]) %in% c("thinnest", "finest")
+    if (is.character(groups)) {
+      pick <- c(thinnest = "thinnest", finest = "thinnest",
+                thickest = "thickest", coarsest = "thickest")[tolower(groups[1])]
+      if (is.na(pick))
+        stop("A character `groups` must be \"thinnest\" or \"thickest\"; ",
+             "pass a named list to choose the orders yourself.", call. = FALSE)
       lv <- sort(unique(o))
       wdia <- vapply(lv, function(k) { ix <- o == k; w <- len[ix]
       if (sum(w) > 0) sum(dia[ix] * w) / sum(w) else mean(dia[ix]) }, numeric(1))
-      focal_set <- lv[if (want_thin) which.min(wdia) else which.max(wdia)]
-    } else {
-      focal_set <- as.numeric(focal)
+      groups <- stats::setNames(
+        list(lv[if (pick == "thinnest") which.min(wdia) else which.max(wdia)]),
+        unname(pick))
     }
-    g <- ifelse(o %in% focal_set, "focal", "rest")
-    res <- agg(g)
-    attr(res, "focal_orders") <- focal_set
+    if (!is.list(groups) || is.null(names(groups)) || !all(nzchar(names(groups))))
+      stop("`groups` must be a named list of order values, e.g. ",
+           "list(fine = 1:2, coarse = 3:5).", call. = FALSE)
+    if ("rest" %in% names(groups))
+      stop("\"rest\" is the name given to the orders no group lists; ",
+           "pick another name for that group.", call. = FALSE)
+    flat <- unlist(groups, use.names = FALSE)
+    clash <- unique(flat[duplicated(flat)])
+    if (length(clash))
+      stop(sprintf("Order value(s) %s appear in more than one group; each order belongs to one group.",
+                   paste(clash, collapse = ", ")), call. = FALSE)
+
+    g <- rep(NA_character_, length(o))
+    for (nm in names(groups)) g[o %in% groups[[nm]]] <- nm
+    # Orders no group lists still carry length, so they get a row of their own
+    # instead of dropping out of the totals.
+    left <- is.na(g)
+    g[left] <- "rest"
+    if (any(left)) groups[["rest"]] <- sort(unique(o[left]))
+    # Empty groups are dropped rather than written as zero rows, which would
+    # dilute any mean taken over the rows.
+    res <- agg(g, gl = intersect(names(groups), unique(g)))
+    names(res)[1] <- "group"
+    attr(res, "groups") <- groups
   }
+  rownames(res) <- NULL
   attr(res, "order_col")   <- order_col
   attr(res, "n_unordered") <- n_unordered
   res

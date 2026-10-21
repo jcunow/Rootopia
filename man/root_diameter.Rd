@@ -15,18 +15,18 @@ root_diameter(
 )
 }
 \arguments{
-\item{img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array.
+\item{img}{A character string (file path), \code{SpatRaster}, \code{RasterBrick}, \code{RasterLayer}, \code{cimg}, \code{magick-image}, or array.
 The input image to process.}
 
-\item{skeleton_method}{Character. Currently unused — `skeletonize_image()`
+\item{skeleton_method}{Character. Currently unused — \code{skeletonize_image()}
 only implements LUT-based Zhang-Suen thinning. Kept for backward
-compatibility. Will be skipped if skeleton `SpatRaster` is provided.}
+compatibility. Will be skipped if skeleton \code{SpatRaster} is provided.}
 
-\item{skeleton_img}{A character string (file path), `SpatRaster`, `RasterBrick`, `RasterLayer`, `cimg`, `magick-image`, or array. Uses this object instead of computing it from scratch.}
+\item{skeleton_img}{A character string (file path), \code{SpatRaster}, \code{RasterBrick}, \code{RasterLayer}, \code{cimg}, \code{magick-image}, or array. Uses this object instead of computing it from scratch.}
 
-\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`, which passes every layer to `load_flexible_image()` rather than selecting one.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is \code{NULL}, which passes every layer to \code{load_flexible_image()} rather than selecting one.}
 
-\item{diagnostics}{Logical. If `TRUE`, enables diagnostic plots and logging. Default is `FALSE`.}
+\item{diagnostics}{Logical. If \code{TRUE}, enables diagnostic plots and logging. Default is \code{FALSE}.}
 
 \item{unit}{output in pixel 'px', 'inch' or in 'cm'}
 
@@ -35,20 +35,22 @@ compatibility. Will be skipped if skeleton `SpatRaster` is provided.}
 \value{
 A list containing:
 \describe{
-  \item{quantiles}{Numeric vector of diameter quantiles (10th to 100th percentile).}
-  \item{mean_diameter}{Numeric. The mean root diameter.}
-  \item{median_diameter}{Numeric. The median root diameter.}
-  \item{diameters}{Numeric vector of all diameter values in the skeletonized regions.}
-  \item{skeleton_rast}{`SpatRaster`. Binary raster mask of skeletonized regions.}
-  \item{diameter_rast}{`SpatRaster`. Raster showing diameters in the skeletonized regions.}
-  \item{distance_map_rast}{`SpatRaster`. Raster showing the distance transform values.}
-  \item{root_volume}{Numeric. Total root volume, in `unit`^3. Each skeleton
-    pixel is modeled as a cylinder of radius `diameter / 2` and length 1
-    pixel; volumes (`pi * r^2 * l`) are summed and converted from px^3.}
-  \item{root_surface_area}{Numeric. Total root lateral surface area, in
-    `unit`^2. Each skeleton pixel's cylinder contributes a lateral surface
-    of `2 * pi * r * l = pi * d * l`; values are summed and converted from
-    px^2.}
+\item{quantiles}{Named numeric vector of 11 diameter quantiles, the
+deciles from 0\% (the thinnest skeleton pixel) to 100\% (the thickest),
+as returned by \code{quantile(probs = seq(0, 1, 0.1))}.}
+\item{mean_diameter}{Numeric. The mean root diameter.}
+\item{median_diameter}{Numeric. The median root diameter.}
+\item{diameters}{Numeric vector of all diameter values in the skeletonized regions.}
+\item{skeleton_rast}{\code{SpatRaster}. Binary raster mask of skeletonized regions.}
+\item{diameter_rast}{\code{SpatRaster}. Raster showing diameters in the skeletonized regions.}
+\item{distance_map_rast}{\code{SpatRaster}. Raster showing the distance transform values.}
+\item{root_volume}{Numeric. Total root volume, in \code{unit}^3. Each skeleton
+pixel is modeled as a cylinder of radius \code{diameter / 2} and length 1
+pixel; volumes (\code{pi * r^2 * l}) are summed and converted from px^3.}
+\item{root_surface_area}{Numeric. Total root lateral surface area, in
+\code{unit}^2. Each skeleton pixel's cylinder contributes a lateral surface
+of \code{2 * pi * r * l = pi * d * l}; values are summed and converted from
+px^2.}
 }
 }
 \description{
@@ -57,13 +59,15 @@ The input can be a file path, raster, image object, or array, which is converted
 }
 \details{
 The function works as follows:
-- Converts the input image to a binary format (`cimg`).
-- Applies a distance transform to compute the Euclidean distance for the foreground (root) pixels.
-- Skeletonizes the binary image to identify root centerlines.
-- Filters distance values to retain only those corresponding to the skeletonized regions.
-- Computes diameter statistics, including quantiles, mean, and median diameters.
+\itemize{
+\item Converts the input image to a binary format (\code{cimg}).
+\item Applies a distance transform to compute the Euclidean distance for the foreground (root) pixels.
+\item Skeletonizes the binary image to identify root centerlines.
+\item Filters distance values to retain only those corresponding to the skeletonized regions.
+\item Computes diameter statistics, including quantiles, mean, and median diameters.
+}
 
-The function supports various input formats and normalizes image values to the range [0, 1] if needed. It uses the `terra` package for raster operations and the `imager` package for image processing.
+The function supports various input formats and normalizes image values to the range \verb{[0, 1]} if needed. It uses the \code{terra} package for raster operations and the \code{imager} package for image processing.
 }
 \examples{
 # Example usage:

@@ -62,7 +62,8 @@
 #'   tube, \code{45} a tube pushed in at 45 degrees.  This is the convention
 #'   \code{create_depthmap()} uses for \code{tilt}, and it is the opposite of
 #'   the "degrees from vertical" wording used by some minirhizotron software,
-#'   so convert before passing it in.  Values must be strictly between 0 and 90.
+#'   so convert before passing it in.  Values must be greater than 0 and at
+#'   most 90; \code{90} means a vertical tube and is allowed.
 #'   Supplying this argument switches the run to minirhizotron geometry (see
 #'   \strong{Geometry}).  Default \code{NULL} (flatbed).
 #' @param soil_starts Numeric. Pixel row (in the original, un-rotated image)
@@ -301,7 +302,7 @@
 #'   graph via \code{branch_order_map()} and summarize it both per depth bin
 #'   and per tube.  Adds \code{mean.<scheme>} and \code{max.<scheme>} for the
 #'   scheme named by \code{order_scheme} (e.g. \code{mean.strahler_order}),
-#'   plus \code{mean.root_order} and \code{lateral_root_fraction} per depth
+#'   plus \code{mean.root_max_order_from_tip} and \code{lateral_root_fraction} per depth
 #'   bin, tube-level \code{main_root.*} / \code{lateral_roots.*} columns
 #'   (length, diameter, branching frequency, etc.), and \code{n_root_orders}
 #'   (the highest order found).  Requires a skeleton.  \strong{Slow}:
@@ -310,20 +311,24 @@
 # --- Branching-order settings (used when calc_root_order_metrics = TRUE) ---
 #' @param order_scheme Character. Which ordering labels the per-bin order
 #'   columns and the main-root split.  \code{"strahler_order"} (default) is the
-#'   convention of the fine-root literature (Pregitzer et al. 2002; Fitter):
-#'   every distal unbranched root is order 1, and the order rises only where two
-#'   roots of equal order meet.  \code{"tip_order"} is the same leaf-peeling
-#'   with the order raised at \emph{every} junction, so an axis carrying ten
-#'   laterals reaches order 11.  \code{"branch_order"} counts the other way --
-#'   the thickest root of each component is 1 and its laterals 2 -- and
-#'   \code{"root_order"} gives each continuous root the maximum
-#'   \code{tip_order} along it.  All four are computed regardless; this only
-#'   picks which one is reported.  See \code{\link{branch_order_map}}.
+#'   morphometric, or stream-order, convention of the fine-root literature
+#'   (Pregitzer et al. 2002): every distal unbranched root is order 1, and the
+#'   order rises only where two roots of equal order meet.
+#'   \code{"order_from_tip"} is the same leaf-peeling with the order raised at
+#'   \emph{every} junction, so an axis carrying ten laterals reaches order 11.
+#'   \code{"order_from_base"} counts the other way -- the thickest root of each
+#'   component is 1 and its laterals 2 -- and \code{"root_max_order_from_tip"}
+#'   gives each continuous root the largest \code{order_from_tip} along it.
+#'   All four are computed regardless; this only picks which one is reported.
+#'   The spellings used up to Rootopia 1.1.0 (\code{"tip_order"},
+#'   \code{"root_order"}, \code{"branch_order"}) are accepted and resolved to
+#'   these.  See \code{\link{branch_order_map}}.
 #' @param diam_weight Numeric >= 0. At a junction, which two arms are read as
 #'   the same root continuing: \code{straightness + diam_weight *
 #'   diameter_similarity}.  \code{0} uses the angle alone, larger values let
-#'   thickness decide.  Affects \code{root_order}, \code{branch_order} and the
-#'   segment grouping, not \code{strahler_order} or \code{tip_order}.
+#'   thickness decide.  Affects \code{root_max_order_from_tip},
+#'   \code{order_from_base} and the segment grouping, not
+#'   \code{strahler_order} or \code{order_from_tip}.
 #'   Default \code{0.5}.
 #' @param prune_spur_length_cm Numeric. Remove terminal skeleton branches
 #'   ("spurs") shorter than this, in \strong{centimetres}, before any trait is
@@ -509,8 +514,8 @@ root_depth_metrics <- function(
   calc_root_order_metrics = FALSE,
 
   # ---------- branching-order settings ---------------------------------------
-  order_scheme            = c("strahler_order", "branch_order",
-                              "root_order", "tip_order"),
+  order_scheme            = c("strahler_order", "order_from_base",
+                              "root_max_order_from_tip", "order_from_tip"),
   diam_weight             = 0.5,
   prune_spur_length_cm    = 0,
   prune_spur_iter         = 1L,
@@ -697,7 +702,7 @@ root_depth_metrics <- function(
   # NULL says this image has no depth axis, as for a tray of washed roots. Every
   # pixel then falls in the same bin and the densities become whole-scan
   # numbers, because they already divide by the bin's own pixel area.
-  order_scheme <- match.arg(order_scheme)
+  order_scheme <- .order_scheme(order_scheme)
   bin_round    <- match.arg(bin_round)
   if (!is.numeric(diam_weight) || length(diam_weight) != 1L ||
       is.na(diam_weight) || diam_weight < 0)
@@ -1228,22 +1233,22 @@ root_depth_metrics <- function(
 
         bo_map <- bo$class_map
         terra::ext(bo_map) <- terra::ext(bm)
-        ro_map <- order_classification_map(et, im.skeleton, value = "root_order")
+        ro_map <- order_classification_map(et, im.skeleton, value = "root_max_order_from_tip")
         terra::ext(ro_map) <- terra::ext(bm)
 
         # Named for the scheme in use, so a column can never be read under the
         # wrong definition.
         bo_mean <- terra::zonal(bo_map, bm, "mean", na.rm = TRUE); colnames(bo_mean) <- c("depth", paste0("mean.", order_scheme))
         bo_max  <- terra::zonal(bo_map, bm, "max",  na.rm = TRUE); colnames(bo_max)  <- c("depth", paste0("max.",  order_scheme))
-        ro_mean <- terra::zonal(ro_map, bm, "mean", na.rm = TRUE); colnames(ro_mean) <- c("depth", "mean.root_order")
+        ro_mean <- terra::zonal(ro_map, bm, "mean", na.rm = TRUE); colnames(ro_mean) <- c("depth", "mean.root_max_order_from_tip")
 
         # Tube-level main-root vs lateral-root summary. The main root is the
         # order class with the largest length-weighted diameter, which under
-        # branch_order is order 1 and under Strahler the highest order -- so the
+        # order_from_base is order 1 and under Strahler the highest order -- so the
         # split is taken from the diameters rather than from the order numbers,
         # and means the same thing whichever scheme is in use.
-        om    <- order_metrics(bo, focal = "thickest")
-        focal <- attr(om, "focal_orders")
+        om    <- order_metrics(bo, groups = "thickest")
+        focal <- attr(om, "groups")[["thickest"]]
 
         main_px <- bo_map                      # one vectorised pass, not per cell
         terra::values(main_px) <- as.numeric(terra::values(bo_map) %in% focal)
@@ -1252,16 +1257,29 @@ root_depth_metrics <- function(
         lat_z <- terra::zonal(lateral_px, bm, "sum", na.rm = TRUE); colnames(lat_z) <- c("depth", "lateral_px")
         tot_z <- terra::zonal(ordered_px, bm, "sum", na.rm = TRUE); colnames(tot_z) <- c("depth", "ordered_px")
 
-        per_bin <- Reduce(function(a, b) merge(a, b, by = "depth", all = TRUE),
-                          list(bo_mean, bo_max, ro_mean, lat_z, tot_z))
+        # With root_max_order_from_tip as the chosen scheme, bo_mean already
+        # holds those numbers under that name, so merging ro_mean as well would
+        # split the column into mean.*.x and mean.*.y.
+        parts <- if (identical(order_scheme, "root_max_order_from_tip"))
+          list(bo_mean, bo_max, lat_z, tot_z) else list(bo_mean, bo_max, ro_mean, lat_z, tot_z)
+        per_bin <- Reduce(function(a, b) merge(a, b, by = "depth", all = TRUE), parts)
         per_bin$lateral_root_fraction <- ifelse(per_bin$ordered_px > 0,
                                                  per_bin$lateral_px / per_bin$ordered_px, NA_real_)
         per_bin$lateral_px <- per_bin$ordered_px <- NULL
+        # The per-bin order columns are named after the scheme in use. Where
+        # that scheme also has a spelling from Rootopia 1.1.0, the column is
+        # repeated under it so existing scripts keep indexing.
+        for (old in names(.ORDER_LEGACY)) {
+          for (pre in c("mean.", "max.")) {
+            cur <- paste0(pre, .ORDER_LEGACY[[old]])
+            if (cur %in% names(per_bin)) per_bin[[paste0(pre, old)]] <- per_bin[[cur]]
+          }
+        }
 
         metric_cols <- c("n_segments", "n_tips", "n_branch_points", "total_length",
                          "length_fraction", "mean_segment_length", "branching_frequency",
                          "mean_diameter", "median_diameter")
-        grp_map <- c(focal = "main_root", rest = "lateral_roots")
+        grp_map <- c(thickest = "main_root", rest = "lateral_roots")
         tube_row <- as.list(stats::setNames(rep(NA_real_, length(metric_cols) * length(grp_map)),
                                      as.vector(outer(grp_map, metric_cols, paste, sep = "."))))
         for (i in seq_len(nrow(om))) {
@@ -1278,8 +1296,14 @@ root_depth_metrics <- function(
         roots <- merge(roots, ord_res$per_bin, by = "depth", all.x = TRUE)
         for (nm in names(ord_res$tube)) roots[[nm]] <- ord_res$tube[[nm]]
       } else {
-        roots[c(paste0("mean.", order_scheme), paste0("max.", order_scheme),
-                "mean.root_order", "lateral_root_fraction")] <- NA_real_
+        na_cols <- c(paste0("mean.", order_scheme), paste0("max.", order_scheme),
+                     "mean.root_max_order_from_tip", "mean.root_order",
+                     "lateral_root_fraction")
+        for (old in names(.ORDER_LEGACY)) {
+          if (.ORDER_LEGACY[[old]] == order_scheme)
+            na_cols <- c(na_cols, paste0("mean.", old), paste0("max.", old))
+        }
+        roots[unique(na_cols)] <- NA_real_
       }
     }
 

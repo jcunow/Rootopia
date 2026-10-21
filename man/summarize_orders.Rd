@@ -4,7 +4,7 @@
 \alias{summarize_orders}
 \title{Per-order summary of length and diameter}
 \usage{
-summarize_orders(et, order_col = "branch_order")
+summarize_orders(et, order_col = "order_from_base")
 }
 \arguments{
 \item{et}{An \code{edges} table (ideally already in real units via
@@ -14,20 +14,26 @@ summarize_orders(et, order_col = "branch_order")
 }
 \value{
 A data.frame with one row per order:
-  \describe{
-    \item{\code{order}}{The order class value.}
-    \item{\code{n_segments}}{Number of graph segments (edges between nodes).}
-    \item{\code{n_tips}}{Number of root tips/apices (degree-1 endpoints).}
-    \item{\code{n_branch_points}}{Number of branching junctions on roots of this
-      order (= number of laterals departing, for ordinary 3-way forks).}
-    \item{\code{total_length}}{Summed root length.}
-    \item{\code{mean_segment_length}}{Mean length per segment.}
-    \item{\code{branching_frequency}}{Branch points per unit length
-      (\code{n_branch_points / total_length}).}
-    \item{\code{mean_diameter}}{Length-weighted mean diameter.}
-    \item{\code{median_diameter}}{Median of segment median diameters.}
-  }
-  Unordered (NA) segments are excluded and counted in \code{attr(., "n_unordered")}.
+\describe{
+\item{\code{order}}{The order class value.}
+\item{\code{n_segments}}{Number of graph segments (edges between nodes).}
+\item{\code{n_tips}}{Number of root tips/apices (degree-1 endpoints).}
+\item{\code{n_branch_points}}{Number of branching junctions on roots of this
+order (= number of laterals departing, for ordinary 3-way forks).}
+\item{\code{total_length}}{Summed root length.}
+\item{\code{cumulative_length}}{Running total of \code{total_length} from
+the first row down to this one. Rows ascend in \code{order}, and an order
+with no segments has no row, so the running total steps from one present
+order to the next rather than inserting a zero.}
+\item{\code{cumulative_fraction}}{\code{cumulative_length} over the total
+ordered length, so the last row is 1.}
+\item{\code{mean_segment_length}}{Mean length per segment.}
+\item{\code{branching_frequency}}{Branch points per unit length
+(\code{n_branch_points / total_length}).}
+\item{\code{mean_diameter}}{Length-weighted mean diameter.}
+\item{\code{median_diameter}}{Median of segment median diameters.}
+}
+Unordered (NA) segments are excluded and counted in \code{attr(., "n_unordered")}.
 }
 \description{
 Aggregates the per-segment edge table into one row per order class. All
