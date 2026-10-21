@@ -36,9 +36,8 @@ exact on segments that are nearly straight; both measures follow whatever
 path the skeleton takes, so neither can recover length the skeleton does
 not have.
 
-Use \code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier,
-which defaulted to it, or to compare against software that reports the
-chain code.}
+Use \code{"polyline"} to compare against software that reports the chain
+code.}
 }
 \value{
 \code{et} with length/diameter columns in \code{unit}; records

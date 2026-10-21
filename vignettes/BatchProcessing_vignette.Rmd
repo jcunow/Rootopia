@@ -302,9 +302,9 @@ This adds two kinds of columns:
 | `mean.root_max_order_from_tip` | Mean of `root_max_order_from_tip` — the largest `order_from_tip` along each continuous root — over the bin's pixels. Always present, whichever scheme is chosen |
 | `lateral_root_fraction` | Fraction of the bin's ordered skeleton pixels that fall **outside** the thickest order class, i.e. everything the main-root split calls lateral |
 
-Where a scheme has a spelling from Rootopia 1.1.0 (`branch_order`,
-`tip_order`, `root_order`), the column is repeated under that name as well, so
-scripts written against the old names keep working.
+Where a scheme has a deprecated alias (`branch_order`, `tip_order`,
+`root_order`), the column is repeated under that name too, so code indexing
+either name finds it.
 
 **Per tube** (repeated on every row of that tube) — the thickest order-1
 path vs. all higher-order branches, split by

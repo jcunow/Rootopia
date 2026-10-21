@@ -320,9 +320,9 @@
 #'   component is 1 and its laterals 2 -- and \code{"root_max_order_from_tip"}
 #'   gives each continuous root the largest \code{order_from_tip} along it.
 #'   All four are computed regardless; this only picks which one is reported.
-#'   The spellings used up to Rootopia 1.1.0 (\code{"tip_order"},
-#'   \code{"root_order"}, \code{"branch_order"}) are accepted and resolved to
-#'   these.  See \code{\link{branch_order_map}}.
+#'   The deprecated aliases \code{"tip_order"}, \code{"root_order"} and
+#'   \code{"branch_order"} resolve to these.  See
+#'   \code{\link{branch_order_map}}.
 #' @param diam_weight Numeric >= 0. At a junction, which two arms are read as
 #'   the same root continuing: \code{straightness + diam_weight *
 #'   diameter_similarity}.  \code{0} uses the angle alone, larger values let
@@ -1267,11 +1267,11 @@ root_depth_metrics <- function(
                                                  per_bin$lateral_px / per_bin$ordered_px, NA_real_)
         per_bin$lateral_px <- per_bin$ordered_px <- NULL
         # The per-bin order columns are named after the scheme in use. Where
-        # that scheme also has a spelling from Rootopia 1.1.0, the column is
-        # repeated under it so existing scripts keep indexing.
-        for (old in names(.ORDER_LEGACY)) {
+        # that scheme has a deprecated alias, the column is repeated under it,
+        # so code indexing either name finds it.
+        for (old in names(.ORDER_DEPRECATED)) {
           for (pre in c("mean.", "max.")) {
-            cur <- paste0(pre, .ORDER_LEGACY[[old]])
+            cur <- paste0(pre, .ORDER_DEPRECATED[[old]])
             if (cur %in% names(per_bin)) per_bin[[paste0(pre, old)]] <- per_bin[[cur]]
           }
         }
@@ -1299,8 +1299,8 @@ root_depth_metrics <- function(
         na_cols <- c(paste0("mean.", order_scheme), paste0("max.", order_scheme),
                      "mean.root_max_order_from_tip", "mean.root_order",
                      "lateral_root_fraction")
-        for (old in names(.ORDER_LEGACY)) {
-          if (.ORDER_LEGACY[[old]] == order_scheme)
+        for (old in names(.ORDER_DEPRECATED)) {
+          if (.ORDER_DEPRECATED[[old]] == order_scheme)
             na_cols <- c(na_cols, paste0("mean.", old), paste0("max.", old))
         }
         roots[unique(na_cols)] <- NA_real_

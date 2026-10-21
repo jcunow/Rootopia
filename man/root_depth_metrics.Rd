@@ -328,9 +328,9 @@ order rises only where two roots of equal order meet.
 component is 1 and its laterals 2 -- and \code{"root_max_order_from_tip"}
 gives each continuous root the largest \code{order_from_tip} along it.
 All four are computed regardless; this only picks which one is reported.
-The spellings used up to Rootopia 1.1.0 (\code{"tip_order"},
-\code{"root_order"}, \code{"branch_order"}) are accepted and resolved to
-these.  See \code{\link{branch_order_map}}.}
+The deprecated aliases \code{"tip_order"}, \code{"root_order"} and
+\code{"branch_order"} resolve to these.  See
+\code{\link{branch_order_map}}.}
 
 \item{diam_weight}{Numeric >= 0. At a junction, which two arms are read as
 the same root continuing: \code{straightness + diam_weight *

@@ -26,8 +26,8 @@ plot_order_window(
 
 \item{file}{Output PNG path.}
 
-\item{order_col}{Which order column to color by. The 1.1.0 spellings are
-accepted and resolved to the current ones.}
+\item{order_col}{Which order column to color by. A deprecated alias
+resolves to the column it names.}
 }
 \value{
 Invisibly, \code{file}.

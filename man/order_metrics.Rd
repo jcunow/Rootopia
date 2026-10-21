@@ -10,8 +10,8 @@ order_metrics(x, order_col = NULL, groups = NULL, focal = NULL)
 \item{x}{A \code{"branchOrderMap"} object or an \code{edges} data.frame.}
 
 \item{order_col}{Order column to aggregate by; defaults to the object's
-\code{$order}, else \code{"order_from_base"}. The 1.1.0 spellings are
-accepted and resolved to the current ones.}
+\code{$order}, else \code{"order_from_base"}. A deprecated alias resolves
+to the column it names.}
 
 \item{groups}{How to pool orders into rows:
 \itemize{
@@ -30,8 +30,8 @@ how the orders are numbered; the \code{orders} column reports which order
 number(s) landed in each row.
 }}
 
-\item{focal}{Deprecated spelling of \code{groups}, kept so existing calls
-still run. A numeric value or vector is read as
+\item{focal}{Deprecated alias for \code{groups}; it warns. A numeric value
+or vector is read as
 \code{groups = list(focal = focal)}; \code{"thinnest"}, \code{"thickest"}
 and the aliases \code{"finest"} / \code{"coarsest"} are read as the matching
 \code{groups} string.}

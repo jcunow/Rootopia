@@ -30,9 +30,9 @@ diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.}
 
 \item{order}{Which scheme labels \code{$class_map}/\code{$summary}:
 \code{"strahler_order"}, \code{"order_from_tip"},
-\code{"root_max_order_from_tip"} or \code{"order_from_base"}. The 1.1.0
-spellings \code{"tip_order"}, \code{"root_order"} and
-\code{"branch_order"} are accepted and resolved to these.}
+\code{"root_max_order_from_tip"} or \code{"order_from_base"}. The
+deprecated aliases \code{"tip_order"}, \code{"root_order"} and
+\code{"branch_order"} resolve to these.}
 
 \item{unit}{Reporting unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.}
 
@@ -45,7 +45,7 @@ estimator corrects for that and is the better estimate. The two agree
 exactly on a perfectly horizontal, vertical or 45-degree segment and
 differ only where a chain mixes orthogonal and diagonal steps. See
 \code{\link{convert_root_units}} for the definition. Use
-\code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier.}
+\code{"polyline"} to match software that reports the chain code.}
 
 \item{template}{\code{SpatRaster} defining the \code{$class_map} grid; defaults
 to \code{skel} when it is a raster.}
@@ -102,10 +102,10 @@ hops outward, its laterals are 2, theirs 3, and so on. Independent of
 subtree depth, so one heavily branched root does not inflate the rest.
 Order 1 is chosen by thickness, not by knowing which root grew first.}
 }
-Up to Rootopia 1.1.0 these columns were called \code{tip_order},
-\code{root_order} and \code{branch_order}. Those names are still returned, as
-copies of the columns above, and are still accepted by \code{order},
-\code{order_col} and \code{value}.
+\code{tip_order}, \code{root_order} and \code{branch_order} are deprecated
+aliases for \code{order_from_tip}, \code{root_max_order_from_tip} and
+\code{order_from_base}. \code{$edges} carries them as copies of those
+columns, and \code{order}, \code{order_col} and \code{value} accept them.
 
 \strong{Continuation rule} (groups segments into roots, for the two per-root
 columns): at each junction the two arms forming the same root are chosen by

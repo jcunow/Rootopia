@@ -385,25 +385,25 @@ build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
 }
 
 
-# Each order column has one current name and one from Rootopia 1.1.0 and
-# earlier. The current name says what the number counts over: `order_from_tip`
-# and `strahler_order` label a single segment, `order_from_base` and
-# `root_max_order_from_tip` label a whole continuous root. The edge table
-# carries both spellings -- the current one computed, the earlier one copied
-# from it -- and every argument that names an order column takes either.
-.ORDER_LEGACY <- c(tip_order    = "order_from_tip",
-                   root_order   = "root_max_order_from_tip",
-                   branch_order = "order_from_base")
+# Each order column has a current name and a deprecated alias. The current
+# name says what the number counts over: `order_from_tip` and `strahler_order`
+# label a single segment, `order_from_base` and `root_max_order_from_tip` label
+# a whole continuous root. The edge table carries both -- the current name
+# computed, the alias copied from it -- and every argument that names an order
+# column accepts either.
+.ORDER_DEPRECATED <- c(tip_order    = "order_from_tip",
+                       root_order   = "root_max_order_from_tip",
+                       branch_order = "order_from_base")
 
 .ORDER_COLS <- c("strahler_order", "order_from_tip",
                  "root_max_order_from_tip", "order_from_base")
 
-# Resolves one column name, so a 1.1.0 spelling reaching any argument lands on
-# the column that is actually computed. A name that is not an order column is
-# passed through: `order_col` and `value` accept any column of the table.
+# Resolves one column name, so a deprecated alias reaching any argument lands
+# on the column that is actually computed. A name that is not an order column
+# is passed through: `order_col` and `value` accept any column of the table.
 .order_col <- function(x) {
   x <- as.character(x)[1L]
-  if (x %in% names(.ORDER_LEGACY)) unname(.ORDER_LEGACY[x]) else x
+  if (x %in% names(.ORDER_DEPRECATED)) unname(.ORDER_DEPRECATED[x]) else x
 }
 
 # For the arguments that must name one of the four schemes.
@@ -416,8 +416,8 @@ build_edge_table <- function(segs, DT, node_xy = attr(segs, "node_xy")) {
 }
 
 .add_legacy_order_cols <- function(et) {
-  for (old in names(.ORDER_LEGACY)) {
-    cur <- .ORDER_LEGACY[[old]]
+  for (old in names(.ORDER_DEPRECATED)) {
+    cur <- .ORDER_DEPRECATED[[old]]
     if (!is.null(et[[cur]])) et[[old]] <- et[[cur]]
   }
   et
@@ -736,10 +736,9 @@ render_order_overlay <- function(segs, values, dims, file,
 #' Four order columns are produced (see \code{\link{branch_order_map}} for the
 #' full rules): \code{order_from_tip} and \code{strahler_order} per segment,
 #' \code{root_max_order_from_tip} and \code{order_from_base} per continuous root.
-#' \code{color_by} selects which one the overlay uses. The spellings used up to
-#' Rootopia 1.1.0 -- \code{tip_order}, \code{root_order}, \code{branch_order} --
-#' are kept as copies of those columns and are still accepted by
-#' \code{color_by}.
+#' \code{color_by} selects which one the overlay uses. The deprecated aliases
+#' \code{tip_order}, \code{root_order} and \code{branch_order} are copies of
+#' those columns and \code{color_by} accepts them too.
 #'
 #' @param skel Binary skeleton: single-layer \code{SpatRaster} (preferred) or 0/1
 #'   matrix. Do not pre-convert a raster with \code{as.matrix()}. If
@@ -899,8 +898,8 @@ root_graph_pipeline <- function(skel = NULL, mask = NULL, verbose = TRUE,
 #' @param r_range,c_range Integer length-2 row/column ranges (original coordinates).
 #' @param scale Magnification factor (device px per image px).
 #' @param file Output PNG path.
-#' @param order_col Which order column to color by. The 1.1.0 spellings are
-#'   accepted and resolved to the current ones.
+#' @param order_col Which order column to color by. A deprecated alias
+#'   resolves to the column it names.
 #' @return Invisibly, \code{file}.
 #' @examples
 #' \dontrun{
@@ -1563,9 +1562,8 @@ summarize_orders <- function(et, order_col = "order_from_base") {
 #'   path the skeleton takes, so neither can recover length the skeleton does
 #'   not have.
 #'
-#'   Use \code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier,
-#'   which defaulted to it, or to compare against software that reports the
-#'   chain code.
+#'   Use \code{"polyline"} to compare against software that reports the chain
+#'   code.
 #' @return \code{et} with length/diameter columns in \code{unit}; records
 #'   \code{unit}, \code{dpi}, \code{length_method} as attributes.
 #' @examples
@@ -1637,10 +1635,10 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'     subtree depth, so one heavily branched root does not inflate the rest.
 #'     Order 1 is chosen by thickness, not by knowing which root grew first.}
 #' }
-#' Up to Rootopia 1.1.0 these columns were called \code{tip_order},
-#' \code{root_order} and \code{branch_order}. Those names are still returned, as
-#' copies of the columns above, and are still accepted by \code{order},
-#' \code{order_col} and \code{value}.
+#' \code{tip_order}, \code{root_order} and \code{branch_order} are deprecated
+#' aliases for \code{order_from_tip}, \code{root_max_order_from_tip} and
+#' \code{order_from_base}. \code{$edges} carries them as copies of those
+#' columns, and \code{order}, \code{order_col} and \code{value} accept them.
 #'
 #' \strong{Continuation rule} (groups segments into roots, for the two per-root
 #' columns): at each junction the two arms forming the same root are chosen by
@@ -1657,9 +1655,9 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'   diameters collapse to ~1 px. Required if \code{skel} is \code{NULL}.
 #' @param order Which scheme labels \code{$class_map}/\code{$summary}:
 #'   \code{"strahler_order"}, \code{"order_from_tip"},
-#'   \code{"root_max_order_from_tip"} or \code{"order_from_base"}. The 1.1.0
-#'   spellings \code{"tip_order"}, \code{"root_order"} and
-#'   \code{"branch_order"} are accepted and resolved to these.
+#'   \code{"root_max_order_from_tip"} or \code{"order_from_base"}. The
+#'   deprecated aliases \code{"tip_order"}, \code{"root_order"} and
+#'   \code{"branch_order"} resolve to these.
 #' @param unit Reporting unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
 #' @param dpi Scan resolution (dots per inch); required for cm/inch.
 #' @param length_method \code{"kimura"} (default) or \code{"polyline"}.
@@ -1669,7 +1667,7 @@ convert_root_units <- function(et, unit = c("cm", "inch", "px"), dpi = 300,
 #'   exactly on a perfectly horizontal, vertical or 45-degree segment and
 #'   differ only where a chain mixes orthogonal and diagonal steps. See
 #'   \code{\link{convert_root_units}} for the definition. Use
-#'   \code{"polyline"} to reproduce output from Rootopia 1.1.0 and earlier.
+#'   \code{"polyline"} to match software that reports the chain code.
 #'
 #' @param template \code{SpatRaster} defining the \code{$class_map} grid; defaults
 #'   to \code{skel} when it is a raster.
@@ -1735,8 +1733,8 @@ branch_order_map <- function(skel = NULL, mask = NULL,
 #'
 #' @param x A \code{"branchOrderMap"} object or an \code{edges} data.frame.
 #' @param order_col Order column to aggregate by; defaults to the object's
-#'   \code{$order}, else \code{"order_from_base"}. The 1.1.0 spellings are
-#'   accepted and resolved to the current ones.
+#'   \code{$order}, else \code{"order_from_base"}. A deprecated alias resolves
+#'   to the column it names.
 #' @param groups How to pool orders into rows:
 #'   \itemize{
 #'     \item \code{NULL} (default): one row per order class, ascending.
@@ -1753,8 +1751,8 @@ branch_order_map <- function(skel = NULL, mask = NULL,
 #'       how the orders are numbered; the \code{orders} column reports which order
 #'       number(s) landed in each row.
 #'   }
-#' @param focal Deprecated spelling of \code{groups}, kept so existing calls
-#'   still run. A numeric value or vector is read as
+#' @param focal Deprecated alias for \code{groups}; it warns. A numeric value
+#'   or vector is read as
 #'   \code{groups = list(focal = focal)}; \code{"thinnest"}, \code{"thickest"}
 #'   and the aliases \code{"finest"} / \code{"coarsest"} are read as the matching
 #'   \code{groups} string.

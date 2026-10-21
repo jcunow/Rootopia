@@ -89,10 +89,9 @@ tips, and assigns all four order schemes. Returns a per-segment edge table in
 Four order columns are produced (see \code{\link{branch_order_map}} for the
 full rules): \code{order_from_tip} and \code{strahler_order} per segment,
 \code{root_max_order_from_tip} and \code{order_from_base} per continuous root.
-\code{color_by} selects which one the overlay uses. The spellings used up to
-Rootopia 1.1.0 -- \code{tip_order}, \code{root_order}, \code{branch_order} --
-are kept as copies of those columns and are still accepted by
-\code{color_by}.
+\code{color_by} selects which one the overlay uses. The deprecated aliases
+\code{tip_order}, \code{root_order} and \code{branch_order} are copies of
+those columns and \code{color_by} accepts them too.
 }
 \seealso{
 \code{\link{branch_order_map}}
