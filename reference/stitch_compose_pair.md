@@ -18,7 +18,9 @@ stitch_compose_pair(
   direction = "horizontal",
   preprocess = "none",
   blend = "linear",
-  blend_width = NULL
+  blend_width = NULL,
+  min_overlap = 0,
+  max_overlap = Inf
 )
 ```
 
@@ -29,7 +31,7 @@ stitch_compose_pair(
   Already-loaded `(H, W, C)` numeric arrays (0-255).
 
 - method, edge_width, vertical_region, vertical_offset, direction,
-  preprocess, blend, blend_width:
+  preprocess, blend, blend_width, min_overlap, max_overlap:
 
   As described for
   [`stitch_image_pair`](https://jcunow.github.io/Rootopia/reference/stitch_image_pair.md).

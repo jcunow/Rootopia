@@ -220,8 +220,9 @@ low values mean the alignment was uncertain. Sorting the report by
 </tr>
 <tr class="odd">
 <td>Poor alignment</td>
-<td>Bring <code>edge_width</code> closer to the true overlap, raise
-<code>vertical_offset</code> past a header strip, or try
+<td>Widen <code>edge_width</code> until it covers the true overlap or
+bracket it with <code>min_overlap</code> / <code>max_overlap</code>,
+raise <code>vertical_offset</code> past a header strip, or try
 <code>preprocess = "grad"</code> for uneven lighting</td>
 </tr>
 </tbody>

@@ -103,7 +103,7 @@ joins first.
 | No file matches `group_regex` | Stops |
 | `tubes` index out of range | Stops, naming how many tubes exist and what they are called |
 | `tubes = "ask"` in a non-interactive session | Stops, suggesting indices or names instead |
-| Poor alignment | Bring `edge_width` closer to the true overlap, raise `vertical_offset` past a header strip, or try `preprocess = "grad"` for uneven lighting |
+| Poor alignment | Widen `edge_width` until it covers the true overlap or bracket it with `min_overlap` / `max_overlap`, raise `vertical_offset` past a header strip, or try `preprocess = "grad"` for uneven lighting |
 
 #### Image input and cleaning
 

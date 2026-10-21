@@ -197,16 +197,16 @@ path your own scans take.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Oulanka_T067_01.png" "Oulanka_T067_02.png" "Oulanka_T067_03.png"</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="va">d</span>, pattern <span class="op">=</span> <span class="st">".png"</span>, edge_width <span class="op">=</span> <span class="va">ov</span>,</span>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="va">d</span>, pattern <span class="op">=</span> <span class="st">".png"</span>, edge_width <span class="op">=</span> <span class="fl">2L</span> <span class="op">*</span> <span class="va">ov</span>,</span>
 <span>                         vertical_region <span class="op">=</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span>, vertical_offset <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>                         report <span class="op">=</span> <span class="cn">TRUE</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">mosaic</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">mosaics</span><span class="op">[[</span><span class="st">"T067"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">mosaic</span><span class="op">)</span>            <span class="co"># reconstructed length</span></span>
 <span><span class="co">#&gt; [1]  387 1360    3</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">report</span>             <span class="co"># per-join dx, dy, peak (confidence), overlap</span></span>
-<span><span class="co">#&gt;   tube step dx dy peak overlap</span></span>
-<span><span class="co">#&gt; 1 T067    1  0  0    1     136</span></span>
-<span><span class="co">#&gt; 2 T067    2  0  0    1     136</span></span></code></pre></div>
+<span><span class="co">#&gt;   tube step  dx dy        peak overlap</span></span>
+<span><span class="co">#&gt; 1 T067    1 136  0 0.001681298     136</span></span>
+<span><span class="co">#&gt; 2 T067    2 136  0 0.001614661     136</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">norm01</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="va">a</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">a</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>         <span class="co"># display only</span></span>
 <span><span class="va">span</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/dimensions.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">mosaic</span><span class="op">)</span></span>
@@ -219,21 +219,31 @@ path your own scans take.</p>
 <p><img src="Stitching_vignette_files/figure-html/show-real-1.png" class="r-plt" alt="Overlapping frames stitched back into a single continuous mosaic." width="1350" style="display: block; margin: auto;"></p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
-<p>The recovered <code>dx</code> is ~0 (we sliced with identical edges)
-and <code>peak</code> is high — a clean alignment — and the two panels
-are indistinguishable. (This chunk needs the suggested <code>png</code>
-package to write the demo files.)</p>
+<p>The band searched is twice the overlap, and the report’s
+<code>overlap</code> column still comes back at <code>ov</code>: the
+search area is an upper bound on the overlap, not the overlap itself.
+The two panels are indistinguishable. (This chunk needs the suggested
+<code>png</code> package to write the demo files.)</p>
 <hr>
 </div>
 <div class="section level3">
 <h3 id="choosing-settings">Choosing settings<a class="anchor" aria-label="anchor" href="#choosing-settings"></a>
 </h3>
 <p>Each setting maps onto a step above.</p>
-<p><strong><code>edge_width</code></strong> — the band width used to
-align. Because <code>overlap = edge_width - dx</code>, set it to roughly
-<strong>1-2x your true overlap</strong> (the overlap should be between
-about half and all of <code>edge_width</code>). Too small misses
-matching content; too large dilutes the peak.</p>
+<p><strong><code>edge_width</code></strong> — the width of the band
+searched for the overlap, not the overlap itself. It has to be
+<strong>at least</strong> the true overlap: an overlap wider than the
+band lies outside the columns being compared and is reported as a
+smaller one. Above that it is only an upper bound, and a band several
+times the overlap still locates it, at the cost of a larger transform.
+When the overlap is unknown, set it to the widest overlap the frames
+could plausibly have.</p>
+<p><strong><code>min_overlap</code> / <code>max_overlap</code></strong>
+— bounds in pixels on the overlap to look for. The peak is read only
+from the part of the correlation surface that corresponds to an overlap
+inside the bracket, so a wide <code>edge_width</code> can be paired with
+whatever is actually known about the overlap. The defaults
+(<code>0</code> and <code>Inf</code>) search the whole band.</p>
 <p><strong><code>vertical_region</code> /
 <code>vertical_offset</code></strong> — which rows are matched. Raise
 <code>vertical_offset</code> to skip a header, label, or tape strip at
@@ -375,7 +385,8 @@ reduce ghosting on color scans.</p>
 <tr class="odd">
 <td>Low, fixed overlap</td>
 <td>
-<code>edge_width</code> ~ 1-2x that overlap</td>
+<code>edge_width</code> at least that overlap;
+<code>min_overlap</code> / <code>max_overlap</code> to bracket it</td>
 </tr>
 </tbody>
 </table>
@@ -474,10 +485,12 @@ a mosaic:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stitch_root_scans.html">stitch_root_scans</a></span><span class="op">(</span><span class="st">"path/to/scans"</span>, pattern <span class="op">=</span> <span class="st">".tiff"</span>, report <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">res</span><span class="op">$</span><span class="va">report</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">report</span><span class="op">$</span><span class="va">peak</span><span class="op">)</span>, <span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span>   <span class="co"># least-confident joins first</span></span></code></pre></div>
-<p>If a tube aligns poorly: bring <code>edge_width</code> closer to the
-real overlap, raise <code>vertical_offset</code> past a header/tape
-strip, try <code>preprocess = "grad"</code> for uneven lighting, or
-confirm the frames are in the intended (filename) order.</p>
+<p>If a tube aligns poorly: widen <code>edge_width</code> until it
+covers the real overlap, bracket the overlap with
+<code>min_overlap</code> / <code>max_overlap</code>, raise
+<code>vertical_offset</code> past a header/tape strip, try
+<code>preprocess = "grad"</code> for uneven lighting, or confirm the
+frames are in the intended (filename) order.</p>
 <hr>
 </div>
 <div class="section level3">

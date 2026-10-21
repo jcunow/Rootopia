@@ -115,16 +115,16 @@ list.files(d)
 
 ``` r
 
-res <- stitch_root_scans(d, pattern = ".png", edge_width = ov,
+res <- stitch_root_scans(d, pattern = ".png", edge_width = 2L * ov,
                          vertical_region = nrow(img), vertical_offset = 0,
                          report = TRUE, verbose = FALSE)
 mosaic <- res$mosaics[["T067"]]
 dim(mosaic)            # reconstructed length
 #> [1]  387 1360    3
 res$report             # per-join dx, dy, peak (confidence), overlap
-#>   tube step dx dy peak overlap
-#> 1 T067    1  0  0    1     136
-#> 2 T067    2  0  0    1     136
+#>   tube step  dx dy        peak overlap
+#> 1 T067    1 136  0 0.001681298     136
+#> 2 T067    2 136  0 0.001614661     136
 ```
 
 ``` r
@@ -147,9 +147,11 @@ mosaic.](Stitching_vignette_files/figure-html/show-real-1.png)
 graphics::par(op)
 ```
 
-The recovered `dx` is ~0 (we sliced with identical edges) and `peak` is
-high — a clean alignment — and the two panels are indistinguishable.
-(This chunk needs the suggested `png` package to write the demo files.)
+The band searched is twice the overlap, and the report’s `overlap`
+column still comes back at `ov`: the search area is an upper bound on
+the overlap, not the overlap itself. The two panels are
+indistinguishable. (This chunk needs the suggested `png` package to
+write the demo files.)
 
 ------------------------------------------------------------------------
 
@@ -157,11 +159,19 @@ high — a clean alignment — and the two panels are indistinguishable.
 
 Each setting maps onto a step above.
 
-**`edge_width`** — the band width used to align. Because
-`overlap = edge_width - dx`, set it to roughly **1-2x your true
-overlap** (the overlap should be between about half and all of
-`edge_width`). Too small misses matching content; too large dilutes the
-peak.
+**`edge_width`** — the width of the band searched for the overlap, not
+the overlap itself. It has to be **at least** the true overlap: an
+overlap wider than the band lies outside the columns being compared and
+is reported as a smaller one. Above that it is only an upper bound, and
+a band several times the overlap still locates it, at the cost of a
+larger transform. When the overlap is unknown, set it to the widest
+overlap the frames could plausibly have.
+
+**`min_overlap` / `max_overlap`** — bounds in pixels on the overlap to
+look for. The peak is read only from the part of the correlation surface
+that corresponds to an overlap inside the bracket, so a wide
+`edge_width` can be paired with whatever is actually known about the
+overlap. The defaults (`0` and `Inf`) search the whole band.
 
 **`vertical_region` / `vertical_offset`** — which rows are matched.
 Raise `vertical_offset` to skip a header, label, or tape strip at the
@@ -204,13 +214,13 @@ band to reduce ghosting on color scans.
 
 #### Cheat-sheet by image type
 
-| Your data                       | Suggested call                            |
-|---------------------------------|-------------------------------------------|
+| Your data | Suggested call |
+|----|----|
 | Color flatbed / RGB tube frames | `preprocess = "none"`, `blend = "linear"` |
-| Uneven lighting / vignetting    | `preprocess = "grad"` (or `"hann"`)       |
-| Segmented / binary masks        | `blend = "max"`, `preprocess = "none"`    |
-| Strips acquired down the tube   | `direction = "vertical"`                  |
-| Low, fixed overlap              | `edge_width` ~ 1-2x that overlap          |
+| Uneven lighting / vignetting | `preprocess = "grad"` (or `"hann"`) |
+| Segmented / binary masks | `blend = "max"`, `preprocess = "none"` |
+| Strips acquired down the tube | `direction = "vertical"` |
+| Low, fixed overlap | `edge_width` at least that overlap; `min_overlap` / `max_overlap` to bracket it |
 
 Only how you *supply* frames changes with format; the settings behave
 the same.
@@ -319,10 +329,11 @@ res <- stitch_root_scans("path/to/scans", pattern = ".tiff", report = TRUE)
 res$report[order(res$report$peak), ][1:10, ]   # least-confident joins first
 ```
 
-If a tube aligns poorly: bring `edge_width` closer to the real overlap,
-raise `vertical_offset` past a header/tape strip, try
-`preprocess = "grad"` for uneven lighting, or confirm the frames are in
-the intended (filename) order.
+If a tube aligns poorly: widen `edge_width` until it covers the real
+overlap, bracket the overlap with `min_overlap` / `max_overlap`, raise
+`vertical_offset` past a header/tape strip, try `preprocess = "grad"`
+for uneven lighting, or confirm the frames are in the intended
+(filename) order.
 
 ------------------------------------------------------------------------
 

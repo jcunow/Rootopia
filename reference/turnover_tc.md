@@ -54,10 +54,14 @@ data.frame containing:
 
 - production: Root production between timepoints
 
-- newroot%per_t1: Percentage of new roots compared to starting
+- newroot.per_t1: Percentage of new roots compared to starting
   conditions
 
-- newroot%per_t2: Percentage of new roots at second timepoint
+- newroot.per_t2: Percentage of new roots at second timepoint
+
+The last two names carry a dot where the percent sign would read more
+naturally: [`data.frame()`](https://rdrr.io/r/base/data.frame.html)
+makes the names syntactic, so index them as `newroot.per_t1`.
 
 ## Examples
 

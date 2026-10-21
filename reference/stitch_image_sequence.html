@@ -74,7 +74,9 @@ temporary PNG round-trips).</p>
 <span>  preprocess <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  blend <span class="op">=</span> <span class="st">"linear"</span>,</span>
 <span>  blend_width <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  return_offsets <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  return_offsets <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  min_overlap <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  max_overlap <span class="op">=</span> <span class="cn">Inf</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,10 +98,14 @@ it raises an informative error.</p></dd>
 
 
 <dt id="arg-edge-width">edge_width<a class="anchor" aria-label="anchor" href="#arg-edge-width"></a></dt>
-<dd><p>Width in pixels of the edge band used for alignment.
-Clamped to the image width. Set it close to the true overlap - roughly
-1-2x (so the overlap is between about half and all of <code>edge_width</code>) -
-for the most reliable peak.</p></dd>
+<dd><p>Width in pixels of the band searched for the overlap, not
+the overlap itself. Clamped to the narrower frame. It has to be at least
+as wide as the true overlap, because an overlap wider than the band falls
+outside the part of the frames being compared and is reported as a smaller
+one. Beyond that it only has to be an upper bound: a band many times the
+overlap still locates it, at the cost of a larger transform. When the
+overlap is unknown, set it to the largest overlap the frames could
+plausibly have.</p></dd>
 
 
 <dt id="arg-vertical-region">vertical_region<a class="anchor" aria-label="anchor" href="#arg-vertical-region"></a></dt>
@@ -148,6 +154,18 @@ ghosting on color scans. Ignored unless <code>blend = "linear"</code>.</p></dd>
 <dd><p>Logical. If <code>TRUE</code>, return a list with the mosaic
 and a per-step performance data frame (<code>step</code>, <code>dx</code>, <code>dy</code>,
 <code>peak</code>, <code>overlap</code>) instead of just the mosaic.</p></dd>
+
+
+<dt id="arg-min-overlap-max-overlap">min_overlap, max_overlap<a class="anchor" aria-label="anchor" href="#arg-min-overlap-max-overlap"></a></dt>
+<dd><p>Bounds in pixels on the overlap to look for.
+The peak is read only from the columns of the correlation surface that
+correspond to an overlap of <code>min_overlap</code> to <code>max_overlap</code>
+pixels, so an overlap outside the bracket is never returned. The defaults
+<code>0</code> and <code>Inf</code> leave both ends open and search the whole band.
+<code>max_overlap</code> is clamped to the band width, since the band cannot
+express a wider overlap; <code>min_overlap</code> wider than the band, or a
+<code>max_overlap</code> below one pixel, is an error rather than a silently
+empty search.</p></dd>
 
 </dl></div>
     <div class="section level2">
