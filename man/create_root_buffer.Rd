@@ -2,7 +2,7 @@
 % Please edit documentation in R/CreateZoning4.R
 \name{create_root_buffer}
 \alias{create_root_buffer}
-\title{Create a buffer halo) around non-zero pixels}
+\title{Create a buffer (halo) around non-zero pixels}
 \usage{
 create_root_buffer(img, width = 2, halo_only = TRUE, kernel = "circle")
 }
@@ -19,7 +19,7 @@ create_root_buffer(img, width = 2, halo_only = TRUE, kernel = "circle")
 SpatRast - buffer zone around non-zero pixels
 }
 \description{
-Create a buffer halo) around non-zero pixels
+Create a buffer (halo) around non-zero pixels
 }
 \examples{
 data(seg_Oulanka2023_Session03_T067)

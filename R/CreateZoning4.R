@@ -1,5 +1,5 @@
 
-#' Create a buffer halo) around non-zero pixels
+#' Create a buffer (halo) around non-zero pixels
 #'
 #' @param img SpatRaster/matrix/array - segmented image
 #' @param width numeric - buffer width in pixels (default: 2)
