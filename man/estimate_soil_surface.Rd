@@ -39,7 +39,7 @@ estimate_soil_surface(
 
 \item{tape_quantile}{Brightness alignment quantile}
 
-\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is \code{NULL}.}
 }
 \value{
 data.frame with soil surface and tape end positions
@@ -48,6 +48,8 @@ data.frame with soil surface and tape end positions
 Detects the soil surface by analyzing tape coverage patterns in the image.
 }
 \examples{
-img = rgb_Oulanka2023_Session03_T067
-Soil0Estimates = estimate_soil_surface(img)
+if (requireNamespace("RStoolbox", quietly = TRUE)) {
+  img = rgb_Oulanka2023_Session03_T067
+  Soil0Estimates = estimate_soil_surface(img)
+}
 }

@@ -27,7 +27,7 @@ estimate_rotation_center(
 
 \item{nclasses}{Number of classes for pixel clustering}
 
-\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is `NULL`.}
+\item{select_layer}{Integer. Specifies which layer to use if the input is a multi-band image. Default is \code{NULL}.}
 }
 \value{
 numeric Position of the center of extruding tape
@@ -37,6 +37,8 @@ This function analyzes image data to determine rotation based on tape coverage,
 assuming more tape is present on the upper side of the tube.
 }
 \examples{
-img = seg_Oulanka2023_Session01_T067
-r0 = estimate_rotation_center(img)
+if (requireNamespace("RStoolbox", quietly = TRUE)) {
+  img = seg_Oulanka2023_Session01_T067
+  r0 = estimate_rotation_center(img)
+}
 }

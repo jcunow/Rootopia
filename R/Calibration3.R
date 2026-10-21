@@ -15,8 +15,10 @@
 #' @export
 #'
 #' @examples
-#' img = seg_Oulanka2023_Session01_T067
-#' r0 = estimate_rotation_center(img)
+#' if (requireNamespace("RStoolbox", quietly = TRUE)) {
+#'   img = seg_Oulanka2023_Session01_T067
+#'   r0 = estimate_rotation_center(img)
+#' }
 estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, search_area=0.45,
                                     tape_quantile=0.98, nclasses=3, select_layer=NULL) {
   if (!requireNamespace("RStoolbox", quietly = TRUE))
@@ -416,8 +418,10 @@ rotation_censor <- function(img, center_offset = 0, cut_buffer = 0.02,
 #' @export
 #'
 #' @examples
-#' img = rgb_Oulanka2023_Session03_T067
-#' Soil0Estimates = estimate_soil_surface(img)
+#' if (requireNamespace("RStoolbox", quietly = TRUE)) {
+#'   img = rgb_Oulanka2023_Session03_T067
+#'   Soil0Estimates = estimate_soil_surface(img)
+#' }
 estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=150, nclasses=3,
                      inverse=FALSE, tape_overlap=0.5, tape_brightness=0.6,
                      extra_rows=100, tape_quantile=0.98, select_layer=NULL) {
