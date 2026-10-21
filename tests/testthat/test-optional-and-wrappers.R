@@ -73,7 +73,7 @@ test_that("root_depth_metrics runs on a one-image directory", {
     path_seg         = dir,       # a plain directory, no trailing separator
     tube_names       = "T067",
     session          = "test",
-    insertion_angles = 45,        # non-zero -> valid depth-map geometry
+    insertion_angles = 45,        # degrees from horizontal -> tube geometry
     soil_starts      = 0,
     dpi              = 150,
     calc_root_length         = FALSE,
@@ -86,6 +86,40 @@ test_that("root_depth_metrics runs on a one-image directory", {
   expect_s3_class(res, "data.frame")
   expect_gt(nrow(res), 0)
   expect_true(any(res$rootpx > 0))          # images were actually read, not skipped
+})
+
+test_that("geometry = 'flat' gives one depth bin per scan", {
+  skip_if_not_installed("terra")
+  data(seg_Oulanka2023_Session01_T067)
+  dir <- tempfile("seg"); dir.create(dir)
+  terra::writeRaster(terra::rast(seg_Oulanka2023_Session01_T067),
+                     file.path(dir, "T067.tif"), overwrite = TRUE)
+  # A tray has no depth axis, so the profile collapses whatever
+  # depth_interval_cm asks for -- that is the point of naming the shape.
+  res <- suppressWarnings(root_depth_metrics(
+    path_seg          = dir,
+    tube_names        = "T067",
+    geometry          = "flat",
+    depth_interval_cm = 5,
+    dpi               = 150,
+    calc_root_length          = FALSE,
+    calc_diameter_stats       = FALSE,
+    calc_density_metrics      = FALSE,
+    calc_distribution_indices = FALSE,
+    calc_advanced_metrics     = FALSE,
+    verbose           = FALSE
+  ))
+  expect_s3_class(res, "data.frame")
+  expect_equal(nrow(res), 1L)
+  expect_length(unique(res$depth), 1L)
+})
+
+test_that("root_depth_metrics rejects an unknown geometry", {
+  skip_if_not_installed("terra")
+  # The geometry is resolved before the directory is read, so this fails on the
+  # shape name rather than on an empty folder.
+  expect_error(root_depth_metrics(path_seg = tempdir(), geometry = "cylinder"),
+               "should be one of")
 })
 
 
