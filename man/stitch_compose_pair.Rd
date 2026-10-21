@@ -14,13 +14,15 @@ stitch_compose_pair(
   direction = "horizontal",
   preprocess = "none",
   blend = "linear",
-  blend_width = NULL
+  blend_width = NULL,
+  min_overlap = 0,
+  max_overlap = Inf
 )
 }
 \arguments{
 \item{a1, a2}{Already-loaded \code{(H, W, C)} numeric arrays (0-255).}
 
-\item{method, edge_width, vertical_region, vertical_offset, direction, preprocess, blend, blend_width}{As described for \code{\link{stitch_image_pair}}.}
+\item{method, edge_width, vertical_region, vertical_offset, direction, preprocess, blend, blend_width, min_overlap, max_overlap}{As described for \code{\link{stitch_image_pair}}.}
 }
 \value{
 A list \code{list(mosaic, dx, dy, peak, overlap)}.

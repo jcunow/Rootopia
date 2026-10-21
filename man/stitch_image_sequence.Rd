@@ -14,7 +14,9 @@ stitch_image_sequence(
   preprocess = "none",
   blend = "linear",
   blend_width = NULL,
-  return_offsets = FALSE
+  return_offsets = FALSE,
+  min_overlap = 0,
+  max_overlap = Inf
 )
 }
 \arguments{
@@ -27,10 +29,14 @@ correlation) is supported. \code{"feature"} (SIFT/ORB keypoint matching in
 the Python original) requires OpenCV and has no CRAN-compatible R backend;
 it raises an informative error.}
 
-\item{edge_width}{Width in pixels of the edge band used for alignment.
-Clamped to the image width. Set it close to the true overlap - roughly
-1-2x (so the overlap is between about half and all of \code{edge_width}) -
-for the most reliable peak.}
+\item{edge_width}{Width in pixels of the band searched for the overlap, not
+the overlap itself. Clamped to the narrower frame. It has to be at least
+as wide as the true overlap, because an overlap wider than the band falls
+outside the part of the frames being compared and is reported as a smaller
+one. Beyond that it only has to be an upper bound: a band many times the
+overlap still locates it, at the cost of a larger transform. When the
+overlap is unknown, set it to the largest overlap the frames could
+plausibly have.}
 
 \item{vertical_region}{Height in pixels of the vertical band used for
 alignment.}
@@ -65,6 +71,16 @@ ghosting on color scans. Ignored unless \code{blend = "linear"}.}
 \item{return_offsets}{Logical. If \code{TRUE}, return a list with the mosaic
 and a per-step performance data frame (\code{step}, \code{dx}, \code{dy},
 \code{peak}, \code{overlap}) instead of just the mosaic.}
+
+\item{min_overlap, max_overlap}{Bounds in pixels on the overlap to look for.
+The peak is read only from the columns of the correlation surface that
+correspond to an overlap of \code{min_overlap} to \code{max_overlap}
+pixels, so an overlap outside the bracket is never returned. The defaults
+\code{0} and \code{Inf} leave both ends open and search the whole band.
+\code{max_overlap} is clamped to the band width, since the band cannot
+express a wider overlap; \code{min_overlap} wider than the band, or a
+\code{max_overlap} below one pixel, is an error rather than a silently
+empty search.}
 }
 \value{
 A numeric \code{(height, width, channel)} array (0-255); or, when

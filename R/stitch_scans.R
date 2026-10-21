@@ -147,6 +147,7 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
                               edge_width = 250, vertical_region = 1000,
                               vertical_offset = 300, direction = "horizontal",
                               preprocess = "none", blend = "linear", blend_width = NULL,
+                              min_overlap = 0, max_overlap = Inf,
                               report = FALSE, verbose = TRUE) {
   tryCatch({
     out_format <- match.arg(out_format, c("png", "tiff"))
@@ -217,7 +218,8 @@ stitch_root_scans <- function(input, pattern = NULL, group_regex = "T0\\d{2}",
                                     edge_width = edge_width, vertical_region = vertical_region,
                                     vertical_offset = vertical_offset, direction = direction,
                                     preprocess = preprocess, blend = blend,
-                                    blend_width = blend_width, return_offsets = TRUE)
+                                    blend_width = blend_width, min_overlap = min_overlap,
+                                    max_overlap = max_overlap, return_offsets = TRUE)
         results[[gi]] <- sr$mosaic
         if (nrow(sr$offsets)) {
           report_rows[[length(report_rows) + 1L]] <-
@@ -280,7 +282,8 @@ stitch_image_sequence <- function(images, method = "phase",
                                   edge_width = 250, vertical_region = 1000,
                                   vertical_offset = 300, direction = "horizontal",
                                   preprocess = "none", blend = "linear", blend_width = NULL,
-                                  return_offsets = FALSE) {
+                                  return_offsets = FALSE,
+                                  min_overlap = 0, max_overlap = Inf) {
   tryCatch({
     if (is.null(images)) stop("'images' is required")
     if (is.character(images)) images <- as.list(images)
@@ -301,7 +304,9 @@ stitch_image_sequence <- function(images, method = "phase",
       res <- stitch_compose_pair(acc, nxt, method = method,
                                  edge_width = edge_width, vertical_region = vertical_region,
                                  vertical_offset = vertical_offset, direction = direction,
-                                 preprocess = preprocess, blend = blend, blend_width = blend_width)
+                                 preprocess = preprocess, blend = blend,
+                                 blend_width = blend_width, min_overlap = min_overlap,
+                                 max_overlap = max_overlap)
       acc <- res$mosaic
       offs[[i - 1]] <- data.frame(step = i - 1L, dx = res$dx, dy = res$dy,
                                   peak = res$peak, overlap = res$overlap)
@@ -328,10 +333,14 @@ stitch_image_sequence <- function(images, method = "phase",
 #'   correlation) is supported. \code{"feature"} (SIFT/ORB keypoint matching in
 #'   the Python original) requires OpenCV and has no CRAN-compatible R backend;
 #'   it raises an informative error.
-#' @param edge_width Width in pixels of the edge band used for alignment.
-#'   Clamped to the image width. Set it close to the true overlap - roughly
-#'   1-2x (so the overlap is between about half and all of \code{edge_width}) -
-#'   for the most reliable peak.
+#' @param edge_width Width in pixels of the band searched for the overlap, not
+#'   the overlap itself. Clamped to the narrower frame. It has to be at least
+#'   as wide as the true overlap, because an overlap wider than the band falls
+#'   outside the part of the frames being compared and is reported as a smaller
+#'   one. Beyond that it only has to be an upper bound: a band many times the
+#'   overlap still locates it, at the cost of a larger transform. When the
+#'   overlap is unknown, set it to the largest overlap the frames could
+#'   plausibly have.
 #' @param vertical_region Height in pixels of the vertical band used for
 #'   alignment.
 #' @param vertical_offset Starting row (from the top) of the vertical band.
@@ -347,6 +356,15 @@ stitch_image_sequence <- function(images, method = "phase",
 #'   scans with uneven lighting or sparse texture; \code{"norm"} alone barely
 #'   changes phase correlation (it is already scale-invariant). On well-textured
 #'   scans \code{"none"} is usually fine.
+#' @param min_overlap,max_overlap Bounds in pixels on the overlap to look for.
+#'   The peak is read only from the columns of the correlation surface that
+#'   correspond to an overlap of \code{min_overlap} to \code{max_overlap}
+#'   pixels, so an overlap outside the bracket is never returned. The defaults
+#'   \code{0} and \code{Inf} leave both ends open and search the whole band.
+#'   \code{max_overlap} is clamped to the band width, since the band cannot
+#'   express a wider overlap; \code{min_overlap} wider than the band, or a
+#'   \code{max_overlap} below one pixel, is an error rather than a silently
+#'   empty search.
 #' @param blend How the overlap band is combined: \code{"linear"} (default,
 #'   alpha ramp 1 -> 0, good for color scans), \code{"overlay"} (img2 hides
 #'   img1), \code{"overlay_first"} (img1 hides img2), \code{"max"} (lighten /
@@ -377,14 +395,17 @@ stitch_image_sequence <- function(images, method = "phase",
 stitch_image_pair <- function(img1, img2, method = "phase",
                               edge_width = 250, vertical_region = 1000,
                               vertical_offset = 300, direction = "horizontal",
-                              preprocess = "none", blend = "linear", blend_width = NULL) {
+                              preprocess = "none", blend = "linear", blend_width = NULL,
+                              min_overlap = 0, max_overlap = Inf) {
   tryCatch({
     a1 <- stitch_to_hwc(img1)
     a2 <- stitch_to_hwc(img2)
     res <- stitch_compose_pair(a1, a2, method = method,
                                edge_width = edge_width, vertical_region = vertical_region,
                                vertical_offset = vertical_offset, direction = direction,
-                               preprocess = preprocess, blend = blend, blend_width = blend_width)
+                               preprocess = preprocess, blend = blend,
+                               blend_width = blend_width, min_overlap = min_overlap,
+                               max_overlap = max_overlap)
     out <- res$mosaic
     attr(out, "offset") <- c(dx = res$dx, dy = res$dy, peak = res$peak)
     out
@@ -407,19 +428,33 @@ stitch_image_pair <- function(img1, img2, method = "phase",
 #' the image) and only the outermost \code{edge_width} columns, optionally
 #' \code{preprocess}ed. The cross-power spectrum is
 #' \eqn{F_1 \bar{F_2} / (|F_1||F_2| + \epsilon)} and the shift is read from the
-#' correlation peak (with wrap-around past the half dimension). The returned
-#' \code{dx} is the placement shift: \code{overlap = edge_width - dx}. \code{dy}
-#' is the vertical shift to apply to \code{img2}.
+#' correlation peak. The returned \code{dx} is the placement shift:
+#' \code{overlap = edge_width - dx}, and it is the peak column as found,
+#' because the lag between the two bands is \code{edge_width - overlap} and so
+#' already lies in \code{[0, edge_width)}. \code{dy} is the vertical shift to
+#' apply to \code{img2}, and does wrap past the half height, since a vertical
+#' drift can go either way.
 #'
 #' @param img1,img2 Image inputs accepted by \code{\link{load_flexible_image}}.
-#' @param edge_width Width in pixels of the edge band used for alignment
-#'   (clamped to the image width).
+#' @param edge_width Width in pixels of the band searched for the overlap, not
+#'   the overlap itself (clamped to the narrower frame). It must be at least the
+#'   true overlap; beyond that it is only an upper bound, and a band many times
+#'   the overlap still locates it.
 #' @param vertical_region Height in pixels of the vertical band used for
 #'   alignment.
 #' @param vertical_offset Starting row (from the top) of the vertical band.
 #' @param preprocess Preprocessing of the edge bands: one of \code{"none"},
 #'   \code{"center"}, \code{"norm"}, \code{"center_norm"}, \code{"hann"},
 #'   \code{"grad"} or \code{"grad_norm"}.
+#' @param min_overlap,max_overlap Bounds in pixels on the overlap to look for.
+#'   The peak is read only from the columns of the correlation surface that
+#'   correspond to an overlap of \code{min_overlap} to \code{max_overlap}
+#'   pixels, so an overlap outside the bracket is never returned. The defaults
+#'   \code{0} and \code{Inf} leave both ends open and search the whole band.
+#'   \code{max_overlap} is clamped to the band width, since the band cannot
+#'   express a wider overlap; \code{min_overlap} wider than the band, or a
+#'   \code{max_overlap} below one pixel, is an error rather than a silently
+#'   empty search.
 #' @return Named numeric vector \code{c(dx, dy, peak)}: \code{dx} horizontal
 #'   placement shift (\code{overlap = edge_width - dx}), \code{dy} vertical shift
 #'   (pixels) and \code{peak} the normalized correlation peak height.
@@ -427,9 +462,18 @@ stitch_image_pair <- function(img1, img2, method = "phase",
 #' @keywords internal
 align_phase_correlation <- function(img1, img2, edge_width = 250,
                                     vertical_region = 1000, vertical_offset = 300,
-                                    preprocess = "none") {
+                                    preprocess = "none",
+                                    min_overlap = 0, max_overlap = Inf) {
   tryCatch({
     if (is.null(img1) || is.null(img2)) stop("Both input images are required")
+    if (!is.numeric(min_overlap) || length(min_overlap) != 1L ||
+        is.na(min_overlap) || min_overlap < 0)
+      stop("'min_overlap' must be a single number >= 0")
+    if (!is.numeric(max_overlap) || length(max_overlap) != 1L ||
+        is.na(max_overlap) || max_overlap < min_overlap)
+      stop("'max_overlap' must be a single number >= min_overlap")
+    if (max_overlap < 1)
+      stop("'max_overlap' must be at least 1 pixel")
     preprocess <- match.arg(preprocess,
                             c("none", "center", "norm", "center_norm",
                               "hann", "grad", "grad_norm"))
@@ -461,18 +505,45 @@ align_phase_correlation <- function(img1, img2, edge_width = 250,
     cps <- (f1 * Conj(f2)) / (Mod(f1) * Mod(f2) + 1e-10)
     corr <- Mod(stats::fft(cps, inverse = TRUE))
 
-    lin    <- which.max(corr) - 1L          # column-major linear index, 0-based
-    dy_raw <- lin %% nr                      # row    (Y) peak position
-    dx_raw <- lin %/% nr                     # column (X) peak position
-    if (dy_raw > nr %/% 2) dy_raw <- dy_raw - nr
-    if (dx_raw > nc %/% 2) dx_raw <- dx_raw - nc
+    # A peak column of dx means an overlap of nc - dx, and dx runs 0 to nc - 1,
+    # so the overlap the band can express runs 1 to nc. Bracketing the overlap
+    # between min_overlap and max_overlap therefore brackets dx between
+    # nc - max_overlap and nc - min_overlap, and the peak is read from that
+    # range alone: a match outside it is one the caller has already ruled out.
+    min_ov <- as.integer(min_overlap)
+    max_ov <- if (is.finite(max_overlap)) as.integer(max_overlap) else nc
+    if (min_ov > nc)
+      stop("min_overlap (", min_ov, ") exceeds the search band (", nc,
+           "); widen edge_width to at least the smallest overlap you expect.",
+           call. = FALSE)
+    lo <- max(0L, nc - max_ov)              # smallest admissible dx
+    hi <- min(nc - 1L, nc - min_ov)         # largest admissible dx
+    cols   <- (lo + 1L):(hi + 1L)
+    keep   <- corr[, cols, drop = FALSE]
 
-    # Placement-ready shifts: img2 at (w1 - edge_width + dx, dy). The horizontal
-    # peak is negated, the vertical is not - this reproduces the validated stitch.
+    lin    <- which.max(keep) - 1L          # column-major linear index, 0-based
+    dy_raw <- lin %% nr                      # row    (Y) peak position
+    dx_raw <- lin %/% nr + lo                # column (X) peak position
+    # The vertical shift is a small drift either side of zero, so the half-way
+    # wrap is what makes a negative one readable.
+    if (dy_raw > nr %/% 2) dy_raw <- dy_raw - nr
+
+    # The horizontal peak is not a drift about zero and is deliberately left
+    # unwrapped. The bands are cut as the last `edge_width` columns of img1 and
+    # the first `edge_width` of img2, so img1 column (w1 - edge_width + i)
+    # carries the same pixels as img2 column (i - edge_width + overlap): the
+    # lag between the bands is edge_width - overlap, which lies in
+    # [0, edge_width) for every overlap the band can contain. Wrapping it about
+    # nc/2 would fold every overlap below half the band onto a negative lag and
+    # put it out of reach.
+    #
+    # dx is therefore the peak column as found, and img2 belongs at
+    # (w1 - edge_width + dx, dy), i.e. overlap = edge_width - dx.
+    #
     # estimate_rotation_shift() solves the same problem (FFT phase correlation)
-    # but returns c(depth, rotation) with neither axis negated, so the two are
-    # not interchangeable despite the shared method.
-    c(dx = -dx_raw, dy = dy_raw, peak = max(corr) / sum(corr))
+    # but returns c(depth, rotation) against a different placement convention,
+    # so the two are not interchangeable despite the shared method.
+    c(dx = dx_raw, dy = dy_raw, peak = max(keep) / sum(corr))
   }, error = function(e) stop("align_phase_correlation failed: ", e$message, call. = FALSE))
 }
 
@@ -483,14 +554,15 @@ align_phase_correlation <- function(img1, img2, edge_width = 250,
 #' \code{\link{stitch_image_sequence}}.
 #'
 #' @param a1,a2 Already-loaded \code{(H, W, C)} numeric arrays (0-255).
-#' @param method,edge_width,vertical_region,vertical_offset,direction,preprocess,blend,blend_width
+#' @param method,edge_width,vertical_region,vertical_offset,direction,preprocess,blend,blend_width,min_overlap,max_overlap
 #'   As described for \code{\link{stitch_image_pair}}.
 #' @return A list \code{list(mosaic, dx, dy, peak, overlap)}.
 #' @keywords internal
 stitch_compose_pair <- function(a1, a2, method, edge_width,
                                 vertical_region, vertical_offset,
                                 direction = "horizontal", preprocess = "none",
-                                blend = "linear", blend_width = NULL) {
+                                blend = "linear", blend_width = NULL,
+                                min_overlap = 0, max_overlap = Inf) {
   direction <- match.arg(direction, c("horizontal", "vertical"))
   blend <- match.arg(blend, c("linear", "overlay", "overlay_first", "max", "min"))
   if (direction == "vertical") {           # transpose, stitch horizontally, transpose back
@@ -510,7 +582,9 @@ stitch_compose_pair <- function(a1, a2, method, edge_width,
 
   al <- align_phase_correlation(a1, a2, edge_width = edge_width,
                                 vertical_region = vertical_region,
-                                vertical_offset = vertical_offset, preprocess = preprocess)
+                                vertical_offset = vertical_offset,
+                                preprocess = preprocess, min_overlap = min_overlap,
+                                max_overlap = max_overlap)
   dx <- as.numeric(al["dx"]); dy <- as.numeric(al["dy"]); peak <- as.numeric(al["peak"])
 
   h1 <- dim(a1)[1]; w1 <- dim(a1)[2]

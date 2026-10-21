@@ -21,6 +21,8 @@ stitch_root_scans(
   preprocess = "none",
   blend = "linear",
   blend_width = NULL,
+  min_overlap = 0,
+  max_overlap = Inf,
   report = FALSE,
   verbose = TRUE
 )
@@ -60,10 +62,14 @@ correlation) is supported. \code{"feature"} (SIFT/ORB keypoint matching in
 the Python original) requires OpenCV and has no CRAN-compatible R backend;
 it raises an informative error.}
 
-\item{edge_width}{Width in pixels of the edge band used for alignment.
-Clamped to the image width. Set it close to the true overlap - roughly
-1-2x (so the overlap is between about half and all of \code{edge_width}) -
-for the most reliable peak.}
+\item{edge_width}{Width in pixels of the band searched for the overlap, not
+the overlap itself. Clamped to the narrower frame. It has to be at least
+as wide as the true overlap, because an overlap wider than the band falls
+outside the part of the frames being compared and is reported as a smaller
+one. Beyond that it only has to be an upper bound: a band many times the
+overlap still locates it, at the cost of a larger transform. When the
+overlap is unknown, set it to the largest overlap the frames could
+plausibly have.}
 
 \item{vertical_region}{Height in pixels of the vertical band used for
 alignment.}
@@ -94,6 +100,16 @@ fractional values and ghost thin roots) or \code{"min"} (darken).}
 overlap (hard img1 to its left, hard img2 to its right); \code{NULL}
 (default) ramps across the whole overlap. A smaller value reduces root
 ghosting on color scans. Ignored unless \code{blend = "linear"}.}
+
+\item{min_overlap, max_overlap}{Bounds in pixels on the overlap to look for.
+The peak is read only from the columns of the correlation surface that
+correspond to an overlap of \code{min_overlap} to \code{max_overlap}
+pixels, so an overlap outside the bracket is never returned. The defaults
+\code{0} and \code{Inf} leave both ends open and search the whole band.
+\code{max_overlap} is clamped to the band width, since the band cannot
+express a wider overlap; \code{min_overlap} wider than the band, or a
+\code{max_overlap} below one pixel, is an error rather than a silently
+empty search.}
 
 \item{report}{Logical. If \code{TRUE}, return a list with both the mosaics
 and a per-step performance table instead of just the mosaics (see Value).}
