@@ -8,7 +8,9 @@
 #' \eqn{ y = amp * sin(2 * pi / period * (x + phase)) + offset }
 #' to data points (x, y) using nonlinear least squares.
 #'
-#' @param x Numeric vector of independent variable values (e.g., time).
+#' @param x Numeric vector of positions along the axis being tested: a
+#'   circumferential slice index, a depth, a sampling time -- whatever the
+#'   period is measured in.
 #' @param y Numeric vector of dependent variable values.
 #' @param par_start Named list of starting values for parameters:
 #'   - amp: Amplitude (default 3)
@@ -139,10 +141,14 @@ fit_sine_curve <- function(x, y, par_start = list(amp=3, phase=0, offset=0, peri
 
 #' Assess rhythmicity via sine curve fitting and model comparison
 #'
-#' Fits a sine curve to time-series data and computes rhythmicity statistics.
+#' Fits a sine curve along any ordered axis and computes rhythmicity
+#' statistics. The axis is usually circumferential slice index here, which asks
+#' whether roots are distributed evenly around a tube; nothing in the fit is
+#' specific to time.
 #' The amplitude significance is tested via various statistical methods.
 #'
-#' @param x Numeric vector of time or phase values.
+#' @param x Numeric vector of positions along the axis being tested (slice
+#'   index, depth, time), in the same units as \code{period}.
 #' @param y Numeric vector of observed values (same length as \code{x}).
 #' @param fix_period Either numeric (e.g., 24) to fix the period, or \code{NULL} to estimate it.
 #' @param method Type of test to use: \code{"F"} for F-test (default), \code{"FLR"} for finite sample 
@@ -156,7 +162,10 @@ fit_sine_curve <- function(x, y, par_start = list(amp=3, phase=0, offset=0, peri
 #'   \item \code{phase}: Fitted phase
 #'   \item \code{offset}: Fitted offset
 #'   \item \code{period}: Fitted or fixed period
-#'   \item \code{peakTime}: Position of the first peak, \code{(period/4 - phase) mod period}
+#'   \item \code{peakTime}: Position of the first peak, in the units of
+#'     \code{x}: \code{(period/4 - phase) mod period}. Named for the
+#'     time-series literature the test comes from; on a tube it is a
+#'     circumferential position, not a time
 #'   \item \code{R2}: Coefficient of determination
 #'   \item \code{residual_se}: Residual standard error (F-test only)
 #'   \item \code{df_residual}: Residual degrees of freedom (F-test only)

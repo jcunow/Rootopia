@@ -274,6 +274,10 @@ wave and the angle scaling, `"window"` keeps the angle scaling for a planar
 rhizotron panel, and `"flat"` drops both so that every pixel of a tray scan
 shares one depth. Only `"flat"` removes the depth axis itself.
 
+[How It Works](HowItWorks_vignette.html) plots the two terms against the angle
+over the whole range, measured off `create_depthmap()` rather than drawn from
+the formula -- the clearest way to see what the angle does to a depth map.
+
 **Rule 5 -- `start_soil` is centimeters, and it only shifts the origin.** It is
 subtracted from every depth, so an error in it moves the entire profile by that
 amount and changes nothing else. In-situ calibration -- marking the tube at

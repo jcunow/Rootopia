@@ -13,7 +13,8 @@ rhythmicity(
 )
 }
 \arguments{
-\item{x}{Numeric vector of time or phase values.}
+\item{x}{Numeric vector of positions along the axis being tested (slice
+index, depth, time), in the same units as \code{period}.}
 
 \item{y}{Numeric vector of observed values (same length as \code{x}).}
 
@@ -32,7 +33,10 @@ A named list with the following elements:
 \item \code{phase}: Fitted phase
 \item \code{offset}: Fitted offset
 \item \code{period}: Fitted or fixed period
-\item \code{peakTime}: Position of the first peak, \code{(period/4 - phase) mod period}
+\item \code{peakTime}: Position of the first peak, in the units of
+\code{x}: \code{(period/4 - phase) mod period}. Named for the
+time-series literature the test comes from; on a tube it is a
+circumferential position, not a time
 \item \code{R2}: Coefficient of determination
 \item \code{residual_se}: Residual standard error (F-test only)
 \item \code{df_residual}: Residual degrees of freedom (F-test only)
@@ -46,7 +50,10 @@ A named list with the following elements:
 }
 }
 \description{
-Fits a sine curve to time-series data and computes rhythmicity statistics.
+Fits a sine curve along any ordered axis and computes rhythmicity
+statistics. The axis is usually circumferential slice index here, which asks
+whether roots are distributed evenly around a tube; nothing in the fit is
+specific to time.
 The amplitude significance is tested via various statistical methods.
 }
 \examples{

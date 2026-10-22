@@ -12,7 +12,9 @@ fit_sine_curve(
 )
 }
 \arguments{
-\item{x}{Numeric vector of independent variable values (e.g., time).}
+\item{x}{Numeric vector of positions along the axis being tested: a
+circumferential slice index, a depth, a sampling time -- whatever the
+period is measured in.}
 
 \item{y}{Numeric vector of dependent variable values.}
 
