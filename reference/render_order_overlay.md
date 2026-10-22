@@ -66,12 +66,12 @@ render_order_overlay(
 
 - value_label:
 
-  Optional title drawn above the colour bar, e.g. `"path resistance"`.
+  Optional title drawn above the color bar, e.g. `"path resistance"`.
   Continuous legend only.
 
 - n_bins:
 
-  Number of colour steps in the continuous ramp.
+  Number of color steps in the continuous ramp.
 
 - tip_order:
 
@@ -85,9 +85,9 @@ Invisibly, `file`.
 
 Two legends are available and the right one is chosen from the data. A
 branch order is a handful of small integers and reads as named classes,
-so it gets one labelled swatch per order. A transport quantity – path
+so it gets one labeled swatch per order. A transport quantity – path
 resistance, path length from the base, the root length a segment serves
-– is continuous and gets a colour ramp with a scale bar instead. Pass
+– is continuous and gets a color ramp with a scale bar instead. Pass
 `continuous` to override the choice.
 
 ## See also

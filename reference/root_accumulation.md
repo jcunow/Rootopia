@@ -28,7 +28,11 @@ root_accumulation(x, group, depth, variable, stdrz = "counts")
 
 - stdrz:
 
-  Character string specifying standardization method
+  Character string naming the denominator applied to the cumulative sum:
+  `"counts"` (default) returns it raw, `"additive"` divides by its
+  maximum so each group's curve ends at 1, and `"relative"` divides by
+  the sum of the cumulative values. Use `"additive"` to compare the
+  shape of profiles between groups
 
 ## Value
 

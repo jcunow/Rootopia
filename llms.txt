@@ -77,8 +77,8 @@ img <- load_flexible_image(seg_Oulanka2023_Session01_T067,
                            scale         = "binary",
                            select_layer  = 2)
 
-# Preprocess and skeletonise
-cleaned <- clean_image(img, max_artifact_size = 5, max_hole_size = 5)
+# Preprocess and skeletonize
+cleaned <- clean_image(img, drop_objects_upto = 5, fill_holes_upto = 5)
 skel    <- skeletonize_image(cleaned, verbose = FALSE)
 
 # Length and diameter
@@ -92,10 +92,10 @@ root_tips     <- count_pixels(points$endpoints)
 root_branches <- count_pixels(points$branching_points)
 
 # Branch order (most informative for flatbed scans)
-order_res <- branch_order_map(skel, mask = cleaned, order = "root_order",
+order_res <- branch_order_map(skel, mask = cleaned, order = "order_from_base",
                               unit = "cm", dpi = 150)
 order_res$summary
-order_metrics(order_res, focal = "thinnest")
+order_metrics(order_res, groups = "thinnest")
 
 # Visualize
 zoom_plot(diam_map$diameter_rast)
@@ -181,7 +181,7 @@ metrics.
 ## Root branching order
 
 Convert a root skeleton into a segment graph, assign tip/root/branch
-order, and summarise root architecture by order class.
+order, and summarize root architecture by order class.
 
 - [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
   : Branch-order classification of a root skeleton
@@ -229,7 +229,7 @@ Functions for constructing and binning depth maps from minirhizotron
 geometry.
 
 - [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
+  : Assign a soil depth in centimeters to every pixel
 - [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md)
   : Bin continuous depth values into discrete intervals
 - [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
@@ -241,12 +241,12 @@ geometry.
 - [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
   : Estimate rotational/depth shift between two root scans
 
-## Soil and colour characterisation
+## Soil and color characterization
 
-Colour metrics, soil classification, and texture analysis.
+Color metrics, soil classification, and texture analysis.
 
 - [`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
-  : Create a buffer halo) around non-zero pixels
+  : Create a buffer (halo) around non-zero pixels
 - [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
   : Calculate Image Coloration Metrics
 - [`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md)
@@ -260,7 +260,7 @@ Colour metrics, soil classification, and texture analysis.
 
 ## Distribution analysis
 
-Statistical indices summarising root distribution with depth.
+Statistical indices summarizing root distribution with depth.
 
 - [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) :
   Calculate Mean Rooting Depth
@@ -276,7 +276,7 @@ Statistical indices summarising root distribution with depth.
 
 ## Rotation bias
 
-Detect and correct for rotational artefacts in minirhizotron tube scans.
+Detect and correct for rotational artifacts in minirhizotron tube scans.
 
 - [`slice_rotation()`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md)
   : Slice a scan along the rotation (circumferential) axis
@@ -323,6 +323,8 @@ Built-in example images from the Oulanka 2023 field campaign.
   Rules](https://jcunow.github.io/Rootopia/articles/HowItWorks_vignette.md):
 - [Minirhizotron Scans Analysis with Rootopia in
   R](https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.md):
+- [Rootopia in One Article: Purpose, Capabilities, and a Worked Depth
+  Profile](https://jcunow.github.io/Rootopia/articles/Rootopia_Overview_vignette.md):
 - [Rotation Bias and Rhythmicity Analysis with
   Rootopia](https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.md):
 - [Special Topics: Soil Color, Soil Texture, Rhizosphere Halos, and

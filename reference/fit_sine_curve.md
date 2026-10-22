@@ -18,7 +18,9 @@ fit_sine_curve(
 
 - x:
 
-  Numeric vector of independent variable values (e.g., time).
+  Numeric vector of positions along the axis being tested: a
+  circumferential slice index, a depth, a sampling time – whatever the
+  period is measured in.
 
 - y:
 

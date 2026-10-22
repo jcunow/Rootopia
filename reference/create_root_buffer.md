@@ -1,6 +1,6 @@
-# Create a buffer halo) around non-zero pixels
+# Create a buffer (halo) around non-zero pixels
 
-Create a buffer halo) around non-zero pixels
+Create a buffer (halo) around non-zero pixels
 
 ## Usage
 

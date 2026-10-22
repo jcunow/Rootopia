@@ -121,7 +121,7 @@ clean_image(
 A cleaned image in the format specified by `output_format`
 (`SpatRaster`, `cimg`, or matrix).
 
-## Why clean before skeletonisation
+## Why clean before skeletonization
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
 uses the Medial Axis Transform, which is driven by the distance

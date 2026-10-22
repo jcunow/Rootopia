@@ -133,9 +133,9 @@ counts_Q <- c(2, 8, 25, 20)
 P <- counts_P / sum(counts_P)
 Q <- counts_Q / sum(counts_Q) 
 compare_depth_distribution(P, Q)
-#> [1] 0.05909091
+#> [1] 0.2454545
 compare_depth_distribution(P, Q, metric = "js")
 #> [1] 0.01228139
 compare_depth_distribution(P, Q, tail_weight = TRUE, weighting = "sigmoid")
-#> [1] 0.04693082
+#> [1] 0.1965095
 ```

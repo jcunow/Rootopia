@@ -29,6 +29,7 @@ root_depth_metrics(
   tube_names = NULL,
   session = "",
   dpi = 300,
+  geometry = NULL,
   tube_diameter_cm = NULL,
   tube_center_offset = 0.5,
   depth_interval_cm = 5,
@@ -79,6 +80,7 @@ batch_root_traits(
   tube_names = NULL,
   session = "",
   dpi = 300,
+  geometry = NULL,
   tube_diameter_cm = NULL,
   tube_center_offset = 0.5,
   depth_interval_cm = 5,
@@ -127,7 +129,7 @@ batch_root_traits(
 
 - path_skl:
 
-  Character or `NULL`. Path to directory of skeletonised images
+  Character or `NULL`. Path to directory of skeletonized images
   (one-pixel-wide centerlines of roots), used for length, diameter,
   angle, and branching-order metrics. If `NULL` or a file is missing,
   the skeleton is computed internally via
@@ -157,21 +159,28 @@ batch_root_traits(
 - insertion_angles:
 
   Numeric or `NULL`. Insertion angle of the tube, in **degrees measured
-  from horizontal** – `90` is a vertical tube, `45` a tube pushed in at
-  45 degrees. This is the convention
+  from vertical** – `0` is an upright tube and `90` a horizontal one, so
+  the number is how far the tube leans over. This is the convention
+  field notes usually record and the one
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  uses for `tilt`, and it is the opposite of the "degrees from vertical"
-  wording used by some minirhizotron software, so convert before passing
-  it in. Values must be greater than 0 and at most 90; `90` means a
-  vertical tube and is allowed. Supplying this argument switches the run
-  to minirhizotron geometry (see **Geometry**). Default `NULL`
-  (flatbed).
+  takes as `angle_from_vertical`. Values must be in `[0, 90]`; one
+  value, or one per image. Supplying this argument switches the run to
+  minirhizotron geometry unless `geometry` says otherwise (see
+  **Geometry**). Default `NULL` (flatbed).
 
 - soil_starts:
 
-  Numeric. Pixel row (in the original, un-rotated image) at which the
-  soil surface begins. Used to set the zero-depth reference. Default
-  `0`.
+  Numeric. Depth offset in **centimeters**, passed to
+  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
+  as `start_soil` and subtracted from every depth, so it sets where
+  depth zero sits. A positive value moves the zero point deeper into the
+  scan, which is what you want when the top of the image is above the
+  soil surface. One value, or one per image. Default `0`, which reads
+  depths relative to the top of the scan.
+
+  [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md)
+  reports the soil line as a **pixel** position along the depth axis, so
+  convert before passing it here: `soil_starts = soil0 * 2.54 / dpi`.
 
 - tube_names:
 
@@ -196,10 +205,18 @@ batch_root_traits(
 
   Numeric; image resolution in dots per inch
 
+- geometry:
+
+  Character or `NULL`. The shape being imaged: one of `"tube"`,
+  `"window"` or `"flat"`, passed to
+  [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md).
+  Overrides the geometry inferred from `insertion_angles` /
+  `tube_diameter_cm` – see **Geometry**. Default `NULL` (infer).
+
 - tube_diameter_cm:
 
   Numeric or `NULL`. Inner diameter of the minirhizotron tube in
-  **centimetres**. Passed to
+  **centimeters**. Passed to
   [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
   as `tube_thicc`, where it sets the amplitude and wavelength of the
   sinusoidal curvature correction. Supplying this argument switches the
@@ -214,12 +231,12 @@ batch_root_traits(
   and `1` are the same point on the tube, the image seam. Set it if your
   scanner's rotational reference differs, or the depth assigned to a
   root will be offset by up to a full tilted tube diameter
-  (`tube_diameter_cm * sin(insertion_angle)`), the shallowest-to-deepest
-  range of the wave. Minirhizotron only.
+  (`tube_diameter_cm * sin(insertion_angles)`), the
+  shallowest-to-deepest range of the wave. Minirhizotron only.
 
 - depth_interval_cm:
 
-  Numeric or `NULL`. Size of each depth bin in **centimetres**. Passed
+  Numeric or `NULL`. Size of each depth bin in **centimeters**. Passed
   as `nn` to
   [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md).
   `NULL` switches on whole-image mode, where the scan is treated as a
@@ -430,7 +447,7 @@ batch_root_traits(
 - prune_spur_length_cm:
 
   Numeric. Remove terminal skeleton branches ("spurs") shorter than
-  this, in **centimetres**, before any trait is measured; `0` (default)
+  this, in **centimeters**, before any trait is measured; `0` (default)
   prunes nothing. Thinning leaves short stubs where roots are wide or
   ragged, and each one is counted as a root tip and adds a little
   length, so the pruning applies to the skeleton every metric is
@@ -570,16 +587,16 @@ all images) or a vector of length equal to the number of images.
 
 ## Geometry
 
-There is no geometry switch. The geometry follows from whether you
-supply tube parameters:
+The geometry follows from whether you supply tube parameters, and
+`geometry` overrides that inference when the shape is not what those
+arguments imply:
 
 - Flatbed (default):
 
   Neither `insertion_angles` nor `tube_diameter_cm` is supplied. The
-  scan is treated as a flat surface imaged head-on: no sinusoidal
-  curvature correction (`sinoid = FALSE`), no foreshortening of the
-  depth axis (one pixel along the image width is one pixel of depth),
-  and no
+  scan is treated as a flat surface imaged head-on: no curvature
+  correction, no foreshortening of the depth axis (one pixel along the
+  image width is one pixel of depth), and no
   [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
   crop, since there is no tube interior to crop to.
 
@@ -587,11 +604,31 @@ supply tube parameters:
 
   Either argument is supplied. The sinusoidal curvature correction is
   switched on, the depth axis is foreshortened by
-  `sin(insertion_angles)`, and each image is cropped to
+  `cos(insertion_angles)`, and each image is cropped to
   `rotation_fixed_width` rows about its center. An argument you leave
   out falls back to a neutral default: `tube_diameter_cm = 7` and
-  `insertion_angles = 90` (vertical tube), both announced in the run
-  log.
+  `insertion_angles = 0` (upright tube), both announced in the run log.
+
+- `geometry = "flat"`:
+
+  No depth axis at all. Every pixel of a scan shares one depth, so the
+  profile collapses to a single bin whatever `depth_interval_cm` says,
+  and no curvature or foreshortening is applied. This is the shortcut
+  for a tray of washed roots; it is also what `depth_interval_cm = NULL`
+  achieves, stated as a property of the sample rather than of the
+  binning.
+
+- `geometry = "window"`:
+
+  A planar rhizotron window that does have a depth axis. The depth axis
+  is foreshortened by `cos(insertion_angles)` as for a tube, but no
+  curvature wave is added and no tube-interior crop is applied. This is
+  the one case the inference above cannot reach, because supplying an
+  angle would otherwise switch the curvature correction on.
+
+- `geometry = "tube"`:
+
+  States the minirhizotron case explicitly.
 
 In both cases depth runs along the image **width** (left to right),
 which is the orientation minirhizotron scanners produce. A flatbed scan
@@ -636,7 +673,7 @@ both geometries; in short:
 
 - Minirhizotron:
 
-  Set `dpi`, `insertion_angles` (degrees from *horizontal*),
+  Set `dpi`, `insertion_angles` (degrees from *vertical*),
   `tube_diameter_cm`, `soil_starts`, `tube_names`, `depth_interval_cm`
   and `bin_round`, and look at `rotation_fixed_width` – how much of the
   tube's curved edge to trim is a property of your scanner that no
@@ -683,7 +720,7 @@ result <- batch_root_traits(
 result <- root_depth_metrics(
   path_seg         = "scans/segmented/2022_02/",
   path_skl         = "scans/skeleton/2022_02/",
-  insertion_angles = tube_meta$angle,   # degrees from horizontal
+  insertion_angles = tube_meta$angle,   # degrees from vertical
   tube_diameter_cm = 7,
   session          = "2022_02"
 )
@@ -695,7 +732,7 @@ result <- root_depth_metrics(
   path_rgb                = "scans/blended/2022_02/",
   rgb_file_index          = 37:72,
   insertion_angles        = tube_meta$angle,
-  soil_starts             = tube_meta$soil_row,
+  soil_starts             = tube_meta$soil_cm,   # centimeters
   session                 = "2022_02",
   calc_diameter_quantiles = TRUE,
   calc_root_angles        = TRUE,

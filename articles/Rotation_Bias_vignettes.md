@@ -82,7 +82,7 @@ Key parameters:
 | `tape_brightness` | Brightness threshold (0–1) for classifying tape pixels |
 | `search_area` | Fraction of image width to analyze (tape is near one edge) |
 | `nclasses` | Number of unsupervised clustering classes |
-| `tape_quantile` | Quantile used to align the brightness scale |
+| `tape_quantile` | Quantile of the image used as the bright reference for tape |
 
 ------------------------------------------------------------------------
 
@@ -214,9 +214,11 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session01_T067, scale = "binar
                                   output_format = "spatrast")
 
 
-# rotation trim: drop the top 33% of rows
+# Trim the shallowest quarter of the depth axis (columns), where the tape and
+# the noisiest soil sit. The rotation axis is left whole, since that is what the
+# slices below are cut along.
 e <- terra::ext(root_layer)
-root_layer <- terra::crop(root_layer, terra::ext(e[1]+ e[2] / 4, e[2], e[3], e[4])) 
+root_layer <- terra::crop(root_layer, terra::ext(e[1] + e[2] / 4, e[2], e[3], e[4]))
 terra::plot(root_layer, maxcell = Inf)
 ```
 
@@ -225,7 +227,6 @@ below.](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-5-1.png)
 
 ``` r
 
-# --> the trimming avoids noisy deep layer and tape artifacts at the top
 
 # create circumferential zones
 n_slices <- 48
@@ -253,20 +254,21 @@ slice_traits$rld <- slice_traits$rootlen /
 
 ``` r
 
+# With a numeric `fix_period` the period is not estimated, so `par_start` is
+# not used -- the three remaining parameters are fitted from the data.
 res <- rhythmicity(
   x          = slice_traits$slice,
   y          = slice_traits$rld,
   fix_period = n_slices,
-  method     = "F",
-  par_start   = list(amp = 0.01, phase = 0, offset = mean(slice_traits$rootlen),
-                     period = n_slices)
+  method     = "F"
 )
 
 cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
 #> Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000
-cat("The top-down difference is", round((res$amplitude*2) / res$offset,2), " -> circa twice as large as the mean"    )
-#> The top-down difference is 1.13  -> circa twice as large as the mean
+cat(sprintf("Peak-to-trough spread is %.2f x the mean root length density\n",
+            (res$amplitude * 2) / res$offset))
+#> Peak-to-trough spread is 1.13 x the mean root length density
 ```
 
 A significant, non-trivial amplitude indicates that root abundance
@@ -331,10 +333,14 @@ ggplot(slice_traits, aes(slice, rld + inner)) +
 the
 tube.](Rotation_Bias_vignettes_files/figure-html/unnamed-chunk-7-2.png)
 
-> **Going further**: the same slice loop can be combined with
-> `slice_rotation(mode = "both")` to additionally split each
-> circumferential slice by depth bin, producing a slice x depth grid.
-> Fitting
+> **Going further**: the same slice loop can be nested inside
+> [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
+> to split each circumferential slice by depth bin, producing a slice x
+> depth grid —
+> [`slice_rotation()`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md)
+> the image, then
+> [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
+> each slice, or the other way round. Fitting
 > [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
 > separately within each depth bin (x = slice, y = trait per slice)
 > tests whether the circumferential pattern is consistent with depth or

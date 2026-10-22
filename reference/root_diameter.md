@@ -92,7 +92,9 @@ A list containing:
 
 - distance_map_rast:
 
-  `SpatRaster`. Raster showing the distance transform values.
+  `SpatRaster`. Local diameter in **pixels** over the whole mask – twice
+  the distance transform, and not converted to `unit`. Use
+  `diameter_rast` for skeleton-only diameters in `unit`.
 
 - root_volume:
 

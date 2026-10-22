@@ -2,7 +2,7 @@
 
 Applies a morphological closing (dilation then erosion) to smooth the
 edges of binary objects. Intended as a post-cleaning step before
-skeletonisation; do **not** apply after skeletonisation.
+skeletonization; do **not** apply after skeletonization.
 
 ## Usage
 

@@ -6,6 +6,7 @@
 <url><loc>https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/articles/HowItWorks_vignette.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/articles/MinirhizotronScans_vignettes.html</loc></url>
+<url><loc>https://jcunow.github.io/Rootopia/articles/Rootopia_Overview_vignette.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/articles/Rotation_Bias_vignettes.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/articles/SpecialTopics_vignette.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/articles/Stitching_vignette.html</loc></url>
@@ -89,6 +90,7 @@
 <url><loc>https://jcunow.github.io/Rootopia/reference/stitch_image_sequence.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/stitch_luma.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/stitch_match_channels.html</loc></url>
+<url><loc>https://jcunow.github.io/Rootopia/reference/stitch_order_frames.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/stitch_preprocess.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/stitch_prompt_tubes.html</loc></url>
 <url><loc>https://jcunow.github.io/Rootopia/reference/stitch_root_scans.html</loc></url>

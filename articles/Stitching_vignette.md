@@ -181,9 +181,10 @@ top.
 `"vertical"` (frames stacked top-to-bottom, e.g. strips acquired *down*
 a tube).
 
-**`method`** — `"phase"` (FFT phase correlation) is supported. The
-Python tool’s `"feature"` (SIFT/ORB) needs OpenCV and has no CRAN
-backend, so it errors with a message rather than guessing.
+**`method`** — `"phase"` (FFT phase correlation) is the only method
+implemented. `"feature"` (SIFT/ORB) would need OpenCV, which has no CRAN
+backend, so passing it errors with that message rather than silently
+falling back to phase correlation.
 
 **`preprocess`** — applied to the edge bands before correlation:
 
@@ -288,11 +289,12 @@ stitch_root_scans("scans", pattern = ".tiff", tubes  = "ask")             # inte
 Normally you want `tubes`; `select` is for raw file ranges.
 
 **Ordering — `order_by` / `decreasing`.** Frames within a tube are
-stitched in order. The default key is the **file name**, which sorts
-*lexicographically* — so unpadded numbers come out wrong (`_10` before
-`_2`). Use `order_by` to sort by the frame number instead, and
-`decreasing = TRUE` to reverse it (e.g. frames numbered from the bottom
-of the tube upward):
+stitched in order, so this decides the sequence. The default key is the
+**file name**, which sorts *lexicographically* — so unpadded numbers
+come out wrong (`_10` before `_2`). `order_by` takes a regular
+expression and sorts on its match instead; a match that parses as a
+number sorts numerically. `decreasing = TRUE` reverses it, for frames
+numbered from the far end of the tube back:
 
 ``` r
 
@@ -300,6 +302,10 @@ of the tube upward):
 stitch_root_scans("scans", pattern = ".tiff", order_by = "\\d+(?=\\.)")
 stitch_root_scans("scans", pattern = ".tiff", order_by = "\\d+(?=\\.)", decreasing = TRUE)
 ```
+
+A file the pattern does not match stops the run rather than being placed
+arbitrarily, since a frame in the wrong part of the sequence is exactly
+the failure this argument exists to prevent.
 
 (Equivalently, zero-pad your frame numbers — `_02`, `_10` — so the
 default name sort is already correct.)

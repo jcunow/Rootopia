@@ -67,7 +67,7 @@ meaningless start.
 Lengths and diameters are used in whatever unit the edge table carries,
 so run
 [`convert_root_units`](https://jcunow.github.io/Rootopia/reference/convert_root_units.md)
-first if you want centimetres.
+first if you want centimeters.
 
 ## See also
 
@@ -81,7 +81,7 @@ if (FALSE) { # \dontrun{
 res <- branch_order_map(skel, mask, unit = "cm", dpi = 300)
 et  <- root_transport(res$edges)
 
-# a transport map: colour every segment by its path resistance
+# a transport map: color every segment by its path resistance
 render_order_overlay(attr(et, "segments"), et$path_resistance,
                      attr(et, "dims"), "transport.png",
                      value_label = "path resistance")

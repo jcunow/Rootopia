@@ -1,8 +1,10 @@
 # Assess rhythmicity via sine curve fitting and model comparison
 
-Fits a sine curve to time-series data and computes rhythmicity
-statistics. The amplitude significance is tested via various statistical
-methods.
+Fits a sine curve along any ordered axis and computes rhythmicity
+statistics. The axis is usually circumferential slice index here, which
+asks whether roots are distributed evenly around a tube; nothing in the
+fit is specific to time. The amplitude significance is tested via
+various statistical methods.
 
 ## Usage
 
@@ -20,7 +22,8 @@ rhythmicity(
 
 - x:
 
-  Numeric vector of time or phase values.
+  Numeric vector of positions along the axis being tested (slice index,
+  depth, time), in the same units as `period`.
 
 - y:
 
@@ -53,7 +56,10 @@ A named list with the following elements:
 
 - `period`: Fitted or fixed period
 
-- `peakTime`: Peak time (phase + period/4)
+- `peakTime`: Position of the first peak, in the units of `x`:
+  `(period/4 - phase) mod period`. Named for the time-series literature
+  the test comes from; on a tube it is a circumferential position, not a
+  time
 
 - `R2`: Coefficient of determination
 

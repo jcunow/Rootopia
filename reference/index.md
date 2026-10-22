@@ -63,7 +63,7 @@ metrics.
 ## Root branching order
 
 Convert a root skeleton into a segment graph, assign tip/root/branch
-order, and summarise root architecture by order class.
+order, and summarize root architecture by order class.
 
 - [`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
   : Branch-order classification of a root skeleton
@@ -111,7 +111,7 @@ Functions for constructing and binning depth maps from minirhizotron
 geometry.
 
 - [`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md)
-  : Create A Phase-Shifted, Tilt-Amplitude Sine Depth Map
+  : Assign a soil depth in centimeters to every pixel
 - [`binning()`](https://jcunow.github.io/Rootopia/reference/binning.md)
   : Bin continuous depth values into discrete intervals
 - [`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
@@ -123,12 +123,12 @@ geometry.
 - [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
   : Estimate rotational/depth shift between two root scans
 
-## Soil and colour characterisation
+## Soil and color characterization
 
-Colour metrics, soil classification, and texture analysis.
+Color metrics, soil classification, and texture analysis.
 
 - [`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
-  : Create a buffer halo) around non-zero pixels
+  : Create a buffer (halo) around non-zero pixels
 - [`tube_coloration()`](https://jcunow.github.io/Rootopia/reference/tube_coloration.md)
   : Calculate Image Coloration Metrics
 - [`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md)
@@ -142,7 +142,7 @@ Colour metrics, soil classification, and texture analysis.
 
 ## Distribution analysis
 
-Statistical indices summarising root distribution with depth.
+Statistical indices summarizing root distribution with depth.
 
 - [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) :
   Calculate Mean Rooting Depth
@@ -158,7 +158,7 @@ Statistical indices summarising root distribution with depth.
 
 ## Rotation bias
 
-Detect and correct for rotational artefacts in minirhizotron tube scans.
+Detect and correct for rotational artifacts in minirhizotron tube scans.
 
 - [`slice_rotation()`](https://jcunow.github.io/Rootopia/reference/slice_rotation.md)
   : Slice a scan along the rotation (circumferential) axis

@@ -54,13 +54,19 @@ tail_weighted_wasserstein_distance(
 
 ## Value
 
-Numeric Wasserstein distance.
+Numeric Wasserstein distance, in the units of `index`.
 
 ## Details
 
-Wasserstein distance measures the minimal "transport cost" required to
-transform one distribution into another along a one-dimensional index.
+Wasserstein distance measures the minimal transport cost required to
+transform one distribution into another along a one-dimensional index:
+the mass-weighted mean distance the probability has to travel, in the
+units of `index`. For depth profiles indexed in centimetres it is
+therefore a depth, and a profile shifted `d` cm returns exactly `d`.
 
-This implementation uses
 [`transport::wasserstein1d()`](https://rdrr.io/pkg/transport/man/wasserstein1d.html)
-after applying optional weighting.
+does the work. Its `a` and `b` are positions and its `wa` and `wb` the
+mass at those positions, so `index` is passed as the positions and `P`
+and `Q` as the weights. Passing the mass vectors as positions instead
+would sort them and discard `index`, which measures how differently
+concentrated the two profiles are rather than how far apart they sit.

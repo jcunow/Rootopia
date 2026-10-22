@@ -31,10 +31,10 @@ Stitching](https://jcunow.github.io/Rootopia/articles/Stitching_vignette.md)
 | What you need | Where it comes from |
 |----|----|
 | Segmented images (binary, root = 1) | [RootDetector](https://github.com/ExPlEcoGreifswald/RootDetector) or [RootPainter](https://github.com/Abe404/root_painter) |
-| Skeletonised images (one-pixel centerlines) — *optional* | RootDetector (channel 2), or omit `path_skl` and [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
+| Skeletonized images (one-pixel centerlines) — *optional* | RootDetector (channel 2), or omit `path_skl` and [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md) will compute skeletons internally via [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md) — needed for length, diameter, angle, and branching-order metrics |
 | RGB images aligned to segmented images | Original scan — needed for color metrics only |
 | Tube insertion angle per image | Field metadata |
-| Soil-surface pixel row per image — *optional*, defaults to `0` | Field metadata or [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md); only needed if you want depths reported relative to the true soil surface rather than the top of the image |
+| Soil-surface offset per image, in **centimeters** — *optional*, defaults to `0` | Field metadata, or [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md) converted from pixels with `cm = px * 2.54 / dpi`; only needed if you want depths relative to the true soil surface rather than the top of the image |
 
 Images in the three directories must be in the **same alphabetical
 order** as each other; each position corresponds to the same physical
@@ -62,7 +62,7 @@ as one row.
 
 | Tier | Parameters | Why |
 |----|----|----|
-| **Set every time** | `dpi`, `tube_names`, `depth_interval_cm = NULL` | `dpi` scales every value reported in cm. `tube_names` must be unique — the derived default takes three characters from the file name and collides whenever files share a suffix like `fine.tif`, so a run stops rather than mislabel. `NULL` collapses each scan to a single bin. |
+| **Set every time** | `dpi`, `tube_names`, `geometry = "flat"` (or `depth_interval_cm = NULL`) | `dpi` scales every value reported in cm. `tube_names` must be unique — the derived default takes three characters from the file name and collides whenever files share a suffix like `fine.tif`, so a run stops rather than mislabel. `NULL` collapses each scan to a single bin. |
 | **Set for raw scans** | `binarize_threshold`, `dark_roots` | Only if your files are grayscale or RGB rather than a binary mask. Both accept one value per image, for sessions where exposure drifted. |
 | **Usually worth setting** | `prune_spur_length_cm`, `clean_drop_objects_upto`, `diameter_thresholds`, `session` | Thinning leaves stubs that count as root tips and as length; specks in a painted segmentation count as root area. The thresholds are the fine-root cut-offs your question actually turns on. |
 | **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_quantiles`, the `calc_*` toggles |  |
@@ -90,7 +90,7 @@ result <- root_depth_metrics(
 
 | Tier | Parameters | Why |
 |----|----|----|
-| **Set every time** | `dpi`, `insertion_angles`, `tube_diameter_cm`, `soil_starts`, `tube_names`, `depth_interval_cm`, `bin_round` | `insertion_angles` is **degrees from horizontal** — 90 is a vertical tube, the opposite of some minirhizotron software. `soil_starts` sets where depth zero is. |
+| **Set every time** | `dpi`, `insertion_angles`, `tube_diameter_cm`, `soil_starts`, `tube_names`, `depth_interval_cm`, `bin_round` | `insertion_angles` is **degrees from vertical**, in `[0, 90]` — 0 is an upright tube, 90 a horizontal one. `soil_starts` sets where depth zero is, in **centimeters**. |
 | **Set for raw scans** | `binarize_threshold`, `dark_roots` | As above. |
 | **Usually worth setting** | `rotation_fixed_width`, `tube_center_offset`, `prune_spur_length_cm` | How much of the tube’s curved edge to trim is a property of your scanner that no default can guess. `tube_center_offset` sets where the top of the tube falls across the image, as a fraction of one circumference; leave it at `0.5` (tube top mid-image) unless your rotational reference differs. |
 | **Only for the metrics that use them** | `order_scheme`, `diam_weight`, `diameter_thresholds`, `diameter_quantiles`, the `calc_*` toggles | `calc_root_angles` and `calc_distribution_indices` earn their keep here, unlike on flatbed. |
@@ -101,9 +101,9 @@ result <- root_depth_metrics(
 result <- root_depth_metrics(
   path_seg             = "scans/segmented/2022_02/",
   tube_names           = meta$tube_id,
-  insertion_angles     = meta$angle,          # degrees from HORIZONTAL
+  insertion_angles     = meta$angle,          # degrees from VERTICAL
   tube_diameter_cm     = 7,
-  soil_starts          = meta$soil_row,
+  soil_starts          = meta$soil_cm,       # centimeters
   dpi                  = 300,
   depth_interval_cm    = 5,
   bin_round            = "floor",             # honest 0–5, 5–10 bins
@@ -185,13 +185,13 @@ when all images share the same setting.
 
 # Load your field metadata table
 tube_meta <- read.csv("metadata/tube_metadata_2022_02.csv")
-# Expected columns: filename, angle, soil_row, tube_id
+# Expected columns: filename, angle, soil_cm, tube_id
 
 result <- root_depth_metrics(
   path_seg         = "scans/segmented/2022_02/",
   path_skl         = "scans/skeleton/2022_02/",
-  insertion_angles = tube_meta$angle,       # degrees from horizontal; 90 = vertical tube
-  soil_starts      = tube_meta$soil_row,    # pixel row of soil surface
+  insertion_angles = tube_meta$angle,       # degrees from vertical; 0 = upright tube
+  soil_starts      = tube_meta$soil_cm,     # centimeters from top of scan
   tube_names       = tube_meta$tube_id,     # e.g. "T042"
   session          = "2022_02",
   dpi              = 300
@@ -286,7 +286,7 @@ and labels every root segment with all four **order schemes** —
 `"strahler_order"`, where every distal unbranched root is order 1 and
 the number rises only where two roots of equal order meet. See the
 [Flatbed
-Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html#7b-branch-order)
+Scans](https://jcunow.github.io/Rootopia/articles/FlatBedScans_vignettes.html#branch-order)
 vignette for a worked example of the underlying pipeline.
 
 ``` r
@@ -348,21 +348,52 @@ ggplot(result, aes(x = depth, y = lateral_root_fraction, color = Tube)) +
 
 ------------------------------------------------------------------------
 
-### Flat rhizotron windows
+### Shapes other than a tube
 
-For glass-fronted rhizotron boxes (flat geometry, no tube curvature),
-set `flat_geometry = TRUE`. This disables the sinusoidal depth
-correction that is otherwise applied to cylindrical minirhizotron tubes.
+Normally the geometry follows from the arguments: supply
+`insertion_angles` or `tube_diameter_cm` and you are on a minirhizotron
+tube, supply neither and you are on a flatbed. `geometry` states the
+shape outright, for the two cases that inference cannot reach.
+
+**A glass-fronted rhizotron box** is planar but still pushed into the
+soil at an angle, so it has a depth axis and no curvature. Supplying the
+angle alone would switch the curvature correction on, so say
+`geometry = "window"`:
 
 ``` r
 
 result <- root_depth_metrics(
-  path_seg      = "scans/segmented/rhizotron_A/",
-  path_skl      = "scans/skeleton/rhizotron_A/",
-  flat_geometry = TRUE,
-  insertion_angles = 0   # vertical windows
+  path_seg         = "scans/segmented/rhizotron_A/",
+  path_skl         = "scans/skeleton/rhizotron_A/",
+  geometry         = "window",
+  insertion_angles = 0,     # 0 = head-on; degrees from VERTICAL
+  depth_interval_cm = 5
 )
 ```
+
+**A tray of washed roots** has no depth axis at all: where a root lies
+on the tray says nothing about where it grew. `geometry = "flat"` puts
+every pixel at one depth, so the profile collapses to a single bin per
+scan whatever `depth_interval_cm` says:
+
+``` r
+
+result <- root_depth_metrics(
+  path_seg = "scans/trays/",
+  geometry = "flat",
+  dpi      = 1200
+)
+```
+
+That is the same result as `depth_interval_cm = NULL`, said as a
+property of the sample rather than of the binning — which is usually
+what you mean, and is harder to undo by accident.
+
+> **On the angle convention.** `insertion_angles` is **degrees from
+> vertical**, in `[0, 90]`: `0` is an upright tube or a window imaged
+> head-on, `90` a horizontal one whose axis gains no depth along its
+> length. Both ends are valid, and the number is how far the tube leans
+> over – the way field notes usually record it.
 
 ------------------------------------------------------------------------
 
@@ -494,15 +525,15 @@ result <- root_depth_metrics(
 
   # Per-image metadata
   insertion_angles = tube_meta$angle,
-  soil_starts      = tube_meta$soil_row,
+  soil_starts      = tube_meta$soil_cm,
   tube_names       = tube_meta$tube_id,
   session          = "2022_02",
 
   # Geometry
   dpi               = 300,
+  geometry          = "tube",
   tube_diameter_cm  = 7,
   depth_interval_cm = 5,
-  flat_geometry     = FALSE,
 
   # Core metrics
   calc_root_pixels    = TRUE,

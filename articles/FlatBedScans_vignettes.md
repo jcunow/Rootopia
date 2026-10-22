@@ -148,14 +148,17 @@ holes.](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-5-3.png)
 
 ``` r
 
-grayscale <- load_flexible_image("path/to/scan.tif", scale = "to_01")
+grayscale <- load_flexible_image("path/to/scan.tif", scale = "to_01",
+                                output_format = "spatrast")
 
 # even illumination: one level for the whole scan
-mask <- image_threshold(grayscale, threshold = 0.3, method = "global")
+mask <- image_threshold(grayscale, threshold = 0.3, method = "global",
+                        select_layer = NULL)
 
 # bright center, dark corners: a level that follows the local brightness
 mask <- image_threshold(grayscale, method = "adaptive",
-                        adaptive_k = 1.15, window_size = 51)
+                        adaptive_k = 1.15, window_size = 51,
+                        select_layer = NULL)
 ```
 
 For the adaptive method, two numbers decide whether it works, and both
@@ -335,10 +338,10 @@ cat(sprintf("Root area coverage: %.2f %%\n", root_area_pct))
 #> Root area coverage: 5.16 %
 
 # Root length density (cm root per cm² scan area)
-scan_area_cm2 <- (root_px + void_px) / (300 / 2.54)^2
+scan_area_cm2 <- (root_px + void_px) / (1200 / 2.54)^2
 rl_density    <- rl / scan_area_cm2
 cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
-#> Root length density: 0.0490 cm / cm²
+#> Root length density: 0.7835 cm / cm²
 ```
 
 ------------------------------------------------------------------------
