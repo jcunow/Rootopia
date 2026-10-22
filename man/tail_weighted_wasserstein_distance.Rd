@@ -33,17 +33,24 @@ tail_weighted_wasserstein_distance(
 \item{inverse}{Logical. Reverse weighting direction.}
 }
 \value{
-Numeric Wasserstein distance.
+Numeric Wasserstein distance, in the units of \code{index}.
 }
 \description{
 Computes the 1D Wasserstein distance between two probability distributions
 with optional depth-dependent weighting.
 }
 \details{
-Wasserstein distance measures the minimal "transport cost" required to
-transform one distribution into another along a one-dimensional index.
+Wasserstein distance measures the minimal transport cost required to
+transform one distribution into another along a one-dimensional index: the
+mass-weighted mean distance the probability has to travel, in the units of
+\code{index}. For depth profiles indexed in centimetres it is therefore a
+depth, and a profile shifted \code{d} cm returns exactly \code{d}.
 
-This implementation uses \code{transport::wasserstein1d()} after applying
-optional weighting.
+\code{transport::wasserstein1d()} does the work. Its \code{a} and \code{b}
+are positions and its \code{wa} and \code{wb} the mass at those positions,
+so \code{index} is passed as the positions and \code{P} and \code{Q} as
+the weights. Passing the mass vectors as positions instead would sort them
+and discard \code{index}, which measures how differently concentrated the
+two profiles are rather than how far apart they sit.
 }
 \keyword{internal}

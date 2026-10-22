@@ -13,6 +13,12 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+
+# Chunks here are illustrative and not run, with one exception: the figure in
+# Depth mapping measures the depth-map terms off the function itself, so the
+# package has to be attached for it.
+library(Rootopia)
+library(terra)
 ```
 
 # How It Works
@@ -1109,8 +1115,9 @@ angles <- seq(0, 90, by = 5)
 # circumference term alone; across one row it is the other way round.
 terms <- vapply(angles, function(a) {
   m <- terra::as.matrix(
-    create_depthmap(img, geometry = "tube", tube_thicc = tube,
-                    angle_from_vertical = a, dpi = dpi, center_offset = 0),
+    Rootopia::create_depthmap(img, geometry = "tube", tube_thicc = tube,
+                              angle_from_vertical = a, dpi = dpi,
+                              center_offset = 0),
     wide = TRUE)
   c(circumference = diff(range(m[, 1])), length = diff(range(m[1, ])))
 }, numeric(2))

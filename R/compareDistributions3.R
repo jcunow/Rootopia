@@ -264,13 +264,20 @@ tail_weighted_js_divergence <- function(
 #' @inheritParams tail_weighted_kl_divergence
 #'
 #' @details
-#' Wasserstein distance measures the minimal "transport cost" required to
-#' transform one distribution into another along a one-dimensional index.
+#' Wasserstein distance measures the minimal transport cost required to
+#' transform one distribution into another along a one-dimensional index: the
+#' mass-weighted mean distance the probability has to travel, in the units of
+#' \code{index}. For depth profiles indexed in centimetres it is therefore a
+#' depth, and a profile shifted \code{d} cm returns exactly \code{d}.
 #'
-#' This implementation uses \code{transport::wasserstein1d()} after applying
-#' optional weighting.
+#' \code{transport::wasserstein1d()} does the work. Its \code{a} and \code{b}
+#' are positions and its \code{wa} and \code{wb} the mass at those positions,
+#' so \code{index} is passed as the positions and \code{P} and \code{Q} as
+#' the weights. Passing the mass vectors as positions instead would sort them
+#' and discard \code{index}, which measures how differently concentrated the
+#' two profiles are rather than how far apart they sit.
 #'
-#' @return Numeric Wasserstein distance.
+#' @return Numeric Wasserstein distance, in the units of \code{index}.
 #' @keywords internal
 tail_weighted_wasserstein_distance <- function(
     P, Q,
@@ -293,9 +300,26 @@ tail_weighted_wasserstein_distance <- function(
   
   P <- (P * w) / sum(P * w)
   Q <- (Q * w) / sum(Q * w)
-  
+
+  # `index` carries the positions the mass sits at and P/Q the mass at each,
+  # so the cost of moving mass between two bins is the distance between their
+  # index values. Both distributions live on the same index, and the default
+  # index spans the shorter of the two, so a longer vector is cut to match it
+  # rather than silently paired with the wrong positions.
+  n <- length(index)
+  if (length(P) != n || length(Q) != n) {
+    if (length(P) < n || length(Q) < n)
+      stop("`index` is longer than `P` or `Q`; they must share one position ",
+           "per bin.", call. = FALSE)
+    warning(sprintf(
+      "`P`/`Q` are longer than `index` (%d); using the first %d bin(s) of each.",
+      n, n), call. = FALSE)
+    P <- P[seq_len(n)]; P <- P / sum(P)
+    Q <- Q[seq_len(n)]; Q <- Q / sum(Q)
+  }
+
   tryCatch({
-    transport::wasserstein1d(a = P, b = Q)
+    transport::wasserstein1d(a = index, b = index, wa = P, wb = Q)
   }, error = function(e) {
     stop("Wasserstein error: ", e$message)
   })
