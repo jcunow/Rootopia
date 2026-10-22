@@ -208,7 +208,9 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, se
                                      fun = function(x) base::mean(x, na.rm = TRUE))$global
       median_diameter <- terra::global(DsSKL,
                                        fun = function(x) stats::median(x, na.rm = TRUE))$global
-      diameters <- terra::values(DsSKL, na.rm = TRUE)
+      # terra::values() returns a one-column matrix; `diameters` is documented
+      # and used as a plain vector.
+      diameters <- as.numeric(terra::values(DsSKL, na.rm = TRUE))
 
       # Per-pixel cylinder: radius r_i = d_i / 2, length l_i = 1 px.
       # Volume  = pi * r_i^2 * l_i  -> sum, then convert px^3 -> unit^3
