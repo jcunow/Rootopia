@@ -1359,7 +1359,7 @@ order_res <- branch_order_map(
 #>   spliced pass-through nodes: 111 -> 111 segment(s)
 #>   resolved crossings: 111 -> 111 segment(s)
 #> Tip order...
-#> Done in 0.34s. 111 segments, max order 8, total length 7857.9 px
+#> Done in 0.33s. 111 segments, max order 8, total length 7857.9 px
 
 # The same window before and after cleaning, so the specks that
 # drop_objects_upto removes and the pinholes that fill_holes_upto closes can
