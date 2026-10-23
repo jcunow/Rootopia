@@ -12,3 +12,4 @@
 ^Meta$
 ^\.claude$
 ^CLAUDE\.md$
+^vignettes/figures/.*\.tif$

@@ -1,4 +1,3 @@
-# Rootopia (development version)
 # Rootopia 1.1.0
 
 Beta release, available from the GitHub repository only. Not submitted to CRAN.
