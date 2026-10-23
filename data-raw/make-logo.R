@@ -17,15 +17,24 @@ if (length(master) != 1L)
 
 dir.create("man/figures", showWarnings = FALSE, recursive = TRUE)
 
+# Both derivatives are PNG whatever the master is: LaTeX cannot place an SVG
+# through knitr::include_graphics(), so an SVG logo would drop out of the PDF.
 # 240 px wide is what pkgdown's navbar uses and keeps the tarball small.
-if (requireNamespace("magick", quietly = TRUE)) {
+is_svg <- tolower(tools::file_ext(master)) == "svg"
+
+if (is_svg && requireNamespace("rsvg", quietly = TRUE)) {
+  rsvg::rsvg_png(master, "man/figures/logo.png", width = 240)
+} else if (requireNamespace("magick", quietly = TRUE)) {
+  # magick renders SVG only when its build carries an SVG delegate;
+  # magick::magick_config()$rsvg says whether yours does.
   img <- magick::image_read(master)
-  magick::image_write(magick::image_resize(img, "240"), "man/figures/logo.png")
+  magick::image_write(magick::image_resize(img, "240"), "man/figures/logo.png",
+                      format = "png")
+} else if (is_svg) {
+  stop("Rendering ", basename(master), " needs the rsvg or magick package.",
+       call. = FALSE)
 } else {
-  if (tolower(tools::file_ext(master)) != "png")
-    stop("magick is needed to convert ", basename(master), " to PNG.",
-         call. = FALSE)
-  message("magick not installed; copying the master at its own size.")
+  message("Neither rsvg nor magick installed; copying the master at its own size.")
   file.copy(master, "man/figures/logo.png", overwrite = TRUE)
 }
 
