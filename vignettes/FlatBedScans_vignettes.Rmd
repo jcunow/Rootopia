@@ -300,6 +300,15 @@ cat(sprintf("Root length density: %.4f cm / cm²\n", rl_density))
 `detect_skeleton_points()` classifies skeleton pixels into endpoints (root
 tips) and branching points (forks).
 
+> **These are per-pixel counts, so read them as upper bounds.** The test asks
+> only how many neighbors a pixel has, so a thinned junction several pixels
+> wide marks several branch points, and two roots that merely cross in
+> projection are joined by the skeleton into a four-armed node that is counted
+> as a branch point as well. Thinning spurs end in degree-1 pixels and count as
+> tips. Section 7b builds the segment graph, which merges junction pixels into
+> one node, separates crossings, and reports `n_tips` and `n_branch_points` per
+> segment -- those are the counts to publish.
+
 ```{r}
 # `skl` is a single-layer skeleton, so no select_layer is needed
 pts <- detect_skeleton_points(skl, select_layer = NULL)
