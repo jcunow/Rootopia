@@ -22,6 +22,8 @@ navbar:
   left:
     - text: Overview
       href: articles/Rootopia_Overview_vignette.html
+    - text: Overview (PDF)
+      href: Rootopia_Overview.pdf
     - text: Tutorial
       menu:
         - text: "Start here: Minirhizotron Scans (step-by-step)"
