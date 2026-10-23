@@ -1,4 +1,4 @@
-# Rootopia: Extract Root Traits from Flatbed and Minirhizotron Images
+# Rootopia: Extract Root Traits from Flatbed and Minirhizotron Images <img src="man/figures/logo.png" align="right" height="139" alt="Rootopia hex logo" />
 
 [![R-CMD-check](https://github.com/jcunow/Rootopia/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/jcunow/Rootopia/actions/workflows/R-CMD-check.yaml)
 [![pkgdown](https://img.shields.io/badge/docs-pkgdown-blue.svg)](https://jcunow.github.io/Rootopia/)
@@ -94,6 +94,10 @@ zoom_plot(order_res$class_map)
 - [Function reference](https://jcunow.github.io/Rootopia/reference/index.html)
 - [Vignettes](https://jcunow.github.io/Rootopia/articles/index.html)
 - [Source code on GitHub](https://github.com/jcunow/Rootopia)
+
+## Credits
+
+The hex logo was designed by Kaisa Jukuri.
 
 ## Contributions and issues
 

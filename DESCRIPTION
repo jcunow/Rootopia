@@ -7,7 +7,11 @@ Authors@R: c(person(given = "Johannes",
              family = "Cunow",
              role = c("aut", "cre"),
              email = "johannes.cunow@gmail.com",
-             comment = c(ORCID = "0009-0006-4830-1162")))
+             comment = c(ORCID = "0009-0006-4830-1162")),
+             person(given = "Kaisa",
+             family = "Jukuri",
+             role = "ctb",
+             comment = "hex logo"))
 Maintainer: Johannes Cunow <johannes.cunow@gmail.com>
 Description: Extracts root traits from flatbed scanner images and from
     minirhizotron image sequences. Images are loaded, cleaned, thresholded and
@@ -21,6 +25,7 @@ Description: Extracts root traits from flatbed scanner images and from
     batch wrapper runs the whole profile analysis over a directory of images.
     Minirhizotron scans must be segmented beforehand (e.g. with 'RootDetector'
     or 'RootPainter').
+Date: 2026-10-23
 License: GPL (>= 3)
 URL: https://github.com/jcunow/Rootopia, https://jcunow.github.io/Rootopia/
 BugReports: https://github.com/jcunow/Rootopia/issues
