@@ -110,6 +110,10 @@ zoom_plot(order_res$class_map)
 - [Vignettes](https://jcunow.github.io/Rootopia/articles/index.html)
 - [Source code on GitHub](https://github.com/jcunow/Rootopia)
 
+## Credits
+
+The hex logo was designed by Kaisa Jukuri.
+
 ## Contributions and issues
 
 Found a bug or have a feature request? Please [open an

@@ -5,6 +5,9 @@
 - **Johannes Cunow**. Author, maintainer.
   [](https://orcid.org/0009-0006-4830-1162)
 
+- **Kaisa Jukuri**. Contributor.  
+  hex logo
+
 ## Citation
 
 Source:
