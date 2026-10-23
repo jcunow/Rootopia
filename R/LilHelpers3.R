@@ -542,6 +542,14 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 #'   its own level rather than against \code{select_layer}'s.
 #' @param binary_01 Logical. If TRUE, the output is 0/1; if FALSE, it keeps the
 #'   maximum value of the input.
+#' @param invert Logical. FALSE, the default, keeps the pixels at or above the
+#'   cut, so the brighter side is the foreground: roots on a dark tray. TRUE
+#'   keeps the pixels at or below it, for the commoner flatbed case of dark
+#'   roots on a bright tray. \code{threshold} remains a fraction of the image
+#'   maximum and \code{adaptive_k} a factor on the local mean; with
+#'   \code{invert = TRUE} the local cut is the mean divided by
+#'   \code{adaptive_k} rather than multiplied by it. Ignored when
+#'   \code{deblur = TRUE}.
 #' @param deblur Logical. If TRUE, runs the deblurring mode instead of
 #'   thresholding.
 #'
@@ -566,7 +574,7 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 image_threshold <- function(img, threshold = 0.4, method = "global",
                             adaptive_k = 1.15, window_size = 51,
                             select_layer = 2, mask_layer = 1, binary_01 = FALSE,
-                            deblur = FALSE) {
+                            deblur = FALSE, invert = FALSE) {
   method   <- tolower(as.character(method)[1])
   adaptive <- !isTRUE(deblur) && identical(method, "adaptive")
   # `threshold` is a fraction of the global maximum and `adaptive_k` a multiple
@@ -575,6 +583,10 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
   if (adaptive && !missing(threshold))
     warning("`threshold` is not used when method = \"adaptive\"; the local ",
             "multiplier is `adaptive_k`.", call. = FALSE)
+  if (!is.logical(invert) || length(invert) != 1L || is.na(invert))
+    stop("`invert` must be TRUE or FALSE.", call. = FALSE)
+  if (isTRUE(deblur) && isTRUE(invert))
+    warning("`invert` is not used when deblur = TRUE.", call. = FALSE)
   tryCatch({
     if (missing(img)) stop("img parameter is required")
     if (!inherits(img, "SpatRaster")) stop("img must be a SpatRaster object")
@@ -639,9 +651,17 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
     mx <- terra::global(layer_to_process, "max", na.rm = TRUE)[[1]]
     if (is.na(mx) || mx == 0) stop("Invalid maximum in processing layer")
     output_value <- ifelse(binary_01, 1, mx)
+
+    # `invert` moves the cut to the other side of the pixel value, so the
+    # darker side becomes the foreground. The cut itself is also reflected:
+    # a global cut stays a fraction of the maximum, and a local cut divides by
+    # `adaptive_k` instead of multiplying, so in both directions the factor
+    # means "this far from the reference level".
+    keep <- function(x, cut) if (invert) x <= cut else x >= cut
+    by_k <- function(level) if (invert) level / adaptive_k else level * adaptive_k
     
     if (identical(method, "global")) {
-      threshold_mask <- layer_to_process >= (mx * threshold)
+      threshold_mask <- keep(layer_to_process, mx * threshold)
     } else if (adaptive) {
       if (!is.numeric(window_size) || length(window_size) != 1L ||
           !is.finite(window_size) || window_size < 3 || window_size %% 2 == 0) {
@@ -662,7 +682,7 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
         window_size <- fits
       }
       local_mean <- .box_mean(layer_to_process, window_size)
-      threshold_mask <- layer_to_process >= (local_mean * adaptive_k)
+      threshold_mask <- keep(layer_to_process, by_k(local_mean))
     } else {
       stop("method must be 'global' or 'adaptive'")
     }
@@ -674,9 +694,9 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
           mask_layer_data <- img[[mask_layer]]
           if (adaptive) {
             mask_mean <- .box_mean(mask_layer_data, window_size)
-            img2[[i]] <- (mask_layer_data >= (mask_mean * adaptive_k)) * output_value
+            img2[[i]] <- keep(mask_layer_data, by_k(mask_mean)) * output_value
           } else {
-            img2[[i]] <- (mask_layer_data >= (mx * threshold)) * output_value
+            img2[[i]] <- keep(mask_layer_data, mx * threshold) * output_value
           }
         } else {
           img2[[i]] <- threshold_mask * output_value

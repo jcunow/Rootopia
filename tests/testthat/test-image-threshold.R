@@ -243,3 +243,65 @@ test_that("deblur needs two different layers to subtract", {
   expect_error(image_threshold(two, select_layer = 1, mask_layer = 1, deblur = TRUE),
                "cannot be the same")
 })
+
+# invert = TRUE is the dark-roots-on-a-bright-tray case: the same gradient
+# background, with the roots at half their own local level instead of twice it.
+# The local cut is the mean divided by adaptive_k, so a pixel has to be that
+# factor darker than its surroundings, which is the mirror of what the upright
+# scene asks of a bright root.
+dark_adaptive_scene <- function(nr = 80L, nc = 80L, contrast = 2, cv = 0.02) {
+  set.seed(7)
+  g <- outer(seq(1, 0.35, length.out = nr), seq(1, 0.6, length.out = nc))
+  truth <- matrix(FALSE, nr, nc)
+  truth[, c(12, 30, 55, 70)] <- TRUE
+  truth[c(20, 48), ] <- TRUE
+  m <- g * 0.8
+  m[truth] <- m[truth] / contrast
+  m <- m + stats::rnorm(nr * nc, 0, cv * 0.4)
+  m[] <- pmax(0, pmin(1, m))
+  list(img = terra::rast(m), truth = terra::rast(truth * 1))
+}
+
+test_that("invert recovers a known mask of dark roots under a gradient", {
+  skip_if_not_installed("terra")
+  s <- dark_adaptive_scene()
+
+  dn <- image_threshold(s$img, method = "adaptive", adaptive_k = 1.15,
+                        window_size = 21, select_layer = NULL,
+                        mask_layer = NULL, binary_01 = TRUE, invert = TRUE)
+  expect_gt(pr_scores(dn, s$truth)$f1, 0.8)
+
+  # Without the flag the same scene returns the background, not the roots.
+  up <- image_threshold(s$img, method = "adaptive", adaptive_k = 1.15,
+                        window_size = 21, select_layer = NULL,
+                        mask_layer = NULL, binary_01 = TRUE)
+  expect_lt(pr_scores(up, s$truth)$f1, pr_scores(dn, s$truth)$f1)
+})
+
+test_that("invert reverses which side of a global cut is kept", {
+  skip_if_not_installed("terra")
+  r <- terra::rast(matrix(c(0, 0.25, 0.75, 1), 2, 2))
+
+  hi <- image_threshold(r, threshold = 0.5, method = "global",
+                        select_layer = NULL, mask_layer = NULL,
+                        binary_01 = TRUE)
+  lo <- image_threshold(r, threshold = 0.5, method = "global",
+                        select_layer = NULL, mask_layer = NULL,
+                        binary_01 = TRUE, invert = TRUE)
+
+  expect_equal(sort(terra::values(hi, mat = FALSE)), c(0, 0, 1, 1))
+  expect_equal(sort(terra::values(lo, mat = FALSE)), c(0, 0, 1, 1))
+  expect_true(all(terra::values(hi, mat = FALSE) +
+                  terra::values(lo, mat = FALSE) == 1))
+})
+
+test_that("invert is validated and is ignored by deblur", {
+  skip_if_not_installed("terra")
+  r <- terra::rast(matrix(c(0, 0.5, 0.5, 1), 2, 2))
+  expect_error(image_threshold(r, select_layer = NULL, mask_layer = NULL,
+                               invert = NA), "TRUE or FALSE")
+  two <- c(r, r * 0.5)
+  expect_warning(image_threshold(two, select_layer = 2, mask_layer = 1,
+                                 deblur = TRUE, invert = TRUE),
+                 "not used when deblur")
+})
