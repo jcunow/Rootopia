@@ -872,10 +872,18 @@ shifted10 <- shift_by(reference, 2)         # 2 intervals = 10 cm
 shifted35 <- shift_by(reference, 7)         # 7 intervals = 35 cm
 even      <- rep(1 / length(z), length(z))  # equal root in every interval
 
-# Two layers of root: most of it left at the surface, 2/7 of it pushed to
-# depth. The weight is chosen so this profile has the same mean rooting depth
-# as shifted10, which is the point of the fourth panel.
-bimodal   <- (5 / 7) * reference + (2 / 7) * shifted35
+# A two-layer profile: a surface mode and a second one at 45 cm. The weight on
+# the deep mode is solved so this profile has exactly the reference's mean
+# rooting depth -- same center of mass, different shape.
+shallow <- exp(-z / 5);           shallow[z > 15] <- 0
+deep    <- exp(-abs(z - 45) / 7); deep[z < 30]    <- 0
+shallow <- shallow / sum(shallow)
+deep    <- deep / sum(deep)
+
+mean_depth <- function(p) sum(z * p)
+w <- (mean_depth(reference) - mean_depth(shallow)) /
+     (mean_depth(deep)      - mean_depth(shallow))
+bimodal <- (1 - w) * shallow + w * deep
 
 # Distance in centimeters of depth: the area between the two cumulative
 # curves, measured down the depth axis. This is what
@@ -902,16 +910,16 @@ op <- graphics::par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
 compare_panel(shifted10, "10 cm deeper",      "same shape, 10 cm down")
 compare_panel(shifted35, "35 cm deeper",      "same shape, 35 cm down")
 compare_panel(even, "equal at all depths",    "spread evenly")
-compare_panel(bimodal, "two layers",          "same mean depth as panel 1")
+compare_panel(bimodal, "two layers",          "same mean depth, other shape")
 ```
 
 ![Four panels, each showing the cumulative share of root with depth for
 a reference profile and a comparison profile, with the area between them
 shaded. The band is narrow for a 10 cm shift, wide for a 35 cm shift,
 intermediate for a profile with equal root at every depth whose
-cumulative curve is a straight line, and narrow again for a bimodal
-profile with two layers of
-root.](Rootopia_Overview_vignette_files/figure-html/wasserstein-1.png)
+cumulative curve is a straight line, and crossing curves for a bimodal
+profile that has the same mean rooting depth as the
+reference.](Rootopia_Overview_vignette_files/figure-html/wasserstein-1.png)
 
 ``` r
 
@@ -929,34 +937,32 @@ because the mass has to be spread out as well as moved. There is no
 shift to report for it, and its 19.3 cm is what rearranging one profile
 into the other costs.
 
-The fourth panel is the one to read twice. It is a two-layer profile –
-most of the root still at the surface, a smaller second peak at depth,
-the shape
-[`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
-exists to find – and against the reference it costs 10 cm, exactly what
-the single 10 cm shift in the first panel costs. That is not a
-coincidence: whenever every gram of root moves in the same direction,
-the transport distance equals the change in mean rooting depth, and here
-both profiles raise it by 10 cm. The two are indistinguishable by either
-number.
+The fourth panel is the one to read twice. It holds a two-layer profile
+– a surface mode and a second one at 45 cm – with the weight on the deep
+mode solved so that its mean rooting depth is exactly the reference’s.
 
 ``` r
 
-# Mean rooting depth of each, and the transport between the two themselves.
-c(shifted10 = sum(z * shifted10), bimodal = sum(z * bimodal))
-#> shifted10   bimodal 
-#>  20.68323  20.68323
-emd_cm(shifted10, bimodal)
-#> [1] 9.977589
+c(reference = mean_depth(reference), bimodal = mean_depth(bimodal))
+#> reference   bimodal 
+#>  10.68323  10.68323
+emd_cm(reference, bimodal)
+#> [1] 9.669479
 ```
 
-Their mean depths are identical, so mean rooting depth says these are
-the same profile. The transport between them is about 10 cm, because the
-bimodal profile has to pull two sevenths of its root from 45 cm back up
-to the surface while the rest goes the other way. Reporting a distance
-against a common reference and reporting the distance between the two
-profiles you actually care about are different questions, and only the
-second notices that one of these stands has its root in two layers.
+[`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) reports no
+difference at all between these two stands. The transport distance is
+9.7 cm, and every centimeter of it is shape.
+
+The curves show why. In the first three panels they never cross: one
+profile is deeper than the other at every depth, all the root travels
+the same way, and the distance comes out equal to the difference in mean
+rooting depth – 10, 35 and 19.3 cm. In the fourth they cross, because
+the bimodal profile holds more root than the reference near the surface
+and more again at depth. Mass has to move up as well as down; the two
+directions cancel in the mean and add in the distance. Crossing
+cumulative curves are the visual test for a difference that mean rooting
+depth cannot see.
 
 [`compare_depth_distribution()`](https://jcunow.github.io/Rootopia/reference/compare_depth_distribution.md)
 is the function for this, with `metric = "wasserstein"` (default),
@@ -976,12 +982,13 @@ a tube with ten times the root but the same depth distribution scores 0,
 and abundance has to be reported separately. And the value is bounded
 below by the difference in mean rooting depth: two tubes 3 cm apart in
 [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) are at
-least 3 cm apart here. Equality is weaker than it looks – it says every
-gram of root moved in the same direction, not that the profiles are the
-same shape, as the two-layer panel above shows. What is informative is
-the gap: a distance well above the difference in mean depth means root
-moved both up and down, so the shapes differ and not just the center of
-mass.
+least 3 cm apart here. That bound is tight whenever the cumulative
+curves do not cross, which is the ordinary case for a profile that
+simply deepened. What is informative is the gap: a distance well above
+the difference in mean depth means root moved both up and down, so the
+shapes differ and not just the center of mass. The two-layer panel above
+is that case taken to its limit – the difference in mean depth is zero
+and the whole distance is shape.
 
 ### Turnover between sessions
 
@@ -1495,10 +1502,20 @@ png_file <- tempfile(fileext = ".png")
 # max_side caps the longest side of the written PNG, and anything below the
 # scan's own width throws pixels away: thin roots drop out rather than getting
 # thicker. Keep it at the full width and zoom afterwards instead.
-render_order_overlay(attr(et, "segments"), et$path_resistance,
+# A handful of thin distal segments carry resistance far above the rest, and a
+# ramp stretched to that maximum leaves every other segment in nearly the same
+# color. Capping the value at the 97th percentile spends the ramp on the range
+# the roots actually occupy; the capped segments sit at the top color. The
+# alternative is to paint log10(path_resistance) and label the bar as a log
+# scale, which keeps the extremes distinguishable but makes the bar harder to
+# read as a physical quantity.
+cap <- stats::quantile(et$path_resistance, 0.97, na.rm = TRUE)
+
+render_order_overlay(attr(et, "segments"),
+                     pmin(et$path_resistance, cap),
                      attr(et, "dims"), png_file,
                      mask = fb_clean, max_side = 2000,
-                     value_label = "path resistance")
+                     value_label = "path resistance (capped at p97)")
 
 zoom_plot(as_rgb_rast(png_file), frac = 0.25, center = c(0.6, 0.7), maxcell = Inf,
           main = "Path resistance")
@@ -1524,32 +1541,47 @@ reason is the radius term.
 
 ``` r
 
-op <- graphics::par(mar = c(4, 4, 2, 1))
+op     <- graphics::par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+pt_bg  <- grDevices::rgb(0.21, 0.35, 0.47, 0.45)
+pt_cex <- 0.4 + 2.4 * et$mean_diameter / max(et$mean_diameter, na.rm = TRUE)
+
+plot(et$path_length, et$path_resistance,
+     pch = 21, bg = pt_bg, col = "steelblue4", cex = pt_cex,
+     xlab = "path length from the base (cm)",
+     ylab = "path resistance (relative)",
+     main = "linear resistance axis")
+
 plot(et$path_length, et$path_resistance, log = "y",
-     pch = 21, bg = grDevices::rgb(0.21, 0.35, 0.47, 0.45),
-     col = "steelblue4",
-     cex = 0.4 + 2.4 * et$mean_diameter / max(et$mean_diameter, na.rm = TRUE),
+     pch = 21, bg = pt_bg, col = "steelblue4", cex = pt_cex,
      xlab = "path length from the base (cm)",
      ylab = "path resistance (relative, log)",
-     main = "path length vs path resistance")
+     main = "log resistance axis")
 ```
 
-![Path resistance against path length for every segment, on a log
-resistance axis, with point size by diameter. Segments at the same
-distance from the base span orders of magnitude in resistance, and the
-thin ones are the costly
-ones.](Rootopia_Overview_vignette_files/figure-html/transport-ranks-1.png)
+![Path resistance against path length for every segment, drawn twice: on
+a linear resistance axis, where nearly every segment is pressed to the
+bottom of the range, and on a log axis, where the spread is visible.
+Point size is
+diameter.](Rootopia_Overview_vignette_files/figure-html/transport-ranks-1.png)
 
 ``` r
 
 graphics::par(op)
 ```
 
-Point size is diameter. Two segments the same distance from the base can
-differ by orders of magnitude in resistance, and the small points – the
-thin roots – sit at the top. So a long thick root can be an easier path
-for water than a short thin one, which is why both columns are reported
-rather than one standing in for the other.
+The pair is worth seeing. On the linear axis a few thin segments set the
+top of the range and everything else is squeezed into a band along the
+bottom, which says only that most segments are cheap and one or two are
+not. The log axis spreads the same points over the orders of magnitude
+they actually span, and the structure appears: at any given distance
+from the base, resistance varies by two or three orders of magnitude. It
+is the same problem the overlay has, solved there by capping the ramp
+instead.
+
+Point size is diameter, and the small points – the thin roots – sit at
+the top. So a long thick root can be an easier path for water than a
+short thin one, which is why both columns are reported rather than one
+standing in for the other.
 
 ## Reference
 

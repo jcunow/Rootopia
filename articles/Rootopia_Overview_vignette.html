@@ -916,10 +916,18 @@ centimeters.</p>
 <span><span class="va">shifted35</span> <span class="op">&lt;-</span> <span class="fu">shift_by</span><span class="op">(</span><span class="va">reference</span>, <span class="fl">7</span><span class="op">)</span>         <span class="co"># 7 intervals = 35 cm</span></span>
 <span><span class="va">even</span>      <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span>  <span class="co"># equal root in every interval</span></span>
 <span></span>
-<span><span class="co"># Two layers of root: most of it left at the surface, 2/7 of it pushed to</span></span>
-<span><span class="co"># depth. The weight is chosen so this profile has the same mean rooting depth</span></span>
-<span><span class="co"># as shifted10, which is the point of the fourth panel.</span></span>
-<span><span class="va">bimodal</span>   <span class="op">&lt;-</span> <span class="op">(</span><span class="fl">5</span> <span class="op">/</span> <span class="fl">7</span><span class="op">)</span> <span class="op">*</span> <span class="va">reference</span> <span class="op">+</span> <span class="op">(</span><span class="fl">2</span> <span class="op">/</span> <span class="fl">7</span><span class="op">)</span> <span class="op">*</span> <span class="va">shifted35</span></span>
+<span><span class="co"># A two-layer profile: a surface mode and a second one at 45 cm. The weight on</span></span>
+<span><span class="co"># the deep mode is solved so this profile has exactly the reference's mean</span></span>
+<span><span class="co"># rooting depth -- same center of mass, different shape.</span></span>
+<span><span class="va">shallow</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">z</span> <span class="op">/</span> <span class="fl">5</span><span class="op">)</span>;           <span class="va">shallow</span><span class="op">[</span><span class="va">z</span> <span class="op">&gt;</span> <span class="fl">15</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="va">deep</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">z</span> <span class="op">-</span> <span class="fl">45</span><span class="op">)</span> <span class="op">/</span> <span class="fl">7</span><span class="op">)</span>; <span class="va">deep</span><span class="op">[</span><span class="va">z</span> <span class="op">&lt;</span> <span class="fl">30</span><span class="op">]</span>    <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="va">shallow</span> <span class="op">&lt;-</span> <span class="va">shallow</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">shallow</span><span class="op">)</span></span>
+<span><span class="va">deep</span>    <span class="op">&lt;-</span> <span class="va">deep</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">deep</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">mean_depth</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">z</span> <span class="op">*</span> <span class="va">p</span><span class="op">)</span></span>
+<span><span class="va">w</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu">mean_depth</span><span class="op">(</span><span class="va">reference</span><span class="op">)</span> <span class="op">-</span> <span class="fu">mean_depth</span><span class="op">(</span><span class="va">shallow</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span></span>
+<span>     <span class="op">(</span><span class="fu">mean_depth</span><span class="op">(</span><span class="va">deep</span><span class="op">)</span>      <span class="op">-</span> <span class="fu">mean_depth</span><span class="op">(</span><span class="va">shallow</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">bimodal</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">w</span><span class="op">)</span> <span class="op">*</span> <span class="va">shallow</span> <span class="op">+</span> <span class="va">w</span> <span class="op">*</span> <span class="va">deep</span></span>
 <span></span>
 <span><span class="co"># Distance in centimeters of depth: the area between the two cumulative</span></span>
 <span><span class="co"># curves, measured down the depth axis. This is what</span></span>
@@ -946,8 +954,8 @@ centimeters.</p>
 <span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">shifted10</span>, <span class="st">"10 cm deeper"</span>,      <span class="st">"same shape, 10 cm down"</span><span class="op">)</span></span>
 <span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">shifted35</span>, <span class="st">"35 cm deeper"</span>,      <span class="st">"same shape, 35 cm down"</span><span class="op">)</span></span>
 <span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">even</span>, <span class="st">"equal at all depths"</span>,    <span class="st">"spread evenly"</span><span class="op">)</span></span>
-<span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">bimodal</span>, <span class="st">"two layers"</span>,          <span class="st">"same mean depth as panel 1"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rootopia_Overview_vignette_files/figure-html/wasserstein-1.png" class="r-plt" alt="Four panels, each showing the cumulative share of root with depth for a reference profile and a comparison profile, with the area between them shaded. The band is narrow for a 10 cm shift, wide for a 35 cm shift, intermediate for a profile with equal root at every depth whose cumulative curve is a straight line, and narrow again for a bimodal profile with two layers of root." width="1350"></p>
+<span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">bimodal</span>, <span class="st">"two layers"</span>,          <span class="st">"same mean depth, other shape"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Rootopia_Overview_vignette_files/figure-html/wasserstein-1.png" class="r-plt" alt="Four panels, each showing the cumulative share of root with depth for a reference profile and a comparison profile, with the area between them shaded. The band is narrow for a 10 cm shift, wide for a 35 cm shift, intermediate for a profile with equal root at every depth whose cumulative curve is a straight line, and crossing curves for a bimodal profile that has the same mean rooting depth as the reference." width="1350"></p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>The first two panels hold the same root in the same shape and differ
@@ -960,28 +968,28 @@ a straight line: the band is a different shape rather than simply wider,
 because the mass has to be spread out as well as moved. There is no
 shift to report for it, and its 19.3 cm is what rearranging one profile
 into the other costs.</p>
-<p>The fourth panel is the one to read twice. It is a two-layer profile
-– most of the root still at the surface, a smaller second peak at depth,
-the shape <code><a href="../reference/modal_peaks.html">modal_peaks()</a></code> exists to find – and against the
-reference it costs 10 cm, exactly what the single 10 cm shift in the
-first panel costs. That is not a coincidence: whenever every gram of
-root moves in the same direction, the transport distance equals the
-change in mean rooting depth, and here both profiles raise it by 10 cm.
-The two are indistinguishable by either number.</p>
+<p>The fourth panel is the one to read twice. It holds a two-layer
+profile – a surface mode and a second one at 45 cm – with the weight on
+the deep mode solved so that its mean rooting depth is exactly the
+reference’s.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Mean rooting depth of each, and the transport between the two themselves.</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>shifted10 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">z</span> <span class="op">*</span> <span class="va">shifted10</span><span class="op">)</span>, bimodal <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">z</span> <span class="op">*</span> <span class="va">bimodal</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; shifted10   bimodal </span></span>
-<span><span class="co">#&gt;  20.68323  20.68323</span></span>
-<span><span class="fu">emd_cm</span><span class="op">(</span><span class="va">shifted10</span>, <span class="va">bimodal</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 9.977589</span></span></code></pre></div>
-<p>Their mean depths are identical, so mean rooting depth says these are
-the same profile. The transport between them is about 10 cm, because the
-bimodal profile has to pull two sevenths of its root from 45 cm back up
-to the surface while the rest goes the other way. Reporting a distance
-against a common reference and reporting the distance between the two
-profiles you actually care about are different questions, and only the
-second notices that one of these stands has its root in two layers.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>reference <span class="op">=</span> <span class="fu">mean_depth</span><span class="op">(</span><span class="va">reference</span><span class="op">)</span>, bimodal <span class="op">=</span> <span class="fu">mean_depth</span><span class="op">(</span><span class="va">bimodal</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; reference   bimodal </span></span>
+<span><span class="co">#&gt;  10.68323  10.68323</span></span>
+<span><span class="fu">emd_cm</span><span class="op">(</span><span class="va">reference</span>, <span class="va">bimodal</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 9.669479</span></span></code></pre></div>
+<p><code><a href="../reference/MRD.html">MRD()</a></code> reports no difference at all between these two
+stands. The transport distance is 9.7 cm, and every centimeter of it is
+shape.</p>
+<p>The curves show why. In the first three panels they never cross: one
+profile is deeper than the other at every depth, all the root travels
+the same way, and the distance comes out equal to the difference in mean
+rooting depth – 10, 35 and 19.3 cm. In the fourth they cross, because
+the bimodal profile holds more root than the reference near the surface
+and more again at depth. Mass has to move up as well as down; the two
+directions cancel in the mean and add in the distance. Crossing
+cumulative curves are the visual test for a difference that mean rooting
+depth cannot see.</p>
 <p><code><a href="../reference/compare_depth_distribution.html">compare_depth_distribution()</a></code> is the function for this,
 with <code>metric = "wasserstein"</code> (default), <code>"js"</code> or
 <code>"kl"</code>, and optional tail weighting so deep layers can count
@@ -998,12 +1006,13 @@ normalized, so total root amount divides out – a tube with ten times the
 root but the same depth distribution scores 0, and abundance has to be
 reported separately. And the value is bounded below by the difference in
 mean rooting depth: two tubes 3 cm apart in <code><a href="../reference/MRD.html">MRD()</a></code> are at
-least 3 cm apart here. Equality is weaker than it looks – it says every
-gram of root moved in the same direction, not that the profiles are the
-same shape, as the two-layer panel above shows. What is informative is
-the gap: a distance well above the difference in mean depth means root
-moved both up and down, so the shapes differ and not just the center of
-mass.</p>
+least 3 cm apart here. That bound is tight whenever the cumulative
+curves do not cross, which is the ordinary case for a profile that
+simply deepened. What is informative is the gap: a distance well above
+the difference in mean depth means root moved both up and down, so the
+shapes differ and not just the center of mass. The two-layer panel above
+is that case taken to its limit – the difference in mean depth is zero
+and the whole distance is shape.</p>
 </div>
 <div class="section level3">
 <h3 id="turnover-between-sessions">Turnover between sessions<a class="anchor" aria-label="anchor" href="#turnover-between-sessions"></a>
@@ -1436,10 +1445,20 @@ bar.</p>
 <span><span class="co"># max_side caps the longest side of the written PNG, and anything below the</span></span>
 <span><span class="co"># scan's own width throws pixels away: thin roots drop out rather than getting</span></span>
 <span><span class="co"># thicker. Keep it at the full width and zoom afterwards instead.</span></span>
-<span><span class="fu"><a href="../reference/render_order_overlay.html">render_order_overlay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"segments"</span><span class="op">)</span>, <span class="va">et</span><span class="op">$</span><span class="va">path_resistance</span>,</span>
+<span><span class="co"># A handful of thin distal segments carry resistance far above the rest, and a</span></span>
+<span><span class="co"># ramp stretched to that maximum leaves every other segment in nearly the same</span></span>
+<span><span class="co"># color. Capping the value at the 97th percentile spends the ramp on the range</span></span>
+<span><span class="co"># the roots actually occupy; the capped segments sit at the top color. The</span></span>
+<span><span class="co"># alternative is to paint log10(path_resistance) and label the bar as a log</span></span>
+<span><span class="co"># scale, which keeps the extremes distinguishable but makes the bar harder to</span></span>
+<span><span class="co"># read as a physical quantity.</span></span>
+<span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">path_resistance</span>, <span class="fl">0.97</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/render_order_overlay.html">render_order_overlay</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"segments"</span><span class="op">)</span>,</span>
+<span>                     <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">path_resistance</span>, <span class="va">cap</span><span class="op">)</span>,</span>
 <span>                     <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">et</span>, <span class="st">"dims"</span><span class="op">)</span>, <span class="va">png_file</span>,</span>
 <span>                     mask <span class="op">=</span> <span class="va">fb_clean</span>, max_side <span class="op">=</span> <span class="fl">2000</span>,</span>
-<span>                     value_label <span class="op">=</span> <span class="st">"path resistance"</span><span class="op">)</span></span>
+<span>                     value_label <span class="op">=</span> <span class="st">"path resistance (capped at p97)"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="fu">as_rgb_rast</span><span class="op">(</span><span class="va">png_file</span><span class="op">)</span>, frac <span class="op">=</span> <span class="fl">0.25</span>, center <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="fl">0.7</span><span class="op">)</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>          main <span class="op">=</span> <span class="st">"Path resistance"</span><span class="op">)</span></span></code></pre></div>
@@ -1453,22 +1472,36 @@ in that color. A lot of red is the same signal
 <p>Path length and path resistance rank the segments differently, and
 the reason is the radius term.</p>
 <div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">op</span>     <span class="op">&lt;-</span> <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pt_bg</span>  <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.21</span>, <span class="fl">0.35</span>, <span class="fl">0.47</span>, <span class="fl">0.45</span><span class="op">)</span></span>
+<span><span class="va">pt_cex</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">+</span> <span class="fl">2.4</span> <span class="op">*</span> <span class="va">et</span><span class="op">$</span><span class="va">mean_diameter</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">mean_diameter</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">path_length</span>, <span class="va">et</span><span class="op">$</span><span class="va">path_resistance</span>,</span>
+<span>     pch <span class="op">=</span> <span class="fl">21</span>, bg <span class="op">=</span> <span class="va">pt_bg</span>, col <span class="op">=</span> <span class="st">"steelblue4"</span>, cex <span class="op">=</span> <span class="va">pt_cex</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"path length from the base (cm)"</span>,</span>
+<span>     ylab <span class="op">=</span> <span class="st">"path resistance (relative)"</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"linear resistance axis"</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">path_length</span>, <span class="va">et</span><span class="op">$</span><span class="va">path_resistance</span>, log <span class="op">=</span> <span class="st">"y"</span>,</span>
-<span>     pch <span class="op">=</span> <span class="fl">21</span>, bg <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.21</span>, <span class="fl">0.35</span>, <span class="fl">0.47</span>, <span class="fl">0.45</span><span class="op">)</span>,</span>
-<span>     col <span class="op">=</span> <span class="st">"steelblue4"</span>,</span>
-<span>     cex <span class="op">=</span> <span class="fl">0.4</span> <span class="op">+</span> <span class="fl">2.4</span> <span class="op">*</span> <span class="va">et</span><span class="op">$</span><span class="va">mean_diameter</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">mean_diameter</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>     pch <span class="op">=</span> <span class="fl">21</span>, bg <span class="op">=</span> <span class="va">pt_bg</span>, col <span class="op">=</span> <span class="st">"steelblue4"</span>, cex <span class="op">=</span> <span class="va">pt_cex</span>,</span>
 <span>     xlab <span class="op">=</span> <span class="st">"path length from the base (cm)"</span>,</span>
 <span>     ylab <span class="op">=</span> <span class="st">"path resistance (relative, log)"</span>,</span>
-<span>     main <span class="op">=</span> <span class="st">"path length vs path resistance"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rootopia_Overview_vignette_files/figure-html/transport-ranks-1.png" class="r-plt" alt="Path resistance against path length for every segment, on a log resistance axis, with point size by diameter. Segments at the same distance from the base span orders of magnitude in resistance, and the thin ones are the costly ones." width="1350"></p>
+<span>     main <span class="op">=</span> <span class="st">"log resistance axis"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="Rootopia_Overview_vignette_files/figure-html/transport-ranks-1.png" class="r-plt" alt="Path resistance against path length for every segment, drawn twice: on a linear resistance axis, where nearly every segment is pressed to the bottom of the range, and on a log axis, where the spread is visible. Point size is diameter." width="1350"></p>
 <div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
-<p>Point size is diameter. Two segments the same distance from the base
-can differ by orders of magnitude in resistance, and the small points –
-the thin roots – sit at the top. So a long thick root can be an easier
-path for water than a short thin one, which is why both columns are
-reported rather than one standing in for the other.</p>
+<p>The pair is worth seeing. On the linear axis a few thin segments set
+the top of the range and everything else is squeezed into a band along
+the bottom, which says only that most segments are cheap and one or two
+are not. The log axis spreads the same points over the orders of
+magnitude they actually span, and the structure appears: at any given
+distance from the base, resistance varies by two or three orders of
+magnitude. It is the same problem the overlay has, solved there by
+capping the ramp instead.</p>
+<p>Point size is diameter, and the small points – the thin roots – sit
+at the top. So a long thick root can be an easier path for water than a
+short thin one, which is why both columns are reported rather than one
+standing in for the other.</p>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
