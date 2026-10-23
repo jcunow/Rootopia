@@ -18,6 +18,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/Rootopia_Overview_vignette.html">Overview</a></li>
+<li class="nav-item"><a class="nav-link" href="../Rootopia_Overview.pdf">Overview (PDF)</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial"><li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
@@ -94,7 +95,9 @@ segmented mask and reduced to a skeleton internally via
 <dt>branching_points</dt>
 <dd><p>SpatRaster marking pixels with more than two neighbors</p></dd>
 
-</dl></div>
+</dl><p>Both are rebuilt without the input's extent, so carry it across with
+<code><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">terra::ext()</a></code> before overlaying them on the skeleton.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The computation proceeds as follows:</p><ol><li><p>Raster values are converted into a numeric matrix.</p></li>
@@ -106,6 +109,36 @@ segmented mask and reduced to a skeleton internally via
 </ol><p>Classification rules:</p><ul><li><p>Endpoint: pixel == 1 AND neighbor count == 1</p></li>
 <li><p>Branch point: pixel == 1 AND neighbor count &gt; 2</p></li>
 </ul><p>Outputs are converted back into SpatRaster objects.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="what-this-counts-and-what-it-over-counts">What this counts, and what it over-counts<a class="anchor" aria-label="anchor" href="#what-this-counts-and-what-it-over-counts"></a></h2>
+
+
+<p>The test is applied to each pixel on its own, which makes the two rasters
+the right input for an overlay – they say <em>where</em> the points are –
+and the wrong input for a count. Branch points are over-counted for two
+reasons, and tips for a third:</p><ul><li><p><strong>A junction is several pixels wide after thinning.</strong> Each of
+those pixels can have more than two neighbors, so one real fork marks
+several branch-point pixels.</p></li>
+<li><p><strong>Crossings are not resolved.</strong> Two roots that cross in
+projection touch in the image, and the skeleton joins them into a
+four-armed node. Nothing branches there, but the node has more than two
+neighbors and is counted as a branch point.</p></li>
+<li><p><strong>Thinning spurs end in a tip.</strong> A short terminal stub left by
+thinning has a degree-1 end, so it is counted as a root tip unless it is
+pruned first with <code><a href="prune_skeleton.html">prune_skeleton</a></code>.</p></li>
+</ul><p>For counts, use the segment graph instead:
+<code><a href="branch_order_map.html">branch_order_map()</a></code> merges adjacent junction pixels into one
+node, separates four-armed crossings where both candidate through-roots are
+straight enough, and optionally prunes weak terminal segments. Its
+<code>$edges</code> table carries <code>n_tips</code> and <code>n_branch_points</code> per
+segment, summed per order class in <code>$summary</code>. The two will not agree,
+and the graph's numbers are the defensible ones.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="branch_order_map.html">branch_order_map</a></code> for counts from the segment graph,
+<code><a href="prune_skeleton.html">prune_skeleton</a></code> for removing thinning spurs first.</p></div>
     </div>
 
     <div class="section level2">

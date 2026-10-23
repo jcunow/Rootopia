@@ -24,6 +24,7 @@ image."></head><body>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/Rootopia_Overview_vignette.html">Overview</a></li>
+<li class="nav-item"><a class="nav-link" href="../Rootopia_Overview.pdf">Overview (PDF)</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial"><li><a class="dropdown-item" href="../articles/MinirhizotronScans_vignettes.html">Start here: Minirhizotron Scans (step-by-step)</a></li>
@@ -80,7 +81,8 @@ image.</p>
 <span>  select_layer <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  mask_layer <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  binary_01 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  deblur <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  deblur <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  invert <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -132,6 +134,17 @@ maximum value of the input.</p></dd>
 <dt id="arg-deblur">deblur<a class="anchor" aria-label="anchor" href="#arg-deblur"></a></dt>
 <dd><p>Logical. If TRUE, runs the deblurring mode instead of
 thresholding.</p></dd>
+
+
+<dt id="arg-invert">invert<a class="anchor" aria-label="anchor" href="#arg-invert"></a></dt>
+<dd><p>Logical. FALSE, the default, keeps the pixels at or above the
+cut, so the brighter side is the foreground: roots on a dark tray. TRUE
+keeps the pixels at or below it, for the commoner flatbed case of dark
+roots on a bright tray. <code>threshold</code> remains a fraction of the image
+maximum and <code>adaptive_k</code> a factor on the local mean; with
+<code>invert = TRUE</code> the local cut is the mean divided by
+<code>adaptive_k</code> rather than multiplied by it. Ignored when
+<code>deblur = TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

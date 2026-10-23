@@ -40,6 +40,10 @@ List with:
 
   SpatRaster marking pixels with more than two neighbors
 
+Both are rebuilt without the input's extent, so carry it across with
+[`terra::ext()`](https://rspatial.github.io/terra/reference/ext.html)
+before overlaying them on the skeleton.
+
 ## Details
 
 The computation proceeds as follows:
@@ -63,6 +67,43 @@ Classification rules:
 - Branch point: pixel == 1 AND neighbor count \> 2
 
 Outputs are converted back into SpatRaster objects.
+
+## What this counts, and what it over-counts
+
+The test is applied to each pixel on its own, which makes the two
+rasters the right input for an overlay – they say *where* the points are
+– and the wrong input for a count. Branch points are over-counted for
+two reasons, and tips for a third:
+
+- **A junction is several pixels wide after thinning.** Each of those
+  pixels can have more than two neighbors, so one real fork marks
+  several branch-point pixels.
+
+- **Crossings are not resolved.** Two roots that cross in projection
+  touch in the image, and the skeleton joins them into a four-armed
+  node. Nothing branches there, but the node has more than two neighbors
+  and is counted as a branch point.
+
+- **Thinning spurs end in a tip.** A short terminal stub left by
+  thinning has a degree-1 end, so it is counted as a root tip unless it
+  is pruned first with
+  [`prune_skeleton`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md).
+
+For counts, use the segment graph instead:
+[`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
+merges adjacent junction pixels into one node, separates four-armed
+crossings where both candidate through-roots are straight enough, and
+optionally prunes weak terminal segments. Its `$edges` table carries
+`n_tips` and `n_branch_points` per segment, summed per order class in
+`$summary`. The two will not agree, and the graph's numbers are the
+defensible ones.
+
+## See also
+
+[`branch_order_map`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
+for counts from the segment graph,
+[`prune_skeleton`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md)
+for removing thinning spurs first.
 
 ## Examples
 

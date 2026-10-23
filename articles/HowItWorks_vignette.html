@@ -33,6 +33,7 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../articles/Rootopia_Overview_vignette.html">Overview</a></li>
+<li class="nav-item"><a class="nav-link" href="../Rootopia_Overview.pdf">Overview (PDF)</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
@@ -650,6 +651,15 @@ them.</p>
 exactly one neighbor is a tip. One with three or more is a branch point.
 Pixels with exactly two neighbors are ordinary line pixels and are
 neither.</p>
+<p>That is a per-pixel test, so <code><a href="../reference/detect_skeleton_points.html">detect_skeleton_points()</a></code>
+reports where those points are rather than how many roots there are. A
+thinned junction is several pixels wide and marks several branch points;
+two roots crossing in projection form a four-armed node and are counted
+as a branch point although nothing branches; a thinning spur ends in a
+tip. The branching module merges junction pixels into one node,
+separates crossings, and can prune spurs, so its <code>n_tips</code> and
+<code>n_branch_points</code> are the counts to report. Both are
+documented at <code><a href="../reference/detect_skeleton_points.html">?detect_skeleton_points</a></code>.</p>
 <p><strong>Spur pruning.</strong> <code><a href="../reference/prune_skeleton.html">prune_skeleton()</a></code> removes
 terminal branches shorter than <code>min_length</code> or thinner than
 <code>min_diameter</code>. It works on the skeleton graph, because that

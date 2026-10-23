@@ -424,6 +424,17 @@ drifting; the neighborhood is recomputed between them.
 is a tip. One with three or more is a branch point. Pixels with exactly
 two neighbors are ordinary line pixels and are neither.
 
+That is a per-pixel test, so
+[`detect_skeleton_points()`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md)
+reports where those points are rather than how many roots there are. A
+thinned junction is several pixels wide and marks several branch points;
+two roots crossing in projection form a four-armed node and are counted
+as a branch point although nothing branches; a thinning spur ends in a
+tip. The branching module merges junction pixels into one node,
+separates crossings, and can prune spurs, so its `n_tips` and
+`n_branch_points` are the counts to report. Both are documented at
+[`?detect_skeleton_points`](https://jcunow.github.io/Rootopia/reference/detect_skeleton_points.md).
+
 **Spur pruning.**
 [`prune_skeleton()`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md)
 removes terminal branches shorter than `min_length` or thinner than

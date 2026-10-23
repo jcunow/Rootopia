@@ -17,7 +17,8 @@ image_threshold(
   select_layer = 2,
   mask_layer = 1,
   binary_01 = FALSE,
-  deblur = FALSE
+  deblur = FALSE,
+  invert = FALSE
 )
 ```
 
@@ -66,6 +67,16 @@ image_threshold(
 - deblur:
 
   Logical. If TRUE, runs the deblurring mode instead of thresholding.
+
+- invert:
+
+  Logical. FALSE, the default, keeps the pixels at or above the cut, so
+  the brighter side is the foreground: roots on a dark tray. TRUE keeps
+  the pixels at or below it, for the commoner flatbed case of dark roots
+  on a bright tray. `threshold` remains a fraction of the image maximum
+  and `adaptive_k` a factor on the local mean; with `invert = TRUE` the
+  local cut is the mean divided by `adaptive_k` rather than multiplied
+  by it. Ignored when `deblur = TRUE`.
 
 ## Value
 

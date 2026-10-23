@@ -33,6 +33,7 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="../articles/Rootopia_Overview_vignette.html">Overview</a></li>
+<li class="nav-item"><a class="nav-link" href="../Rootopia_Overview.pdf">Overview (PDF)</a></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorial" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorial</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorial">
@@ -374,6 +375,18 @@ diameter modes in the distribution:</p>
 </h4>
 <p><code><a href="../reference/detect_skeleton_points.html">detect_skeleton_points()</a></code> classifies skeleton pixels into
 endpoints (root tips) and branching points (forks).</p>
+<blockquote>
+<p><strong>These are per-pixel counts, so read them as upper
+bounds.</strong> The test asks only how many neighbors a pixel has, so a
+thinned junction several pixels wide marks several branch points, and
+two roots that merely cross in projection are joined by the skeleton
+into a four-armed node that is counted as a branch point as well.
+Thinning spurs end in degree-1 pixels and count as tips. Section 7b
+builds the segment graph, which merges junction pixels into one node,
+separates crossings, and reports <code>n_tips</code> and
+<code>n_branch_points</code> per segment – those are the counts to
+publish.</p>
+</blockquote>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># `skl` is a single-layer skeleton, so no select_layer is needed</span></span>
 <span><span class="va">pts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_skeleton_points.html">detect_skeleton_points</a></span><span class="op">(</span><span class="va">skl</span>, select_layer <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
