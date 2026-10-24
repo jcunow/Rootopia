@@ -1130,10 +1130,10 @@ It needs a real depth gradient, so it means nothing on a flatbed scan.
 The batch wrapper reports it as `deep_drive` alongside
 `mean.steepness.angle`.
 
-`return = "all"` keeps the intermediate rasters, and the three that
-matter sit next to each other: the center lines the directions are read
-from, the depth field that defines which way is down, and the direction
-assigned to each skeleton pixel.
+`return = "all"` keeps the intermediate rasters. The one worth looking
+at is the direction assigned to each skeleton pixel, drawn on its own
+below — the skeleton and the depth bins it was derived from are both
+shown in Part I.
 
 ``` r
 
@@ -1147,46 +1147,21 @@ ang_cols <- rep("#00000000", 8)
 ang_cols[ang_use / 45 + 1] <- c("#FFD60A", "#4D7CFF", "#3DDC84",
                                 "#E0218A", "#00E5FF")
 
-a_skl   <- terra::aggregate(rot(skl),        fact = 4, fun = "max",  na.rm = TRUE)
-a_depth <- terra::aggregate(rot(depth_bins), fact = 4, fun = "mean", na.rm = TRUE)
-a_ang   <- terra::aggregate(dd_all$angle_map, fact = 4, fun = "modal",
-                            na.rm = TRUE)
+a_ang <- terra::aggregate(dd_all$angle_map, fact = 4, fun = "modal",
+                          na.rm = TRUE)
 
-# Same window, same inset placement as the workflow figure, so the three
-# panels can be read against it. wins$ang is the tighter window, because a D8
-# class map is only legible a few pixels at a time.
-f_skl   <- rot(skl)
-f_depth <- rot(depth_bins)
-
-op <- graphics::par(mfrow = c(1, 3), mar = mar_p)
-
-terra::plot(a_skl, col = c("black", "#FF5A36"), legend = FALSE, axes = FALSE,
-            maxcell = Inf, mar = mar_p)
-draw_inset(f_skl, win = wins$ang, col = c("black", "#FF5A36"))
-graphics::mtext("Skeleton", side = 3, line = 0.4)
-
-terra::plot(a_depth, col = band_cols, legend = FALSE, axes = FALSE,
-            maxcell = Inf, mar = mar_p)
-draw_inset(f_depth, win = wins$ang, col = band_cols)
-graphics::legend("bottomleft", bty = "n", fill = band_cols, border = NA,
-                 bg = leg_bg, text.col = "white", cex = 0.55, inset = 0.02,
-                 legend = paste0(depths, " cm"))
-graphics::mtext("Depth bins", side = 3, line = 0.4)
-
+op <- graphics::par(mar = mar_p)
 terra::plot(a_ang, breaks = ang_brk, col = ang_cols, legend = FALSE,
             axes = FALSE, maxcell = Inf, mar = mar_p)
-draw_inset(dd_all$angle_map, win = wins$ang, new = TRUE, breaks = ang_brk,
-           col = ang_cols)
+draw_inset(dd_all$angle_map, win = wins$ang, breaks = ang_brk, col = ang_cols)
 graphics::legend("bottomleft", bty = "n", border = NA, bg = leg_bg,
-                 text.col = "white", cex = 0.6, inset = 0.02,
+                 text.col = "white", cex = 0.7, inset = 0.02,
                  fill = ang_cols[ang_use / 45 + 1],
                  legend = paste0(ang_use, "\u00b0"))
-graphics::mtext("D8 direction", side = 3, line = 0.4)
 ```
 
-![Three panels: the one-pixel skeleton, the binned depth map, and the D8
-direction class of each skeleton pixel, with a legend naming the five
-downward directions that
+![The D8 direction class of each skeleton pixel over the scan, with a
+magnified inset and a legend naming the five downward directions that
 occur.](Rootopia_Overview_vignette_files/figure-html/angle-panels-1.png)
 
 ``` r
@@ -1316,9 +1291,15 @@ ggplot(slice_traits, aes(slice, rld)) +
   geom_point(color = "gray50") +
   geom_line(data = fit_df, color = "coral", linewidth = 1) +
   geom_hline(yintercept = res$offset, color = "gray40", linetype = 3) +
+  annotate("text", x = 1, y = res$offset, hjust = 0, vjust = -0.5,
+           size = 3, color = "gray30", label = "offset (mean around the tube)") +
   annotate("segment", x = res$peakTime, xend = res$peakTime,
            y = res$offset, yend = res$offset + res$amplitude,
-           linetype = 2, color = "gray40") +
+           linetype = 2, color = "firebrick3") +
+  annotate("text", x = res$peakTime, y = res$offset + res$amplitude,
+           hjust = -0.08, vjust = 0.5, size = 3, color = "firebrick3",
+           label = sprintf("peak at slice %.1f\n= fitted top of the tube",
+                           res$peakTime)) +
   annotate("text", x = Inf, y = Inf, hjust = 1.05, vjust = 1.5,
            label = sprintf("A = %.4f, R2 = %.3f, p = %.4f",
                            res$amplitude, res$R2, res$p_value)) +
@@ -1339,6 +1320,10 @@ curve.](Rootopia_Overview_vignette_files/figure-html/rhythm-plots-1.png)
 inner <- 6
 ggplot(slice_traits, aes(slice, rld + inner)) +
   geom_col(fill = "steelblue") +
+  # In polar coordinates a vertical line is a radius, so this marks the fitted
+  # peak: where the sine says the top of the tube is.
+  geom_vline(xintercept = res$peakTime, color = "firebrick3",
+             linetype = 2, linewidth = 0.8) +
   coord_polar(start = pi) +
   xlab("") + ylab("") +
   ggtitle("Circumferential Root Length Distribution") +
@@ -1621,14 +1606,23 @@ than forcing them into the nearest class.
 # downsample_fact speeds up the demo; drop it for full resolution
 result <- classify_soil_rgb(rgb, downsample_fact = 4, verbose = FALSE)
 
-# A SpatRaster of class IDs (factor levels are the class names)
-zoom_plot(result$map, main = "Soil classification")
+# Raw beside classified over one window: a class map is only checkable against
+# the colors it was derived from.
+op <- graphics::par(mfrow = c(1, 2), mar = mar_p)
+zoom_plot(rgb,        main = "Scan",       frac = 0.25, center = c(0.6, 0.45),
+          overview = FALSE)
+zoom_plot(result$map, main = "Classified", frac = 0.25, center = c(0.6, 0.45),
+          overview = FALSE)
 ```
 
-![RGB minirhizotron scan, full view with the magnified region
-outlined.](Rootopia_Overview_vignette_files/figure-html/soil-classify-1.png)![The
-same scan magnified to native
-resolution.](Rootopia_Overview_vignette_files/figure-html/soil-classify-2.png)
+![The RGB scan and the class map side by side over the same window, so
+each assigned class can be checked against the color it came
+from.](Rootopia_Overview_vignette_files/figure-html/soil-classify-1.png)
+
+``` r
+
+graphics::par(op)
+```
 
 ``` r
 
@@ -1697,6 +1691,41 @@ entropy.](Rootopia_Overview_vignette_files/figure-html/soil-texture-1.png)
 
 ``` r
 
+halo <- create_root_buffer(root_layer, width = 3, halo_only = TRUE,
+                           kernel = "circle")
+zoom_plot(halo, main = "Rhizosphere halo (width 3)", frac = 0.1)
+```
+
+![Rhizosphere halo of width 3 pixels around each root, with the
+magnified region
+outlined.](Rootopia_Overview_vignette_files/figure-html/root-buffer-1.png)![The
+same halo magnified to native
+resolution.](Rootopia_Overview_vignette_files/figure-html/root-buffer-2.png)
+
+``` r
+
+
+halo10 <- create_root_buffer(root_layer, width = 10, halo_only = FALSE,
+                             kernel = "circle")
+zoom_plot(halo10, main = "Roots + halo (width 10)", frac = 0.25,
+          overview = FALSE)
+```
+
+![Roots together with their width-10
+halo.](Rootopia_Overview_vignette_files/figure-html/root-buffer-3.png)
+
+`kernel` switches between a `"circle"` (8-neighbor) and a `"diamond"`
+(4-neighbor) growth shape, and `width` is the number of dilation
+iterations.
+
+## Part III: flatbed scans
+
+Everything to this point assumed a tube. A flatbed scan of washed roots
+is the other half of the diagram in the introduction: no depth axis, and
+architecture in its place.
+
+``` r
+
 tube_coloration(rgb)
 #>      rcc    gcc   bcc        hue saturation luminosity      red    green
 #> 1 0.4117 0.3192 0.269 0.06635659  0.1982295    61.0889 67.84946 59.75458
@@ -1704,10 +1733,9 @@ tube_coloration(rgb)
 #> 1 54.3997
 ```
 
-The halo below is what makes a rhizosphere question answerable: with
-roots, their immediate surroundings, and the rest of the frame
-separated, the same color measurement can be taken three times and
-compared.
+With roots, their immediate surroundings and the rest of the frame
+separated by the halo above, the same color measurement can be taken
+three times and compared.
 
 ``` r
 
@@ -1715,6 +1743,10 @@ compared.
 halo_only <- create_root_buffer(root_layer, width = 10, halo_only = TRUE,
                                 kernel = "circle")
 
+# The unweighted mean of the three channels. This is not luminosity: a
+# perceptual luminance weights green far above blue, and `tube_coloration()`
+# reports that weighted version. The unweighted mean is used here because the
+# question is which channels differ, and a weighting would hide it.
 bright <- terra::app(rgb_disp[[1:3]], fun = mean, na.rm = TRUE)
 b <- terra::values(bright,     mat = FALSE)
 r <- terra::values(root_layer, mat = FALSE) == 1
@@ -1757,44 +1789,47 @@ curve says they are — or that the segmentation is a pixel or two
 generous and the halo is partly root. Widening `width` and watching
 whether the curve migrates separates those two readings.
 
+**The bulk-peat curve is bimodal, and that is the scan rather than the
+soil.** A stitched mosaic is built from frames exposed separately, and
+the brightness bands running across the scan in the first figure of Part
+I are those frames meeting. Each exposure contributes its own mode. It
+matters here because any color comparison between depths is partly a
+comparison between frames, so a depth trend in color should be checked
+against where the joins fall before it is read as soil chemistry. Per
+channel the same split shows up:
+
+``` r
+
+op <- graphics::par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+for (k in 1:3) {
+  ch <- terra::values(rgb_disp[[k]], mat = FALSE)
+  dk <- lapply(list(root = r, halo = h, peat = !r & !h), function(sel) {
+    v <- ch[sel]; v <- v[!is.na(v)]
+    stats::density(if (length(v) > 40000) sample(v, 40000) else v)
+  })
+  plot(NA, xlim = c(0, 1), ylim = c(0, max(vapply(dk, function(d) max(d$y), 1))),
+       xlab = c("red", "green", "blue")[k], ylab = if (k == 1) "density" else "",
+       main = "")
+  for (nm in names(dk)) graphics::lines(dk[[nm]], col = cols[[nm]], lwd = 2)
+}
+```
+
+![Three panels, one per color channel, each showing the density of pixel
+values for root, halo and bulk
+peat.](Rootopia_Overview_vignette_files/figure-html/rgb-channels-1.png)
+
+``` r
+
+graphics::par(op)
+```
+
+Reading the three together separates a brightness difference from a
+color difference: curves that shift together between groups are
+exposure, curves that shift apart are pigment.
+
 [`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
 grows a buffer around every root pixel, a simple proxy for the
 rhizosphere. With `halo_only = TRUE` it returns the ring alone.
-
-``` r
-
-halo <- create_root_buffer(root_layer, width = 3, halo_only = TRUE,
-                           kernel = "circle")
-zoom_plot(halo, main = "Rhizosphere halo (width 3)", frac = 0.1)
-```
-
-![Rhizosphere halo of width 3 pixels around each root, with the
-magnified region
-outlined.](Rootopia_Overview_vignette_files/figure-html/root-buffer-1.png)![The
-same halo magnified to native
-resolution.](Rootopia_Overview_vignette_files/figure-html/root-buffer-2.png)
-
-``` r
-
-
-halo10 <- create_root_buffer(root_layer, width = 10, halo_only = FALSE,
-                             kernel = "circle")
-zoom_plot(halo10, main = "Roots + halo (width 10)", frac = 0.25,
-          overview = FALSE)
-```
-
-![Roots together with their width-10
-halo.](Rootopia_Overview_vignette_files/figure-html/root-buffer-3.png)
-
-`kernel` switches between a `"circle"` (8-neighbor) and a `"diamond"`
-(4-neighbor) growth shape, and `width` is the number of dilation
-iterations.
-
-## Part III: flatbed scans
-
-Everything to this point assumed a tube. A flatbed scan of washed roots
-is the other half of the diagram in the introduction: no depth axis, and
-architecture in its place.
 
 ### The same traits, without a depth axis
 
@@ -1803,6 +1838,15 @@ and it is a special case rather than a different pipeline: the same
 cleaning, skeleton, length and diameter functions apply, and only the
 depth axis goes away. Where a root lies on the tray says nothing about
 where it grew, so the whole scan is one observation.
+
+The raw segmentation below is worth a moment before it is cleaned. It
+carries two kinds of flaw that
+[`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+addresses and that are easy to miss at full-scan scale: isolated specks
+of a few pixels, which the tracer would read as one-segment root
+systems, and pinholes inside roots, which survive skeletonization as
+small loops and show up later as `artefact_cycles`. The magnified pair
+shows both.
 
 What that buys is architecture. A washed root system is rarely complete
 — fragments break off at the base and at branch points during excavation
@@ -1878,27 +1922,30 @@ order_res <- branch_order_map(
 #>   spliced pass-through nodes: 111 -> 111 segment(s)
 #>   resolved crossings: 111 -> 111 segment(s)
 #> Tip order...
-#> Done in 0.40s. 111 segments, max order 8, total length 7857.9 px
+#> Done in 0.31s. 111 segments, max order 8, total length 7857.9 px
 
 # One window for every figure in this part, so the panels can be compared.
 fb_frac <- 0.25
 fb_ctr  <- c(0.7, 0.625)
 
+# Raw whole, raw magnified, cleaned magnified: the progression that shows what
+# cleaning changed rather than asking you to hold two overviews in mind.
 zoom_plot(seg_fb,   main = "Segmented, as it comes", frac = fb_frac,
-          center = fb_ctr, overview = FALSE)
+          center = fb_ctr)
 ```
 
 ![The raw segmentation magnified, with isolated specks still
-present.](Rootopia_Overview_vignette_files/figure-html/flatbed-1.png)
+present.](Rootopia_Overview_vignette_files/figure-html/flatbed-1.png)![Segmented
+flatbed root scan after cleaning, with the magnified region
+outlined.](Rootopia_Overview_vignette_files/figure-html/flatbed-2.png)
 
 ``` r
 
-zoom_plot(fb_clean, main = "Cleaned", frac = fb_frac, center = fb_ctr)
+zoom_plot(fb_clean, main = "Cleaned", frac = fb_frac, center = fb_ctr,
+          overview = FALSE)
 ```
 
-![Segmented flatbed root scan after cleaning, with the magnified region
-outlined.](Rootopia_Overview_vignette_files/figure-html/flatbed-2.png)![The
-cleaned scan magnified to native
+![The cleaned scan magnified to native
 resolution.](Rootopia_Overview_vignette_files/figure-html/flatbed-3.png)
 
 ``` r
