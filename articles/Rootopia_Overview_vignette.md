@@ -21,12 +21,12 @@ reconstructed from the tube’s diameter, its insertion angle and the scan
 resolution before any trait can be attributed to a horizon.
 
 Finding the roots in either image is a segmentation problem, and trained
-models solve it well enough to be used as given: RootDetector (Peters
-*et al.* 2023) and RootPainter (Smith *et al.* 2022) are the two this
-package is built around. What they return is a mask. Turning that mask
-into root length density per 5 cm interval is not recognition but
-geometry, and it is the step at which a depth axis is either earned from
-measured quantities or quietly invented.
+models solve it well enough to be used as given — RootDetector (Peters
+*et al.* 2023) and RootPainter (Smith *et al.* 2022) are two of them,
+and where the examples here came from. What they return is a mask.
+Turning that mask into root length density per 5 cm interval is not
+recognition but geometry, and it is the step at which a depth axis is
+either earned from measured quantities or quietly invented.
 
 Rootopia performs that conversion and measures the traits that follow
 from it: root length, diameter, surface, branching architecture, network
@@ -34,65 +34,82 @@ topology, turnover between sessions, and soil color and texture – each
 per depth interval wherever a depth map exists. The boundary matters in
 both directions:
 
-- **Nothing here segments an image.**
+- **Segmentation is somebody else’s job.**
   [`image_threshold()`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
-  separates a foreground from a background by brightness alone, in
-  either direction (`invert` picks which side is kept), and can do no
-  more than that. Roots against soil need a trained model whichever way
-  the contrast runs; on the bundled tube scan no threshold setting
-  separates them, which is a property of the image rather than of the
-  code.
-- **Every conversion after the mask is a stated rule,** not a default to
-  be inferred. Depth comes from measured geometry, lengths name their
-  estimator, and each function names the image type it expects.
+  is the one segmenter here, and it is the simplest kind: it splits
+  foreground from background by brightness alone, in either direction.
+  That is enough for washed roots on a tray of known color and not
+  enough for roots in soil, where wet soil, old root and debris overlap
+  in brightness. A trained model does that job, and handing over to one
+  is a step in the workflow rather than an optional extra.
+- **Depth is computed, not assumed.** It comes from the tube geometry
+  and the scan resolution, which are numbers you supply; length
+  estimators are named rather than chosen for you; and every function
+  states which image type it expects.
 
 This chapter covers the three image types and what consumes them, one
 complete worked depth profile, and each remaining module in turn. Part I
 is the standard minirhizotron workflow from stitched frames to a depth
-profile; Part II is everything built on top of it.
+profile, Part II the modules that attach to it, and Part III the flatbed
+case, which has no depth axis and goes to architecture instead.
 
-### The package pipeline
+### The two pathways
 
-Most analyses run left to right through this chain. You can enter at any
-point and stop at any point; nothing forces you through the whole thing.
+The package covers two imaging setups that share a front end and diverge
+after it. A minirhizotron sequence is stitched, segmented, and then
+reduced to traits per depth interval. A flatbed scan has no depth axis,
+so it goes to architecture instead: branch order, network shape,
+transport. Only stitching and segmentation are common to both, and
+segmentation happens outside this package.
 
-     stitch  ->  threshold  ->  clean  ->  (rotation censor)
-                                    |
-                                    v
-                               skeletonize  ---->  branching order
-                                    |
-                                    +----->  size traits (length, diameter, px)
-                                    |
-                                    v
-                                depth map  ---->  root angle
-                                    |
-                                    v
-                            distribution indices
+Three things sit beside both paths rather than in either. **Root angle**
+needs a depth map and a skeleton together. **Soil color and texture**
+read the RGB scan and never touch root shape. **Turnover** compares two
+sessions. Part II takes each in turn.
 
-Turnover and soil & color sit outside this chain: turnover compares two
-images, and soil & color works on the color channels rather than the
-root shape.
+Branch order belongs to the flatbed side. Nothing stops you running it
+on a tube scan, and
+[`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md)
+will return a graph – but a minirhizotron frame is a window onto a
+cylinder, so a root leaves and re-enters the field of view and the
+topology you recover is the topology of the visible fragments, not of
+the root system. Order and network metrics mean what they say on a
+washed root system laid flat.
+
+**On cleaning.**
+[`clean_image()`](https://jcunow.github.io/Rootopia/reference/clean_image.md)
+is optional on both sides but not neutral. `drop_objects_upto` removes
+connected components below a pixel count, which deletes scanner speckle
+and also deletes genuine fine-root fragments that enter and leave the
+frame – on a minirhizotron scan those fragments are real root.
+`fill_holes_upto` closes pinholes inside a mask, which raises area and
+lowers the measured diameter variance. Neither is reversible downstream,
+so the honest order is: measure once without cleaning, once with, and
+report which you used. For branch order the calculation is different –
+specks become spurious one-segment components and pinholes become
+spurious loops – so there cleaning earns its place.
 
 [`root_depth_metrics()`](https://jcunow.github.io/Rootopia/reference/root_depth_metrics.md)
-is not a module. It is a batch wrapper that runs this chain over a
-folder of images.
+is not a step in either column. It is a batch wrapper that runs the
+whole left-hand path over a folder of images.
 
-Two patterns cover everything downstream of the depth map. A trait that
-reduces to a per-zone sum or mean goes through
+Two patterns cover everything downstream of the depth map, and both
+appear below. A trait that reduces to a per-zone sum or mean goes
+through
 [`terra::zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
-in one call. A trait whose function needs a whole image, such as root
-length, goes through
-[`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
-one bin at a time, in a loop. Both appear below.
+in one call. A trait whose function needs a whole image goes through
+[`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md),
+which crops the image to one interval, in a loop.
 
 ## Part I: the standard minirhizotron workflow
 
 This is the path almost every minirhizotron analysis takes, in order:
 censor the rotation, build a depth map, bin it, measure traits per bin,
-summarize the profile. Nothing is thinned on the fly – the segmentation
-and the skeleton both come from RootDetector, which is the hand-over
-described above, exercised. Part II then adds the modules that sit
-outside this path.
+summarize the profile. Nothing is thinned on the fly here: the example
+has a skeleton from the segmenter, so the hand-over described above is
+exercised as it stands. Where a segmenter returns no skeleton, one step
+is added and the section below shows what it costs. Part II then adds
+the modules that sit outside this path.
 
 ### Stitch the frames, if there are several
 
@@ -101,49 +118,87 @@ frames, and a root crossing a frame boundary would otherwise be measured
 twice. If each tube is already one image, skip this.
 [`stitch_root_scans()`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
 groups files into tubes by a pattern in the filename, aligns consecutive
-frames by FFT phase correlation over a band along the overlapping edge,
-and blends them into one mosaic per tube.
+frames over a band along the overlapping edge, and blends them into one
+mosaic per tube. Alignment is FFT phase correlation
+(`method = "phase"`); `method = "feature"` is accepted but stops with a
+message, because keypoint matching has no backend here.
+
+Two arguments decide which files are read and how they are grouped, and
+they do different jobs. `pattern` is a plain substring that keeps or
+drops whole files; `group_regex` is the expression that pulls the tube
+identity out of each path. The default `group_regex` is already
+`"T0\\d{2}"`, which matches labels like `T067`, so a naming scheme built
+on `T0xx` needs nothing set. Anything else does: a folder named by plot
+and tube would use something like `group_regex = "P\\d+_T\\d+"`.
 
 ``` r
 
 # See what a folder holds, then pick a range in the same call
-stitch_root_scans("path/to/scans", pattern = ".tiff", tubes = "ask")
+stitch_root_scans("path/to/scans", tubes = "ask")
 
 res <- stitch_root_scans(
-  "path/to/scans", pattern = ".tiff",
-  blend      = "max",          # for segmented masks: never averages a root
-  order_by   = "\\d+(?=\\.)",  # sort on the frame number, not the file name
-  report     = TRUE
+  "path/to/scans",
+  pattern     = ".tiff",        # read only these files
+  group_regex = "T0\\d{2}",      # the tube identity inside each file name
+  blend       = "max",          # see below: do not average a segmented mask
+  order_by    = "\\d+(?=\\.)",   # sort frames on their number, not the file name
+  report      = TRUE
 )
 res$report      # tube | step | dx | dy | peak | overlap
-res$report[order(res$report$peak), ][1:10, ]   # weakest joins first
 ```
 
-Two settings decide whether a mosaic is usable. `blend = "max"` is the
-one for segmented masks: a linear feather *averages*, which turns a root
-pixel into a fractional value and ghosts thin roots wherever alignment
-is off by a pixel. And `edge_width` is the width of the band searched
-for the overlap, not the overlap itself, so it has to be at least as
-wide as the true overlap. The report’s `peak` column is the correlation
-height at each join; sort by it to find the weak ones.
+The report has one row per join. `peak` is how strongly the two edge
+bands agree at the shift that was chosen: a normalized correlation
+score, near 1 when the overlap matched cleanly and near 0 when the
+alignment is little better than a guess. It is the column to check,
+because a bad join does not announce itself – the mosaic is still
+produced, with a seam in the wrong place.
+
+``` r
+
+# The ten least trustworthy joins in the run, worst first.
+res$report[order(res$report$peak), ][1:10, ]
+```
+
+If a mosaic looks wrong, three arguments are worth changing before
+anything else. `edge_width` is the width of the band searched for the
+overlap, not the overlap itself, so it must be at least as wide as the
+true overlap – an overlap wider than the band cannot be found at all.
+`preprocess` conditions the bands before correlation: `"hann"`, `"grad"`
+or `"center"` help on scans with uneven lighting or sparse texture,
+where plain intensity correlation locks onto the illumination gradient
+instead of the roots. And `min_overlap` / `max_overlap` reject a shift
+that is physically impossible for your setup, which is the cheapest way
+to stop one bad join from propagating.
+
+`blend` decides how the overlap is combined, and the choice is not
+cosmetic. `"linear"` feathers the two frames with an alpha ramp, which
+suits color scans. For a segmented mask use `"max"`: feathering
+*averages*, so a root pixel in one frame and background in the other
+becomes a fractional value, and thin roots ghost wherever alignment is
+off by a pixel. `"max"` takes the union instead, so a pixel is root if
+either frame called it root. `"overlay"` and `"overlay_first"` let one
+frame hide the other outright, and `"min"` takes the intersection, which
+erodes rather than ghosts.
 
 ### Hand the images to a segmenter
 
 Stitched or not, the next step is not in this package. A scan has to be
-turned into a root mask by something trained to recognize roots, and
-there are three routes:
+turned into a root mask. Any tool that writes a binary mask will do; two
+that are used on minirhizotron images are:
 
-- **RootDetector** (Peters *et al.* 2023) — a convolutional network for
-  minirhizotron images. Returns the segmentation and a skeleton in one
-  pass, and optionally the decay/production/constant coding that
+- **RootDetector** (Peters *et al.* 2023) — a convolutional network.
+  Returns the segmentation and a skeleton in one pass, and optionally
+  the decay/production/constant coding that
   `root_turnover(method = "dpc")` reads.
 - **RootPainter** (Smith *et al.* 2022) — interactive training, where
-  you correct the model as it learns. Returns a mask; use
-  [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
-  for the skeleton.
-- **Anything else** that writes a binary mask. Rootopia reads PNG, JPEG,
-  TIFF, BMP, `terra` and `raster` objects, `imager` images and plain
-  arrays, so the format is rarely the obstacle.
+  you correct the model as it learns. Returns a mask, and no skeleton.
+
+Those are examples, not requirements, and nothing below depends on
+either. Rootopia reads PNG, JPEG, TIFF, BMP, `terra` and `raster`
+objects, `imager` images and plain arrays, so the format is rarely the
+obstacle. What matters is which of the image types below you get back,
+not which program produced them.
 
 Only one case does not need a trained model: a scan where root and
 background differ in brightness alone.
@@ -168,18 +223,27 @@ image_threshold(scan, method = "adaptive", adaptive_k = 1.15,
                 window_size = 51, binary_01 = TRUE, invert = TRUE)
 ```
 
-Roots against soil cannot be separated this way whichever direction the
-contrast runs — on the bundled tube scan no setting of `adaptive_k`
-separates them, which is a property of the image rather than of the
-code.
+This works only where brightness alone separates root from background,
+which in practice means washed roots on a tray of known color. It does
+not work on a minirhizotron scan: wet soil, old root and organic debris
+overlap in brightness there, so no single cut and no local multiplier
+puts a boundary between them, whichever side you keep. That is a
+property of the image, not a shortcoming of the function, and it is why
+the hand-over to a trained segmenter is the step above rather than an
+optional extra.
 
-What comes back is up to three rasters per scan, and the rest of this
-article is about what to do with them.
+What comes back is one or more image layers per scan. Which ones depends
+on the segmenter, and the three the rest of this article uses are
+described next.
 
-### The three image types
+### The image layers, and which is which
 
-A segmenter hands back up to three rasters per scan, and they are not
-interchangeable.
+A segmenter returns one or more image layers per scan, and they are not
+interchangeable. How many depends on the tool: a mask is the one you
+always get, a skeleton comes from some segmenters and not others, and
+the color photograph survives only if the setup recorded it. The three
+used below are the three a RootDetector run happens to produce, which is
+why the bundled example has all of them.
 
 Figures here use
 [`zoom_plot()`](https://jcunow.github.io/Rootopia/reference/zoom_plot.md),
@@ -193,9 +257,7 @@ sets the inset size, so the magnification is `1 / frac`.
 
 ``` r
 
-# 3-band RootDetector output; layer 2 is the root channel. All three images
-# below are the same scan of the same tube, so every panel of the figure at the
-# end of this part shows the same pixels.
+# Three layers from one RootDetector run on one tube; layer 2 carries the roots.
 data(seg_Oulanka2023_Session03_T067)
 data(skl_Oulanka2023_Session03_T067)
 data(rgb_Oulanka2023_Session03_T067)
@@ -213,32 +275,32 @@ root_layer <- load_flexible_image(seg_Oulanka2023_Session03_T067,
                                   output_format = "spatrast",
                                   scale = "binary", select_layer = 2)
 
-# The one-pixel center line, from the same RootDetector run.
+# The one-pixel center line, as this segmenter supplies it.
 skl <- load_flexible_image(skl_Oulanka2023_Session03_T067,
                            output_format = "spatrast",
                            scale = "binary", select_layer = 2)
 
-rgb <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
-                           output_format = "spatrast", scale = "none")
-
-# The color functions further down read `rgb` as it comes. For drawing it,
-# a 0-1 copy is needed, and one scalar divisor keeps the channel ratios --
-# terra::global() returns one maximum per layer, and dividing each layer by its
-# own would shift the hue.
-rgb_disp <- rgb / max(terra::global(rgb, "max", na.rm = TRUE)[[1]])
+# The color functions read the photograph as it comes; drawing it wants 0-1.
+# `scale` does both conversions, so neither is done by hand.
+rgb      <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
+                                output_format = "spatrast", scale = "none")
+rgb_disp <- load_flexible_image(rgb_Oulanka2023_Session03_T067,
+                                output_format = "spatrast", scale = "to_01")
 ```
 
 Each carries different information, so each feeds different functions.
 
-| Image        | What it is            | What it is for             |
-|--------------|-----------------------|----------------------------|
-| RGB          | the photograph        | color, texture, soil class |
-| Segmentation | solid root mask, 0/1  | area, diameter, cleaning   |
-| Skeleton     | one-pixel center line | length, tips, branching    |
+| Image        | What it is            | What it is for                      |
+|--------------|-----------------------|-------------------------------------|
+| RGB          | the photograph        | color, texture, soil class          |
+| Segmentation | solid root mask, 0/1  | area, diameter, cleaning            |
+| Skeleton     | one-pixel center line | length, tips, branching, root angle |
 
-RootDetector returns all three. RootPainter returns a mask, and
+Only the mask is guaranteed. Where no skeleton comes back,
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
-thins it, so a missing skeleton is never a blocker.
+thins the mask into one, so a missing skeleton is never a blocker – but
+a supplied skeleton and a thinned one are not the same picture, and the
+section below compares them before anything downstream uses either.
 
 ### Which image feeds which function
 
@@ -260,9 +322,15 @@ number rather than an error.
 | [`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md) | RGB | GLCM texture (needs **glcm**) |
 | [`root_turnover()`](https://jcunow.github.io/Rootopia/reference/root_turnover.md) | two scans, or one DPC | per `tc_method` |
 
+Throughout this article **mask** means the segmentation: the solid 0/1
+image in which every root pixel is 1. It is what the `mask =` argument
+of the branching functions and the first argument of
+[`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
+expect.
+
 **[`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
 is the one to understand.** Diameter comes from a distance transform of
-the *solid* mask: every root pixel is labeled with its distance to the
+that solid image: every root pixel is labeled with its distance to the
 nearest background pixel, which is the radius of the largest circle that
 fits inside the root there, and diameter is twice that. The skeleton
 then says *which* of those pixels to report, so each root contributes
@@ -270,6 +338,11 @@ its center line once rather than its whole width. Pass only a skeleton
 and every diameter collapses to about one pixel. The same applies to
 `mask =` in the branching functions, where the continuation rule and the
 order-1 seed both depend on diameter.
+
+`select_layer` applies to that first argument only, not to
+`skeleton_img`. It picks the band to read when the mask arrives as a
+multi-layer image; `NULL` passes every layer through, which is right
+when the mask is already one band, as `root_layer` is here.
 
 ### Censor the rotation
 
@@ -281,9 +354,12 @@ removes it, and it is standard procedure rather than an option.
 
 ``` r
 
-# Center the window on the tube's rotational zero. estimate_rotation_center()
-# finds it from the tape on the tube's upper side, once per tube; here the
-# image midpoint stands in for it, so this article needs no extra packages.
+# The window has to be centered on the tube's rotational zero, and that is a
+# per-scan quantity: estimate_rotation_center() locates it from the tape on the
+# tube's upper side, and estimate_rotation_shift() measures how far a later
+# session has turned relative to the first, which is what you add to the first
+# session's center. Both need RStoolbox and imagefx, so the midpoint stands in
+# here to keep this article runnable on a thin install.
 r0 <- round(dim(root_layer)[1] / 2, 0)
 
 censored <- rotation_censor(
@@ -304,14 +380,84 @@ red.](Rootopia_Overview_vignette_files/figure-html/censor-1.png)
 `fixed_rotation = TRUE` forces exactly `fixed_width` rows, which is what
 you want when comparing sessions: equal width is what makes counts
 comparable. `fixed_rotation = FALSE` instead cuts in proportion to a
-measured offset, so the output width varies between images.
+measured offset, so the output width varies between images. In a real
+run the order is:
+[`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
+once per tube on the first session,
 [`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
-measures that offset between two sessions by phase or cross correlation.
+for every later session against it, and the sum passed as
+`center_offset` so the same band of tube is kept throughout.
+`center_offset` is a row index here; it is a fraction of the image
+height only in
+[`create_depthmap()`](https://jcunow.github.io/Rootopia/reference/create_depthmap.md),
+which is a different argument with the same name.
 
 The rest of this article works on the uncensored image, so the depth
-figures cover the full circumference.
+figures cover the whole scan – which is still less than a full turn of
+the tube, since the scanner does not reach all the way around.
 
-### Depth, from geometry
+### The skeleton: supplied, or made here
+
+Some segmenters return a skeleton along with the mask; others return
+only the mask. Both cases work. Where a skeleton comes back, use it.
+Where it does not,
+[`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
+thins the segmentation into one: it strips pixels off the edges of each
+root, layer by layer, until a single connected line of pixels is left
+down the middle, which is the Zhang-Suen thinning.
+
+The two are not the same picture, and the difference is not noise. A
+thinned skeleton follows the segmentation exactly, so a pinhole in the
+mask becomes a small loop and a ragged edge can grow a short spur that
+is not a root. A segmenter that predicts the center line directly is not
+bound by the mask it also predicts, so it can disagree with its own
+mask.
+
+That difference is worth looking at on your own scans, and it cannot
+honestly be shown on the example data here, which is downsampled to keep
+the package installable. `data-raw/make-figures.R` draws it from
+full-resolution originals: fill in the two paths at the top and run it,
+and the figure appears below.
+
+*No comparison figure found. `data-raw/make-figures.R` writes one; fill
+in the two scan paths at the top of that script and run it.*
+
+Whichever you use, use one consistently. Mixing a supplied skeleton in
+one session with a thinned one in the next puts a step into a time
+series that has nothing to do with roots. Everything below uses the
+supplied skeleton.
+
+### Root diameter
+
+Diameter needs both images at once: the mask gives the width, the
+skeleton says which pixels to report.
+[`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
+returns the local thickness across the whole scan as well as the
+per-skeleton-pixel diameters, so it is worth looking at before reducing
+it to a per-interval mean.
+
+``` r
+
+diam_result <- root_diameter(
+  root_layer,
+  skeleton_img = skl,
+  unit         = "cm",
+  dpi          = dpi,   # not optional: the default is 300
+  select_layer = NULL
+)
+
+# root thickness
+zoom_plot(diam_result$distance_map_rast, frac = 0.1)
+```
+
+![Local root thickness across the whole scan, with the magnified region
+outlined.](Rootopia_Overview_vignette_files/figure-html/diameter-1.png)![The
+same thickness map magnified to native
+resolution.](Rootopia_Overview_vignette_files/figure-html/diameter-2.png)
+
+### From pixels to depth
+
+#### The depth map
 
 ``` r
 
@@ -332,26 +478,43 @@ terra::plot(depth_map, main = "Depth map (cm)")
 to deep at the
 other.](Rootopia_Overview_vignette_files/figure-html/depthmap-1.png)
 
-Four measured quantities set this map, and each fails in its own way.
-`angle_from_vertical` is read from vertical, so 0 is an upright tube and
-90 a horizontal one. `tube_thicc` is the inner diameter; if it or `dpi`
-is wrong the curvature wave cannot span the image and the function stops
-with `Wrong Tube Diameter`. `start_soil` is in centimeters and is
-subtracted from every depth, so an error in it shifts the whole profile
-by that amount and changes nothing else. `center_offset` rotates the
-curvature wave to where the top of your tube sits, as a fraction of one
-circumference.
+Every argument above except `geometry` is a measurement, taken on the
+tube or read off the scanner, and each one fails in its own way if it is
+wrong.
+
+- `angle_from_vertical` — the installation angle, in degrees from
+  vertical, so 0 is an upright tube and 90 a horizontal one. From the
+  field notes.
+- `tube_thicc` — the inner diameter in centimeters, measured on the
+  tube. If it or `dpi` is wrong the curvature wave cannot span the image
+  height and the function stops with `Wrong Tube Diameter`, which is the
+  one error here that catches itself.
+- `dpi` — the scan resolution, from the scanner settings. Every
+  centimeter in this article depends on it.
+- `start_soil` — where the soil surface sits along the tube, in
+  centimeters, from in-situ calibration. It is subtracted from every
+  depth, so an error shifts the whole profile by that amount and changes
+  nothing else.
+  [`estimate_soil_surface()`](https://jcunow.github.io/Rootopia/reference/estimate_soil_surface.md)
+  estimates it from the image in pixels; convert with
+  `cm = px * 2.54 / dpi`.
+- `center_offset` — where the top of the tube sits across the image
+  height, as a fraction of one circumference, so 0.5 is halfway down.
+  From the installation, or from
+  [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md).
 
 Depth also runs along the image **width**. A scan with the soil surface
 at the top needs a quarter turn first; nothing errors if it is the wrong
 way round, the map is simply built along the wrong axis.
 
-### Insertion angle and the depth map
+#### What the insertion angle does
 
-The angle is not a scaling factor. It splits a tube’s depth between two
-axes: depth gained along the tube’s length, and depth spread around its
-circumference. Leaning the tube over trades one for the other, and with
-`geometry = "tube"` both terms are visible in the same map.
+A tube lying at an angle gains depth in two ways at once, and the
+insertion angle sets how much of each. Moving along the tube’s length
+takes you deeper, and so does moving around its circumference from the
+top of the tube to the bottom. Standing the tube upright removes the
+first and leaves only the second; laying it flat does the reverse. Both
+terms are visible in the same map with `geometry = "tube"`.
 
 ``` r
 
@@ -447,7 +610,7 @@ angle at which the two terms cannot be told apart. With
 length term remains; with `"flat"` both go, and every pixel shares one
 depth.
 
-### Bin the depths
+#### Binning
 
 ``` r
 
@@ -464,13 +627,16 @@ terra::plot(depth_bins, main = "Depth bins")
 constant
 color.](Rootopia_Overview_vignette_files/figure-html/bins-1.png)
 
-`round_option = "floor"` gives the soil-science convention: the bin
-labeled 5 spans 5-10 cm and every bin is the full `nn` wide. The
-default, `"rounding"`, labels a bin by its center, so the bin labeled 0
-spans -2.5 to +2.5 cm and is half width once negative depths are
-dropped. Per-bin densities are unaffected either way, because they
-divide by each bin’s own measured area, but any total that multiplies a
-per-bin value by `nn` is biased by that half-width bin.
+`round_option` decides what a bin’s label means, and the two options
+label the same interval differently. `"floor"` computes
+`nn * floor(depth / nn)`, so a label is the **upper edge** of its
+interval: with `nn = 5` the bin labeled 5 holds depths 5 up to 10. The
+default `"rounding"` computes `nn * round(depth / nn)`, so a label is
+the interval’s **center**: the bin labeled 5 holds 2.5 to 7.5, and the
+bin labeled 0 holds -2.5 to 2.5, which is half a bin wide once negative
+depths are dropped. Per-bin densities are unaffected either way, since
+they divide by each bin’s own measured area, but any total that
+multiplies a per-bin value by `nn` is biased by that half-width bin.
 
 ### Traits per depth bin
 
@@ -496,10 +662,28 @@ head(depth_data, 4)
 #> 5    15  47220 437614 139.0202
 ```
 
-Root length does not reduce that way. Kimura’s estimator needs a whole
-skeleton, and it is not additive: the depth bins do not add up to the
-whole-image value. That is correct for a non-linear estimator rather
-than a leak, and it is why the trait is computed one bin at a time.
+Root length cannot go through
+[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html) at
+all, for a plainer reason:
+[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html)
+applies a summary to the *values* in each zone, and length is not a
+property of pixel values but of how the pixels are arranged.
+[`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
+has to see a connected skeleton. So the loop below does the same job
+[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html) does
+– one number per depth bin – with
+[`depth_zoning()`](https://jcunow.github.io/Rootopia/reference/depth_zoning.md)
+supplying the crop
+[`zonal()`](https://rspatial.github.io/terra/reference/zonal.html) would
+have supplied internally, and any function at all in place of a summary
+statistic.
+
+One consequence of taking it bin by bin: Kimura’s estimator weights
+diagonal and orthogonal steps differently, so it is not additive, and
+the per-bin lengths do not sum to the length of the whole skeleton. That
+is a property of the estimator rather than a leak, but it means a
+profile total and a whole-image total are different numbers and should
+not be compared.
 
 ``` r
 
@@ -520,35 +704,9 @@ head(depth_data, 4)
 #> 4    15  47220 437614 139.0202  187.38270          1.3478808
 ```
 
-Diameter needs both images at once: the mask gives the width, the
-skeleton says which pixels to report.
-[`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md)
-returns the local thickness across the whole scan as well as the
-per-skeleton-pixel diameters, so it is worth looking at before reducing
-it to a per-interval mean.
-
-``` r
-
-diam_result <- root_diameter(
-  root_layer,
-  skeleton_img = skl,
-  unit         = "cm",
-  dpi          = dpi,   # not optional: the default is 300
-  select_layer = NULL
-)
-
-# root thickness
-zoom_plot(diam_result$distance_map_rast, frac = 0.1)
-```
-
-![Local root thickness across the whole scan, with the magnified region
-outlined.](Rootopia_Overview_vignette_files/figure-html/diameter-1.png)![The
-same thickness map magnified to native
-resolution.](Rootopia_Overview_vignette_files/figure-html/diameter-2.png)
-
 Diameter is a per-pixel value, so it reduces with
 [`zonal()`](https://rspatial.github.io/terra/reference/zonal.html) like
-the counts, once its raster is snapped onto the depth grid.
+the counts, once `diam_result`’s raster is snapped onto the depth grid.
 
 ``` r
 
@@ -576,10 +734,16 @@ ok      <- depth_data[!is.na(depth_data$rootlength.density) &
                         depth_data$rootlength.density > 0, ]
 mrd_val <- MRD(w = ok$depth, roots = ok$rootlength.density)
 
-total_ld <- sum(depth_data$rootlength.density * 5, na.rm = TRUE)
+# Total length is a sum of lengths. Summing a density and multiplying by the
+# bin width is not a total of anything: density is cm of root per cm2 of
+# window, so the product has no interpretation. The areal density of the whole
+# profile is the total length over the total observed area.
+total_len <- sum(depth_data$rootlength, na.rm = TRUE)
+mean_rld  <- total_len / sum(depth_data$area_cm2, na.rm = TRUE)
 
-cat(sprintf("MRD: %.2f  Total length density: %.4f\n", mrd_val, total_ld))
-#> MRD: 20.64  Total length density: 46.6096
+cat(sprintf("MRD: %.2f cm | total length: %.1f cm | mean RLD: %.4f cm cm-2\n",
+            mrd_val, total_len, mean_rld))
+#> MRD: 20.64 cm | total length: 1226.7 cm | mean RLD: 0.7668 cm cm-2
 ```
 
 [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) stops on
@@ -612,7 +776,9 @@ depth_data$rootpx.cumulative <- root_accumulation(
   group    = "Tube",
   depth    = "depth",
   variable = "rootpx",
-  stdrz    = "additive"   # "counts" (raw), "additive" (/max), "relative" (/sum)
+  stdrz    = "additive"   # counts: cumsum(x)
+                          # additive: cumsum(x) / max(cumsum(x))
+                          # relative: cumsum(x) / sum(cumsum(x))
 )
 
 ggplot(depth_data, aes(x = depth, y = rootpx.cumulative)) +
@@ -626,11 +792,17 @@ ggplot(depth_data, aes(x = depth, y = rootpx.cumulative)) +
 ![Cumulative root accumulation against
 depth.](Rootopia_Overview_vignette_files/figure-html/profile-plots-2.png)
 
-`stdrz` picks the denominator and only one option ends at 1.
-`"additive"` divides the cumulative curve by its own maximum, so curves
-from tubes with very different total abundance compare by shape alone.
-`"counts"` is the raw cumulative sum, and `"relative"` divides by the
-sum of the cumulative values, which is a different scale.
+All three options accumulate down the profile; `stdrz` only picks the
+denominator applied afterwards, and the names do not describe what they
+do. `"counts"` leaves the cumulative sum raw. `"additive"` divides it by
+its own maximum – that is, by the profile total – so the curve runs to 1
+and tubes with very different abundance compare by shape alone. This is
+the one that gives a cumulative share, despite the name. `"relative"`
+divides by the *sum of the cumulative values*, a quantity with no
+obvious interpretation: the curve ends well below 1 and its endpoint
+depends on how many bins there are, so two profiles binned differently
+are not comparable. Use `"additive"` unless you have a specific reason,
+and read the documentation rather than the option name.
 
 ### The whole workflow in one figure
 
@@ -699,10 +871,10 @@ mar_p      <- c(0.4, 0.4, 1.8, 0.4)
 
 # ---- zoom inset ----
 zoom_on   <- TRUE
-# c(across, down) as fractions of the panel, or "densest" for the window
-# holding the most skeleton pixels. A fraction tuned on one scan lands
-# somewhere else on another, so the search is the portable choice.
-zoom_ctr  <- "densest"
+# c(across, down) as fractions of the panel. "densest" instead searches for the
+# window holding the most skeleton pixels, which moves between scans; a fixed
+# position is reproducible, and this one is the position used throughout.
+zoom_ctr  <- c(0.8, 0.35)
 zoom_w_default <- 0.10
 # Window width per panel, as a fraction of the panel width. Magnification in a
 # panel is inset_w / its entry, so each panel can be zoomed separately.
@@ -908,26 +1080,40 @@ result <- root_depth_metrics(
 )
 ```
 
-`path_skl` is optional; left out, skeletons are thinned internally.
-Branching order, root angle, color and landscape metrics are separate
-`calc_*` switches, all off by default because each costs real time.
+`path_skl` is optional; left out, each mask is thinned internally, which
+adds the cost of a skeletonization pass per image and is the single
+slowest thing this wrapper can be asked to do over a large folder.
+Supply the segmenter’s own skeletons if you have them. Branching order,
+root angle, color and landscape metrics are separate `calc_*` switches,
+all off by default because each costs real time too.
 
-## Part II: extensions
+## Part II: minirhizotron extensions
 
-Part I is the standard path. Everything here sits beside it: another
-trait from the same scan, a second session, a different imaging
-geometry, or a step that comes before analysis. The order runs from
-closest to that path to furthest from it. Each section names the article
-that develops it.
+Everything here still works on a minirhizotron tube, and each section
+attaches to the path Part I walked: another trait from the same scan, a
+second session, or the color channels rather than the root shape. The
+order runs from closest to that path to furthest from it. Part III then
+changes the imaging setup altogether.
 
 ### Root angle
 
+Two things have to exist before an angle means anything, and the first
+is a **direction per root pixel**. It comes from a D8 pass over the
+depth map restricted to the skeleton: each center-line pixel is assigned
+whichever of its eight neighbors the depth field falls toward, giving
+one of eight compass classes. The second is a **reference direction** to
+score it against, and that is where the assumption sits: the reference
+is the direction that gets a root away from the tube wall and *downward*
+fastest, so the whole measure is read from a gravitropic standpoint. A
+root growing along a nutrient patch or around a stone is not doing worse
+by this measure in any biological sense; it is simply not doing what
+gravity would predict.
+
 [`deep_drive()`](https://jcunow.github.io/Rootopia/reference/deep_drive.md)
-asks one question of a depth map and a skeleton: what fraction of root
-pixels head in the direction that would take them deeper fastest? It
-derives the direction each root pixel is actually heading from a D8
-flow-direction pass over the depth map, compares it against which of the
-eight neighbors lies deepest, and returns the fraction that agree.
+builds both and reports the agreement between them: the fraction of root
+pixels heading the direction the depth field says is steepest down. It
+takes an `AngleMap` if you have one from elsewhere, and computes it from
+`DepthMap` and `RootMap` when you do not, which is the usual case.
 
 ``` r
 
@@ -937,20 +1123,24 @@ cat(sprintf("deep_drive: %.3f of root pixels head the deepest way\n", dd))
 #> deep_drive: 0.260 of root pixels head the deepest way
 ```
 
-One number between 0 and 1, so it compares across tubes. There is no
-partial credit: a pixel heading 45 degrees from optimal counts the same
-as one heading 180 degrees away, which makes it a measure of agreement
-rather than of deviation. It needs a real depth gradient, so it means
-nothing on a flatbed scan. The batch wrapper reports it as `deep_drive`
-alongside `mean.steepness.angle`.
+One number between 0 and 1, so it compares across tubes. It is an
+agreement score rather than a deviation: a pixel pointing 45 degrees off
+the steepest direction counts exactly as wrong as one pointing 180
+degrees away, since the D8 classes are compared for equality. Two stands
+could therefore score the same while one grows mostly sideways and the
+other mostly upward. Weighting each pixel by its angular distance from
+the reference would separate those, and it would turn the statistic into
+a mean deviation in degrees; that is not what the function does today,
+and it is the obvious extension if the distinction matters to you.
+
+It needs a real depth gradient, so it means nothing on a flatbed scan.
+The batch wrapper reports it as `deep_drive` alongside
+`mean.steepness.angle`.
 
 `return = "all"` keeps the intermediate rasters, and the three that
 matter sit next to each other: the center lines the directions are read
 from, the depth field that defines which way is down, and the direction
 assigned to each skeleton pixel.
-[`deep_drive()`](https://jcunow.github.io/Rootopia/reference/deep_drive.md)
-returns its maps already turned a quarter turn, so the skeleton and the
-depth bins are turned to match.
 
 ``` r
 
@@ -1072,17 +1262,40 @@ slice_traits$rld <- slice_traits$rootlen /
 ```
 
 [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md)
-fits `amplitude * sin(2*pi/period * (x + phase)) + offset` and tests
-whether the amplitude differs from zero. The fit is a
-Levenberg-Marquardt least squares solve from **minpack.lm**, and the
-amplitude tests follow the likelihood-based rhythmicity tests of
-diffCircadian (Ding *et al.* 2021): `method = "F"`, `"LR"` and `"Wald"`
-are the three tests that package distinguishes. Fixing the period to the
-number of slices means one full turn of the tube, so a significant
-amplitude says root abundance varies systematically with circumferential
-position. Nothing in the fit is specific to time: this is a spatial use
-of a tool normally introduced for time series, and `res$peakTime` is a
-slice index rather than a time.
+fits `amplitude * sin(2*pi/period * (x + phase)) + offset`, and all
+three fitted parameters are useful, not just the amplitude:
+
+- **`offset`** is the mean level — the trait averaged around the whole
+  tube, free of the one-sided excess.
+- **`amplitude`** is half the peak-to-trough range. The test asks
+  whether it differs from zero, which is the question “is there a side
+  at all?”.
+- **`phase`** is *where* the peak sits around the circumference. Where
+  the amplitude is clearly non-zero, that is an estimate of the tube’s
+  rotational zero from the roots themselves, and it can be compared
+  against the one
+  [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
+  reads off the tape. Where the amplitude is not significant, the phase
+  is fitting noise and means nothing.
+
+Fixing the period to the number of slices means one full turn of the
+tube, so a significant amplitude says root abundance varies
+systematically with circumferential position. Nothing in the fit is
+specific to time: this is a spatial use of a tool normally introduced
+for time series, and `res$peakTime` is a slice index rather than a time.
+
+The fit is a Levenberg-Marquardt minimization of the residual function
+through
+[`minpack.lm::nls.lm`](https://rdrr.io/pkg/minpack.lm/man/nls.lm.html),
+and the reason is practical rather than principled: base
+[`nls()`](https://rdrr.io/r/stats/nls.html) takes a formula and
+routinely fails with a singular gradient on a sine with three free
+parameters and ordinary starting values. `nls.lm` minimizes the
+residuals directly and converges where
+[`nls()`](https://rdrr.io/r/stats/nls.html) gives up. The amplitude
+tests follow the likelihood-based rhythmicity tests of diffCircadian
+(Ding *et al.* 2021); `method = "F"`, `"LR"` and `"Wald"` are the three
+that package distinguishes.
 
 ``` r
 
@@ -1147,25 +1360,41 @@ the
 tube.](Rootopia_Overview_vignette_files/figure-html/rhythm-plots-2.png)
 
 A significant, non-trivial amplitude means more root material on one
-side of the tube than the other – from gravitropism, from light reaching
-one face of the installation, or from the installation angle itself.
+side of the tube than the other. Gravitropism and the installation angle
+are the biological and geometric causes, but check the methodological
+one first: tape on the upper side of the tube, inside the soil, hides
+whatever grew under it. That removes root from one band of rows and from
+the shallowest depths at the same time, which produces exactly the
+signal a real one-sided bias produces. Comparing the fitted `phase`
+against the rotational zero from
 [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md)
-and
-[`estimate_rotation_shift()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_shift.md)
-locate the rotational zero and the offset between sessions.
+is the check — a peak sitting where the tape is is an artifact, one
+sitting elsewhere is not.
 
 ### Comparing depth profiles
 
-Two profiles can differ in two ways that are worth keeping apart: the
-same root sitting at a different depth, or a different amount of root at
-the same depth. The earth-mover idea measures the first. **Distance here
-means depth**: how far down the profile the root mass would have to be
-carried, in centimeters, to turn one profile into the other. It is
-unrelated to
-[`root_transport()`](https://jcunow.github.io/Rootopia/reference/root_transport.md),
-which measures water movement through a root network. A profile shifted
-35 cm costs more than one shifted 10 cm, and a profile of a different
-shape costs whatever rearranging it takes.
+The usual way to say two stands root differently is to compare mean
+rooting depth.
+[`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) gives one
+number per profile, it is easy to model, and it is the right summary
+when the thing that changed is how deep the root sits. Its limit is that
+it is a center of mass: it collapses a whole profile to one coordinate,
+so any two profiles with the same center are the same number to it. A
+stand with all its root at 20 cm and a stand with half at the surface
+and half at 40 cm have the same mean rooting depth and nothing else in
+common.
+
+Comparing the distributions keeps what the mean throws away. The
+earth-mover distance asks how far the root mass would have to be
+carried, down the depth axis, to turn one profile into the other:
+**distance here means depth**, in centimeters. A profile shifted 35 cm
+costs more than one shifted 10 cm, and a profile of a different shape
+costs whatever rearranging it takes. It reduces to the difference in
+mean rooting depth exactly when all the root moves the same way, and
+exceeds it whenever some moves up and some down — so it is never less
+informative than
+[`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md), and the
+gap between the two is itself the quantity that says the shapes differ.
 
 In one dimension that has an exact picture. Plot each profile as the
 cumulative share of total root length from the surface down, and the
@@ -1206,10 +1435,12 @@ w <- (mean_depth(reference) - mean_depth(shallow)) /
      (mean_depth(deep)      - mean_depth(shallow))
 bimodal <- (1 - w) * shallow + w * deep
 
-# Distance in centimeters of depth: the area between the two cumulative
-# curves, measured down the depth axis. This is what
-# compare_depth_distribution(metric = "wasserstein") returns.
-emd_cm <- function(a, b) sum(abs(cumsum(a) - cumsum(b))) * diff(z)[1]
+# The package function, with the depth of each bin as `index` and no tail
+# weighting, so every centimeter of depth counts the same. The result is in the
+# units of `index`, which is centimeters here.
+emd_cm <- function(a, b)
+  compare_depth_distribution(a, b, metric = "wasserstein", index = z,
+                             tail_weight = FALSE)
 
 compare_panel <- function(b, label_b, title) {
   Fa <- cumsum(reference)
@@ -1231,7 +1462,7 @@ op <- graphics::par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
 compare_panel(shifted10, "10 cm deeper",      "same shape, 10 cm down")
 compare_panel(shifted35, "35 cm deeper",      "same shape, 35 cm down")
 compare_panel(even, "equal at all depths",    "spread evenly")
-compare_panel(bimodal, "two layers",          "same mean depth, other shape")
+compare_panel(bimodal, "bimodal",            "same mean depth, other shape")
 ```
 
 ![Four panels, each showing the cumulative share of root with depth for
@@ -1258,8 +1489,8 @@ because the mass has to be spread out as well as moved. There is no
 shift to report for it, and its 19.3 cm is what rearranging one profile
 into the other costs.
 
-The fourth panel is the one to read twice. It holds a two-layer profile
-– a surface mode and a second one at 45 cm – with the weight on the deep
+The fourth panel is the one to read twice. It holds a bimodal profile –
+a surface mode and a second one at 45 cm – with the weight on the deep
 mode solved so that its mean rooting depth is exactly the reference’s.
 
 ``` r
@@ -1284,6 +1515,14 @@ and more again at depth. Mass has to move up as well as down; the two
 directions cancel in the mean and add in the distance. Crossing
 cumulative curves are the visual test for a difference that mean rooting
 depth cannot see.
+
+`tail_weight = TRUE` is the reason the function takes more than two
+vectors. It multiplies the cost of moving mass by a weight that varies
+with depth, so a centimeter of displacement deep in the profile can be
+made to count for more than a centimeter near the surface — `weighting`
+picks the shape and `parameter` its steepness. Left at `FALSE`, as
+above, every depth counts equally and the result is the plain
+earth-mover distance the figure draws.
 
 [`compare_depth_distribution()`](https://jcunow.github.io/Rootopia/reference/compare_depth_distribution.md)
 is the function for this, with `metric = "wasserstein"` (default),
@@ -1313,7 +1552,35 @@ and the whole distance is shape.
 
 ### Turnover between sessions
 
-Two methods, for two kinds of input, answering different questions.
+Turnover is how much of the root system is replaced over time: root
+produced and root lost between two visits to the same tube, rather than
+how much is there. It matters because standing root length can sit still
+while the roots making it up are entirely different ones, and that
+difference is what carbon and nutrient budgets turn on.
+
+[`root_turnover()`](https://jcunow.github.io/Rootopia/reference/root_turnover.md)
+offers two methods, for two kinds of input, and they do not measure the
+same thing.
+
+**`method = "tc"`** — *temporal comparison*. Two segmented images of the
+same tube from consecutive sessions. It measures root amount in each and
+takes the difference, so what you get is **net** change.
+
+**`method = "dpc"`** — *decay, production, constant*. One image in which
+a segmenter has already matched roots between the two sessions and
+labeled every root pixel as decayed, newly produced, or unchanged.
+Because it separates the two directions, what you get is **gross**
+change.
+
+Use `"tc"` when all you have is a pair of segmentations, which is the
+common case, and read the result as a lower bound. Use `"dpc"` when your
+segmenter produces the matched coding, and read it as an upper bound.
+The reason for both caveats is the same: `"tc"` cannot see root that
+appeared and vanished between two scans and so **understates** turnover,
+while `"dpc"` counts every labeled difference including the ones that
+come from imperfect matching and segmentation noise, and so
+**overstates** it. The truth is between them, and reporting which method
+produced a number matters more than the number.
 
 ``` r
 
@@ -1329,9 +1596,9 @@ root_turnover(img1 = t1, img2 = t2, method = "tc", tc_method = "kimura",
 #> 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618
 ```
 
-Temporal comparison measures root amount in each image and takes the
-difference, so it sees only the *net* change: root that grew and died
-between the two scans is invisible to it.
+`tc_method` picks how “root amount” is measured — `"kimura"` for length,
+pixel counts for area — and the two can disagree in sign when roots
+thicken without extending.
 
 ``` r
 
@@ -1343,11 +1610,10 @@ root_turnover(dpc, method = "dpc")
 #> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
 ```
 
-Decay-production-constant decomposes a single three-layer image in which
-a segmenter has already color-coded each pixel as produced, decayed or
-unchanged, which resolves *gross* change instead. `include_virtualroots`
-switches the denominator between “present at this time point” and
-“present at any time point”, and the choice changes the ratios.
+`include_virtualroots` switches the denominator between “present at this
+time point” and “present at any time point”. The second includes root
+that was there only in the other session, which lowers every ratio; the
+choice changes the numbers and has to be reported with them.
 
 ### Soil color, texture, and the rhizosphere
 
@@ -1410,16 +1676,16 @@ is the figure to read it from: the class map, a legend in dendrogram
 order, and a dendrogram of inter-class LAB distances, so you can see
 which classes sit close enough together to be confused. `color_mode`
 switches the palette: `"contrast"` is the default and the one used here,
-`"vibrant"` saturates it, and `"centroid"` paints each class in its own
-measured mean color – which looks faithful but puts several soil classes
-in nearly the same red-brown, so it is the hardest of the three to read.
+`"vibrant"` saturates it, and `"centroid"` paints each class in the mean
+color of the pixels assigned to it — computed from the image, not chosen
+— which looks faithful but puts several soil classes in nearly the same
+red-brown, so it is the hardest of the three to read.
 
-Texture is delegated:
+Texture is delegated to **glcm**:
 [`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md)
-converts the band to a `raster` object and calls **glcm**, which
-computes the grey-level co-occurrence matrices and their statistics.
-`grays` sets the quantization level and `window` the moving window; both
-are glcm’s arguments, passed straight through.
+hands it the band and returns what it computes. `grays` sets how many
+grey levels the image is reduced to and `window` the size of the moving
+window; both are glcm’s own arguments, passed straight through.
 
 ``` r
 
@@ -1444,6 +1710,59 @@ tube_coloration(rgb)
 #>      blue
 #> 1 54.3997
 ```
+
+The halo below is what makes a rhizosphere question answerable: with
+roots, their immediate surroundings, and the rest of the frame
+separated, the same color measurement can be taken three times and
+compared.
+
+``` r
+
+# A 10 px halo with roots excluded, so the three groups do not overlap.
+halo_only <- create_root_buffer(root_layer, width = 10, halo_only = TRUE,
+                                kernel = "circle")
+
+bright <- terra::app(rgb_disp[[1:3]], fun = mean, na.rm = TRUE)
+b <- terra::values(bright,     mat = FALSE)
+r <- terra::values(root_layer, mat = FALSE) == 1
+h <- terra::values(halo_only,  mat = FALSE) == 1
+r[is.na(r)] <- FALSE
+h[is.na(h)] <- FALSE
+
+# Take the values, then drop NA, then thin: subsetting first means a group can
+# never hand density() a missing value, and sampling values rather than indices
+# avoids sample()'s behavior on a length-one vector.
+set.seed(1)
+pick <- function(sel, n = 40000) {
+  v <- b[sel]
+  v <- v[!is.na(v)]
+  if (length(v) > n) sample(v, n) else v
+}
+
+groups <- list(root = pick(r), halo = pick(h), peat = pick(!r & !h))
+dens   <- lapply(groups[vapply(groups, length, 1L) > 1L], stats::density)
+
+plot(NA, xlim = range(unlist(lapply(dens, function(d) d$x))),
+     ylim = c(0, max(vapply(dens, function(d) max(d$y), 1))),
+     xlab = "brightness (mean of R, G, B)", ylab = "density", main = "")
+cols <- c(root = "#C1440E", halo = "#2455A4", peat = "#8C6D46")
+for (nm in names(dens)) graphics::lines(dens[[nm]], col = cols[[nm]], lwd = 2)
+graphics::legend("topright", bty = "n", lwd = 2, col = cols[names(dens)],
+                 legend = c(root = "root", halo = "halo around roots",
+                            peat = "bulk peat")[names(dens)])
+```
+
+![Three density curves of pixel brightness: root pixels, the halo of
+soil immediately around the roots, and the remaining bulk
+peat.](Rootopia_Overview_vignette_files/figure-html/rgb-zones-1.png)
+
+Three groups, one measurement. Whether the halo sits between root and
+bulk peat, or on top of one of them, is the thing to look at: a halo
+that tracks bulk peat says the roots are not visibly altering their
+surroundings at this resolution, and a halo displaced toward the root
+curve says they are — or that the segmentation is a pixel or two
+generous and the halo is partly root. Widening `width` and watching
+whether the curve migrates separates those two readings.
 
 [`create_root_buffer()`](https://jcunow.github.io/Rootopia/reference/create_root_buffer.md)
 grows a buffer around every root pixel, a simple proxy for the
@@ -1478,7 +1797,13 @@ halo.](Rootopia_Overview_vignette_files/figure-html/root-buffer-3.png)
 (4-neighbor) growth shape, and `width` is the number of dilation
 iterations.
 
-### Flatbed scans: the same traits without a depth axis
+## Part III: flatbed scans
+
+Everything to this point assumed a tube. A flatbed scan of washed roots
+is the other half of the diagram in the introduction: no depth axis, and
+architecture in its place.
+
+### The same traits, without a depth axis
 
 A flatbed scan of washed roots is the other geometry the package serves,
 and it is a special case rather than a different pipeline: the same
@@ -1486,10 +1811,33 @@ cleaning, skeleton, length and diameter functions apply, and only the
 depth axis goes away. Where a root lies on the tray says nothing about
 where it grew, so the whole scan is one observation.
 
-What that buys is architecture. A washed root system is complete and
-unoccluded, so the branching graph is worth building on a flatbed scan
-in a way it rarely is on a tube, where roots enter and leave the field
-of view.
+What that buys is architecture. A washed root system is rarely complete
+— fragments break off at the base and at branch points during excavation
+and washing, so how much you recover depends on the setup. What you do
+have is a set of individually complete, fully connected units laid flat
+and unoccluded, and that is enough for a branching graph to mean
+something. On a tube it is not: roots enter and leave the field of view,
+so the graph describes visible fragments rather than root systems.
+
+#### Junctions and crossings
+
+Two situations look identical in a binary image and are biologically
+opposite. A **junction** is a root branching: three arms meet, one
+parent and two children. A **crossing** is two roots lying over one
+another: four arms meet, nothing branched, and the two roots merely
+touch in projection. Counted naively, a crossing contributes a branch
+point that does not exist, two tips that do not exist, and a closed loop
+that does not exist.
+
+[`root_graph_pipeline()`](https://jcunow.github.io/Rootopia/reference/root_graph_pipeline.md)
+handles both, and prints what it did: tracing finds one segment per arm,
+`spliced pass-through nodes` merges arms that are not really ends, and
+`resolved crossings` pairs up the four arms of a crossing by direction
+so each root continues *through* the node.
+[`network_metrics()`](https://jcunow.github.io/Rootopia/reference/network_metrics.md)
+then reports whatever could not be paired as `artefact_cycles` – loops
+in a structure that cannot have them, which is a measurement of
+unresolved overlap rather than a property of the plant.
 
 ``` r
 
@@ -1498,10 +1846,10 @@ data(flatbed_scan_example)
 seg_fb <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
                               scale = "binary", select_layer = 2)
 
-# The top edge of the scan carries the tray rim rather than root, and a rim
-# touching the mask joins otherwise separate roots into one component, which
-# changes the base each path is measured from. Drop it before anything is
-# traced.
+# The top edge of the scan carries an artifact rather than root. Anything
+# non-root that touches the mask can join otherwise separate roots into one
+# component and move the base each path is measured from, so it goes before
+# anything is traced.
 e <- terra::ext(seg_fb)
 seg_fb <- terra::crop(seg_fb, terra::ext(e[1], e[2], e[3],
                                         e[4] - 0.05 * (e[4] - e[3])))
@@ -1513,9 +1861,10 @@ fb_clean <- clean_image(seg_fb,
 
 fb_skl <- skeletonize_image(fb_clean, verbose = FALSE)
 
-# The order map is built on the unpruned skeleton. Pruning removes the short
-# terminal branches, and those are exactly the segments that carry the highest
-# orders, so pruning first flattens the very classification being shown.
+# The order map is built on the unpruned skeleton. Pruning removes short
+# terminal branches, and which end of the order scale that affects depends on
+# the scheme: under order_from_base, used below, terminal segments carry the
+# highest numbers, so pruning first flattens the top of the classification.
 # `prune_skeleton()` is still the right call before counting tips, and
 # `prune_terminal_segments()` prunes inside the graph if you want both.
 fb_skl_pruned <- prune_skeleton(fb_skl, mask = fb_clean, min_length = 50,
@@ -1536,13 +1885,14 @@ order_res <- branch_order_map(
 #>   spliced pass-through nodes: 111 -> 111 segment(s)
 #>   resolved crossings: 111 -> 111 segment(s)
 #> Tip order...
-#> Done in 0.36s. 111 segments, max order 8, total length 7857.9 px
+#> Done in 0.37s. 111 segments, max order 8, total length 7857.9 px
 
-# The same window before and after cleaning, so the specks that
-# drop_objects_upto removes and the pinholes that fill_holes_upto closes can
-# be compared rather than described.
-zoom_plot(seg_fb,   main = "Segmented, as it comes", center = c(0.6, 0.7),
-          overview = FALSE)
+# One window for every figure in this part, so the panels can be compared.
+fb_frac <- 0.25
+fb_ctr  <- c(0.7, 0.625)
+
+zoom_plot(seg_fb,   main = "Segmented, as it comes", frac = fb_frac,
+          center = fb_ctr, overview = FALSE)
 ```
 
 ![The raw segmentation magnified, with isolated specks still
@@ -1550,7 +1900,7 @@ present.](Rootopia_Overview_vignette_files/figure-html/flatbed-1.png)
 
 ``` r
 
-zoom_plot(fb_clean, main = "Cleaned", center = c(0.6, 0.7))
+zoom_plot(fb_clean, main = "Cleaned", frac = fb_frac, center = fb_ctr)
 ```
 
 ![Segmented flatbed root scan after cleaning, with the magnified region
@@ -1560,8 +1910,8 @@ resolution.](Rootopia_Overview_vignette_files/figure-html/flatbed-3.png)
 
 ``` r
 
-zoom_plot(fb_skl_pruned, main = "Skeleton (spurs pruned)", frac = 0.25,
-          center = c(0.7, 0.625))
+zoom_plot(fb_skl_pruned, main = "Skeleton (spurs pruned)", frac = fb_frac,
+          center = fb_ctr)
 ```
 
 ![The pruned skeleton of the same scan, with the magnified region
@@ -1598,16 +1948,15 @@ render_order_overlay(attr(order_res$edges, "segments"),
                      attr(order_res$edges, "dims"), ord_png,
                      mask = fb_clean, value_label = "order from base")
 
-zoom_plot(as_rgb_rast(ord_png), frac = 0.25, center = c(0.6, 0.7), maxcell = Inf,
-          main = "Order from base")
+# overview = FALSE: the whole tray at page width shows nothing, so only the
+# magnified window is drawn.
+zoom_plot(as_rgb_rast(ord_png), frac = fb_frac, center = fb_ctr,
+          maxcell = Inf, overview = FALSE, main = "Order from base")
 ```
 
 ![The flatbed root system painted by branch order over the grey root
 mask, with one labeled color per order class, and the same region
-magnified.](Rootopia_Overview_vignette_files/figure-html/order-overlay-1.png)![The
-flatbed root system painted by branch order over the grey root mask,
-with one labeled color per order class, and the same region
-magnified.](Rootopia_Overview_vignette_files/figure-html/order-overlay-2.png)
+magnified.](Rootopia_Overview_vignette_files/figure-html/order-overlay-1.png)
 
 [`plot_order_window()`](https://jcunow.github.io/Rootopia/reference/plot_order_window.md)
 is the one figure that is not a
@@ -1641,12 +1990,40 @@ if (requireNamespace("png", quietly = TRUE)) {
 by order over it, so untraced skeleton shows as bare
 gray.](Rootopia_Overview_vignette_files/figure-html/order-window-1.png)
 
-`order = "order_from_base"` counts generations outward: the thickest,
-most central path of each connected component is order 1, its branches
-are 2, theirs 3. Three other schemes are computed at the same time and
-kept in `order_res$edges`; two count inward from the tips per segment,
-two describe a whole continuous root. The scheme has to be named because
-root ecology uses “order” in both directions.
+All four schemes are computed at once and kept as columns of
+`order_res$edges`; `order =` only picks which one colors the map and
+groups the summary. They are not variants of one idea — they count from
+opposite ends and two of them describe a whole root rather than a
+segment, so a number means nothing until the scheme is named.
+
+| Scheme | Counts from | Unit | 1 is |
+|----|----|----|----|
+| `order_from_tip` | the tips, inward | segment | a terminal segment |
+| `strahler_order` | the tips, inward | segment | a terminal segment |
+| `order_from_base` | the base, outward | continuous root | the main axis |
+| `root_max_order_from_tip` | the tips, inward | continuous root | a root with no branches |
+
+`order_from_tip` peels: every terminal segment is 1, and a segment is
+one more than the highest of its children. `strahler_order` differs in
+one rule — it increments only where two children of *equal* order meet,
+otherwise it takes the larger — so it grows with how balanced the
+branching is rather than with how deep it goes, and stays lower than
+`order_from_tip` on a lopsided system.
+
+The two per-root schemes first group segments into continuous roots,
+following the straightest, thickest path through each junction.
+`order_from_base` counts generations outward, so the main axis of each
+component is 1, its branches 2, theirs 3. `root_max_order_from_tip`
+stamps every segment of a root with the largest `order_from_tip` found
+along it, which labels a root by how much branching it carries rather
+than by where it sits.
+
+Which to use follows from the question. Comparing against published
+root-order data usually means `order_from_base`, because that is the
+convention most root ecology reports. Asking how deep the branching
+hierarchy goes means `order_from_tip`. Asking how *balanced* it is means
+`strahler_order`. The one thing not to do is compare numbers across
+schemes.
 
 ``` r
 
@@ -1713,7 +2090,10 @@ window.](Rootopia_Overview_vignette_files/figure-html/flatbed-diameter-1.png)
 A diameter distribution is where fine and coarse roots separate, and
 [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md)
 finds the modes in it, optionally refining them with a Gaussian mixture
-via `mclust`.
+via `mclust`. It is not run here because this one distribution is
+unimodal: a single peak with a long upper tail, which is what a scan of
+mostly fine roots looks like. Run it where the histogram shows two humps
+and you want the cut between them placed by the data rather than by eye.
 
 ### Network shape and transport
 
@@ -1812,13 +2192,34 @@ head(et[, c("length", "path_length", "path_resistance",
 #> 4 0.04135668    2.034989         6777683               1        0.04135668
 ```
 
+Everything here answers one question: which parts of this root system
+are *remote*, and remote in what sense. Geometric distance from the base
+is one answer and hydraulic cost is another, and they disagree, because
+a root’s resistance scales with the fourth power of its radius. A tip at
+the end of a long thick root can be hydraulically closer to the base
+than one at the end of a short thin root. That is the comparison the
+figure below draws, and it is why both columns are reported.
+
+Two families of column, and the direction of each is fixed by the base
+rather than by any order scheme.
 [`root_transport()`](https://jcunow.github.io/Rootopia/reference/root_transport.md)
-picks the thickest loose end of each separate piece as the base, which
-on a scan is the proximal end, and measures outward from there.
-Resistance is the Hagen-Poiseuille term, so it scales with the fourth
+picks the thickest loose end of each separate piece as the base — on a
+scan that is the proximal end — and everything is measured relative to
+that. `path_length` and `path_resistance` accumulate **inward to
+outward**: from the base to the far end of this segment, so they grow
+toward the tips and answer “how far is this, from the plant’s point of
+view”. `downstream_tips`, `downstream_length` and `downstream_surface`
+accumulate **outward to inward**: what lies beyond this segment, so they
+peak at the base and answer “how much does this segment serve”. Neither
+changes if you switch `order =` in
+[`branch_order_map()`](https://jcunow.github.io/Rootopia/reference/branch_order_map.md);
+both change if the base is picked wrongly, which is what a stray
+non-root object touching the mask does. Resistance is the
+Hagen-Poiseuille term for an open pipe, so it scales with the fourth
 power of radius: halving a root’s diameter makes the same length roughly
-sixteen times harder to push water through. Treat it as a relative
-ranking rather than a physical measurement.
+sixteen times harder to push water through. Real resistance is set by
+xylem anatomy, not by the outer diameter, so treat these as a relative
+ranking within one scan rather than a physical measurement.
 
 [`render_order_overlay()`](https://jcunow.github.io/Rootopia/reference/render_order_overlay.md)
 paints any per-segment column back onto the mask, which is how a
@@ -1848,17 +2249,14 @@ render_order_overlay(attr(et, "segments"),
                      mask = fb_clean, max_side = 2000,
                      value_label = "path resistance (capped at p97)")
 
-zoom_plot(as_rgb_rast(png_file), frac = 0.25, center = c(0.6, 0.7), maxcell = Inf,
-          main = "Path resistance")
+zoom_plot(as_rgb_rast(png_file), frac = fb_frac, center = fb_ctr,
+          maxcell = Inf, overview = FALSE, main = "Path resistance")
 ```
 
 ![The root system painted by path resistance, segments near the base
 dark and distal segments bright, over the grey root mask, with the same
 window
-magnified.](Rootopia_Overview_vignette_files/figure-html/transport-overlay-1.png)![The
-root system painted by path resistance, segments near the base dark and
-distal segments bright, over the grey root mask, with the same window
-magnified.](Rootopia_Overview_vignette_files/figure-html/transport-overlay-2.png)
+magnified.](Rootopia_Overview_vignette_files/figure-html/transport-overlay-1.png)
 
 Segments with no value are drawn in red, which makes failures visible
 rather than silently absent – a loop in the graph has no single
@@ -1900,14 +2298,17 @@ diameter.](Rootopia_Overview_vignette_files/figure-html/transport-ranks-1.png)
 graphics::par(op)
 ```
 
-The pair is worth seeing. On the linear axis a few thin segments set the
-top of the range and everything else is squeezed into a band along the
-bottom, which says only that most segments are cheap and one or two are
-not. The log axis spreads the same points over the orders of magnitude
-they actually span, and the structure appears: at any given distance
-from the base, resistance varies by two or three orders of magnitude. It
-is the same problem the overlay has, solved there by capping the ramp
-instead.
+The pair is worth seeing, and which one to use depends on the scan. On
+the linear axis a few thin segments set the top of the range and
+everything else is squeezed into a band along the bottom, which says
+only that most segments are cheap and one or two are not. The log axis
+spreads the same points over the orders of magnitude they actually span,
+and the structure appears: at any given distance from the base,
+resistance varies by two or three orders of magnitude. A clean scan with
+no stray object can be readable on the linear axis; one where a single
+artifact has created an extremely thin segment never is, because that
+segment alone sets the scale. Removing the artifact is the better fix,
+and the log axis is what to reach for when you cannot.
 
 Point size is diameter, and the small points – the thin roots – sit at
 the top. So a long thick root can be an easier path for water than a
