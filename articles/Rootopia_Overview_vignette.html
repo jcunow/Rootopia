@@ -1126,12 +1126,11 @@ bundled example. <code>overview_figure.R</code> writes one; put it at
 includes it instead of recomputing. With no such file the bundled scan
 is used, which is what makes this article reproducible from the package
 alone.</p>
+<p><img src="figures/overview_panels.png" class="r-plt" alt="Six panels of one minirhizotron scan: the RGB scan, the segmented root area, the skeleton, local root thickness, the binned depth map, and the root length density profile against depth." width="100%"></p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">panels</span><span class="op">)</span><span class="op">)</span>, mar <span class="op">=</span> <span class="va">mar_p</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">pn</span> <span class="kw">in</span> <span class="va">panels</span><span class="op">)</span> <span class="va">draw</span><span class="op">[[</span><span class="va">pn</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="Rootopia_Overview_vignette_files/figure-html/overview-panels-1.png" class="r-plt" alt="Six panels of the same minirhizotron scan, depth running down the page, each with a magnified inset of one window: the RGB scan, the segmented root area, the one-pixel skeleton over the root area, local root thickness in millimeters, the binned depth map with the roots drawn over it, and the resulting root length density profile against depth." width="100%"></p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">pn</span> <span class="kw">in</span> <span class="va">panels</span><span class="op">)</span> <span class="va">draw</span><span class="op">[[</span><span class="va">pn</span><span class="op">]</span><span class="op">]</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>The last panel is the point of the other five. Everything to its left
 is an image; it is the only one with a soil depth axis, and it is what
 the rest of this article compares between tubes, between sessions and
@@ -1140,7 +1139,7 @@ between treatments.</p>
 <div class="section level3">
 <h3 id="the-same-profile-over-a-folder">The same profile over a folder<a class="anchor" aria-label="anchor" href="#the-same-profile-over-a-folder"></a>
 </h3>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_depth_metrics.html">root_depth_metrics</a></span><span class="op">(</span></span>
 <span>  path_seg            <span class="op">=</span> <span class="st">"scans/segmented/2023_06/"</span>,</span>
 <span>  path_skl            <span class="op">=</span> <span class="st">"scans/skeleton/2023_06/"</span>,</span>
@@ -1192,7 +1191,7 @@ between them: the fraction of root pixels heading the direction the
 depth field says is steepest down. It takes an <code>AngleMap</code> if
 you have one from elsewhere, and computes it from <code>DepthMap</code>
 and <code>RootMap</code> when you do not, which is the usual case.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span>DepthMap <span class="op">=</span> <span class="va">depth_map</span>, RootMap <span class="op">=</span> <span class="va">skl</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"deep_drive: %.3f of root pixels head the deepest way\n"</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span>
@@ -1213,7 +1212,7 @@ scan. The batch wrapper reports it as <code>deep_drive</code> alongside
 three that matter sit next to each other: the center lines the
 directions are read from, the depth field that defines which way is
 down, and the direction assigned to each skeleton pixel.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dd_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span>DepthMap <span class="op">=</span> <span class="va">depth_map</span>, RootMap <span class="op">=</span> <span class="va">skl</span>, return <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Only downward directions occur on a tube installed at an angle, so the three</span></span>
@@ -1260,7 +1259,7 @@ down, and the direction assigned to each skeleton pixel.</p>
 <span>                 legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">ang_use</span>, <span class="st">"\u00b0"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/mtext.html" class="external-link">mtext</a></span><span class="op">(</span><span class="st">"D8 direction"</span>, side <span class="op">=</span> <span class="fl">3</span>, line <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/angle-panels-1.png" class="r-plt" alt="Three panels: the one-pixel skeleton, the binned depth map, and the D8 direction class of each skeleton pixel, with a legend naming the five downward directions that occur." width="100%"></p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Zero degrees is up and the angle runs clockwise, so 180 is straight
 down the depth axis and 90 and 270 run around the circumference. A tube
@@ -1276,7 +1275,7 @@ question: are roots spread evenly around the tube, or concentrated on
 one side? <code><a href="../reference/slice_rotation.html">slice_rotation()</a></code> cuts the image into bands of
 rows in rotation order, and a trait measured per band becomes a sequence
 indexed by circumferential position.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Trim the shallowest quarter of the depth axis (columns), where the tape and</span></span>
 <span><span class="co"># the noisiest soil sit. The rotation axis is left whole, since that is what the</span></span>
 <span><span class="co"># slices below are cut along.</span></span>
@@ -1285,7 +1284,7 @@ indexed by circumferential position.</p>
 <span>                         <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">e</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="va">e</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">/</span> <span class="fl">4</span>, <span class="va">e</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">e</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="va">e</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">rot_layer</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/slices-1.png" class="r-plt" alt="Segmented scan cropped to the circumferential slices used below." width="1350"></p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># create circumferential zones</span></span>
 <span><span class="va">n_slices</span> <span class="op">&lt;-</span> <span class="fl">48</span></span>
@@ -1347,7 +1346,7 @@ gives up. The amplitude tests follow the likelihood-based rhythmicity
 tests of diffCircadian (Ding <em>et al.</em> 2021);
 <code>method = "F"</code>, <code>"LR"</code> and <code>"Wald"</code> are
 the three that package distinguishes.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rhythmicity.html">rhythmicity</a></span><span class="op">(</span></span>
 <span>  x          <span class="op">=</span> <span class="va">slice_traits</span><span class="op">$</span><span class="va">slice</span>,</span>
 <span>  y          <span class="op">=</span> <span class="va">slice_traits</span><span class="op">$</span><span class="va">rld</span>,</span>
@@ -1358,7 +1357,7 @@ the three that package distinguishes.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Mean %.4f | Amplitude %.4f | Phase %.2f | R2 %.3f | p %.4f\n"</span>,</span>
 <span>            <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Mean 4.9233 | Amplitude 1.8943 | Phase 39.56 | R2 0.650 | p 0.0000</span></span></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Smooth fitted sine over the slice index</span></span>
 <span><span class="va">fit_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>slice <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n_slices</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">fit_df</span><span class="op">$</span><span class="va">rld</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span></span>
@@ -1380,7 +1379,7 @@ the three that package distinguishes.</p>
 <span>       y <span class="op">=</span> <span class="st">"Root Length Density (cm / cm2)"</span>,</span>
 <span>       title <span class="op">=</span> <span class="st">"Root distribution around tube circumference"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/rhythm-plots-1.png" class="r-plt" alt="Root length density against position around the tube circumference, with the fitted sine curve." width="1350"></p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># cross section view</span></span>
 <span><span class="va">inner</span> <span class="op">&lt;-</span> <span class="fl">6</span></span>
@@ -1432,7 +1431,7 @@ area between the two curves <em>is</em> that distance. At any depth the
 horizontal gap between the curves is the share of root that has to cross
 that depth; adding it up down the profile gives the total, in
 centimeters.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">z</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">60</span>, by <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>                    <span class="co"># 13 intervals, 5 cm each</span></span>
 <span></span>
 <span><span class="co"># A surface-weighted reference, with no mass below 25 cm. Keeping the support</span></span>
@@ -1492,7 +1491,7 @@ centimeters.</p>
 <span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">even</span>, <span class="st">"equal at all depths"</span>,    <span class="st">"spread evenly"</span><span class="op">)</span></span>
 <span><span class="fu">compare_panel</span><span class="op">(</span><span class="va">bimodal</span>, <span class="st">"bimodal"</span>,            <span class="st">"same mean depth, other shape"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/wasserstein-1.png" class="r-plt" alt="Four panels, each showing the cumulative share of root with depth for a reference profile and a comparison profile, with the area between them shaded. The band is narrow for a 10 cm shift, wide for a 35 cm shift, intermediate for a profile with equal root at every depth whose cumulative curve is a straight line, and crossing curves for a bimodal profile that has the same mean rooting depth as the reference." width="1350"></p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>The first two panels hold the same root in the same shape and differ
 only in how far down it sits, so the band widens in proportion – and
@@ -1508,7 +1507,7 @@ into the other costs.</p>
 – a surface mode and a second one at 45 cm – with the weight on the deep
 mode solved so that its mean rooting depth is exactly the
 reference’s.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>reference <span class="op">=</span> <span class="fu">mean_depth</span><span class="op">(</span><span class="va">reference</span><span class="op">)</span>, bimodal <span class="op">=</span> <span class="fu">mean_depth</span><span class="op">(</span><span class="va">bimodal</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; reference   bimodal </span></span>
 <span><span class="co">#&gt;  10.68323  10.68323</span></span>
@@ -1586,7 +1585,7 @@ scans and so <strong>understates</strong> turnover, while
 that come from imperfect matching and segmentation noise, and so
 <strong>overstates</strong> it. The truth is between them, and reporting
 which method produced a number matters more than the number.</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span>
 <span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span>,</span>
 <span>                          output_format <span class="op">=</span> <span class="st">"spatrast"</span><span class="op">)</span></span>
@@ -1600,7 +1599,7 @@ which method produced a number matters more than the number.</p>
 <p><code>tc_method</code> picks how “root amount” is measured —
 <code>"kimura"</code> for length, pixel counts for area — and the two
 can disagree in sign when roots thicken without extending.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span><span class="op">)</span></span>
 <span><span class="va">dpc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
 <span>                           scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
@@ -1621,14 +1620,14 @@ them.</p>
 by nearest-centroid matching in CIE LAB, leaving pixels too far from any
 centroid unclassified rather than forcing them into the nearest
 class.</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># downsample_fact speeds up the demo; drop it for full resolution</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">rgb</span>, downsample_fact <span class="op">=</span> <span class="fl">4</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># A SpatRaster of class IDs (factor levels are the class names)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">map</span>, main <span class="op">=</span> <span class="st">"Soil classification"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/soil-classify-1.png" class="r-plt" alt="RGB minirhizotron scan, full view with the magnified region outlined." width="1350"><img src="Rootopia_Overview_vignette_files/figure-html/soil-classify-2.png" class="r-plt" alt="The same scan magnified to native resolution." width="1350"></p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">metrics</span></span>
 <span><span class="co">#&gt;           class n_pixels pct_pixels L_mean A_mean B_mean L_sd A_sd B_sd R_mean</span></span>
 <span><span class="co">#&gt; 1     dark_soil    40252     11.331    8.8    1.5    2.4 3.38 1.45 1.35   28.3</span></span>
@@ -1644,7 +1643,7 @@ class.</p>
 <span><span class="co">#&gt; 4  180.6      177.8                  7.67    #B0B5B2</span></span>
 <span><span class="co">#&gt; 5   49.1       36.5                  6.38    #473124</span></span>
 <span><span class="co">#&gt; 6   36.5       13.9                    NA    #50240F</span></span></code></pre></div>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_soil_classification.html">plot_soil_classification</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/soil-plot-1.png" class="r-plt" alt="Soil classification map beside a legend and a dendrogram of inter-class distances in LAB color space." width="1350"></p>
 <p>The returned list carries per-class statistics: pixel counts, area
@@ -1667,7 +1666,7 @@ to read.</p>
 it computes. <code>grays</code> sets how many grey levels the image is
 reduced to and <code>window</code> the size of the moving window; both
 are glcm’s own arguments, passed straight through.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tex</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/analyze_soil_texture.html">analyze_soil_texture</a></span><span class="op">(</span></span>
 <span>  <span class="va">rgb</span>,</span>
 <span>  grays   <span class="op">=</span> <span class="fl">12</span>,</span>
@@ -1676,7 +1675,7 @@ are glcm’s own arguments, passed straight through.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tex</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/soil-texture-1.png" class="r-plt" alt="Four GLCM texture rasters of the scan: variance, second moment, correlation and entropy." width="1350"></p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/tube_coloration.html">tube_coloration</a></span><span class="op">(</span><span class="va">rgb</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      rcc    gcc   bcc        hue saturation luminosity      red    green</span></span>
 <span><span class="co">#&gt; 1 0.4117 0.3192 0.269 0.06635659  0.1982295    61.0889 67.84946 59.75458</span></span>
@@ -1686,7 +1685,7 @@ are glcm’s own arguments, passed straight through.</p>
 roots, their immediate surroundings, and the rest of the frame
 separated, the same color measurement can be taken three times and
 compared.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># A 10 px halo with roots excluded, so the three groups do not overlap.</span></span>
 <span><span class="va">halo_only</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">root_layer</span>, width <span class="op">=</span> <span class="fl">10</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                                kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
@@ -1730,12 +1729,12 @@ watching whether the curve migrates separates those two readings.</p>
 <p><code><a href="../reference/create_root_buffer.html">create_root_buffer()</a></code> grows a buffer around every root
 pixel, a simple proxy for the rhizosphere. With
 <code>halo_only = TRUE</code> it returns the ring alone.</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">halo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">root_layer</span>, width <span class="op">=</span> <span class="fl">3</span>, halo_only <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                           kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">halo</span>, main <span class="op">=</span> <span class="st">"Rhizosphere halo (width 3)"</span>, frac <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/root-buffer-1.png" class="r-plt" alt="Rhizosphere halo of width 3 pixels around each root, with the magnified region outlined." width="1350"><img src="Rootopia_Overview_vignette_files/figure-html/root-buffer-2.png" class="r-plt" alt="The same halo magnified to native resolution." width="1350"></p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">halo10</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_root_buffer.html">create_root_buffer</a></span><span class="op">(</span><span class="va">root_layer</span>, width <span class="op">=</span> <span class="fl">10</span>, halo_only <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>                             kernel <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span></span>
@@ -1789,7 +1788,7 @@ crossing by direction so each root continues <em>through</em> the node.
 as <code>artefact_cycles</code> – loops in a structure that cannot have
 them, which is a measurement of unresolved overlap rather than a
 property of the plant.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">flatbed_scan_example</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">seg_fb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">flatbed_scan_example</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
@@ -1834,7 +1833,7 @@ property of the plant.</p>
 <span><span class="co">#&gt;   spliced pass-through nodes: 111 -&gt; 111 segment(s)</span></span>
 <span><span class="co">#&gt;   resolved crossings: 111 -&gt; 111 segment(s)</span></span>
 <span><span class="co">#&gt; Tip order...</span></span>
-<span><span class="co">#&gt; Done in 0.37s. 111 segments, max order 8, total length 7857.9 px</span></span>
+<span><span class="co">#&gt; Done in 0.40s. 111 segments, max order 8, total length 7857.9 px</span></span>
 <span></span>
 <span><span class="co"># One window for every figure in this part, so the panels can be compared.</span></span>
 <span><span class="va">fb_frac</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
@@ -1843,10 +1842,10 @@ property of the plant.</p>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">seg_fb</span>,   main <span class="op">=</span> <span class="st">"Segmented, as it comes"</span>, frac <span class="op">=</span> <span class="va">fb_frac</span>,</span>
 <span>          center <span class="op">=</span> <span class="va">fb_ctr</span>, overview <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/flatbed-1.png" class="r-plt" alt="The raw segmentation magnified, with isolated specks still present." width="1350"></p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">fb_clean</span>, main <span class="op">=</span> <span class="st">"Cleaned"</span>, frac <span class="op">=</span> <span class="va">fb_frac</span>, center <span class="op">=</span> <span class="va">fb_ctr</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/flatbed-2.png" class="r-plt" alt="Segmented flatbed root scan after cleaning, with the magnified region outlined." width="1350"><img src="Rootopia_Overview_vignette_files/figure-html/flatbed-3.png" class="r-plt" alt="The cleaned scan magnified to native resolution." width="1350"></p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">fb_skl_pruned</span>, main <span class="op">=</span> <span class="st">"Skeleton (spurs pruned)"</span>, frac <span class="op">=</span> <span class="va">fb_frac</span>,</span>
 <span>          center <span class="op">=</span> <span class="va">fb_ctr</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/flatbed-4.png" class="r-plt" alt="The pruned skeleton of the same scan, with the magnified region outlined." width="1350"><img src="Rootopia_Overview_vignette_files/figure-html/flatbed-5.png" class="r-plt" alt="The skeleton magnified to native resolution." width="1350"></p>
@@ -1857,7 +1856,7 @@ looking at it – it paints the per-segment value back onto the
 <strong>mask</strong>, so each root is drawn at its own width, and picks
 a labeled swatch per class when the values are a handful of small
 integers.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># render_order_overlay() writes the figure with grDevices::png(), which can</span></span>
 <span><span class="co"># emit a palette image; terra then reads it as a single band of palette</span></span>
 <span><span class="co"># indices rather than three color bands. png::readPNG() expands the palette,</span></span>
@@ -1891,7 +1890,7 @@ resolution and magnified, with no downsampling at all. It draws the
 skeleton in gray and the traced, ordered segments in color on top, so
 <strong>bare gray is skeleton the graph missed</strong> – which is the
 check to run when a number looks wrong.</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">win_png</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".png"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_order_window.html">plot_order_window</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">edges</span>, <span class="va">fb_skl</span>,</span>
 <span>                  r_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">600</span>, <span class="fl">1000</span><span class="op">)</span>, c_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">900</span>, <span class="fl">1300</span><span class="op">)</span>,</span>
@@ -1970,7 +1969,7 @@ is the convention most root ecology reports. Asking how deep the
 branching hierarchy goes means <code>order_from_tip</code>. Asking how
 <em>balanced</em> it is means <code>strahler_order</code>. The one thing
 not to do is compare numbers across schemes.</p>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">order_res</span><span class="op">$</span><span class="va">summary</span></span>
 <span><span class="co">#&gt;   order n_segments n_tips n_branch_points total_length cumulative_length</span></span>
 <span><span class="co">#&gt; 1     1         26      6              22   5.16391097          5.163911</span></span>
@@ -2009,7 +2008,7 @@ not to do is compare numbers across schemes.</p>
 <p>Tips and branch points come from this table too: <code>n_tips</code>
 and <code>n_branch_points</code> per segment, summed per order class in
 <code>$summary</code>.</p>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">diam_fb</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_diameter.html">root_diameter</a></span><span class="op">(</span><span class="va">fb_clean</span>, skeleton_img <span class="op">=</span> <span class="va">fb_skl_pruned</span>,</span>
 <span>                           unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">1200</span>, select_layer <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="va">diam_vals</span> <span class="op">&lt;-</span> <span class="va">diam_fb</span><span class="op">$</span><span class="va">diameters</span>      <span class="co"># the per-skeleton-pixel values</span></span>
@@ -2038,7 +2037,7 @@ placed by the data rather than by eye.</p>
 </h3>
 <p>Two questions the segment table answers once it exists, both working
 on <code>order_res$edges</code> rather than on the image.</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/network_metrics.html">network_metrics</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">edges</span>, topology <span class="op">=</span> <span class="st">"projected_tree"</span><span class="op">)</span></span>
 <span><span class="va">net</span><span class="op">$</span><span class="va">traits</span></span>
 <span><span class="co">#&gt; $n_nodes</span></span>
@@ -2141,7 +2140,7 @@ Reporting that as biology is the mistake the argument exists to prevent
 with anastomoses, leaf venation or a stream network, the loops
 <em>are</em> the structure, and <code>cyclomatic</code> and
 <code>alpha_meshedness</code> move into <code>$traits</code>.</p>
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">et</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_transport.html">root_transport</a></span><span class="op">(</span><span class="va">order_res</span><span class="op">$</span><span class="va">edges</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">et</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"length"</span>, <span class="st">"path_length"</span>, <span class="st">"path_resistance"</span>,</span>
 <span>            <span class="st">"downstream_tips"</span>, <span class="st">"downstream_length"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">4</span><span class="op">)</span></span>
@@ -2182,7 +2181,7 @@ back onto the mask, which is how a transport quantity becomes legible.
 It picks its own legend: a handful of small integers gets one labeled
 swatch per class, anything continuous gets a color ramp with a scale
 bar.</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">png_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".png"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># max_side caps the longest side of the written PNG, and anything below the</span></span>
@@ -2214,7 +2213,7 @@ in that color. A lot of red is the same signal
 <code>artefact_cycles</code>.</p>
 <p>Path length and path resistance rank the segments differently, and
 the reason is the radius term.</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">op</span>     <span class="op">&lt;-</span> <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4</span>, <span class="fl">3</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pt_bg</span>  <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/rgb.html" class="external-link">rgb</a></span><span class="op">(</span><span class="fl">0.21</span>, <span class="fl">0.35</span>, <span class="fl">0.47</span>, <span class="fl">0.45</span><span class="op">)</span></span>
 <span><span class="va">pt_cex</span> <span class="op">&lt;-</span> <span class="fl">0.4</span> <span class="op">+</span> <span class="fl">2.4</span> <span class="op">*</span> <span class="va">et</span><span class="op">$</span><span class="va">mean_diameter</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">et</span><span class="op">$</span><span class="va">mean_diameter</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -2231,7 +2230,7 @@ the reason is the radius term.</p>
 <span>     ylab <span class="op">=</span> <span class="st">"path resistance (relative, log)"</span>,</span>
 <span>     main <span class="op">=</span> <span class="st">"log resistance axis"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Rootopia_Overview_vignette_files/figure-html/transport-ranks-1.png" class="r-plt" alt="Path resistance against path length for every segment, drawn twice: on a linear resistance axis, where nearly every segment is pressed to the bottom of the range, and on a log axis, where the spread is visible. Point size is diameter." width="1350"></p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>The pair is worth seeing, and which one to use depends on the scan.
 On the linear axis a few thin segments set the top of the range and

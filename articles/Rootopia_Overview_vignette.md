@@ -1038,21 +1038,14 @@ example. `overview_figure.R` writes one; put it at
 instead of recomputing. With no such file the bundled scan is used,
 which is what makes this article reproducible from the package alone.
 
+![Six panels of one minirhizotron scan: the RGB scan, the segmented root
+area, the skeleton, local root thickness, the binned depth map, and the
+root length density profile against depth.](figures/overview_panels.png)
+
 ``` r
 
 op <- graphics::par(mfrow = c(1, length(panels)), mar = mar_p)
 for (pn in panels) draw[[pn]]()
-```
-
-![Six panels of the same minirhizotron scan, depth running down the
-page, each with a magnified inset of one window: the RGB scan, the
-segmented root area, the one-pixel skeleton over the root area, local
-root thickness in millimeters, the binned depth map with the roots drawn
-over it, and the resulting root length density profile against
-depth.](Rootopia_Overview_vignette_files/figure-html/overview-panels-1.png)
-
-``` r
-
 graphics::par(op)
 ```
 
@@ -1885,7 +1878,7 @@ order_res <- branch_order_map(
 #>   spliced pass-through nodes: 111 -> 111 segment(s)
 #>   resolved crossings: 111 -> 111 segment(s)
 #> Tip order...
-#> Done in 0.37s. 111 segments, max order 8, total length 7857.9 px
+#> Done in 0.40s. 111 segments, max order 8, total length 7857.9 px
 
 # One window for every figure in this part, so the panels can be compared.
 fb_frac <- 0.25
