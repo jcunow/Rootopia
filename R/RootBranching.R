@@ -953,6 +953,46 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
   nrm <- sqrt(sum(v^2)); if (nrm == 0) return(c(0, 0)); v / nrm
 }
 
+#' Pair up the arms of a node, as many as can be paired
+#'
+#' The arms of a node are paired wherever a pair runs through it. Pairing as
+#' many arms as possible is what lets a node with more than four arms be read
+#' at all: six arms meeting at one pixel can be three roots crossing. Among the
+#' matchings that pair the most arms, the straightest total wins.
+#'
+#' Enumeration is exhaustive, which is why \code{resolve_crossings()} declines
+#' a node with more than eight arms: the number of matchings grows faster than
+#' the information in them does, and a node that wide is a tangle rather than a
+#' crossing.
+#'
+#' @param dmat \code{k x k} matrix of dot products between arm directions.
+#' @param elig \code{k x k} logical; which pairs are straight enough to join.
+#' @return A list of integer pairs, possibly empty.
+#' @keywords internal
+#' @noRd
+.match_arms <- function(dmat, elig) {
+  k    <- nrow(dmat)
+  best <- list(prs = list(), n = -1L, tot = Inf)
+  walk <- function(used, prs, tot) {
+    free <- which(!used)
+    if (length(free) < 2L) {
+      if (length(prs) > best$n || (length(prs) == best$n && tot < best$tot))
+        best <<- list(prs = prs, n = length(prs), tot = tot)
+      return(invisible(NULL))
+    }
+    a <- free[1L]
+    u <- used; u[a] <- TRUE
+    walk(u, prs, tot)                                   # leave this arm over
+    for (b in free[-1L]) if (elig[a, b]) {
+      u2 <- used; u2[c(a, b)] <- TRUE
+      walk(u2, c(prs, list(c(a, b))), tot + dmat[a, b])
+    }
+  }
+  walk(rep(FALSE, k), list(), 0)
+  best$prs
+}
+
+
 #' Resolve root crossings by continuity
 #'
 #' At clean degree-4 nodes (an X overlap of two roots in projection) the two
@@ -972,9 +1012,9 @@ plot_order_window <- function(et, skel, r_range, c_range, scale = 3, file = "win
 #'   axis in opposite directions look exactly like an X in outline, and so does
 #'   a thin root crossing a thick one; no threshold gets both right, which is
 #'   why this is off unless the caller asks for it.
-#' @param verbose Report nodes with more than four arms, which this function
-#'   cannot resolve and \code{assign_root_order()} will read as one continuation
-#'   plus laterals.
+#' @param verbose Report nodes where no pair of arms was straight enough to
+#'   join, which \code{assign_root_order()} reads as one continuation plus
+#'   laterals.
 #' @return A segment list with crossings spliced; \code{attr(., "dims")} preserved.
 #' @keywords internal
 #' @noRd
@@ -999,39 +1039,68 @@ resolve_crossings <- function(segs, DT = NULL, straight_dot = -0.5, look = 5L,
   partner_seg  <- matrix(0L, ns, 2)
   partner_side <- matrix(0L, ns, 2)
   
-  n_highdeg <- 0L
+  n_unpaired <- 0L
   for (lab in names(node_inc)) {
     inc <- node_inc[[lab]]
-    if (nrow(inc) > 4L) n_highdeg <- n_highdeg + 1L
-    if (nrow(inc) != 4L) next                       # only clean X crossings
-    tg  <- lapply(seq_len(4), function(m) side_tan(inc[m, 1], inc[m, 2]))
-    dot <- function(a, b) sum(tg[[a]] * tg[[b]])
-    pairings <- list(c(1, 2, 3, 4), c(1, 3, 2, 4), c(1, 4, 2, 3))
-    best <- NULL; best_tot <- Inf
-    for (pr in pairings) {
-      d <- c(dot(pr[1], pr[2]), dot(pr[3], pr[4]))
-      if (sum(d) < best_tot) { best_tot <- sum(d); best <- list(pr = pr, d = d) }
-    }
-    if (max(best$d) >= straight_dot) next            # both pairs must be straight
+    k <- nrow(inc)
+    if (k < 4L) next                                 # a junction, not a crossing
+    if (k > 8L) { n_unpaired <- n_unpaired + 1L; next }   # see .match_arms()
+
+    tg   <- lapply(seq_len(k), function(m) side_tan(inc[m, 1], inc[m, 2]))
+    dmat <- matrix(0, k, k)
+    for (a in seq_len(k)) for (b in seq_len(k))
+      dmat[a, b] <- sum(tg[[a]] * tg[[b]])
+    elig <- dmat < straight_dot                      # straight enough to join
+    diag(elig) <- FALSE
+
+    prs <- .match_arms(dmat, elig)
+    if (length(prs) == 0L) { n_unpaired <- n_unpaired + 1L; next }
+
     if (!is.null(seg_rad)) {
-      # a crossing joins two roots of comparable thickness; a bilateral branch
+      # a crossing joins roots of comparable thickness; a bilateral branch
       # pairs a thick axis against two thin laterals, and must be left alone
-      pr0 <- best$pr
       rad <- seg_rad[inc[, 1]]
-      pd  <- c(mean(rad[pr0[1:2]]), mean(rad[pr0[3:4]]))
-      if (max(pd) > 0 && min(pd) / max(pd) < diam_ratio) next
+      pd  <- vapply(prs, function(q) mean(rad[q]), numeric(1))
+      if (max(pd) > 0 && min(pd) / max(pd) < diam_ratio) {
+        n_unpaired <- n_unpaired + 1L
+        next
+      }
     }
-    pr <- best$pr
-    for (q in c(1L, 3L)) {                            # link (pr[q], pr[q+1])
-      a <- inc[pr[q], ]; b <- inc[pr[q + 1L], ]
+
+    # An arm left unpaired is a lateral, and it has to stay attached to
+    # something. The pair it leaves is therefore held back from splicing, so
+    # the node keeps two endpoints there and assign_root_order() reads it as an
+    # ordinary junction. Splicing every pair would leave the lateral touching
+    # the interior of a segment, which a segment list cannot express, and the
+    # lateral would come away as a root of its own with a tip that is not
+    # there. Its pair is the one holding the arm closest in direction, the
+    # thinner pair breaking a tie, since a lateral is likelier to leave a
+    # thinner root than the thickest axis at the node.
+    over <- setdiff(seq_len(k), unlist(prs))
+    hold <- integer(0)
+    for (m in over) {
+      near <- vapply(prs, function(q) max(dmat[m, q]), numeric(1))
+      cand <- which(near >= max(near) - 1e-9)
+      if (length(cand) > 1L && !is.null(seg_rad)) {
+        rad  <- seg_rad[inc[, 1]]
+        cand <- cand[which.min(vapply(prs[cand], function(q) mean(rad[q]),
+                                      numeric(1)))]
+      }
+      hold <- c(hold, cand[1])
+    }
+
+    for (i in seq_along(prs)) {
+      if (i %in% hold) next
+      a <- inc[prs[[i]][1], ]; b <- inc[prs[[i]][2], ]
       partner_seg[a[1], a[2]]  <- b[1]; partner_side[a[1], a[2]]  <- b[2]
       partner_seg[b[1], b[2]]  <- a[1]; partner_side[b[1], b[2]]  <- a[2]
     }
   }
-  
-  if (verbose && n_highdeg > 0L)
-    cat(sprintf(paste0("  %d node(s) with >4 arms left unresolved; each is read as ",
-                       "one continuation plus laterals, not as a crossing\n"), n_highdeg))
+
+  if (verbose && n_unpaired > 0L)
+    cat(sprintf(paste0("  %d node(s) with no pair straight enough to join; ",
+                       "each is read as one continuation plus laterals\n"),
+                n_unpaired))
 
   if (!any(partner_seg > 0L)) return(segs)
   .stitch_chains(segs, partner_seg, partner_side)
