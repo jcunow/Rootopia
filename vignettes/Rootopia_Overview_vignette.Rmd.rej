@@ -1,0 +1,70 @@
+diff a/vignettes/Rootopia_Overview_vignette.Rmd b/vignettes/Rootopia_Overview_vignette.Rmd	(rejected hunks)
+@@ -407,7 +409,7 @@
+ installable. `data-raw/make-figures.R` draws it from full-resolution originals:
+ fill in the two paths at the top and run it, and the figure appears below.
+ 
+-```{r skeleton-compare-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/skeleton_compare.png"), fig.alt = "A magnified window of one scan showing where a supplied skeleton and a skeleton thinned from the same mask agree and where each has pixels the other does not."}
++```{r skeleton-compare-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/skeleton_compare.png"), fig.cap = "Figure 2. A supplied skeleton against one thinned from the same segmentation.", fig.alt = "A magnified window of one scan showing where a supplied skeleton and a skeleton thinned from the same mask agree and where each has pixels the other does not."}
+ knitr::include_graphics("figures/skeleton_compare.png")
+ ```
+ 
+@@ -1043,14 +1045,46 @@
+ ang_cols[ang_use / 45 + 1] <- c("#FFD60A", "#4D7CFF", "#3DDC84",
+                                 "#E0218A", "#00E5FF")
+ 
+-a_ang <- terra::aggregate(dd_all$angle_map, fact = 4, fun = "modal",
+-                          na.rm = TRUE)
++# The whole frame with one window outlined, then that window magnified inside
++# it, the way the workflow figure draws each panel. The rectangles are worked
++# out from this map's own extent: inset_e and wins above are in the pixel
++# coordinates of the panel rasters, which are not this raster's, so reusing
++# them puts the box partly off the image.
++am <- dd_all$angle_map
++ae <- terra::ext(am)
++Wa <- ae[2] - ae[1]; Ha <- ae[4] - ae[3]
++
++h   <- zoom_w[["ang"]] * Wa / 2
++wcx <- min(max(ae[1] + zoom_ctr[1] * Wa, ae[1] + h), ae[2] - h)
++wcy <- min(max(ae[3] + (1 - zoom_ctr[2]) * Ha, ae[3] + h), ae[4] - h)
++awin <- terra::ext(wcx - h, wcx + h, wcy - h, wcy + h)
++
++# bottom right, which is clear of both the window at zoom_ctr and the legend
++pad <- 0.02 * min(Wa, Ha)
++iwa <- 0.40 * min(Wa, Ha)
++aie <- terra::ext(ae[2] - pad - iwa, ae[2] - pad, ae[3] + pad, ae[3] + pad + iwa)
++
++# Coarsened for the overview only, so the one-pixel direction lines survive the
++# device; the inset reads the full-resolution map.
++a_ang <- terra::aggregate(am, fact = 4, fun = "modal", na.rm = TRUE)
+ 
+ op <- graphics::par(mar = mar_p)
+ terra::plot(a_ang, breaks = ang_brk, col = ang_cols, legend = FALSE,
+             axes = FALSE, maxcell = Inf, mar = mar_p)
+-draw_inset(dd_all$angle_map, win = wins$ang, breaks = ang_brk, col = ang_cols)
+-graphics::legend("bottomleft", bty = "n", border = NA, bg = leg_bg,
++
++# A dark backdrop under the inset: the three upward classes are transparent,
++# and on white they would read as root rather than as nothing.
++graphics::rect(aie[1], aie[3], aie[2], aie[4], col = "grey15", border = NA)
++azoom <- terra::crop(am, awin); terra::ext(azoom) <- aie
++terra::plot(azoom, breaks = ang_brk, col = ang_cols, legend = FALSE,
++            axes = FALSE, maxcell = Inf, add = TRUE)
++
++# Both boxes last, so neither is covered by the inset.
++graphics::rect(aie[1], aie[3], aie[2], aie[4], border = zoom_col, lwd = zoom_lwd)
++graphics::rect(awin[1], awin[3], awin[2], awin[4], border = zoom_col,
++               lwd = zoom_lwd)
++
++graphics::legend("topleft", bty = "n", border = NA, bg = leg_bg,
+                  text.col = "white", cex = 0.7, inset = 0.02,
+                  fill = ang_cols[ang_use / 45 + 1],
+                  legend = paste0(ang_use, "\u00b0"))
+@@ -1548,7 +1582,7 @@
+ depth trend in color should be checked against where the joins fall before it
+ is read as soil chemistry. Per channel the same split shows up:
+ 
+-```{r rgb-channels, fig.height = 3.6, fig.alt = "Three panels, one per color channel, each showing the density of pixel values for root, halo and bulk peat."}
++```{r rgb-channels, fig.height = 3.6, fig.cap = "Figure 24. The same separation, one panel per color channel.", fig.alt = "Three panels, one per color channel, each showing the density of pixel values for root, halo and bulk peat."}
+ op <- graphics::par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
+ for (k in 1:3) {
+   ch <- terra::values(rgb_disp[[k]], mat = FALSE)

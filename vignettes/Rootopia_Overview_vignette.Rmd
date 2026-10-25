@@ -11,7 +11,7 @@ output:
     toc_depth: 3
     fig_width: 6.5
 vignette: >
-  %\VignetteIndexEntry{Rootopia: Depth-Resolved Root Trait Analysis}
+  %\VignetteIndexEntry{Rootopia: Depth-Resolved Root Trait Analysis for Minirhizotrons and Flatbed Scans in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -327,12 +327,13 @@ rather than an error.
 | `analyze_soil_texture()` | RGB | GLCM texture (needs **glcm**) |
 | `root_turnover()` | two scans, or one DPC | per `tc_method` |
 
-Throughout this article **mask** means the segmentation: the solid 0/1 image in
-which every root pixel is 1. It is what the `mask =` argument of the branching
-functions and the first argument of `root_diameter()` expect.
+The branching functions take an argument called `mask =`, and
+`root_diameter()` takes the same image as its first argument. In both cases
+what they want is the **segmentation**: the 0/1 image in which every root pixel
+is 1. The argument name is not a separate kind of image.
 
 **`root_diameter()` is the one to understand.** Diameter comes from a distance
-transform of that solid image: every root pixel is labeled with its distance to
+transform of the segmentation: every root pixel is labeled with its distance to
 the nearest background pixel, which is the radius of the largest circle that
 fits inside the root there, and diameter is twice that. The skeleton then says
 *which* of those pixels to report, so each root contributes its center line once
@@ -353,7 +354,7 @@ Left alone that is a systematic bias which looks like growth or death. Cropping
 every session to a common window of rows removes it, and it is standard
 procedure rather than an option.
 
-```{r censor, fig.alt = "The full scan with the retained window outlined in green and the discarded margins shaded red."}
+```{r censor, fig.cap = "The retained window; the margins rotation leaves behind are discarded.", fig.alt = "The full scan with the retained window outlined in green and the discarded margins shaded red."}
 # The window has to be centered on the tube's rotational zero, and that is a
 # per-scan quantity: estimate_rotation_center() locates it from the tape on the
 # tube's upper side, and estimate_rotation_shift() measures how far a later
@@ -390,35 +391,45 @@ the scanner does not reach all the way around.
 
 ## The skeleton: supplied, or made here
 
-Some segmenters return a skeleton along with the mask; others return only the
-mask. Both cases work. Where a skeleton comes back, use it. Where it does not,
-`skeletonize_image()` thins the segmentation into one: it strips pixels off the
-edges of each root, layer by layer, until a single connected line of pixels is
-left down the middle, which is the Zhang-Suen thinning.
+Some segmenters return a skeleton along with the segmentation; others return
+only the segmentation. Both cases work. Where a skeleton comes back, use it.
+Where it does not, `skeletonize_image()` makes one by stripping pixels off the
+edges of each root, layer by layer, until a single connected line is left down
+the middle.
 
-The two are not the same picture, and the difference is not noise. A thinned
-skeleton follows the segmentation exactly, so a pinhole in the mask becomes a
-small loop and a ragged edge can grow a short spur that is not a root. A
-segmenter that predicts the center line directly is not bound by the mask it
-also predicts, so it can disagree with its own mask.
+There is no single right answer to that operation. Rootopia uses a Zhang-Suen
+*variant* --- its lookup table differs from the published one at a handful of
+codes --- and other tools use the published table, Guo-Hall, a medial axis
+transform, or something of their own. Each strips pixels in a slightly
+different order, so each leaves a slightly different line, most visibly at
+corners, at junctions and at the ends of short branches.
 
-That difference is worth looking at on your own scans, and it cannot honestly
-be shown on the example data here, which is downsampled to keep the package
-installable. `data-raw/make-figures.R` draws it from full-resolution originals:
-fill in the two paths at the top and run it, and the figure appears below.
+That matters because a skeleton drives length, tips and branching, so two
+numbers from the same segmentation can differ purely by which thinning
+produced the center line. And a segmenter that predicts the center line
+directly is not thinning anything at all: it is not bound by the segmentation
+it also predicts, so it can disagree with it.
+
+The figure below overlays the two on one window: the segmenter's own skeleton
+against one thinned from the same segmentation. It is drawn from
+full-resolution originals rather than the bundled example, which is
+downsampled to keep the package installable. `data-raw/make-figures.R` writes
+it --- set `seg_path` and it looks for the segmenter's skeleton beside it.
 
 ```{r skeleton-compare-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/skeleton_compare.png"), fig.alt = "A magnified window of one scan showing where a supplied skeleton and a skeleton thinned from the same mask agree and where each has pixels the other does not."}
 knitr::include_graphics("figures/skeleton_compare.png")
 ```
 
 ```{r skeleton-compare-missing, echo = FALSE, results = "asis", eval = !file.exists("figures/skeleton_compare.png")}
-cat("*No comparison figure found. `data-raw/make-figures.R` writes one;",
-    "fill in the two scan paths at the top of that script and run it.*\n")
+cat("*No comparison figure found. Set `seg_path` at the top of",
+    "`data-raw/make-figures.R` and run it.*\n")
 ```
 
-Whichever you use, use one consistently. Mixing a supplied skeleton in one
-session with a thinned one in the next puts a step into a time series that has
-nothing to do with roots. Everything below uses the supplied skeleton.
+Neither line is the true one; they are two implementations of the same idea.
+What follows from that is only that the choice has to be recorded, and held
+fixed across a dataset --- a supplied skeleton in one session and a thinned one
+in the next puts a step into a time series that has nothing to do with roots.
+Everything below uses the supplied skeleton.
 
 ## Root diameter
 
@@ -427,7 +438,7 @@ which pixels to report. `root_diameter()` returns the local thickness across
 the whole scan as well as the per-skeleton-pixel diameters, so it is worth
 looking at before reducing it to a per-interval mean.
 
-```{r diameter, fig.alt = c("Local root thickness across the whole scan, with the magnified region outlined.", "The same thickness map magnified to native resolution.")}
+```{r diameter, fig.cap = c("Local root thickness across the scan.", "The same thickness map at native resolution."), fig.alt = c("Local root thickness across the whole scan, with the magnified region outlined.", "The same thickness map magnified to native resolution.")}
 diam_result <- root_diameter(
   root_layer,
   skeleton_img = skl,
@@ -436,15 +447,19 @@ diam_result <- root_diameter(
   select_layer = NULL
 )
 
-# root thickness
-zoom_plot(diam_result$distance_map_rast, frac = 0.1)
+# A window away from the center, where the roots are. zoom_plot() takes
+# fractions of the extent, and row 1 is the top, so the y fraction counts up
+# from the bottom.
+zoom_plot(diam_result$distance_map_rast, frac = 0.1,
+          center = c(1200 / terra::ncol(root_layer),
+                     1000 / terra::nrow(root_layer)))
 ```
 
 ## From pixels to depth
 
 ### The depth map
 
-```{r depthmap, fig.alt = "Depth map in centimeters, shading from shallow at one end of the tube to deep at the other."}
+```{r depthmap, fig.cap = "Depth along the tube, in centimeters.", fig.alt = "Depth map in centimeters, shading from shallow at one end of the tube to deep at the other."}
 depth_map <- create_depthmap(
   img                 = root_layer,
   geometry            = "tube",  # "window" planar, "flat" no depth axis
@@ -491,7 +506,7 @@ bottom. Standing the tube upright removes the first and leaves only the second;
 laying it flat does the reverse. Both terms are visible in the same map with
 `geometry = "tube"`.
 
-```{r angle-maps, fig.height = 5.4, fig.alt = "Three depth maps of the same tube at insertion angles of 15, 45 and 75 degrees from vertical, on a shared color scale. The curvature banding across the rows grows with the angle while the left-to-right depth gradient shrinks."}
+```{r angle-maps, fig.height = 5.4, fig.cap = "The same tube at insertion angles of 15, 45 and 75 degrees.", fig.alt = "Three depth maps of the same tube at insertion angles of 15, 45 and 75 degrees from vertical, on a shared color scale. The curvature banding across the rows grows with the angle while the left-to-right depth gradient shrinks."}
 # A 7 cm tube over 25 cm of its length: depth runs along the width, the
 # circumference down the height, as in a real scan.
 tube <- 7; sdpi <- 60
@@ -522,7 +537,7 @@ Measuring the two terms off the function needs one more thing: a length of tube
 to measure the depth gain over. Taking 7 cm of tube, the same as the diameter,
 makes the two terms two halves of one budget.
 
-```{r angle-terms, fig.height = 3.6, fig.alt = "The two depth terms plotted against insertion angle: depth along 7 cm of tube falls from 7 cm to 0 while depth around a 7 cm tube rises from 0 to 7 cm, crossing at 45 degrees."}
+```{r angle-terms, fig.height = 3.6, fig.cap = "The two depth terms against insertion angle.", fig.alt = "The two depth terms plotted against insertion angle: depth along 7 cm of tube falls from 7 cm to 0 while depth around a 7 cm tube rises from 0 to 7 cm, crossing at 45 degrees."}
 budget <- terra::rast(matrix(0, nrow = nr,
                              ncol = round(tube * sdpi / 2.54, 0)))
 
@@ -564,7 +579,7 @@ depth.
 
 ### Binning
 
-```{r bins, fig.alt = "The depth map reduced to discrete depth bins, drawn as bands of constant color."}
+```{r bins, fig.cap = "The depth map reduced to bins.", fig.alt = "The depth map reduced to discrete depth bins, drawn as bands of constant color."}
 depth_bins <- binning(depthmap = depth_map, nn = 5, round_option = "floor")
 
 depths <- sort(unique(terra::values(depth_bins, mat = FALSE)))
@@ -666,7 +681,7 @@ cat(sprintf("MRD: %.2f cm | total length: %.1f cm | mean RLD: %.4f cm cm-2\n",
 rather than returning a number built from part of the data, which is why the
 profile is filtered first and the filtering stays visible.
 
-```{r profile-plots, fig.alt = c("Root length density per depth bin, drawn as horizontal bars down the profile.", "Cumulative root accumulation against depth.")}
+```{r profile-plots, fig.cap = c("Root length density per depth bin.", "Cumulative root accumulation with depth."), fig.alt = c("Root length density per depth bin, drawn as horizontal bars down the profile.", "Cumulative root accumulation against depth.")}
 library(ggplot2)
 
 ggplot(depth_data, aes(x = depth, y = rootlength.density)) +
@@ -940,11 +955,11 @@ example. `overview_figure.R` writes one; put it at
 of recomputing. With no such file the bundled scan is used, which is what makes
 this article reproducible from the package alone.
 
-```{r overview-panels-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/overview_panels.png"), fig.alt = "Six panels of one minirhizotron scan: the RGB scan, the segmented root area, the skeleton, local root thickness, the binned depth map, and the root length density profile against depth."}
+```{r overview-panels-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/overview_panels.png"), fig.cap = "The minirhizotron workflow in six panels.", fig.alt = "Six panels of one minirhizotron scan: the RGB scan, the segmented root area, the skeleton, local root thickness, the binned depth map, and the root length density profile against depth."}
 knitr::include_graphics("figures/overview_panels.png")
 ```
 
-```{r overview-panels, fig.width = 9, fig.height = 6.8, dpi = 300, dev = "png", out.width = "100%", eval = !file.exists("figures/overview_panels.png"), fig.alt = "Six panels of the same minirhizotron scan, depth running down the page, each with a magnified inset of one window: the RGB scan, the segmented root area, the one-pixel skeleton over the root area, local root thickness in millimeters, the binned depth map with the roots drawn over it, and the resulting root length density profile against depth."}
+```{r overview-panels, fig.width = 9, fig.height = 6.8, dpi = 300, dev = "png", out.width = "100%", eval = !file.exists("figures/overview_panels.png"), fig.cap = "The minirhizotron workflow in six panels.", fig.alt = "Six panels of the same minirhizotron scan, depth running down the page, each with a magnified inset of one window: the RGB scan, the segmented root area, the one-pixel skeleton over the root area, local root thickness in millimeters, the binned depth map with the roots drawn over it, and the resulting root length density profile against depth."}
 op <- graphics::par(mfrow = c(1, length(panels)), mar = mar_p)
 for (pn in panels) draw[[pn]]()
 graphics::par(op)
@@ -1032,28 +1047,97 @@ batch wrapper reports it as `deep_drive` alongside `mean.steepness.angle`.
 the direction assigned to each skeleton pixel, drawn on its own below --- the
 skeleton and the depth bins it was derived from are both shown in Part I.
 
-```{r angle-panels, fig.width = 6, fig.height = 5.4, dpi = 150, dev = "png", out.width = "85%", fig.alt = "The D8 direction class of each skeleton pixel over the scan, with a magnified inset and a legend naming the five downward directions that occur."}
+```{r angle-panels, fig.width = 4.8, fig.height = 8.6, dpi = 150, dev = "png", out.width = "72%", fig.alt = "The D8 direction class of every skeleton pixel over the black root field, for the shallow part of the tube with its topmost rows cropped away. One window is outlined and magnified as an inset, and a color wheel gives the directions that occur."}
 dd_all <- deep_drive(DepthMap = depth_map, RootMap = skl, return = "all")
 
-# Only downward directions occur on a tube installed at an angle, so the three
-# upward classes are left transparent rather than given a color nothing uses.
+# deep_drive() returns its map already transposed and flipped: turned the same
+# way rot() turns every other panel. So it is used as it comes and NOT rotated
+# again, while the root field underneath is the rotated one the workflow figure
+# already built. Rotating both is how this panel ends up mirrored.
+ang_full <- dd_all$angle_map
+terra::ext(ang_full) <- terra::ext(full$root)
+ang_full <- terra::ifel(full$skel == 2, ang_full, NA)   # center line only
+
+# Index k + 1 is the class k * 45, so a direction keeps its color from tube to
+# tube and two figures compare. 45 and 315 are left out of the wheel: a root
+# cannot run up and outward at once, so where they occur at all it is noise.
 ang_brk  <- seq(-22.5, 337.5, by = 45)
-ang_use  <- c(90, 135, 180, 225, 270)
-ang_cols <- rep("#00000000", 8)
-ang_cols[ang_use / 45 + 1] <- c("#FFD60A", "#4D7CFF", "#3DDC84",
-                                "#E0218A", "#00E5FF")
+ang_cols <- c("#FFFFFF", "#FF8A3D", "#FFD60A", "#4D7CFF",
+              "#3DDC84", "#E0218A", "#00E5FF", "#B388FF")
+ang_skip <- c(45, 315)
 
-a_ang <- terra::aggregate(dd_all$angle_map, fact = 4, fun = "modal",
-                          na.rm = TRUE)
+# What is shown. Depth runs down the panel, so the shallow end is the top.
+# The first rows are tape and mask rather than soil, and the tube is four
+# times longer than it is wide: drawn whole it is a sliver, because terra
+# draws at asp = 1 and the page can only give it height. Showing part of the
+# length is what buys the scale back.
+top_cut   <- 0.05    # drop this much of the length at the shallow end
+show_frac <- 0.50    # how much of the length to draw
+win_ctr   <- c(0.80, 0.42)   # window center, as fractions of what is shown
+win_frac  <- 0.17            # window width, as a fraction of the panel width
 
+y_hi <- H * (1 - top_cut)
+y_lo <- max(0, y_hi - show_frac * H)
+e    <- terra::ext(0, W, y_lo, y_hi)
+
+hw <- win_frac * W / 2
+wx <- min(max(win_ctr[1] * W, hw), W - hw)
+wy <- min(max(y_hi - win_ctr[2] * (y_hi - y_lo), y_lo + hw), y_hi - hw)
+win <- terra::ext(wx - hw, wx + hw, wy - hw, wy + hw)
+
+a_ang     <- terra::aggregate(ang_full, fact = 4, fun = "modal", na.rm = TRUE)
+ang_found <- setdiff(sort(unique(terra::values(terra::crop(a_ang, e),
+                                               mat = FALSE))), ang_skip)
+
+# The same two calls the workflow figure makes: the root raster flat black so
+# the field is black and colNA paints only the masked tape, then the
+# directions over it as the only color in the panel.
 op <- graphics::par(mar = mar_p)
-terra::plot(a_ang, breaks = ang_brk, col = ang_cols, legend = FALSE,
-            axes = FALSE, maxcell = Inf, mar = mar_p)
-draw_inset(dd_all$angle_map, win = wins$ang, breaks = ang_brk, col = ang_cols)
-graphics::legend("bottomleft", bty = "n", border = NA, bg = leg_bg,
-                 text.col = "white", cex = 0.7, inset = 0.02,
-                 fill = ang_cols[ang_use / 45 + 1],
-                 legend = paste0(ang_use, "\u00b0"))
+terra::plot(terra::crop(panel$root, e), col = black_ramp, colNA = mask_col,
+            range = c(0, 1), legend = FALSE, axes = FALSE, maxcell = Inf,
+            mar = mar_p)
+terra::plot(terra::crop(a_ang, e), breaks = ang_brk, col = ang_cols,
+            legend = FALSE, axes = FALSE, maxcell = Inf, add = TRUE)
+
+# The inset, bottom right of what is shown. inset_e from the helper chunk is
+# in whole-frame coordinates, so the box is built against this crop instead.
+iw <- 0.52 * W
+ie <- terra::ext(e[2] - 0.04 * W - iw, e[2] - 0.04 * W,
+                 e[3] + 0.04 * W, e[3] + 0.04 * W + iw)
+graphics::rect(ie[1], ie[3], ie[2], ie[4], col = "black", border = NA)
+for (lyr in list(list(r = full$root, args = list(col = black_ramp,
+                                                 colNA = mask_col,
+                                                 range = c(0, 1))),
+                 list(r = ang_full,  args = list(breaks = ang_brk,
+                                                 col = ang_cols)))) {
+  z <- terra::crop(lyr$r, win); terra::ext(z) <- ie
+  do.call(terra::plot, c(list(z, add = TRUE, legend = FALSE, axes = FALSE,
+                              maxcell = Inf), lyr$args))
+}
+graphics::rect(ie[1], ie[3], ie[2], ie[4], border = zoom_col, lwd = zoom_lwd)
+graphics::rect(win[1], win[3], win[2], win[4], border = zoom_col,
+               lwd = zoom_lwd)
+
+# A wheel rather than a list of numbers: 0 degrees is up and the angle runs
+# clockwise, so 180 is straight down the depth axis and 90 and 270 run around
+# the circumference. Sectors with no wedge are directions that do not occur.
+sz <- 0.20 * W
+wc <- c(1.8 * sz, e[4] - 1.8 * sz)
+graphics::rect(wc[1] - 1.7 * sz, wc[2] - 2.3 * sz,
+               wc[1] + 1.7 * sz, wc[2] + 1.7 * sz, col = leg_bg, border = NA)
+for (q in ang_found / 45) {
+  tt <- seq((q * 45 - 22.5) * pi / 180, (q * 45 + 22.5) * pi / 180,
+            length.out = 24)
+  graphics::polygon(wc[1] + c(0.45 * sz * sin(tt), rev(sz * sin(tt))),
+                    wc[2] + c(0.45 * sz * cos(tt), rev(sz * cos(tt))),
+                    col = ang_cols[q + 1], border = NA)
+  graphics::text(wc[1] + 1.35 * sz * sin(q * pi / 4),
+                 wc[2] + 1.35 * sz * cos(q * pi / 4),
+                 paste0(q * 45, "°"), col = "white", cex = 0.85)
+}
+graphics::text(wc[1], wc[2] - 1.95 * sz, "Angle (D8)", adj = c(0.5, 0.5),
+               col = "white", cex = 0.95)
+graphics::mtext("Root direction, shallow end", side = 3, line = 0.4)
 graphics::par(op)
 ```
 
@@ -1069,18 +1153,26 @@ roots spread evenly around the tube, or concentrated on one side?
 `slice_rotation()` cuts the image into bands of rows in rotation order, and a
 trait measured per band becomes a sequence indexed by circumferential position.
 
-```{r slices, fig.alt = "Segmented scan cropped to the circumferential slices used below."}
+```{r slices, fig.cap = "The circumferential slices used below.", fig.alt = "Segmented scan cropped to the circumferential slices used below."}
 # Trim the shallowest quarter of the depth axis (columns), where the tape and
 # the noisiest soil sit. The rotation axis is left whole, since that is what the
 # slices below are cut along.
 e <- terra::ext(root_layer)
 rot_layer <- terra::crop(root_layer,
                          terra::ext(e[1] + e[2] / 4, e[2], e[3], e[4]))
-terra::plot(rot_layer, maxcell = Inf)
 
 # create circumferential zones
 n_slices <- 48
 slices <- slice_rotation(rot_layer, n_slices)
+
+terra::plot(rot_layer, maxcell = Inf)
+
+# Every fourth slice boundary, so the bands stay legible: each pair of
+# adjacent red lines bounds four of the zones the trait below is measured in.
+re    <- terra::ext(rot_layer)
+edges <- seq(re[3], re[4], length.out = n_slices + 1)
+graphics::abline(h = edges[seq(1, length(edges), by = 4)],
+                 col = "red", lwd = 1, lty = 2)
 
 # tallies from the binary mask: roots = 1, soil/background = 0
 n_root <- function(s) {
@@ -1144,7 +1236,7 @@ cat(sprintf("Mean %.4f | Amplitude %.4f | Phase %.2f | R2 %.3f | p %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
 ```
 
-```{r rhythm-plots, fig.alt = c("Root length density against position around the tube circumference, with the fitted sine curve.", "The same distribution drawn on polar axes as a cross-section through the tube.")}
+```{r rhythm-plots, fig.cap = c("Root length density around the circumference, with the fitted sine.", "The same distribution on polar axes."), fig.alt = c("Root length density against position around the tube circumference, with the fitted sine curve.", "The same distribution drawn on polar axes as a cross-section through the tube.")}
 # Smooth fitted sine over the slice index
 fit_df <- data.frame(slice = seq(1, n_slices, length.out = 200))
 fit_df$rld <- res$amplitude *
@@ -1225,7 +1317,7 @@ curves *is* that distance. At any depth the horizontal gap between the curves
 is the share of root that has to cross that depth; adding it up down the
 profile gives the total, in centimeters.
 
-```{r wasserstein, fig.height = 7, fig.alt = "Four panels, each showing the cumulative share of root with depth for a reference profile and a comparison profile, with the area between them shaded. The band is narrow for a 10 cm shift, wide for a 35 cm shift, intermediate for a profile with equal root at every depth whose cumulative curve is a straight line, and crossing curves for a bimodal profile that has the same mean rooting depth as the reference."}
+```{r wasserstein, fig.height = 7, fig.cap = "Transport distance as the area between cumulative profiles.", fig.alt = "Four panels, each showing the cumulative share of root with depth for a reference profile and a comparison profile, with the area between them shaded. The band is narrow for a 10 cm shift, wide for a 35 cm shift, intermediate for a profile with equal root at every depth whose cumulative curve is a straight line, and crossing curves for a bimodal profile that has the same mean rooting depth as the reference."}
 z  <- seq(0, 60, by = 5)                    # 13 intervals, 5 cm each
 
 # A surface-weighted reference, with no mass below 25 cm. Keeping the support
@@ -1411,7 +1503,7 @@ Everything that reads the color channels rather than the root shape.
 nearest-centroid matching in CIE LAB, leaving pixels too far from any centroid
 unclassified rather than forcing them into the nearest class.
 
-```{r soil-classify, fig.height = 5.6, fig.alt = c("The RGB scan and the class map side by side over the same window, so each assigned class can be checked against the color it came from.")}
+```{r soil-classify, fig.height = 5.6, fig.cap = "Scan and class map over the same window.", fig.alt = c("The RGB scan and the class map side by side over the same window, so each assigned class can be checked against the color it came from.")}
 # downsample_fact speeds up the demo; drop it for full resolution
 result <- classify_soil_rgb(rgb, downsample_fact = 4, verbose = FALSE)
 
@@ -1429,7 +1521,7 @@ graphics::par(op)
 result$metrics
 ```
 
-```{r soil-plot, fig.height = 4.5, fig.alt = "Soil classification map beside a legend and a dendrogram of inter-class distances in LAB color space."}
+```{r soil-plot, fig.height = 4.5, fig.cap = "Soil classes with their distances in LAB color space.", fig.alt = "Soil classification map beside a legend and a dendrogram of inter-class distances in LAB color space."}
 plot_soil_classification(result)
 ```
 
@@ -1451,7 +1543,7 @@ and returns what it computes. `grays` sets how many grey levels the image is
 reduced to and `window` the size of the moving window; both are glcm's own
 arguments, passed straight through.
 
-```{r soil-texture, fig.alt = "Four GLCM texture rasters of the scan: variance, second moment, correlation and entropy."}
+```{r soil-texture, fig.cap = "Four GLCM texture rasters of the scan.", fig.alt = "Four GLCM texture rasters of the scan: variance, second moment, correlation and entropy."}
 tex <- analyze_soil_texture(
   rgb,
   grays   = 12,
@@ -1461,7 +1553,7 @@ tex <- analyze_soil_texture(
 terra::plot(tex)
 ```
 
-```{r root-buffer, fig.alt = c("Rhizosphere halo of width 3 pixels around each root, with the magnified region outlined.", "The same halo magnified to native resolution.", "Roots together with their width-10 halo.")}
+```{r root-buffer, fig.cap = c("A rhizosphere halo three pixels wide.", "The same halo at native resolution.", "Roots with a halo ten pixels wide."), fig.alt = c("Rhizosphere halo of width 3 pixels around each root, with the magnified region outlined.", "The same halo magnified to native resolution.", "Roots together with their width-10 halo.")}
 halo <- create_root_buffer(root_layer, width = 3, halo_only = TRUE,
                            kernel = "circle")
 zoom_plot(halo, main = "Rhizosphere halo (width 3)", frac = 0.1)
@@ -1475,16 +1567,6 @@ zoom_plot(halo10, main = "Roots + halo (width 10)", frac = 0.25,
 `kernel` switches between a `"circle"` (8-neighbor) and a `"diamond"`
 (4-neighbor) growth shape, and `width` is the number of dilation iterations.
 
-```{=latex}
-\newpage
-```
-
-# Part III: flatbed scans
-
-Everything to this point assumed a tube. A flatbed scan of washed roots is the
-other half of the diagram in the introduction: no depth axis, and architecture
-in its place.
-
 ```{r tube-coloration}
 tube_coloration(rgb)
 ```
@@ -1493,7 +1575,7 @@ With roots, their immediate surroundings and the rest of the frame separated
 by the halo above, the same color measurement can be taken three times and
 compared.
 
-```{r rgb-zones, fig.height = 4, fig.alt = "Three density curves of pixel brightness: root pixels, the halo of soil immediately around the roots, and the remaining bulk peat."}
+```{r rgb-zones, fig.height = 4, fig.cap = "Brightness of root, halo and background pixels.", fig.alt = "Three density curves of pixel brightness: root pixels, the halo of soil immediately around the roots, and the remaining bulk peat."}
 # A 10 px halo with roots excluded, so the three groups do not overlap.
 halo_only <- create_root_buffer(root_layer, width = 10, halo_only = TRUE,
                                 kernel = "circle")
@@ -1548,28 +1630,54 @@ color comparison between depths is partly a comparison between frames, so a
 depth trend in color should be checked against where the joins fall before it
 is read as soil chemistry. Per channel the same split shows up:
 
-```{r rgb-channels, fig.height = 3.6, fig.alt = "Three panels, one per color channel, each showing the density of pixel values for root, halo and bulk peat."}
-op <- graphics::par(mfrow = c(1, 3), mar = c(4, 4, 2, 1))
-for (k in 1:3) {
-  ch <- terra::values(rgb_disp[[k]], mat = FALSE)
-  dk <- lapply(list(root = r, halo = h, peat = !r & !h), function(sel) {
-    v <- ch[sel]; v <- v[!is.na(v)]
+```{r rgb-channels, fig.height = 6.4, fig.alt = "Six panels in two rows: the three chromatic coordinates on top and the three raw channels beneath, each showing the density of values for root, halo and bulk peat."}
+# Chromatic coordinates, the same quantities tube_coloration() reports: each
+# channel over the sum of the three. Dividing out the total removes exposure,
+# which is what made the brightness curve bimodal, so what is left is color.
+tot <- terra::app(rgb_disp[[1:3]], fun = sum, na.rm = TRUE)
+cc  <- lapply(1:3, function(k) terra::values(rgb_disp[[k]] / tot, mat = FALSE))
+names(cc) <- c("rcc", "gcc", "bcc")
+
+# Raw channels underneath, for comparison: same roots, same halo, same peat.
+raw <- lapply(1:3, function(k) terra::values(rgb_disp[[k]], mat = FALSE))
+names(raw) <- c("red", "green", "blue")
+
+curves <- function(vals) lapply(list(root = r, halo = h, peat = !r & !h),
+  function(sel) {
+    v <- vals[sel]; v <- v[is.finite(v)]
     stats::density(if (length(v) > 40000) sample(v, 40000) else v)
   })
-  plot(NA, xlim = c(0, 1), ylim = c(0, max(vapply(dk, function(d) max(d$y), 1))),
-       xlab = c("red", "green", "blue")[k], ylab = if (k == 1) "density" else "",
+
+op <- graphics::par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+for (k in c(names(cc), names(raw))) {
+  dk <- curves(if (k %in% names(cc)) cc[[k]] else raw[[k]])
+  plot(NA, xlim = range(unlist(lapply(dk, function(d) d$x))),
+       ylim = c(0, max(vapply(dk, function(d) max(d$y), 1))),
+       xlab = k, ylab = if (k %in% c("rcc", "red")) "density" else "",
        main = "")
   for (nm in names(dk)) graphics::lines(dk[[nm]], col = cols[[nm]], lwd = 2)
 }
 graphics::par(op)
 ```
 
-Reading the three together separates a brightness difference from a color
-difference: curves that shift together between groups are exposure, curves that
-shift apart are pigment.
+Because each coordinate is a share of the total, the frame-to-frame exposure
+differences divide out and what separates the groups is color rather than
+lighting. A group that shifts in `rcc` but not in `gcc` or `bcc` has changed
+hue; one that does not shift in any of the three differs only in brightness,
+which the previous figure already showed.
 
 `create_root_buffer()` grows a buffer around every root pixel, a simple proxy
 for the rhizosphere. With `halo_only = TRUE` it returns the ring alone.
+
+```{=latex}
+\newpage
+```
+
+# Part III: flatbed scans
+
+Everything to this point assumed a tube. A flatbed scan of washed roots is the
+other half of the pair described in the introduction: no depth axis, and architecture
+in its place.
 
 ## The same traits, without a depth axis
 
@@ -1605,13 +1713,138 @@ that do not exist, and a closed loop that does not exist.
 
 `root_graph_pipeline()` handles both, and prints what it did: tracing finds one
 segment per arm, `spliced pass-through nodes` merges arms that are not really
-ends, and `resolved crossings` pairs up the four arms of a crossing by
-direction so each root continues *through* the node. `network_metrics()` then
-reports whatever could not be paired as `artefact_cycles` -- loops in a
-structure that cannot have them, which is a measurement of unresolved overlap
-rather than a property of the plant.
+ends, and `resolved crossings` pairs up the arms of a crossing by direction so
+each root continues *through* the node. `network_metrics()` then reports
+whatever could not be paired as `artefact_cycles` --- loops in a structure that
+cannot have them, which is a measurement of unresolved overlap rather than a
+property of the plant.
 
-```{r flatbed, fig.alt = c("The raw segmentation magnified, with isolated specks still present.", "Segmented flatbed root scan after cleaning, with the magnified region outlined.", "The cleaned scan magnified to native resolution.", "The pruned skeleton of the same scan, with the magnified region outlined.", "The skeleton magnified to native resolution.", "Branch order classes painted onto the same roots, with the magnified region outlined.", "The branch order map magnified to native resolution.")}
+Which rule applies at a node is decided first by **how many arms meet there**.
+From four arms up, the node can be joined into roots passing through it. At
+three arms nothing is ever joined; what remains there is the question of which
+arm continues the root and which arm is a branch off it, which
+`assign_root_order()` decides from straightness and diameter together, weighted
+by `diam_weight`.
+
+The crossing rules, in plain terms:
+
+1. **Four arms or more.** `resolve_crossings()` considers any node where at
+   least four arms meet. A three-arm node is a junction to begin with and is
+   left to the ordering rule.
+2. **Each arm gets a direction**, read `look = 5` pixels back along it and
+   pointing away from the node.
+3. **A pair of arms is scored by how nearly opposite its two directions run.**
+   The score is a dot product: $-1$ means the pair runs straight through the
+   node, $0$ means a right-angle turn. A pair may be joined when it scores
+   below `crossing_straight` (default $-0.5$, so a root may bend by at most 60
+   degrees across the node).
+4. **As many arms are paired as can be.** Of the ways to pair up the arms, the
+   one pairing the most arms wins, ties going to the straightest total. Four
+   arms give two pairs or one; six arms meeting can be three roots crossing.
+5. **An arm left over is a lateral**, and the pair it leaves is held back from
+   splicing, so the lateral stays attached and the node is read as an ordinary
+   junction. The pair holding the arm nearest in direction is the one held, the
+   thinner pair breaking a tie.
+6. **`crossing_diam_ratio` can also require the paired roots to be comparably
+   thick**, which separates a crossing from a branch point whose two laterals
+   happen to leave on opposite sides. It is `0`, off, by default.
+
+Note what rule 4 does *not* read: the angle **between** the two roots. A
+square crossing and a 20-degree one are the same case, because in each the
+paired arms run opposite to one another. What is read is how straight each
+root stays across the node.
+
+### What that does to real nodes
+
+`data-raw/node-gallery.R` is a standalone script, needing no scans, that draws
+ten nodes spanning three to six arms and runs each through the pipeline at its
+default settings. Each hue is one root; a lateral is a **darker tone of the
+root it leaves**, and an axis is drawn wider than its branches. Under each
+panel is what came back.
+
+```{r node-gallery-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/node_gallery.png"), fig.cap = "Ten synthetic nodes as the pipeline reads them.", fig.alt = "Ten panels in two rows, each a synthetic node traced at default settings. Each root is one hue, laterals are darker tones of the root they leave, axes are drawn wider than branches, and the input centerlines are dashed on top. The top row holds three three-arm junctions, an axis with two forward-sweeping laterals, and a square crossing. The bottom row holds a 20-degree crossing, the same crossing with one root much thicker than the other, a crossing with two thin laterals, a crossing with a lateral at 45 degrees, and three roots meeting at one point with a stub on every arm."}
+knitr::include_graphics("figures/node_gallery.png")
+```
+
+```{r node-gallery-missing, echo = FALSE, results = "asis", eval = !file.exists("figures/node_gallery.png")}
+cat("*`data-raw/node-gallery.R` writes this figure; it needs no scans.*\n")
+```
+
+Counting follows the node, not the pixel. **Every lateral arm leaving a node is
+one branch point**, so two laterals at one pixel are two branch points, and
+**every pair of roots that overlap at a node is one junction point**, so three
+roots through one pixel are three junctions. A node can hold both at once, and
+neither count swallows the other.
+
+Each node is settled by two numbers: the score of the arrangement the rule
+picks and the score of the runner-up. A wide gap means the reading is firm, a
+narrow one that the image barely separates two answers. The script prints them
+all; the four-arm nodes read:
+
+| node | chosen | runner-up | gap |
+|:--|--:|--:|--:|
+| square crossing | $-2.00$ | $0.00$ | 2.00 |
+| axis with two forward laterals | $-1.00$ | $0.00$ | 1.00 |
+| crossing at 20 degrees | $-2.00$ | $-1.88$ | 0.12 |
+| the same, 21 px by 9 px | $-2.00$ | $-1.88$ | 0.12 |
+
+The axis with two forward laterals is the one refused: its total is the best
+available, but acceptance tests the *worst single pair*, and that pair turns a
+right angle at $0.00$, well above $-0.5$. The two 20-degree crossings are
+accepted on a gap of 0.12 out of 2, and they come out identically although
+their widths differ --- the pairing reads directions only, so how wide a root
+is cannot change how its arms are paired. In the second of them the chosen
+pairing joins a 21-pixel arm to a 9-pixel one, so each root halves in width at
+the pixel where it touches the other, while the pairing 0.12 behind keeps each
+root at one width and asks it to kink by 20 degrees instead. Which is the
+better reading is a fair question; the figure is where to ask it.
+
+### Where the reading is nearly a coin toss
+
+For the nodes whose gap is narrow, a second figure draws the runner-up: the
+other pairing, or, where a lateral was left over, the other root it could have
+been attributed to.
+
+```{r node-alt-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/node_alternatives.png"), fig.cap = "The runner-up reading of four of those nodes.", fig.alt = "Four panels showing the second-best reading of four of the synthetic nodes, each labelled with its own score, the score of the reading chosen instead, and the gap between them."}
+knitr::include_graphics("figures/node_alternatives.png")
+```
+
+```{r node-alt-missing, echo = FALSE, results = "asis", eval = !file.exists("figures/node_alternatives.png")}
+cat("*`data-raw/node-gallery.R` writes this figure too, via `ambiguity()`.*\n")
+```
+
+A lateral left over at a node needs a parent, and the angle does not always
+give one: in the 45-degree case it ties at $0.71$ against both crossing roots.
+Breaking that tie takes an assumption about where laterals come from --- off
+the thicker axis, or off the thinner higher-order root --- and that is a
+property of the species, not of the image. The package leans towards the
+thicker arm, through the `dmag` term in `assign_root_order()`.
+
+### Two limits worth knowing
+
+**Shallow crossings fail in the skeleton, not in the rule.** Two one-pixel
+centerlines crossing at angle $t$ share pixels for roughly $1/\tan t$ of their
+length either side of the crossing: 1.4 pixels at 20 degrees, 1.9 at 15, 2.8 at
+10. Below about 20 degrees that shared run is long enough that the crossing is
+no longer a single point in the skeleton, and the tracer returns two three-arm
+junctions a few pixels apart joined by a short segment. Such a node never
+reaches `resolve_crossings()` at all, and no threshold recovers it. The scoring
+margin narrows with the angle too --- 0.12 at 20 degrees, 0.07 at 15, 0.03 at
+10 --- but the tracing gives way first.
+
+**Preferring the most pairs cuts both ways.** It is what reads three roots
+crossing at one pixel correctly. It can also pair two arms that are not one
+root: two laterals leaving a node on roughly opposite sides, alike in width,
+score as well as a thin root crossing through, and the rule takes the pairing
+because it covers more arms. Nothing in a single node separates those two
+cases.
+
+**Very wide nodes are still left alone.** Above eight arms the number of ways
+to pair them grows faster than the information in them does, and such a node is
+a tangle rather than a crossing; `verbose = TRUE` reports the nodes where no
+pair of arms was straight enough to join.
+
+```{r flatbed, fig.cap = c("The raw segmentation magnified, specks included.", "The cleaned scan, with the magnified window outlined.", "The cleaned scan at native resolution.", "The pruned skeleton of the same scan.", "The skeleton at native resolution.", "Branch order painted onto the same roots.", "The branch order map at native resolution."), fig.alt = c("The raw segmentation magnified, with isolated specks still present.", "Segmented flatbed root scan after cleaning, with the magnified region outlined.", "The cleaned scan magnified to native resolution.", "The pruned skeleton of the same scan, with the magnified region outlined.", "The skeleton magnified to native resolution.", "Branch order classes painted onto the same roots, with the magnified region outlined.", "The branch order map magnified to native resolution.")}
 data(flatbed_scan_example)
 
 seg_fb <- load_flexible_image(flatbed_scan_example, output_format = "spatrast",
@@ -1671,7 +1904,7 @@ per-segment value back onto the **mask**, so each root is drawn at its own
 width, and picks a labeled swatch per class when the values are a handful of
 small integers.
 
-```{r order-overlay, eval = requireNamespace("png", quietly = TRUE), fig.height = 5, dpi = 120, out.width = "100%", fig.alt = "The flatbed root system painted by branch order over the grey root mask, with one labeled color per order class, and the same region magnified."}
+```{r order-overlay, eval = requireNamespace("png", quietly = TRUE), fig.height = 5, dpi = 120, out.width = "100%", fig.cap = "Branch order over the whole root system.", fig.alt = "The flatbed root system painted by branch order over the grey root mask, with one labeled color per order class, and the same region magnified."}
 # render_order_overlay() writes the figure with grDevices::png(), which can
 # emit a palette image; terra then reads it as a single band of palette
 # indices rather than three color bands. png::readPNG() expands the palette,
@@ -1706,7 +1939,7 @@ downsampling at all. It draws the skeleton in gray and the traced, ordered
 segments in color on top, so **bare gray is skeleton the graph missed** --
 which is the check to run when a number looks wrong.
 
-```{r order-window, fig.height = 5, dpi = 300, out.width = "100%", fig.alt = "A magnified rectangle of the skeleton with the traced segments colored by order over it, so untraced skeleton shows as bare gray."}
+```{r order-window, fig.height = 5, dpi = 300, out.width = "100%", fig.cap = "Traced segments by order in a magnified window.", fig.alt = "A magnified rectangle of the skeleton with the traced segments colored by order over it, so untraced skeleton shows as bare gray."}
 win_png <- tempfile(fileext = ".png")
 plot_order_window(order_res$edges, fb_skl,
                   r_range = c(600, 1000), c_range = c(900, 1300),
@@ -1752,6 +1985,22 @@ ecology reports. Asking how deep the branching hierarchy goes means
 `order_from_tip`. Asking how *balanced* it is means `strahler_order`. The one
 thing not to do is compare numbers across schemes.
 
+A real scan is too dense to show that, so the four schemes are drawn on one
+synthetic fan instead: a trunk with laterals leaving at six heights, two of
+them carrying their own pair of children, and four stubs. Nine branch points,
+eleven tips, three levels deep.
+
+```{r orders-file, echo = FALSE, out.width = "100%", eval = file.exists("figures/synthetic_orders.png"), fig.alt = "The same synthetic branching system drawn four times, colored by order_from_tip, strahler_order, order_from_base and root_max_order_from_tip, with the orders each scheme produced printed beneath."}
+knitr::include_graphics("figures/synthetic_orders.png")
+```
+
+```{r orders-missing, echo = FALSE, results = "asis", eval = !file.exists("figures/synthetic_orders.png")}
+cat("*`data-raw/make-figures.R` writes this figure; it needs no scans.*\n")
+```
+
+The same stub carries a different number in every panel, which is the point:
+the schemes are not refinements of one another.
+
 ```{r flatbed-orders}
 order_res$summary
 
@@ -1763,7 +2012,7 @@ order_metrics(order_res, groups = "thickest")
 Tips and branch points come from this table too: `n_tips` and
 `n_branch_points` per segment, summed per order class in `$summary`.
 
-```{r flatbed-diameter, fig.height = 3.2, fig.alt = "Histogram of root diameters across the flatbed window."}
+```{r flatbed-diameter, fig.height = 3.2, fig.cap = "Root diameters across the flatbed window.", fig.alt = "Histogram of root diameters across the flatbed window."}
 diam_fb   <- root_diameter(fb_clean, skeleton_img = fb_skl_pruned,
                            unit = "cm", dpi = 1200, select_layer = NULL)
 diam_vals <- diam_fb$diameters      # the per-skeleton-pixel values
@@ -1855,7 +2104,7 @@ which is how a transport quantity becomes legible. It picks its own legend: a
 handful of small integers gets one labeled swatch per class, anything
 continuous gets a color ramp with a scale bar.
 
-```{r transport-overlay, eval = requireNamespace("png", quietly = TRUE), fig.height = 5, dpi = 120, out.width = "100%", fig.alt = "The root system painted by path resistance, segments near the base dark and distal segments bright, over the grey root mask, with the same window magnified."}
+```{r transport-overlay, eval = requireNamespace("png", quietly = TRUE), fig.height = 5, dpi = 120, out.width = "100%", fig.cap = "Path resistance from base to tip.", fig.alt = "The root system painted by path resistance, segments near the base dark and distal segments bright, over the grey root mask, with the same window magnified."}
 png_file <- tempfile(fileext = ".png")
 
 # max_side caps the longest side of the written PNG, and anything below the
@@ -1888,7 +2137,7 @@ same signal `network_metrics()` reports as `artefact_cycles`.
 Path length and path resistance rank the segments differently, and the reason
 is the radius term.
 
-```{r transport-ranks, fig.height = 3.8, fig.alt = "Path resistance against path length for every segment, drawn twice: on a linear resistance axis, where nearly every segment is pressed to the bottom of the range, and on a log axis, where the spread is visible. Point size is diameter."}
+```{r transport-ranks, fig.height = 3.8, fig.cap = "Path resistance against path length.", fig.alt = "Path resistance against path length for every segment, drawn twice: on a linear resistance axis, where nearly every segment is pressed to the bottom of the range, and on a log axis, where the spread is visible. Point size is diameter."}
 op     <- graphics::par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
 pt_bg  <- grDevices::rgb(0.21, 0.35, 0.47, 0.45)
 pt_cex <- 0.4 + 2.4 * et$mean_diameter / max(et$mean_diameter, na.rm = TRUE)
