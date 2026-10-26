@@ -1630,15 +1630,15 @@ bin by bin and have no notion that one bin is adjacent to another, so
 two profiles that do not overlap score much the same whether they are 10
 cm or 50 cm apart.
 
-The shaded areas above and the function agree: with `index` giving the
-depth of each bin,
+The shaded areas above and the function agree.
 [`compare_depth_distribution()`](https://jcunow.github.io/Rootopia/reference/compare_depth_distribution.md)
-returns the mass-weighted mean distance the root has to travel, so a
-profile shifted 10 cm returns 10. Interpreting it needs two things kept
-in mind. The profiles are normalized, so total root amount divides out –
-a tube with ten times the root but the same depth distribution scores 0,
-and abundance has to be reported separately. And the value is bounded
-below by the difference in mean rooting depth: two tubes 3 cm apart in
+takes `index` as the depth of each bin and returns the mass-weighted
+mean distance the root has to travel, so a profile shifted 10 cm returns
+10. Interpreting it needs two things kept in mind. The profiles are
+normalized, so total root amount divides out – a tube with ten times the
+root but the same depth distribution scores 0, and abundance has to be
+reported separately. And the value is bounded below by the difference in
+mean rooting depth: two tubes 3 cm apart in
 [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) are at
 least 3 cm apart here. That bound is tight whenever the cumulative
 curves do not cross, which is the ordinary case for a profile that
@@ -2207,7 +2207,7 @@ order_res <- branch_order_map(
 #>   spliced pass-through nodes: 111 -> 111 segment(s)
 #>   resolved crossings: 111 -> 111 segment(s)
 #> Tip order...
-#> Done in 0.21s. 111 segments, max order 8, total length 7857.9 px
+#> Done in 0.37s. 111 segments, max order 8, total length 7857.9 px
 
 # One window for every figure in this part, so the panels can be compared.
 fb_frac <- 0.25

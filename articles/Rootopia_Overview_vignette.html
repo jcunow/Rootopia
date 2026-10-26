@@ -95,6 +95,20 @@ Cunow</h4>
 
     
     
+<style>
+/* rmarkdown writes the caption text but no number, while LaTeX numbers figures
+   itself. A CSS counter gives the HTML the same numbering without touching the
+   captions, which would then read "Figure 3: Figure 3." in the PDF. Both
+   caption shapes are covered: pandoc emits <figure><figcaption> and older
+   versions emit <div class="figure"><p class="caption">. */
+body { counter-reset: rt-fig; }
+div.figure, figure { counter-increment: rt-fig; }
+div.figure > p.caption::before,
+figure > figcaption::before {
+  content: "Figure " counter(rt-fig) ": ";
+  font-weight: 600;
+}
+</style>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -1672,22 +1686,22 @@ for more than shallow ones. Jensen-Shannon and Kullback-Leibler compare
 bin by bin and have no notion that one bin is adjacent to another, so
 two profiles that do not overlap score much the same whether they are 10
 cm or 50 cm apart.</p>
-<p>The shaded areas above and the function agree: with
-<code>index</code> giving the depth of each bin,
-<code><a href="../reference/compare_depth_distribution.html">compare_depth_distribution()</a></code> returns the mass-weighted mean
-distance the root has to travel, so a profile shifted 10 cm returns 10.
-Interpreting it needs two things kept in mind. The profiles are
-normalized, so total root amount divides out – a tube with ten times the
-root but the same depth distribution scores 0, and abundance has to be
-reported separately. And the value is bounded below by the difference in
-mean rooting depth: two tubes 3 cm apart in <code><a href="../reference/MRD.html">MRD()</a></code> are at
-least 3 cm apart here. That bound is tight whenever the cumulative
-curves do not cross, which is the ordinary case for a profile that
-simply deepened. What is informative is the gap: a distance well above
-the difference in mean depth means root moved both up and down, so the
-shapes differ and not just the center of mass. The two-layer panel above
-is that case taken to its limit – the difference in mean depth is zero
-and the whole distance is shape.</p>
+<p>The shaded areas above and the function agree.
+<code><a href="../reference/compare_depth_distribution.html">compare_depth_distribution()</a></code> takes <code>index</code> as
+the depth of each bin and returns the mass-weighted mean distance the
+root has to travel, so a profile shifted 10 cm returns 10. Interpreting
+it needs two things kept in mind. The profiles are normalized, so total
+root amount divides out – a tube with ten times the root but the same
+depth distribution scores 0, and abundance has to be reported
+separately. And the value is bounded below by the difference in mean
+rooting depth: two tubes 3 cm apart in <code><a href="../reference/MRD.html">MRD()</a></code> are at least 3
+cm apart here. That bound is tight whenever the cumulative curves do not
+cross, which is the ordinary case for a profile that simply deepened.
+What is informative is the gap: a distance well above the difference in
+mean depth means root moved both up and down, so the shapes differ and
+not just the center of mass. The two-layer panel above is that case
+taken to its limit – the difference in mean depth is zero and the whole
+distance is shape.</p>
 </div>
 <div class="section level3">
 <h3 id="turnover-between-sessions">Turnover between sessions<a class="anchor" aria-label="anchor" href="#turnover-between-sessions"></a>
@@ -2225,7 +2239,7 @@ straight enough to join.</p>
 <span><span class="co">#&gt;   spliced pass-through nodes: 111 -&gt; 111 segment(s)</span></span>
 <span><span class="co">#&gt;   resolved crossings: 111 -&gt; 111 segment(s)</span></span>
 <span><span class="co">#&gt; Tip order...</span></span>
-<span><span class="co">#&gt; Done in 0.21s. 111 segments, max order 8, total length 7857.9 px</span></span>
+<span><span class="co">#&gt; Done in 0.37s. 111 segments, max order 8, total length 7857.9 px</span></span>
 <span></span>
 <span><span class="co"># One window for every figure in this part, so the panels can be compared.</span></span>
 <span><span class="va">fb_frac</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
