@@ -57,9 +57,9 @@
 #' 1. Raster values are extracted once into a numeric vector.
 #' 2. Each iteration reconstructs a matrix representation of the image.
 #' 3. A zero-padded border is added around the image.
-#' 4. For each pixel equal to 1:
-#'    - The 3x3 neighborhood is extracted
-#'    - A weighted sum (mask encoding) produces a unique neighborhood code
+#' 4. For every pixel equal to 1, the eight neighbors are read from shifted
+#'    copies of the padded matrix and combined as a weighted sum into a
+#'    unique neighborhood code
 #' 5. The code is used as an index into a 256-entry lookup table:
 #'    - LUT value 1 or 3 -> pixel removed in first sub-step
 #'    - LUT value 2 or 3 -> pixel removed in second sub-step
@@ -69,7 +69,8 @@
 #' Important properties of implementation:
 #' - Raster is only written back once at the end
 #' - All intermediate steps operate on in-memory matrix/vector data
-#' - Neighborhood encoding is performed via explicit loops over image pixels
+#' - Neighborhood codes are computed for the whole matrix at once, by
+#'   shifting it, not by looping over pixels
 #'
 #' @param img Binary SpatRaster (single layer only)
 #' @param max_iter Maximum number of thinning iterations
@@ -345,10 +346,9 @@ skeletonize_image <- function(img,
     overlay <- matrix(0L, nrow(clean), ncol(clean))
     overlay[clean == 1] <- 1
     overlay[skel == 1]  <- 2
-    
-    # reverse rows for plotting orientation
-    overlay <- overlay[nrow(overlay):1, , drop = FALSE]
-    
+    # Row 1 of `overlay` is the top image row, and rasterImage() draws row 1 of
+    # a raster at the top, so the matrix is written as is.
+
     # ----------------------------
     # color palette (scientific / neutral)
     # ----------------------------
