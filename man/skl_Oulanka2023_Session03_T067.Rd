@@ -32,8 +32,8 @@ Binary mask, stored as 0 (background) and a single non-zero value
 \item Layer 1: foreign objects such as tape, filled
 \item Layers 2 and 3 (identical): root skeleton
 }
-The skeleton is stored at reduced resolution, and its one-pixel lines did
-not survive that intact: they are broken into many short pieces. For traits
+At the stored resolution the skeleton's one-pixel lines are broken into
+many short pieces. For traits
 that depend on connectivity (tips, branch points, branching order),
 skeletonize the matching segmentation with \code{skeletonize_image()}.
 }
