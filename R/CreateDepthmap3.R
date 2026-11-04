@@ -26,9 +26,12 @@
 #'     \code{center_offset} are unused.}
 #' }
 #'
-#' @param img Input image (accepts terra SpatRaster, matrix, array, or file path). For multi-band
-#'           images, specify band_index parameter
-#' @param mask Raster mask indicating foreign objects (1 = mask, 0 or NA = keep)
+#' @param img Input image (accepts terra SpatRaster, matrix, array, or file
+#'   path). Only its size is used, so any layer of a multi-layer image will do.
+#'   A SpatRaster passes its extent, resolution and CRS on to the depth map.
+#' @param mask Raster mask on the same grid as \code{img}, marking foreign
+#'   objects such as tape with 1 (or TRUE); those cells are \code{NA} in the
+#'   depth map. 0 and NA cells are kept.
 #' @param sinoid Logical. Superseded by \code{geometry}, and kept so existing
 #'   code runs unchanged: \code{TRUE} means \code{geometry = "tube"},
 #'   \code{FALSE} means \code{geometry = "window"}. Ignored when
@@ -56,12 +59,19 @@
 #'   angle either way
 #' @param dpi Numeric; image resolution in dots per inch
 #' @param start_soil Numeric; soil surface boundary in cm (0 = surface)
-#' @param center_offset Numeric in `[0, 1]`; where the top of the tube -- the
-#'   shallowest line of the curvature wave -- sits across the image height, as a
-#'   fraction of one full tube circumference. \code{0} puts it on the first row,
-#'   \code{0.5} halfway down, \code{1} on the last row. \code{0} and \code{1}
-#'   are the same point on the tube, the image seam. Used by
-#'   \code{geometry = "tube"} only
+#' @param center_offset Numeric; the image row of the top of the tube -- the
+#'   shallowest line of the curvature wave -- given in one of two forms:
+#'   \itemize{
+#'     \item \strong{Fraction} - a number in \code{[0, 1]}: the tube top is on
+#'       row \code{1 + center_offset * (nrow - 1)}, so \code{0} puts it on the
+#'       first row, \code{0.5} halfway down and \code{1} on the last row.
+#'     \item \strong{Absolute row} - a number \code{> 1}: the row itself, at
+#'       most \code{nrow}, e.g. from \code{estimate_rotation_center()}.
+#'   }
+#'   The wave itself
+#'   always spans one full tube circumference (\code{tube_thicc * pi} cm at
+#'   \code{dpi}); an image that covers only part of the circumference shows the
+#'   matching part of the wave. Used by \code{geometry = "tube"} only
 #' @param geometry Character; the shape being imaged. One of \code{"tube"}
 #'   (default), \code{"window"} or \code{"flat"} -- see \strong{Geometries}.
 #'
@@ -74,8 +84,7 @@
 #' data(seg_Oulanka2023_Session01_T067)
 #' seg_Oulanka2023_Session01_T067 = terra::rast(seg_Oulanka2023_Session01_T067)
 #' img = seg_Oulanka2023_Session01_T067
-#' mask = seg_Oulanka2023_Session01_T067[[1]] - seg_Oulanka2023_Session01_T067[[2]]
-#' mask[mask == 255] <- NA
+#' mask = seg_Oulanka2023_Session01_T067[[1]] > 0   # layer 1 marks the tape
 #' map = create_depthmap(img, mask, start_soil = 0.1,
 #'   geometry = "tube",
 #'   tube_thicc = 7,
@@ -149,17 +158,18 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     if (!is.numeric(start_soil))
       stop("start_soil must be a numeric value")
     if (geometry == "tube" &&
-        (!is.numeric(center_offset) || center_offset < 0 || center_offset > 1))
-      stop("center_offset must be between 0 and 1")
+        (!is.numeric(center_offset) || length(center_offset) != 1L ||
+         is.na(center_offset) || center_offset < 0))
+      stop("center_offset must be a fraction in [0, 1] or a row number above 1")
 
     # Image validation
     if (is.null(img))
       stop("Input image cannot be NULL")
 
-    # all layers have the same dimensions, we select layer 1 to handle multi-layer and single-layer raster
-    select_layer = 1
-    
-    img <- load_flexible_image(img, select_layer = select_layer,
+    # Only the size of the image is used, so any layer will do. A SpatRaster's
+    # geometry is kept for the output.
+    template <- if (inherits(img, "SpatRaster")) img[[1]] else NULL
+    img <- load_flexible_image(img, select_layer = 1,
                                output_format = "spatrast", scale = "none")
 
     # Validate image dimensions
@@ -201,22 +211,27 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # Only a tube has one; a window and a tray are planar.
     if (geometry == "tube") {
       tube_thicc_tilted = round(tube_thicc * curve.factor, 3)
-      df1 = seq(0*pi, 2*pi, length =  (round(tube_thicc*pi*dpi/2.54, 0)-1))
-      if (length(df1) < 2)
+      circumference_px = tube_thicc * pi * dpi / 2.54
+      if (circumference_px < 2)
         stop("Insufficient points for sine wave generation. Check tube_thicc and dpi values")
+      # A scan covers at most one turn of the tube, so a taller image means the
+      # diameter or the resolution is wrong.
+      if (nr > round(circumference_px))
+        stop("Image height (", nr, " px) exceeds one tube circumference (",
+             round(circumference_px), " px at this tube_thicc and dpi). ",
+             "Check tube_thicc and dpi.")
 
-      # center_offset is a fraction of one full turn, so the phase spans 2*pi.
       # The term runs 0 (tube top, shallowest) to tube_thicc_tilted (tube
-      # bottom), and 1 - cos puts the trough at phase 0: the tube top lands on
-      # image row 1 + (nr - 1) * center_offset, sweeping the full height as
-      # center_offset goes 0 -> 1. Both ends are the same point on the tube --
-      # the image seam -- so the wave stays continuous across it.
-      df00 = (1-cos(df1+(2*pi*(center_offset))))*(tube_thicc_tilted/2)
-
-      # Safely handle vector subsetting
-      if (nr > length(df00))
-        stop("Calculated sine wave shorter than image height. Wrong Tube Diameter")
-      circ = df00[1:nr]
+      # bottom); 1 - cos puts the trough at phase 0. center_offset places the
+      # tube top on a row of the image, and the phase advances by one full turn
+      # per circumference, so an image covering part of the tube carries the
+      # matching stretch of the wave.
+      # Up to 1 the value is a fraction of the image height, above 1 a row.
+      top_row = if (center_offset <= 1) 1 + center_offset * (nr - 1) else center_offset
+      if (top_row > nr)
+        stop("center_offset = ", center_offset, " is beyond the last row (", nr, ")")
+      phase   = 2 * pi * (seq_len(nr) - top_row) / circumference_px
+      circ    = (1 - cos(phase)) * (tube_thicc_tilted / 2)
     } else {
       circ = rep(0, nr)
     }
@@ -226,10 +241,10 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
     # Both terms are zero for "flat", which leaves every cell at -start_soil:
     # one depth for the whole image, so a profile over it has a single bin.
     depth_term = seq_len(nc) * px.to.cm.h * tilt.factor
-    M = outer(rev(circ), depth_term, FUN = "+") - start_soil   # dims [nr, nc]
+    M = outer(circ, depth_term, FUN = "+") - start_soil   # dims [nr, nc]
 
-    # Write onto a raster that copies img's geometry so extent/res/CRS match.
-    masked.depthmap = terra::rast(img[[1]])
+    # Write onto a raster with the input's geometry, so extent/res/CRS match.
+    masked.depthmap = terra::rast(if (is.null(template)) img[[1]] else template)
     terra::values(masked.depthmap) = as.vector(t(M))           # row-major for terra
 
     # Mask foreign objects. `mask` shares img's grid, so cell i of the mask and
@@ -241,6 +256,6 @@ create_depthmap = function(img, mask = NULL, sinoid = TRUE,
 
   }, error = function(e) {
     # Provide informative error message
-    stop(paste("Error in create.depthmap:", e$message))
+    stop(paste("Error in create_depthmap:", e$message))
   })
 }
