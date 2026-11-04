@@ -188,9 +188,9 @@ trace_segments <- function(skel) {
   
   # Absorb degree-2 pixels that bridge two pixels of the SAME junction cluster.
   # A 90-degree bend in an 8-connected skeleton leaves such a pixel wedged
-  # between two contracted junction pixels; tracing it produced a 3-px J->J
-  # self-loop (a spurious micro-cycle: NA order_from_tip + a phantom branch point).
-  # Folding it into the cluster removes the artifact at its source.
+  # between two contracted junction pixels; traced on its own it would form a
+  # 3-px J->J self-loop (a spurious micro-cycle: NA order_from_tip and a
+  # phantom branch point). Folding it into the cluster avoids that.
   d2 <- which(deg == 2L)
   if (length(d2)) {
     pos <- NB[d2, , drop = FALSE] > 0L
