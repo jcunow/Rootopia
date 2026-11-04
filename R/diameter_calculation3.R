@@ -250,7 +250,7 @@ root_diameter <- function(img,  skeleton_method = "MAT", skeleton_img = NULL, se
 
   }, error = function(e) {
     # Main error handler
-    stop(sprintf("Error in root.diameters: %s", e$message))
+    stop(sprintf("Error in root_diameter: %s", e$message))
   })
 }
 
