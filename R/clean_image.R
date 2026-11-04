@@ -1,96 +1,85 @@
 # Image cleaning functions
 #
-# Dependencies: imager (for connected-component labeling, morphological ops)
-# All functions work on `cimg` objects internally; load_flexible_image() handles
-# conversion from SpatRaster / matrix / file path.
+# Hole filling and speck removal work on 0/1 matrices and label connected
+# components with terra::patches(). Edge smoothing and cimg output use imager.
+# load_flexible_image() handles conversion from SpatRaster / matrix / file path.
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+#' Label the connected non-zero regions of a 0/1 matrix
+#'
+#' Only non-zero cells get a label; zero and \code{NA} cells are \code{NA}.
+#'
+#' @param m A 0/1 matrix.
+#' @param directions \code{8} (diagonal neighbors connect) or \code{4}.
+#' @return Integer matrix of region labels, \code{NA} outside the regions.
+#' @keywords internal
+#' @noRd
+.label_regions <- function(m, directions) {
+  p <- terra::patches(terra::rast(m), directions = directions, zeroAsNA = TRUE)
+  matrix(terra::values(p, mat = FALSE), nrow(m), ncol(m), byrow = TRUE)
+}
+
+#' Labels of the regions that touch the matrix border
+#' @keywords internal
+#' @noRd
+.border_labels <- function(lab) {
+  b <- c(lab[1, ], lab[nrow(lab), ], lab[, 1], lab[, ncol(lab)])
+  unique(b[!is.na(b)])
+}
+
+
 #' Fill internal black holes in a binary image
 #'
-#' Sets to 1 all black regions (value = 0) that are completely surrounded by
-#' white (value = 1) -- i.e. not connected to the image border.
+#' Sets to 1 every black region (value 0) of at most \code{max_size} pixels
+#' that is enclosed by white (value 1), i.e. does not touch the image border.
+#' Holes are 4-connected: two background pixels that touch only at a corner
+#' belong to different holes, because the 8-connected foreground passes
+#' between them.
 #'
-#' @param img A `cimg` binary image (values 0 and 1).
-#' @param max_size Maximum hole size in pixels to fill.  If `NULL` (default),
-#'   all holes are filled regardless of size.
-#' @return A `cimg` with holes filled.
+#' @param img A 0/1 matrix.
+#' @param max_size Maximum hole size in pixels to fill.  `NULL` (default)
+#'   fills nothing; `Inf` fills every hole.
+#' @return The matrix with holes filled.
 #' @keywords internal
 fill_holes <- function(img, max_size = NULL) {
-  inv  <- 1 - img
-  lbl  <- imager::label(inv)
-  nd   <- dim(lbl)
-
-  border_labels <- unique(c(
-    lbl[1,    , 1, 1],
-    lbl[nd[1],, 1, 1],
-    lbl[, 1,   1, 1],
-    lbl[, nd[2], 1, 1]
-  ))
-  border_labels <- border_labels[border_labels > 0]
-
-  lblv <- as.numeric(lbl)
-  internal_labels <- lblv * as.numeric(!(lblv %in% border_labels))
-
-  if (!is.null(max_size)) {
-    sizes          <- table(internal_labels[internal_labels > 0])
-    allowed        <- as.integer(names(sizes[sizes <= max_size]))
-    fill_mask      <- internal_labels %in% allowed
-  } else {
-    fill_mask <- internal_labels > 0
-  }
-
-  img[fill_mask] <- 1
+  if (is.null(max_size)) return(img)
+  lab <- .label_regions((img == 0) * 1, directions = 4)
+  lab[lab %in% .border_labels(lab)] <- NA        # touches the border: background
+  sizes <- table(lab)
+  fill  <- as.integer(names(sizes)[sizes <= max_size])
+  img[!is.na(lab) & lab %in% fill] <- 1
   img
 }
 
 
-#' Remove small isolated white artifacts from a binary image
+#' Remove small white objects from a binary image
 #'
-#' Sets to 0 all white regions (value = 1) that are not connected to the
-#' image border.
+#' Sets to 0 every white region (value 1) of at most \code{max_size} pixels.
+#' Regions are 8-connected: pixels that touch at a corner belong to the same
+#' object, so a diagonal run of root pixels is one object. With
+#' \code{protect_border = TRUE}, regions touching the image border are kept
+#' whatever their size.
 #'
-#' @param img A `cimg` binary image (values 0 and 1).
-#' @param max_size Maximum artifact size in pixels to remove.  If `NULL`,
-#'   all candidate white regions are removed.
+#' @param img A 0/1 matrix.
+#' @param max_size Maximum object size in pixels to remove.  `NULL` (default)
+#'   removes nothing; `Inf` removes every candidate region.
 #' @param protect_border Logical.  If `TRUE`, white regions touching the image
 #'   border are never removed (they are assumed to be roots leaving the frame).
 #'   If `FALSE` (default), border-touching regions are subject to the same
 #'   `max_size` test as any other region, so edge specks are removed too.
-#'   Border location confers no protection on its own.
-#' @return A `cimg` with artifacts removed.
+#' @return The matrix with objects removed.
 #' @keywords internal
 remove_small_objects <- function(img, max_size = NULL, protect_border = FALSE) {
-  lbl <- imager::label(img)
-  nd  <- dim(lbl)
-
-  lblv <- as.numeric(lbl)
-
-  if (protect_border) {
-    border_labels <- unique(c(
-      lbl[1,    , 1, 1],
-      lbl[nd[1],, 1, 1],
-      lbl[, 1,   1, 1],
-      lbl[, nd[2], 1, 1]
-    ))
-    border_labels <- border_labels[border_labels > 0]
-    candidate <- lblv * as.numeric(!(lblv %in% border_labels))
-  } else {
-    candidate <- lblv                       # every white region is a candidate
-  }
-
-  if (!is.null(max_size)) {
-    sizes        <- table(candidate[candidate > 0])
-    small        <- as.integer(names(sizes[sizes <= max_size]))
-    remove_mask  <- candidate %in% small
-  } else {
-    remove_mask <- candidate > 0
-  }
-
-  img[remove_mask] <- 0
+  if (is.null(max_size)) return(img)
+  lab <- .label_regions((img > 0) * 1, directions = 8)
+  if (protect_border) lab[lab %in% .border_labels(lab)] <- NA
+  sizes <- table(lab)
+  drop  <- as.integer(names(sizes)[sizes <= max_size])
+  img[!is.na(lab) & lab %in% drop] <- 0
   img
 }
 
@@ -176,11 +165,16 @@ create_kernel <- function(shape = "disk", size = 3) {
 #' }
 report_image_components <- function(img, plot = TRUE, breaks = 30,
                                     select_layer = NULL) {
-  img <- load_flexible_image(img, output_format = "cimg", scale = "binary",
+  arr <- load_flexible_image(img, output_format = "array", scale = "binary",
                              select_layer = select_layer)
+  if (length(dim(arr)) > 2 && dim(arr)[3] > 1) {
+    warning(sprintf(paste("img has %d layers and select_layer is not set;",
+                          "reporting layer 1."), dim(arr)[3]), call. = FALSE)
+  }
+  m <- if (length(dim(arr)) > 2) arr[, , 1] else arr
 
-  holes   <- .component_sizes(1 - img, exclude_border = TRUE)   # enclosed background (0)
-  objects <- .component_sizes(img,     exclude_border = FALSE)  # root (1) components
+  holes   <- .component_sizes(m == 0, directions = 4, exclude_border = TRUE)
+  objects <- .component_sizes(m > 0,  directions = 8, exclude_border = FALSE)
 
   .print_size_summary("Enclosed holes  (background 0 surrounded by root 1)", holes)
   .print_size_summary("Root components (connected root-1 regions)",          objects)
@@ -194,25 +188,18 @@ report_image_components <- function(img, plot = TRUE, breaks = 30,
   invisible(list(holes = holes, objects = objects))
 }
 
-#' Connected-component sizes (px) of a binary cimg
+#' Connected-component sizes (px) of a logical matrix
 #'
-#' Labels the connected `1`-regions of `bin_cimg` and returns one size per
-#' component. With `exclude_border = TRUE`, components touching the image edge
-#' are dropped (used for enclosed holes).
+#' Labels the connected `TRUE` regions of `x` with the same connectivity
+#' clean_image() uses -- 8 for root objects, 4 for holes -- and returns one
+#' size per region. With `exclude_border = TRUE`, regions touching the image
+#' edge are dropped (used for enclosed holes).
 #' @keywords internal
-.component_sizes <- function(bin_cimg, exclude_border) {
-  lbl <- imager::label(bin_cimg)
-  v   <- as.integer(lbl)
-  keep <- v > 0
-  if (exclude_border) {
-    nd <- dim(lbl)
-    bl <- unique(c(lbl[1, , 1, 1], lbl[nd[1], , 1, 1],
-                   lbl[, 1, 1, 1], lbl[, nd[2], 1, 1]))
-    bl <- bl[bl > 0]
-    keep <- keep & !(v %in% bl)
-  }
-  if (!any(keep)) return(integer(0))
-  as.integer(table(v[keep]))
+.component_sizes <- function(x, directions, exclude_border) {
+  lab <- .label_regions(x * 1, directions = directions)
+  if (exclude_border) lab[lab %in% .border_labels(lab)] <- NA
+  if (all(is.na(lab))) return(integer(0))
+  as.integer(table(lab))
 }
 
 #' Print a one-line size summary (n / min / median / mean / max)
@@ -294,18 +281,23 @@ smooth_root_edges <- function(img,
 #'
 #' Performs three sequential cleaning operations on a binary segmented image:
 #' 1. **Hole filling** -- fills black regions enclosed by white (segmentation
-#'    gaps inside roots).
-#' 2. **Speck removal** -- deletes isolated foreground blobs not connected to
-#'    the image border (false-positive root detections).
+#'    gaps inside roots) up to `fill_holes_upto` pixels.
+#' 2. **Speck removal** -- deletes foreground blobs (false-positive root
+#'    detections) up to `drop_objects_upto` pixels; blobs touching the image
+#'    border are included unless `protect_border = TRUE`.
 #' 3. **Edge smoothing** *(optional, off by default)* -- applies morphological
 #'    closing to smooth jagged root edges.
 #'
+#' Each step runs only when its argument is set: with the defaults
+#' (`NULL`, `NULL`, `edge_smooth = FALSE`) the image is binarized and returned
+#' otherwise unchanged.
+#'
 #' @section Why clean before skeletonization:
-#' `skeletonize_image()` uses the Medial Axis Transform, which is driven by
-#' the distance transform.  Small holes inside a root inflate the local
-#' distance values and force the medial axis to bifurcate around the hole,
-#' producing spurious branching points.  Isolated artifact pixels produce
-#' phantom skeleton segments.  Cleaning first yields a much cleaner skeleton.
+#' `skeletonize_image()` thins the mask to a one-pixel line (Zhang-Suen
+#' thinning). Thinning keeps the topology of the mask, so a small hole inside a
+#' root becomes a loop in the skeleton, which reads as two spurious branch
+#' points. An isolated artifact pixel becomes a phantom skeleton segment.
+#' Cleaning first yields a much cleaner skeleton.
 #'
 #' @section Choosing thresholds:
 #' Call \code{\link{report_image_components}} on your image first to see the actual
@@ -331,13 +323,14 @@ smooth_root_edges <- function(img,
 #'
 #' @param img A `cimg` object, `SpatRaster`, matrix, or file path (binary mask).
 #' @param fill_holes_upto Largest enclosed hole that gets filled; anything
-#'   bigger is left alone.  `NULL` (default) fills every enclosed hole.  Units
-#'   are set by `size_unit`.  See **Choosing thresholds** above.
-#' @param drop_objects_upto Largest disconnected foreground blob that gets
-#'   deleted; anything bigger is kept.  `NULL` (default) deletes every
-#'   candidate blob.  Units are set by `size_unit`.
+#'   bigger is left alone.  `NULL` (default) fills nothing; `Inf` fills every
+#'   enclosed hole.  Units are set by `size_unit`.  See **Choosing
+#'   thresholds** above.
+#' @param drop_objects_upto Largest foreground blob that gets deleted;
+#'   anything bigger is kept.  `NULL` (default) deletes nothing; `Inf` deletes
+#'   every blob, roots included.  Units are set by `size_unit`.
 #' @param size_unit Unit of the two thresholds above: `"px"` (default, pixel
-#'   count) or `"mm2"` (square millimetres, which requires `dpi`).
+#'   count) or `"mm2"` (square millimeters, which requires `dpi`).
 #' @param dpi Scan resolution, required when `size_unit = "mm2"` and ignored
 #'   otherwise.
 #' @param max_hole_size,max_artifact_size Deprecated names for
@@ -436,36 +429,41 @@ clean_image <- function(img,
     if (!is.null(drop_objects_upto)) drop_objects_upto <- drop_objects_upto * px_per_mm2
   }
 
-  img_cimg <- load_flexible_image(img,
-                                   output_format = "cimg",
-                                   select_layer  = select_layer,
-                                   scale         = "binary")
+  # (H, W) for one layer, (H, W, C) for several; each layer is cleaned on its own.
+  arr <- load_flexible_image(img,
+                             output_format = "array",
+                             select_layer  = select_layer,
+                             scale         = "binary")
 
-  if (report) report_image_components(img_cimg)
+  if (report) report_image_components(arr)
 
-  img_filled  <- fill_holes(img_cimg, fill_holes_upto)
-  img_cleaned <- remove_small_objects(img_filled, drop_objects_upto,
-                                      protect_border = protect_border)
-
-  img_out <- if (edge_smooth) {
-    smooth_root_edges(img_cleaned, kernel_shape, kernel_size, iterations)
+  clean_layer <- function(m) {
+    m <- fill_holes(m, fill_holes_upto)
+    remove_small_objects(m, drop_objects_upto, protect_border = protect_border)
+  }
+  if (length(dim(arr)) > 2) {
+    for (k in seq_len(dim(arr)[3])) arr[, , k] <- clean_layer(arr[, , k])
   } else {
-    img_cleaned
+    arr <- clean_layer(arr)
+  }
+
+  if (edge_smooth) {
+    arr <- load_flexible_image(
+      smooth_root_edges(arr, kernel_shape, kernel_size, iterations),
+      output_format = "array", scale = "none")
   }
 
   # Convert to the requested output format
   switch(output_format,
     spatrast = {
-      r <- load_flexible_image(img_out,
-                                output_format = "spatrast",
-                                scale         = "none")
-      # Ensure RGB metadata is set so terra::plotRGB() works on multi-layer results.
-      # For a single-layer binary image, use terra::plot() rather than plotRGB().
+      r <- load_flexible_image(arr, output_format = "spatrast", scale = "none")
+      # RGB metadata lets terra::plotRGB() draw a multi-layer result; for a
+      # single-layer binary image, use terra::plot().
       if (terra::nlyr(r) >= 3L) terra::RGB(r) <- 1:3
       r
     },
-    cimg   = img_out,
-    matrix = as.matrix(img_out)
+    cimg   = load_flexible_image(arr, output_format = "cimg",   scale = "none"),
+    matrix = load_flexible_image(arr, output_format = "matrix", scale = "none")
   )
 }
 
