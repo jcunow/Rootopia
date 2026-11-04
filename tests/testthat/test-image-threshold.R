@@ -180,6 +180,19 @@ test_that("on a multilayer image the mask layer gets its own local level", {
   expect_equal(terra::values(out)[, 2], terra::values(out)[, 3])
 })
 
+test_that("with the global method the mask layer is cut at its own maximum", {
+  skip_if_not_installed("terra")
+  # Mask layer on a 0-20 range, select layer on 0-200: at threshold 0.4 the
+  # mask layer's own cut is 8, the select layer's would be 80.
+  a <- array(0, c(4, 4, 2))
+  a[, , 1] <- 10; a[1, 1, 1] <- 20
+  a[, , 2] <- 100; a[1, 1, 2] <- 200
+  out <- image_threshold(terra::rast(a), threshold = 0.4, select_layer = 2,
+                         mask_layer = 1, binary_01 = TRUE)
+  expect_equal(sum(terra::values(out[[1]])), 16)    # every mask pixel >= 8
+  expect_equal(sum(terra::values(out[[2]])), 16)    # every select pixel >= 80
+})
+
 test_that("an unusable method stops instead of falling through", {
   skip_if_not_installed("terra")
   r <- terra::rast(matrix(stats::runif(30 * 30), 30, 30))
