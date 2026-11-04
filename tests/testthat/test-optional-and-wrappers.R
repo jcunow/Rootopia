@@ -24,6 +24,20 @@ test_that("analyze_soil_texture runs on an RGB raster", {
   expect_error(analyze_soil_texture(rgb), regexp = NA)   # expect no error
 })
 
+test_that("analyze_soil_texture reads a file path and an array like a raster", {
+  skip_if_not_installed("terra")
+  skip_if_not_installed("glcm")
+  skip_if_not_installed("tiff")
+  arr <- make_rgb_array() * 255
+  f <- tempfile(fileext = ".tif")
+  terra::writeRaster(terra::rast(arr), f, datatype = "INT1U", overwrite = TRUE)
+  from_rast <- raster::values(analyze_soil_texture(terra::rast(arr), metrics = "variance"))
+  expect_equal(raster::values(analyze_soil_texture(f,   metrics = "variance")), from_rast,
+               tolerance = 1e-6)
+  expect_equal(raster::values(analyze_soil_texture(arr, metrics = "variance")), from_rast,
+               tolerance = 1e-6)
+})
+
 test_that("estimate_rotation_center runs when RStoolbox is available", {
   skip_if_not_installed("terra")
   skip_if_not_installed("RStoolbox")
@@ -183,14 +197,38 @@ test_that("depth_interval_cm = NULL collapses each scan to a single row", {
     sum(profile$rootpx + profile$voidpx, na.rm = TRUE) * 100
   expect_equal(whole$rootpx.density, cover, tolerance = 1e-8)
 
-  # Length gets a loose tolerance on purpose: terra::terrain(v = "flowdir")
-  # breaks ties at random, so root length moves by a few tenths of a percent
-  # between identical runs. The bin width must not move it by more than that.
+  # Kimura is applied to each bin's own connection counts, so the sum over bins
+  # matches the whole-scan estimate only up to how much the mix of orthogonal
+  # and diagonal steps changes between bins.
   pooled <- sum(profile$rootlength, na.rm = TRUE) /
     (sum(profile$rootpx + profile$voidpx, na.rm = TRUE) / (150 / 2.54)^2)
   expect_equal(whole$rootlength.density, pooled, tolerance = 0.02)
 })
 
+
+test_that("batch root length is root_length() of the skeleton, in any direction", {
+  # One 20 px line along the depth axis and one across it: 19 steps each,
+  # 0.19 cm at 254 dpi. Repeated runs must agree exactly.
+  skip_if_not_installed("terra")
+  skip_if_not_installed("tiff")
+  dir <- tempfile("seg"); dir.create(dir)
+  along  <- matrix(0, 30, 30); along[15, 5:24]  <- 1
+  across <- matrix(0, 30, 30); across[5:24, 15] <- 1
+  terra::writeRaster(terra::rast(along),  file.path(dir, "a_along.tif"),  overwrite = TRUE)
+  terra::writeRaster(terra::rast(across), file.path(dir, "b_across.tif"), overwrite = TRUE)
+  run <- function(...) suppressMessages(suppressWarnings(root_depth_metrics(
+    path_seg = dir, tube_names = c("along", "across"), dpi = 254,
+    calc_diameter_stats = FALSE, calc_advanced_metrics = FALSE,
+    verbose = FALSE, ...)))
+
+  whole <- run(depth_interval_cm = NULL)
+  expect_equal(whole$rootlength, c(0.19, 0.19))
+  expect_identical(run(depth_interval_cm = NULL)$rootlength, whole$rootlength)
+
+  # Binned along the depth axis, the bins of the along-line add up to the line.
+  prof <- run(depth_interval_cm = 0.05)
+  expect_equal(sum(prof$rootlength[prof$Tube == "along"], na.rm = TRUE), 0.19)
+})
 
 test_that("duplicate tube names are refused", {
   # Non-unique names key the tube-level joins onto one tube and multiply the
