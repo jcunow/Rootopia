@@ -292,7 +292,8 @@ turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
 #' \describe{
 #'   \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
 #'     (\code{img1}, \code{img2}) and reports standing roots, their net
-#'     change, and that change as a fraction of each date's standing roots. Dispatches to \code{\link{turnover_tc}}. The
+#'     change, and that change as a fraction of each date's standing roots.
+#'     Dispatches to \code{\link{turnover_tc}}. The
 #'     \code{tc_method} argument chooses how root amount is measured:
 #'     \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
 #'   \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single

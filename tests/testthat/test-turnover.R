@@ -88,3 +88,25 @@ test_that("root_turnover dispatches to the two methods and guards the inputs", {
   img <- c(mk(0.3), mk(0.4), mk(0.5))
   expect_warning(root_turnover(img, img, method = "dpc"), "img2 is ignored")
 })
+
+test_that("turnover_dpc assigns each RootDetector color to its class", {
+  skip_if_not_installed("terra")
+  # The color code of the bundled TurnoverDPC_data, with a known number of
+  # pixels per class on a 10 x 10 image.
+  colors <- list(background = c(39, 54, 59),   tape       = c(255, 0, 0),
+                 constant   = c(255, 255, 255), production = c(96, 209, 130),
+                 decay      = c(226, 106, 116))
+  n <- c(tape = 20, constant = 5, production = 8, decay = 3)
+  cls <- rep(c(names(n), "background"), c(n, 100 - sum(n)))
+  a <- array(0, c(10, 10, 3))
+  for (k in 1:3) a[, , k] <- matrix(vapply(cls, function(x) colors[[x]][k], 0), 10, 10)
+
+  out <- root_turnover(terra::rast(a), method = "dpc")
+  expect_equal(out$tape,       20)
+  expect_equal(out$constant,   5)
+  expect_equal(out$production, 8)
+  expect_equal(out$decay,      3)
+  expect_equal(out$newgrowth.ratio, round(8 / (8 + 5), 4))
+  expect_equal(out$decay.ratio,     round(3 / (3 + 5), 4))
+  expect_equal(out$constant.ratio,  round(5 / (5 + 8 + 3), 4))
+})
