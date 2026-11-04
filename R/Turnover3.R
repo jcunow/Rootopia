@@ -12,9 +12,13 @@
 #' @return data.frame containing:
 #'   - standingroot_t1: Standing roots at first timepoint
 #'   - standingroot_t2: Standing roots at second timepoint
-#'   - production: Root production between timepoints
-#'   - newroot.per_t1: Percentage of new roots compared to starting conditions
-#'   - newroot.per_t2: Percentage of new roots at second timepoint
+#'   - production: Net change in standing roots, \code{standingroot_t2 -
+#'     standingroot_t1}. Roots lost between the dates offset roots gained, so
+#'     the value is negative when more roots disappeared than appeared.
+#'   - newroot.per_t1: \code{production} as a fraction of
+#'     \code{standingroot_t1} (0.25 = 25 percent)
+#'   - newroot.per_t2: \code{production} as a fraction of
+#'     \code{standingroot_t2}
 #'
 #'   The last two names carry a dot where the percent sign would read more
 #'   naturally: \code{data.frame()} makes the names syntactic, so index them as
@@ -45,11 +49,8 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
       stop("Both im.t1 and im.t2 must be SpatRaster objects")
     }
 
-    # Check if images have similar dimensions & amount of cells (within +-5%).
-    # Both bounds must hold, so the tests are combined with `&`: a ratio is
-    # within tolerance only when it is >= 0.95 AND <= 1.05. Written with `|`
-    # the cell-count test is a tautology (every number satisfies one side) and
-    # the dimension test loses its upper bound entirely.
+    # The two images must agree in dimensions and cell count within +-5%: each
+    # ratio has to lie between 0.95 and 1.05.
     dim_ratio  <- dim(im.t1)[1:2] / dim(im.t2)[1:2]
     cell_ratio <- terra::ncell(im.t1) / terra::ncell(im.t2)
     if (!all(dim_ratio >= 0.95 & dim_ratio <= 1.05) ||
@@ -122,7 +123,7 @@ turnover_tc = function(im.t1, im.t2, method="kimura", unit="cm", dpi=300, select
     ))
 
   }, error = function(e) {
-    stop(paste("Error in Turnover.TC:", e$message))
+    stop(paste("Error in turnover_tc:", e$message))
   })
 }
 
@@ -277,7 +278,7 @@ turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
     }
 
   }, error = function(e) {
-    stop(paste("Error in Turnover.DPC:", e$message))
+    stop(paste("Error in turnover_dpc:", e$message))
   })
 }
 
@@ -290,8 +291,8 @@ turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
 #' one runs:
 #' \describe{
 #'   \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
-#'     (\code{img1}, \code{img2}) and reports standing roots, production, and
-#'     new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
+#'     (\code{img1}, \code{img2}) and reports standing roots, their net
+#'     change, and that change as a fraction of each date's standing roots. Dispatches to \code{\link{turnover_tc}}. The
 #'     \code{tc_method} argument chooses how root amount is measured:
 #'     \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
 #'   \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single
@@ -329,7 +330,9 @@ turnover_dpc = function(img, product_layer=2, decay_layer=1, blur_capture=0.95,
 #'   timepoint in the DPC method? Default: FALSE
 #'
 #' @return Depends on the method:
-#'   - \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
+#'   - \code{"tc"}: data.frame with standing roots, their net change
+#'     (\code{production}), and that change as a fraction of each date's
+#'     standing roots.
 #'   - \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im_return = TRUE}) a list of SpatRaster layers.
 #'
 #' @seealso \code{\link{turnover_tc}}, \code{\link{turnover_dpc}}
