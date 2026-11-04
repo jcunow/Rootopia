@@ -36,3 +36,17 @@ test_that("root_accumulation standardizes the running total three ways", {
   expect_equal(root_accumulation(df, "Plot", "depth", "rootpx", stdrz = "relative"),
                c(5, 55, 75) / 135)
 })
+
+test_that("root_accumulation accumulates each combination of several grouping columns", {
+  # Rows are shuffled so the result has to be put back into input order.
+  df <- data.frame(depth   = c(20, 0, 40, 0, 20, 40, 0, 40, 20),
+                   Plot    = c("a", "a", "a", "a", "a", "a", "b", "b", "b"),
+                   Session = c("Jun", "Jun", "Jun", "Oct", "Oct", "Oct", "Jun", "Jun", "Jun"),
+                   rootpx  = c(2, 1, 3, 10, 20, 30, 5, 7, 6))
+  acc <- root_accumulation(df, group = c("Plot", "Session"), depth = "depth",
+                           variable = "rootpx")
+  # a/Jun: 1, 3, 6 at depth 0, 20, 40; a/Oct: 10, 30, 60; b/Jun: 5, 11, 18
+  expect_equal(acc, c(3, 1, 6, 10, 30, 60, 5, 18, 11))
+  expect_error(root_accumulation(df, group = c("Plot", "Site"), depth = "depth",
+                                 variable = "rootpx"), "Site")
+})
