@@ -12,7 +12,6 @@ test_that("clean_image returns each requested output format", {
 
 test_that("clean_image removes a small isolated artifact", {
   skip_if_not_installed("terra")
-  skip_if_not_installed("imager")
   m <- matrix(0, 30, 30)
   m[10:20, 10:20] <- 1     # solid block (touches nothing else)
   m[3, 3] <- 1             # isolated 1-px artifact
@@ -23,7 +22,6 @@ test_that("clean_image removes a small isolated artifact", {
 
 test_that("deprecated threshold names still work and warn", {
   skip_if_not_installed("terra")
-  skip_if_not_installed("imager")
   m <- matrix(0, 30, 30)
   m[10:20, 10:20] <- 1
   m[3, 3] <- 1
@@ -38,7 +36,6 @@ test_that("deprecated threshold names still work and warn", {
 
 test_that("mm2 thresholds convert to the equivalent pixel thresholds", {
   skip_if_not_installed("terra")
-  skip_if_not_installed("imager")
   m <- matrix(0, 30, 30)
   m[10:20, 10:20] <- 1
   m[3, 3] <- 1
@@ -71,7 +68,6 @@ test_that("mm2 thresholds convert to the equivalent pixel thresholds", {
 }
 
 test_that("fill_holes_upto fills the holes at or below the threshold only", {
-  skip_if_not_installed("imager")
   skip_if_not_installed("terra")
   m    <- .holey_mask()
   base <- sum(m)                                   # 324 - 4 - 16 = 304
@@ -87,12 +83,24 @@ test_that("fill_holes_upto fills the holes at or below the threshold only", {
   expect_equal(fg(fill_holes_upto = 3,  drop_objects_upto = 0), base)
   # Above both, the whole rectangle comes back.
   expect_equal(fg(fill_holes_upto = 20, drop_objects_upto = 0), base + 20)
-  # NULL is the no-limit case, so it matches the threshold that covers both.
-  expect_equal(fg(fill_holes_upto = NULL, drop_objects_upto = 0), base + 20)
+  # NULL fills nothing; Inf is the no-limit case and fills both holes.
+  expect_equal(fg(fill_holes_upto = NULL, drop_objects_upto = 0), base)
+  expect_equal(fg(fill_holes_upto = Inf,  drop_objects_upto = 0), base + 20)
+})
+
+test_that("the defaults leave a binary mask unchanged", {
+  skip_if_not_installed("terra")
+  m <- matrix(0, 40, 40)
+  m[5:35, 18:22] <- 1          # one root, 155 px
+  m[3, 3]        <- 1          # one speck, 1 px
+  m[10, 20]      <- 0          # one pinhole inside the root
+  out <- terra::as.matrix(clean_image(terra::rast(m)), wide = TRUE)
+  expect_equal(out, m, ignore_attr = TRUE)
+  # Inf on drop_objects_upto deletes every object, the root included.
+  expect_equal(sum(terra::values(clean_image(terra::rast(m), drop_objects_upto = Inf))), 0)
 })
 
 test_that("mm2 thresholds convert to the same pixel counts at a given dpi", {
-  skip_if_not_installed("imager")
   skip_if_not_installed("terra")
   m <- .holey_mask()
   fg <- function(...) sum(terra::values(
@@ -107,7 +115,6 @@ test_that("mm2 thresholds convert to the same pixel counts at a given dpi", {
 })
 
 test_that("protect_border keeps an edge speck that the size test would remove", {
-  skip_if_not_installed("imager")
   skip_if_not_installed("terra")
   m <- matrix(0, 20, 20)
   m[8:13, 8:13] <- 1      # 6 x 6 = 36 px, kept at any threshold below 36
@@ -140,4 +147,29 @@ test_that("create_kernel builds the documented shapes", {
   # An even size is incremented, so it matches the next odd one.
   expect_equal(ksum("disk", 4), ksum("disk", 5))
   expect_error(create_kernel("hexagon", 3), "Invalid kernel shape")
+})
+
+test_that("objects are 8-connected and holes 4-connected", {
+  skip_if_not_installed("terra")
+  # A diagonal line touches only at corners: one 20 px object, kept at 5.
+  expect_equal(sum(terra::values(clean_image(terra::rast(diag(20)),
+                                             drop_objects_upto = 5))), 20)
+  # An object on the first pixel is labeled like any other.
+  m <- matrix(0, 10, 10); m[1, 1] <- 1; m[5:8, 5:8] <- 1
+  expect_equal(sum(terra::values(clean_image(terra::rast(m), drop_objects_upto = 1))), 16)
+  # Two background pixels touching at a corner inside a ring are two holes of
+  # 1 px each, both filled at fill_holes_upto = 1.
+  r <- matrix(0, 8, 8); r[2:7, 2:7] <- 1; r[4, 4] <- 0; r[5, 5] <- 0
+  expect_equal(sum(terra::values(clean_image(terra::rast(r), fill_holes_upto = 1))), 36)
+})
+
+test_that("report_image_components counts root objects and enclosed holes only", {
+  skip_if_not_installed("terra")
+  m <- matrix(0, 20, 20)
+  m[3:10, 3:10] <- 1; m[6, 6] <- 0          # 63 px object with one 1 px hole
+  m[15, 15] <- 1; m[16, 16] <- 1            # one diagonal 2 px object
+  res <- suppressWarnings(utils::capture.output(
+    out <- report_image_components(terra::rast(m), plot = FALSE)))
+  expect_equal(sort(out$objects), c(2L, 63L))
+  expect_equal(out$holes, 1L)
 })
