@@ -4,7 +4,10 @@
 #' @param img SpatRaster/matrix/array - segmented image
 #' @param width numeric - buffer width in pixels (default: 2)
 #' @param halo_only logical - if TRUE, returns only the buffer zone (default: TRUE)
-#' @param kernel character - shape of the thickening kernel: "circle" or "diamond"
+#' @param kernel character - neighborhood added at each of the \code{width}
+#'   steps: \code{"circle"} adds all 8 neighbors, so the buffer grows as a
+#'   square; \code{"diamond"} adds the 4 orthogonal neighbors, so it grows as a
+#'   diamond
 #'
 #' @return SpatRast - buffer zone around non-zero pixels
 #' @export
@@ -72,7 +75,7 @@ create_root_buffer = function(img, width=2, halo_only=TRUE, kernel="circle") {
     return(out.im)
     
   }, error = function(e) {
-    stop(paste("Error in Halo:", e$message))
+    stop(paste("Error in create_root_buffer:", e$message))
   })
 }
 
@@ -89,10 +92,8 @@ create_root_buffer = function(img, width=2, halo_only=TRUE, kernel="circle") {
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img = terra::rast(seg_Oulanka2023_Session01_T067)
-#' mask = img[[1]] - img[[2]]
-#' mask[mask == 255] <- NA
-#' img = img
-#' depthmap = create_depthmap(img,mask,start_soil = 2.9 )
+#' mask = img[[1]] > 0                  # layer 1 marks the tape
+#' depthmap = create_depthmap(img, mask, start_soil = 2.9, dpi = 150)
 #' binned.map = binning(depthmap,nn = 5)
 binning = function(depthmap, nn, round_option="rounding") {
   
@@ -196,8 +197,10 @@ slice_rotation <- function(img, n) {
 #' single depth slice without splitting the raster into separate objects.
 #'
 #' Depth is matched against the binned values in \code{depth_map}: a single value
-#' selects the closest available bin; a consecutive sequence selects an inclusive
-#' range; discrete values select each closest bin.
+#' selects the closest available bin; three or more equally spaced values, e.g.
+#' \code{seq(10, 30, 5)} or \code{c(0, 50, 100)}, select every bin from the
+#' smallest to the largest inclusive; any other set of values selects the
+#' closest bin to each value.
 #'
 #' To split a tube into circumferential (rotation) slices, use
 #' \code{\link{slice_rotation}} instead.
@@ -217,7 +220,7 @@ slice_rotation <- function(img, n) {
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
-#' mask <- img[[1]] - img[[2]]; mask[mask == 255] <- NA
+#' mask <- img[[1]] > 0                 # layer 1 marks the tape
 #' depth_map  <- create_depthmap(img, mask, start_soil = 2.9, dpi = 150 )
 #' depth_bins <- binning(depth_map, nn = 5)
 #' # depth_bins is already aligned with img -- no transpose/flip needed
