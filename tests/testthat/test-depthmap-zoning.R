@@ -17,7 +17,8 @@ test_that("create_depthmap validates parameters", {
   expect_error(create_depthmap(img, angle_from_vertical = -1))
   expect_error(create_depthmap(img, angle_from_vertical = 91))
   expect_error(create_depthmap(img, tube_thicc = -1))
-  expect_error(create_depthmap(img, center_offset = 2))   # must be in [0,1]
+  expect_error(create_depthmap(img, center_offset = -1))
+  expect_error(create_depthmap(img, center_offset = 1000), "last row")
   expect_error(create_depthmap(img, geometry = "cylinder"))
 })
 
@@ -129,11 +130,9 @@ test_that("geometry supersedes sinoid, and disagreement warns", {
 
 test_that("center_offset sweeps the tube top over the full image height", {
   skip_if_not_installed("terra")
-  # One period of the curvature wave spans the tube circumference,
-  # round(tube_thicc * pi * dpi / 2.54) - 1 = 129 px here, so an image 129 rows
-  # tall holds exactly one period and the trough row reads the phase directly.
   # The trough is the shallowest point, i.e. the top of the tube, and it sits on
-  # row 1 + (nr - 1) * center_offset.
+  # row 1 + (nr - 1) * center_offset. Here the image is close to one full
+  # circumference (129 of 129.9 px).
   img <- make_binary_spatraster(nr = 129)
   tube_top_row <- function(offset) {
     dm <- create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5,
@@ -151,20 +150,42 @@ test_that("center_offset sweeps the tube top over the full image height", {
   expect_equal(tube_top_row(0.99), 128L)
 })
 
-test_that("center_offset 0 and 1 are the same point on the tube", {
+test_that("center_offset is a fraction of the image height, not of the circumference", {
   skip_if_not_installed("terra")
-  # A full turn returns to the image seam, so the two ends agree and the trough
-  # sits on the first and last row at once.
-  img <- make_binary_spatraster(nr = 129)
-  dm <- function(offset) {
-    terra::as.matrix(create_depthmap(img, sinoid = TRUE, tube_thicc = 3.5,
-                                     angle_from_vertical = 45, dpi = 30,
-                                     center_offset = offset), wide = TRUE)
+  # A scan covering part of the tube: 61 rows against a circumference of
+  # 3.5 * pi * 30 / 2.54 = 129.9 px. The tube top still sits on row
+  # 1 + 60 * center_offset, so 0, 0.5 and 1 land on the first, middle and
+  # last row of this image.
+  img <- make_binary_spatraster(nr = 61)
+  tube_top_row <- function(offset) {
+    dm <- create_depthmap(img, geometry = "tube", tube_thicc = 3.5,
+                          angle_from_vertical = 45, dpi = 30,
+                          center_offset = offset)
+    which.min(terra::as.matrix(dm, wide = TRUE)[, 1])
   }
-  expect_equal(dm(0), dm(1))
-  col1 <- dm(0)[, 1]
-  expect_equal(col1[1], col1[129])
-  expect_equal(which.min(col1), 1L)
+  expect_equal(tube_top_row(0),   1L)
+  expect_equal(tube_top_row(0.5), 31L)
+  expect_equal(tube_top_row(1),   61L)
+  # Above 1 the value is the row itself.
+  expect_equal(tube_top_row(20),  20L)
+  expect_equal(tube_top_row(61),  61L)
+
+  # The wave keeps its full-circumference period: 61 of 129.9 px is less than
+  # half a turn, so the column never reaches the opposite side of the tube.
+  col1 <- terra::as.matrix(create_depthmap(img, geometry = "tube", tube_thicc = 3.5,
+                                           angle_from_vertical = 45, dpi = 30,
+                                           center_offset = 0), wide = TRUE)[, 1]
+  full_range <- round(3.5 * sin(45 * pi / 180), 3)
+  expect_lt(diff(range(col1)), full_range)
+  expect_equal(diff(range(col1)),
+               (1 - cos(2 * pi * 60 / (3.5 * pi * 30 / 2.54))) * full_range / 2)
+})
+
+test_that("an image taller than one circumference is refused", {
+  skip_if_not_installed("terra")
+  img <- make_binary_spatraster(nr = 200)            # circumference here is 130 px
+  expect_error(create_depthmap(img, geometry = "tube", tube_thicc = 3.5, dpi = 30),
+               "circumference")
 })
 
 test_that("slice_rotation splits into n contiguous slices", {
