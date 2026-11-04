@@ -63,8 +63,8 @@ image_threshold(
   receiving `select_layer`'s: it is thresholded on its own pixel values
   and against its own level (its own maximum, or its own local mean for
   `method = "adaptive"`). It excludes no pixels. The default 1 suits
-  RootDetector output, where layer 1 carries roots and tape and layer 2
-  roots only, so the tape can still be found from the two layers after
+  RootDetector output, where layer 1 marks foreign objects such as tape
+  and layer 2 the roots, so the tape stays in its own layer after
   thresholding. NULL treats every layer alike.
 
 - binary_01:

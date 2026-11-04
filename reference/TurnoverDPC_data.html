@@ -71,28 +71,20 @@ RootDetector root tracking feature.</p>
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
     <p>A numeric array (rows x columns x layers), values 0-255. Rebuild a
-SpatRaster with <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code>. Dimensions:</p><ul><li><p>2550 columns (width)</p></li>
-<li><p>2273 rows (height)</p></li>
-<li><p>3 layers (decay, growth, persistent)</p></li>
+SpatRaster with <code><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">terra::rast()</a></code>. Dimensions:</p><ul><li><p>2273 rows (height)</p></li>
+<li><p>2550 columns (width)</p></li>
+<li><p>3 layers (red, green, blue)</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
     <p>Original minirhizotron images acquired by Johannes Cunow
-and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
-Images were processed using RootDetector.</p>
+and Gesche Blume-Werry at Oulanka Research Station, Finland (June and
+October 2023). Images were processed using RootDetector.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Multi-layer representation of root dynamics where:</p><ul><li><p>Layer 1: Root decay (value = 1)</p><ul><li><p>Roots that disappeared between time points</p></li>
-<li><p>Foreign objects (e.g., tape)</p></li>
-<li><p>Persistent roots</p></li>
-</ul></li>
-<li><p>Layer 2: Root growth (value = 1)</p><ul><li><p>New roots that appeared</p></li>
-<li><p>Persistent roots</p></li>
-</ul></li>
-<li><p>Layer 3: Persistent roots (value = 1)</p><ul><li><p>Roots present in both time points</p></li>
-</ul></li>
-</ul><p>Background is represented as 0 in all layers.</p>
+    <p>An RGB image in which each turnover class has its own color:</p><table class="table table"><tr><td><strong>Class</strong></td><td><strong>Color</strong></td><td><strong>R, G, B</strong></td></tr><tr><td>background</td><td>dark slate</td><td>39, 54, 59</td></tr><tr><td>foreign objects (e.g. tape)</td><td>red</td><td>255, 0, 0</td></tr><tr><td>constant (present at both dates)</td><td>white</td><td>255, 255, 255</td></tr><tr><td>production (new at the second date)</td><td>green</td><td>96, 209, 130</td></tr><tr><td>decay (gone at the second date)</td><td>rose</td><td>226, 106, 116</td></tr></table><p><code>root_turnover(method = "dpc")</code> reads these classes with its default
+<code>decay_layer = 1</code> and <code>product_layer = 2</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -109,13 +101,9 @@ Scientific Reports 13:1399. https://doi.org/10.1038/s41598-023-28400-x</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">img</span> <span class="op">=</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="co"># Plot individual layers</span></span></span>
-<span class="r-in"><span>  <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">img</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="co"># Calculate turnover statistics</span></span></span>
-<span class="r-in"><span>  <span class="va">decay</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">img</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">growth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">img</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">persistent</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">img</span><span class="op">[[</span><span class="fl">3</span><span class="op">]</span><span class="op">]</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plotRGB.html" class="external-link">plotRGB</a></span><span class="op">(</span><span class="va">img</span>, maxcell <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">img</span>, method <span class="op">=</span> <span class="st">"dpc"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

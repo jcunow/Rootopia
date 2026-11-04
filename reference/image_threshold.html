@@ -128,9 +128,9 @@ one result goes into every layer.</p></dd>
 instead of receiving <code>select_layer</code>'s: it is thresholded on its own
 pixel values and against its own level (its own maximum, or its own local
 mean for <code>method = "adaptive"</code>). It excludes no pixels. The default
-1 suits RootDetector output, where layer 1 carries roots and tape and
-layer 2 roots only, so the tape can still be found from the two layers
-after thresholding. NULL treats every layer alike.</p></dd>
+1 suits RootDetector output, where layer 1 marks foreign objects such as
+tape and layer 2 the roots, so the tape stays in its own layer after
+thresholding. NULL treats every layer alike.</p></dd>
 
 
 <dt id="arg-binary-">binary_01<a class="anchor" aria-label="anchor" href="#arg-binary-"></a></dt>

@@ -17,41 +17,33 @@ SpatRaster with
 [`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html).
 Dimensions:
 
-- 2550 columns (width)
-
 - 2273 rows (height)
 
-- 3 layers (decay, growth, persistent)
+- 2550 columns (width)
+
+- 3 layers (red, green, blue)
 
 ## Source
 
 Original minirhizotron images acquired by Johannes Cunow and Gesche
-Blume-Werry at Oulanka Research Station, Finland (June 2023). Images
-were processed using RootDetector.
+Blume-Werry at Oulanka Research Station, Finland (June and October
+2023). Images were processed using RootDetector.
 
 ## Details
 
-Multi-layer representation of root dynamics where:
+An RGB image in which each turnover class has its own color:
 
-- Layer 1: Root decay (value = 1)
+|                                     |            |               |
+|-------------------------------------|------------|---------------|
+| **Class**                           | **Color**  | **R, G, B**   |
+| background                          | dark slate | 39, 54, 59    |
+| foreign objects (e.g. tape)         | red        | 255, 0, 0     |
+| constant (present at both dates)    | white      | 255, 255, 255 |
+| production (new at the second date) | green      | 96, 209, 130  |
+| decay (gone at the second date)     | rose       | 226, 106, 116 |
 
-  - Roots that disappeared between time points
-
-  - Foreign objects (e.g., tape)
-
-  - Persistent roots
-
-- Layer 2: Root growth (value = 1)
-
-  - New roots that appeared
-
-  - Persistent roots
-
-- Layer 3: Persistent roots (value = 1)
-
-  - Roots present in both time points
-
-Background is represented as 0 in all layers.
+`root_turnover(method = "dpc")` reads these classes with its default
+`decay_layer = 1` and `product_layer = 2`.
 
 ## References
 
@@ -68,12 +60,8 @@ Johannes Cunow
 ``` r
 if (FALSE) { # \dontrun{
   data(TurnoverDPC_data)
-  img = terra::rast(TurnoverDPC_data)
-  # Plot individual layers
-  terra::plot(img, maxcell = Inf)
-  # Calculate turnover statistics
-  decay <- sum(terra::values(img[[1]]) == 1)
-  growth <- sum(terra::values(img[[2]]) == 1)
-  persistent <- sum(terra::values(img[[3]]) == 1)
+  img <- terra::rast(TurnoverDPC_data)
+  terra::plotRGB(img, maxcell = Inf)
+  root_turnover(img, method = "dpc")
 } # }
 ```

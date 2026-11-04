@@ -298,8 +298,8 @@ produced, and unchanged root fractions.</li>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dpc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>, scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">dpc</span>, method <span class="op">=</span> <span class="st">"dpc"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio</span></span>
-<span><span class="co">#&gt; 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668</span></span></code></pre></div>
+<span><span class="co">#&gt;      tape constant production  decay newgrowth.ratio decay.ratio constant.ratio</span></span>
+<span><span class="co">#&gt; 1 1763826   177422     246436 180452          0.5814      0.5042         0.2936</span></span></code></pre></div>
 <p>For the two-timepoint comparison you would instead pass both
 sessions:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">

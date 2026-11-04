@@ -262,8 +262,8 @@ The bundled `TurnoverDPC_data` is a DPC-style image:
 
 dpc <- load_flexible_image(TurnoverDPC_data, output_format = "spatrast", scale = "none")
 root_turnover(dpc, method = "dpc")
-#>     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio
-#> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
+#>      tape constant production  decay newgrowth.ratio decay.ratio constant.ratio
+#> 1 1763826   177422     246436 180452          0.5814      0.5042         0.2936
 ```
 
 For the two-timepoint comparison you would instead pass both sessions:

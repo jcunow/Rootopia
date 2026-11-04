@@ -123,8 +123,8 @@ Depends on the method:
 data(TurnoverDPC_data)
 img <- terra::rast(TurnoverDPC_data)
 root_turnover(img, method = "dpc")
-#>     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio
-#> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
+#>      tape constant production  decay newgrowth.ratio decay.ratio constant.ratio
+#> 1 1763826   177422     246436 180452          0.5814      0.5042         0.2936
 
 # TC: two timepoint images compared by root length (kimura)
 data(skl_Oulanka2023_Session01_T067)

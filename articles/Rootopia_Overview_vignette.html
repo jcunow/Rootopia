@@ -1751,8 +1751,8 @@ can disagree in sign when roots thicken without extending.</p>
 <span><span class="va">dpc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_flexible_image.html">load_flexible_image</a></span><span class="op">(</span><span class="va">TurnoverDPC_data</span>, output_format <span class="op">=</span> <span class="st">"spatrast"</span>,</span>
 <span>                           scale <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span><span class="va">dpc</span>, method <span class="op">=</span> <span class="st">"dpc"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio</span></span>
-<span><span class="co">#&gt; 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668</span></span></code></pre></div>
+<span><span class="co">#&gt;      tape constant production  decay newgrowth.ratio decay.ratio constant.ratio</span></span>
+<span><span class="co">#&gt; 1 1763826   177422     246436 180452          0.5814      0.5042         0.2936</span></span></code></pre></div>
 <p><code>include_virtualroots</code> switches the denominator between
 “present at this time point” and “present at any time point”. The second
 includes root that was there only in the other session, which lowers
@@ -2239,7 +2239,7 @@ straight enough to join.</p>
 <span><span class="co">#&gt;   spliced pass-through nodes: 111 -&gt; 111 segment(s)</span></span>
 <span><span class="co">#&gt;   resolved crossings: 111 -&gt; 111 segment(s)</span></span>
 <span><span class="co">#&gt; Tip order...</span></span>
-<span><span class="co">#&gt; Done in 0.37s. 111 segments, max order 8, total length 7857.9 px</span></span>
+<span><span class="co">#&gt; Done in 0.35s. 111 segments, max order 8, total length 7857.9 px</span></span>
 <span></span>
 <span><span class="co"># One window for every figure in this part, so the panels can be compared.</span></span>
 <span><span class="va">fb_frac</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>

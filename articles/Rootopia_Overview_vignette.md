@@ -1704,8 +1704,8 @@ data(TurnoverDPC_data)
 dpc <- load_flexible_image(TurnoverDPC_data, output_format = "spatrast",
                            scale = "none")
 root_turnover(dpc, method = "dpc")
-#>     tape constant production   decay newgrowth.ratio decay.ratio constant.ratio
-#> 1 887012   438681    2770138 3355722          0.8633      0.8844         0.0668
+#>      tape constant production  decay newgrowth.ratio decay.ratio constant.ratio
+#> 1 1763826   177422     246436 180452          0.5814      0.5042         0.2936
 ```
 
 `include_virtualroots` switches the denominator between “present at this
@@ -2207,7 +2207,7 @@ order_res <- branch_order_map(
 #>   spliced pass-through nodes: 111 -> 111 segment(s)
 #>   resolved crossings: 111 -> 111 segment(s)
 #> Tip order...
-#> Done in 0.37s. 111 segments, max order 8, total length 7857.9 px
+#> Done in 0.35s. 111 segments, max order 8, total length 7857.9 px
 
 # One window for every figure in this part, so the panels can be compared.
 fb_frac <- 0.25
