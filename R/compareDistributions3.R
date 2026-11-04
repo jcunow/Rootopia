@@ -109,6 +109,41 @@ tail_weight_function <- function(
 
 
 ############################################
+# Alignment of P and Q
+############################################
+
+#' Bring two mass vectors to a common length
+#'
+#' With \code{cut = FALSE} the shorter vector is padded with zeros at the end;
+#' with \code{cut = TRUE} both are cut to the shorter length.
+#'
+#' @param P,Q Numeric mass vectors.
+#' @param alignPQ Logical. If \code{FALSE}, unequal lengths are an error.
+#' @param cut Logical. Truncate instead of padding.
+#' @return A list with the aligned \code{P} and \code{Q}.
+#' @keywords internal
+#' @noRd
+.align_pq <- function(P, Q, alignPQ = TRUE, cut = FALSE) {
+  if (length(P) == length(Q)) return(list(P = P, Q = Q))
+  if (!alignPQ) stop("P and Q differ in length; set alignPQ = TRUE to align them")
+  n <- if (cut) min(length(P), length(Q)) else max(length(P), length(Q))
+  fit <- function(x) if (length(x) >= n) x[seq_len(n)] else c(x, rep(0, n - length(x)))
+  list(P = fit(P), Q = fit(Q))
+}
+
+#' Default or check the bin positions after alignment
+#' @keywords internal
+#' @noRd
+.resolve_index <- function(index, n) {
+  if (is.null(index)) return(seq_len(n))
+  if (length(index) != n)
+    stop("`index` has ", length(index), " position(s) but P and Q have ", n,
+         " bin(s) after alignment; give one position per bin.", call. = FALSE)
+  index
+}
+
+
+############################################
 # KL divergence
 ############################################
 
@@ -119,14 +154,17 @@ tail_weight_function <- function(
 #'
 #' @param P Numeric probability vector.
 #' @param Q Numeric probability vector.
-#' @param index Numeric vector defining position (e.g., depth layers).
+#' @param index Numeric positions of the bins (e.g. depths), one per bin
+#'   after alignment. \code{NULL} (default) uses \code{1, 2, ..., n}.
 #' @param index.spacing Character. \code{"equal"} or \code{"custom"}.
 #' @param parameter List with \code{lambda} and \code{x0}.
 #' @param weighting Character. Weighting function applied before comparison.
 #' @param baseline.weight Numeric in `[0,1]`. Minimum weight.
 #' @param inverse Logical. Reverse weighting direction.
-#' @param alignPQ Logical. If TRUE, aligns vectors of unequal length.
-#' @param cut Logical. If TRUE, truncates longer vector instead of padding.
+#' @param alignPQ Logical. If TRUE, aligns vectors of unequal length;
+#'   if FALSE, unequal lengths are an error.
+#' @param cut Logical. If TRUE, truncates the longer vector instead of padding
+#'   the shorter one with zeros.
 #'
 #' @details
 #' KL divergence is asymmetric:
@@ -138,7 +176,7 @@ tail_weight_function <- function(
 #' @keywords internal
 tail_weighted_kl_divergence <- function(
     P, Q,
-    index = 1:min(length(P), length(Q)),
+    index = NULL,
     index.spacing = "equal",
     parameter = list(lambda = 0.2, x0 = 30),
     weighting = "constant",
@@ -149,27 +187,11 @@ tail_weighted_kl_divergence <- function(
 ) {
   tryCatch({
     
-    P <- P / sum(P)
-    Q <- Q / sum(Q)
-    
-    if (length(P) != length(Q)) {
-      if (!alignPQ) stop("length mismatch")
-      
-      n <- min(length(P), length(Q))
-      if (cut) {
-        P <- P[1:n]; Q <- Q[1:n]
-      } else {
-        # Pad the SHORTER vector up to the longer one. Using
-        # abs(length(other) - length(this)) padded whichever vector was already
-        # longer as well, so both ended up longer than max(length(P),
-        # length(Q)) -- equal, hence silent, but carrying spurious zero bins
-        # that stretch the index the weights are built over.
-        n_max <- max(length(P), length(Q))
-        P <- c(P, rep(0, n_max - length(P)))
-        Q <- c(Q, rep(0, n_max - length(Q)))
-      }
-    }
-    
+    pq <- .align_pq(P, Q, alignPQ = alignPQ, cut = cut)
+    P <- pq$P / sum(pq$P)
+    Q <- pq$Q / sum(pq$Q)
+    index <- .resolve_index(index, length(P))
+
     w <- tail_weight_function(
       index = index,
       parameter = parameter,
@@ -212,17 +234,20 @@ tail_weighted_kl_divergence <- function(
 #' @keywords internal
 tail_weighted_js_divergence <- function(
     P, Q,
-    index = 1:min(length(P), length(Q)),
+    index = NULL,
     index.spacing = "equal",
     parameter = list(lambda = 0.2, x0 = 30),
     weighting = "constant",
+    baseline.weight = 0,
     inverse = FALSE,
     alignPQ = TRUE,
     cut = FALSE
 ) {
   
-  P <- P / sum(P)
-  Q <- Q / sum(Q)
+  pq <- .align_pq(P, Q, alignPQ = alignPQ, cut = cut)
+  P <- pq$P / sum(pq$P)
+  Q <- pq$Q / sum(pq$Q)
+  index <- .resolve_index(index, length(P))
   
   M <- (P + Q) / 2
   
@@ -232,9 +257,8 @@ tail_weighted_js_divergence <- function(
     index.spacing = index.spacing,
     parameter = parameter,
     weighting = weighting,
-    inverse = inverse,
-    alignPQ = alignPQ,
-    cut = cut
+    baseline.weight = baseline.weight,
+    inverse = inverse
   )
   
   KL_QM <- tail_weighted_kl_divergence(
@@ -243,9 +267,8 @@ tail_weighted_js_divergence <- function(
     index.spacing = index.spacing,
     parameter = parameter,
     weighting = weighting,
-    inverse = inverse,
-    alignPQ = alignPQ,
-    cut = cut
+    baseline.weight = baseline.weight,
+    inverse = inverse
   )
   
   (KL_PM + KL_QM) / 2
@@ -281,14 +304,23 @@ tail_weighted_js_divergence <- function(
 #' @keywords internal
 tail_weighted_wasserstein_distance <- function(
     P, Q,
-    index = 1:min(length(P), length(Q)),
+    index = NULL,
     index.spacing = "equal",
     parameter = list(lambda = 0.2, x0 = 10),
     weighting = "constant",
     baseline.weight = 0,
-    inverse = FALSE
+    inverse = FALSE,
+    alignPQ = TRUE,
+    cut = FALSE
 ) {
   
+  # `index` carries the positions the mass sits at and P/Q the mass at each,
+  # so the cost of moving mass between two bins is the distance between their
+  # index values. Zero mass on a padded bin moves nothing.
+  pq <- .align_pq(P, Q, alignPQ = alignPQ, cut = cut)
+  P <- pq$P; Q <- pq$Q
+  index <- .resolve_index(index, length(P))
+
   w <- tail_weight_function(
     index = index,
     parameter = parameter,
@@ -300,23 +332,6 @@ tail_weighted_wasserstein_distance <- function(
   
   P <- (P * w) / sum(P * w)
   Q <- (Q * w) / sum(Q * w)
-
-  # `index` carries the positions the mass sits at and P/Q the mass at each,
-  # so the cost of moving mass between two bins is the distance between their
-  # index values. Both distributions live on the same index, and the default
-  # index spans the shorter of the two, so a longer vector is cut to match it
-  # rather than silently paired with the wrong positions.
-  n <- length(index)
-  if (length(P) != n || length(Q) != n) {
-    if (length(P) < n || length(Q) < n)
-      stop("`index` is longer than `P` or `Q`; they must share one position ",
-           "per bin.", call. = FALSE)
-    warning(sprintf(
-      "`P`/`Q` are longer than `index` (%d); using the first %d bin(s) of each.",
-      n, n), call. = FALSE)
-    P <- P[seq_len(n)]; P <- P / sum(P)
-    Q <- Q[seq_len(n)]; Q <- Q / sum(Q)
-  }
 
   tryCatch({
     transport::wasserstein1d(a = index, b = index, wa = P, wb = Q)
@@ -345,10 +360,13 @@ tail_weighted_wasserstein_distance <- function(
 #' \code{tail_weight = TRUE}.
 #' @param parameter List with weighting parameters \code{lambda} and \code{x0}.
 #' @param inverse Logical. Reverse weighting direction.
-#' @param index Numeric vector defining depth or ordering.
+#' @param index Numeric positions of the bins (e.g. depths), one per bin
+#'   after alignment. \code{NULL} (default) uses \code{1, 2, ..., n}.
 #' @param index.spacing Character. \code{"equal"} or \code{"custom"}.
-#' @param alignPQ Logical. Aligns unequal-length vectors.
-#' @param cut Logical. If TRUE, truncates longer vector when aligning.
+#' @param alignPQ Logical. Aligns unequal-length vectors; if FALSE, unequal
+#'   lengths are an error.
+#' @param cut Logical. If TRUE, truncates the longer vector instead of padding
+#'   the shorter one with zeros.
 #' @param baseline.weight Numeric in `[0,1]`. Minimum weight applied.
 #'
 #' @section Data requirements:
@@ -376,10 +394,14 @@ tail_weighted_wasserstein_distance <- function(
 #'
 #' \strong{cut = TRUE:} both vectors are truncated to the shared minimum length.
 #'
-#' \strong{cut = FALSE:} the shorter vector is padded with zeros.
+#' \strong{cut = FALSE} (default): the shorter vector is padded with zeros.
 #'
-#' No interpolation or re-binning is performed. Alignment only enforces
-#' equal vector length; consistent bin definitions are assumed.
+#' The same rule applies to all three metrics. No interpolation or re-binning
+#' is performed. Alignment only enforces equal vector length; consistent bin
+#' definitions are assumed. Padding gives \code{"kl"} a value of \code{Inf}
+#' whenever \code{P} has mass in a bin that was padded onto \code{Q}, since
+#' \eqn{P \log(P / 0)} is infinite; \code{"js"} and \code{"wasserstein"} stay
+#' finite.
 #'
 #' @section Interpretation:
 #'
@@ -417,7 +439,7 @@ compare_depth_distribution <- function(
     weighting = "sigmoid",
     parameter = list(lambda = 0.2, x0 = 30),
     inverse = FALSE,
-    index = 1:min(length(P), length(Q)),
+    index = NULL,
     index.spacing = "equal",
     alignPQ = TRUE,
     cut = FALSE,
@@ -438,7 +460,9 @@ compare_depth_distribution <- function(
       parameter = parameter,
       weighting = weighting,
       baseline.weight = baseline.weight,
-      inverse = inverse
+      inverse = inverse,
+      alignPQ = alignPQ,
+      cut = cut
     ),
     
     js = tail_weighted_js_divergence(
@@ -447,6 +471,7 @@ compare_depth_distribution <- function(
       index.spacing = index.spacing,
       parameter = parameter,
       weighting = weighting,
+      baseline.weight = baseline.weight,
       inverse = inverse,
       alignPQ = alignPQ,
       cut = cut
