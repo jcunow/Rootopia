@@ -147,17 +147,26 @@ normalize_array <- function(arr, scale = "none") {
 
 #' Load an image flexibly from file or convert from memory
 #' @param input File path or image object
-#' @param output_format Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.
+#' @param output_format Character, one of "cimg", "spatrast", "matrix",
+#'   "array", "brick", "raster", "magick-image". Capitalization does not
+#'   matter, and "SpatRaster", "RasterBrick", "RasterLayer" and "magick" are
+#'   accepted as well.
 #' @param scale Character, the value rescaling to apply. One of
 #'   `"to_01"` (0-255 -> 0-1, the default), `"to_255"` (0-1 -> 0-255),
-#'   `"binary"` (strictly 0/1), or `"none"` (leave values untouched). Each
-#'   conversion is a no-op if the data is already in the target range.
+#'   `"binary"` (every positive value becomes 1), or `"none"` (leave values
+#'   untouched). `"to_01"` and `"to_255"` leave data that is already in the
+#'   target range untouched.
 #' @param select_layer Numeric, which layer to select if input has multiple layers
 #' @param normalize,binarize,denormalize Deprecated logical flags kept for
 #'   backward compatibility; use `scale` instead. `normalize = TRUE` maps to
 #'   `scale = "to_01"`, `denormalize = TRUE` to `"to_255"`, and
 #'   `binarize = TRUE` to `"binary"`. Supplying these together with `scale`, or
 #'   setting both `normalize` and `denormalize`, is an error.
+#' @return The image in the requested format. Arrays and matrices are
+#'   (rows, columns[, layers]); a SpatRaster built from an array spans
+#'   \code{0..ncol} by \code{0..nrow}, while a SpatRaster passed in with
+#'   \code{scale = "none"} and no \code{select_layer} is returned unchanged.
+#'   Reading \code{.tif}/\code{.tiff} files needs the \pkg{tiff} package.
 #' @export
 load_flexible_image <- function(input, output_format = "cimg",
                                 scale = c("to_01", "to_255", "binary", "none"),
@@ -215,6 +224,8 @@ load_flexible_image <- function(input, output_format = "cimg",
   if (is.character(input) && file.exists(input)) {
     ext <- tolower(tools::file_ext(input))
     if (ext %in% c("tif", "tiff")) {
+      if (!requireNamespace("tiff", quietly = TRUE))
+        stop("Reading .tif files needs the 'tiff' package: install.packages(\"tiff\")")
       arr <- as.array(tiff::readTIFF(input))  # 3D array, already (H, W, C)
     } else {
       # imager loads as 4D (x, y, depth, channel); drop the depth axis, then
