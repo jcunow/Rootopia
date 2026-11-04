@@ -181,13 +181,12 @@ the curvature of cylindrical tubes.
 | `angle_from_vertical` | Insertion angle from **vertical** in degrees, in `[0, 90]`; `0` is an upright tube, `90` a horizontal one. A tube installed at the common 30–45° from vertical is 30–45° here — the number field notes record. |
 | `dpi` | Scanner resolution |
 | `start_soil` | Depth offset in cm — shifts the zero point. Provide from field calibration data. |
-| `center_offset` | Where the top of the tube sits across the image height, as a fraction of one full circumference (0–1). 0 = first row, 0.5 = halfway down, 1 = last row. |
+| `center_offset` | Where the top of the tube sits across the image height, as a fraction of that height (0–1). 0 = first row, 0.5 = halfway down, 1 = last row. |
 
 ```{r fig.alt="Depth map in centimeters, shading from shallow at one end to deep at the other."}
 # `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth
-# attribution. Here it is derived from the RootDetector layers.
-mask <- seg_img[[1]] - seg_img[[2]]
-mask[mask == 255] <- NA
+# attribution. In the RootDetector layers, layer 1 marks them.
+mask <- seg_img[[1]] > 0
 
 depth_map <- create_depthmap(
   img           = seg_img,
