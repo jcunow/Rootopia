@@ -17,7 +17,10 @@ analyze_soil_texture(
 
 - img.color:
 
-  Three-band raster (RGB) or path to image. Internally converted to a
+  Three-band (RGB) image: a `SpatRaster`, `RasterBrick`, `RasterStack`,
+  or any other input
+  [`load_flexible_image`](https://jcunow.github.io/Rootopia/reference/load_flexible_image.md)
+  accepts, including a file path. Internally converted to a
   `raster::RasterBrick` as required by the `glcm` package.
 
 - grays:

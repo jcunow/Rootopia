@@ -108,8 +108,10 @@ depth zone.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Depth is matched against the binned values in <code>depth_map</code>: a single value
-selects the closest available bin; a consecutive sequence selects an inclusive
-range; discrete values select each closest bin.</p>
+selects the closest available bin; three or more equally spaced values, e.g.
+<code>seq(10, 30, 5)</code> or <code>c(0, 50, 100)</code>, select every bin from the
+smallest to the largest inclusive; any other set of values selects the
+closest bin to each value.</p>
 <p>To split a tube into circumferential (rotation) slices, use
 <code><a href="slice_rotation.html">slice_rotation</a></code> instead.</p>
     </div>
@@ -122,7 +124,7 @@ range; discrete values select each closest bin.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mask</span> <span class="op">&lt;-</span> <span class="va">img</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">img</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>; <span class="va">mask</span><span class="op">[</span><span class="va">mask</span> <span class="op">==</span> <span class="fl">255</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
+<span class="r-in"><span><span class="va">mask</span> <span class="op">&lt;-</span> <span class="va">img</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span>                 <span class="co"># layer 1 marks the tape</span></span></span>
 <span class="r-in"><span><span class="va">depth_map</span>  <span class="op">&lt;-</span> <span class="fu"><a href="create_depthmap.html">create_depthmap</a></span><span class="op">(</span><span class="va">img</span>, <span class="va">mask</span>, start_soil <span class="op">=</span> <span class="fl">2.9</span>, dpi <span class="op">=</span> <span class="fl">150</span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">depth_bins</span> <span class="op">&lt;-</span> <span class="fu"><a href="binning.html">binning</a></span><span class="op">(</span><span class="va">depth_map</span>, nn <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># depth_bins is already aligned with img -- no transpose/flip needed</span></span></span>

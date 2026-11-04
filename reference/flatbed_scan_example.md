@@ -23,6 +23,11 @@ Dimensions:
 
 - 3 layers (segmentation channels)
 
+## Source
+
+Original flatbed scans from boreal pine forests in northern Finland,
+acquired by Johannes Cunow and others (field campaign 2022).
+
 ## Details
 
 Flatbed scans capture the full root system in a 2D plane, so traits are
@@ -39,10 +44,6 @@ systems of boreal pine forests. Oikos. https://doi.org/10.1002/oik.12211
 ## Author
 
 Johannes Cunow <johannes.cunow@gmail.com>
-
-Johannes Cunow Original flatbed scans from boreal pine forests in
-northern Finland, acquired by Johannes Cunow and others (field campaign
-2022).
 
 ## Examples
 

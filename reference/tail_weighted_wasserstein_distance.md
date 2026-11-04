@@ -9,12 +9,14 @@ distributions with optional depth-dependent weighting.
 tail_weighted_wasserstein_distance(
   P,
   Q,
-  index = 1:min(length(P), length(Q)),
+  index = NULL,
   index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 10),
   weighting = "constant",
   baseline.weight = 0,
-  inverse = FALSE
+  inverse = FALSE,
+  alignPQ = TRUE,
+  cut = FALSE
 )
 ```
 
@@ -30,7 +32,8 @@ tail_weighted_wasserstein_distance(
 
 - index:
 
-  Numeric vector defining position (e.g., depth layers).
+  Numeric positions of the bins (e.g. depths), one per bin after
+  alignment. `NULL` (default) uses `1, 2, ..., n`.
 
 - index.spacing:
 
@@ -51,6 +54,16 @@ tail_weighted_wasserstein_distance(
 - inverse:
 
   Logical. Reverse weighting direction.
+
+- alignPQ:
+
+  Logical. If TRUE, aligns vectors of unequal length; if FALSE, unequal
+  lengths are an error.
+
+- cut:
+
+  Logical. If TRUE, truncates the longer vector instead of padding the
+  shorter one with zeros.
 
 ## Value
 

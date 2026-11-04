@@ -124,8 +124,8 @@ element is a numeric matrix with exactly 3 columns (R, G, B in 0-255),
 where every row is one color sample believed to belong to that class.
 Classes may have different numbers of rows. The function converts each
 matrix to LAB, averages it to a single centroid, and returns a
-`data.frame` in the same format as `.default_soil_centroids()` – ready
-to pass straight back into `classify_soil_rgb(centroids = ...)`.
+`data.frame` in the same format as the default centroid table – ready to
+pass straight back into `classify_soil_rgb(centroids = ...)`.
 
 The simplest approach is to read representative RGB values off your scan
 (e.g. using an image viewer's color picker) and enter them directly:

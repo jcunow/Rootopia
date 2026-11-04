@@ -185,8 +185,8 @@ element per material class. Each element is a numeric matrix with exactly
 3 columns (R, G, B in 0-255), where every row is one color sample
 believed to belong to that class. Classes may have different numbers of
 rows. The function converts each matrix to LAB, averages it to a single
-centroid, and returns a <code>data.frame</code> in the same format as
-<code>.default_soil_centroids()</code> – ready to pass straight back into
+centroid, and returns a <code>data.frame</code> in the same format as the
+default centroid table – ready to pass straight back into
 <code>classify_soil_rgb(centroids = ...)</code>.</p>
 <p>The simplest approach is to read representative RGB values off your scan
 (e.g. using an image viewer's color picker) and enter them directly:</p><div class="sourceCode"><pre><code><span></span>

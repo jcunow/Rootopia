@@ -100,10 +100,10 @@ guesswork:
 
 image_components = report_image_components(seg)
 #> === Enclosed holes  (background 0 surrounded by root 1) ===
-#>   n = 57 | min = 1 | median = 3 | mean = 3.8 | max = 45  (px)
+#>   n = 55 | min = 1 | median = 3 | mean = 3.8 | max = 45  (px)
 #> 
 #> === Root components (connected root-1 regions) ===
-#>   n = 65 | min = 1 | median = 3 | mean = 9207.7 | max = 391995  (px)
+#>   n = 8 | min = 2 | median = 17433.5 | mean = 25784.1 | max = 69164  (px)
 ```
 
 ![](FlatBedScans_vignettes_files/figure-html/unnamed-chunk-4-1.png)

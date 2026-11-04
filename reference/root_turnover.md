@@ -6,7 +6,8 @@ runs:
 - `"tc"` (Temporal Comparison):
 
   Compares two timepoint images (`img1`, `img2`) and reports standing
-  roots, production, and new-root percentages. Dispatches to
+  roots, their net change, and that change as a fraction of each date's
+  standing roots. Dispatches to
   [`turnover_tc`](https://jcunow.github.io/Rootopia/reference/turnover_tc.md).
   The `tc_method` argument chooses how root amount is measured:
   `"kimura"` (root length) or `"rootpx"` (root pixel count).
@@ -103,8 +104,9 @@ root_turnover(
 
 Depends on the method:
 
-- `"tc"`: data.frame with standing roots, production, and new-root
-  percentages.
+- `"tc"`: data.frame with standing roots, their net change
+  (`production`), and that change as a fraction of each date's standing
+  roots.
 
 - `"dpc"`: data.frame of pixel sums and ratios, or (if
   `im_return = TRUE`) a list of SpatRaster layers.
@@ -130,8 +132,10 @@ data(skl_Oulanka2023_Session03_T067)
 t1 <- terra::rast(skl_Oulanka2023_Session01_T067)
 t2 <- terra::rast(skl_Oulanka2023_Session03_T067)
 root_turnover(t1, t2, method = "tc", tc_method = "kimura")
-#> Diagonal: 457958 | Orthogonal: 459143
-#> Diagonal: 431284 | Orthogonal: 432437
+#> Warning: img has 3 layers and select_layer is not set; measuring layer 1. Layer 1 is often not the skeleton: set select_layer to the layer that holds it.
+#> Diagonal: 914793 | Orthogonal: 916350
+#> Warning: img has 3 layers and select_layer is not set; measuring layer 1. Layer 1 is often not the skeleton: set select_layer to the layer that holds it.
+#> Diagonal: 861596 | Orthogonal: 863048
 #>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2
-#> 1        8937.922        8417.615  -520.3067        -0.0582        -0.0618
+#> 1        17847.64        16809.66  -1037.987        -0.0582        -0.0617
 ```

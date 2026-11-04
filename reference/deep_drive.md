@@ -91,7 +91,7 @@ DepthMap <- create_depthmap(im, center_offset = 0, tube_thicc = 3.5)
 
 # Just the deep drive score
 deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2)
-#> [1] 0.2407429
+#> [1] 0.2153285
 
 # Get spatial outputs too
 res <- deep_drive(DepthMap = DepthMap, RootMap = im, select_layer_rm = 2, return = "all")

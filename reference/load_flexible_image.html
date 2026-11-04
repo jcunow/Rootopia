@@ -79,14 +79,18 @@
 
 
 <dt id="arg-output-format">output_format<a class="anchor" aria-label="anchor" href="#arg-output-format"></a></dt>
-<dd><p>Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.</p></dd>
+<dd><p>Character, one of "cimg", "spatrast", "matrix",
+"array", "brick", "raster", "magick-image". Capitalization does not
+matter, and "SpatRaster", "RasterBrick", "RasterLayer" and "magick" are
+accepted as well.</p></dd>
 
 
 <dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
 <dd><p>Character, the value rescaling to apply. One of
 <code>"to_01"</code> (0-255 -&gt; 0-1, the default), <code>"to_255"</code> (0-1 -&gt; 0-255),
-<code>"binary"</code> (strictly 0/1), or <code>"none"</code> (leave values untouched). Each
-conversion is a no-op if the data is already in the target range.</p></dd>
+<code>"binary"</code> (every positive value becomes 1), or <code>"none"</code> (leave values
+untouched). <code>"to_01"</code> and <code>"to_255"</code> leave data that is already in the
+target range untouched.</p></dd>
 
 
 <dt id="arg-select-layer">select_layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
@@ -101,6 +105,14 @@ backward compatibility; use <code>scale</code> instead. <code>normalize = TRUE</
 setting both <code>normalize</code> and <code>denormalize</code>, is an error.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>The image in the requested format. Arrays and matrices are
+(rows, columns, layers); a SpatRaster built from an array spans
+<code>0..ncol</code> by <code>0..nrow</code>, while a SpatRaster passed in with
+<code>scale = "none"</code> and no <code>select_layer</code> is returned unchanged.
+Reading <code>.tif</code>/<code>.tiff</code> files needs the <span class="pkg">tiff</span> package.</p>
+    </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -65,10 +65,11 @@ weighted KL decomposition.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">tail_weighted_js_divergence</span><span class="op">(</span></span>
 <span>  <span class="va">P</span>,</span>
 <span>  <span class="va">Q</span>,</span>
-<span>  index <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">Q</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  index.spacing <span class="op">=</span> <span class="st">"equal"</span>,</span>
 <span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">0.2</span>, x0 <span class="op">=</span> <span class="fl">30</span><span class="op">)</span>,</span>
 <span>  weighting <span class="op">=</span> <span class="st">"constant"</span>,</span>
+<span>  baseline.weight <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  inverse <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  alignPQ <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cut <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -88,7 +89,8 @@ weighted KL decomposition.</p>
 
 
 <dt id="arg-index">index<a class="anchor" aria-label="anchor" href="#arg-index"></a></dt>
-<dd><p>Numeric vector defining position (e.g., depth layers).</p></dd>
+<dd><p>Numeric positions of the bins (e.g. depths), one per bin
+after alignment. <code>NULL</code> (default) uses <code>1, 2, ..., n</code>.</p></dd>
 
 
 <dt id="arg-index-spacing">index.spacing<a class="anchor" aria-label="anchor" href="#arg-index-spacing"></a></dt>
@@ -103,16 +105,22 @@ weighted KL decomposition.</p>
 <dd><p>Character. Weighting function applied before comparison.</p></dd>
 
 
+<dt id="arg-baseline-weight">baseline.weight<a class="anchor" aria-label="anchor" href="#arg-baseline-weight"></a></dt>
+<dd><p>Numeric in <code>[0,1]</code>. Minimum weight.</p></dd>
+
+
 <dt id="arg-inverse">inverse<a class="anchor" aria-label="anchor" href="#arg-inverse"></a></dt>
 <dd><p>Logical. Reverse weighting direction.</p></dd>
 
 
 <dt id="arg-alignpq">alignPQ<a class="anchor" aria-label="anchor" href="#arg-alignpq"></a></dt>
-<dd><p>Logical. If TRUE, aligns vectors of unequal length.</p></dd>
+<dd><p>Logical. If TRUE, aligns vectors of unequal length;
+if FALSE, unequal lengths are an error.</p></dd>
 
 
 <dt id="arg-cut">cut<a class="anchor" aria-label="anchor" href="#arg-cut"></a></dt>
-<dd><p>Logical. If TRUE, truncates longer vector instead of padding.</p></dd>
+<dd><p>Logical. If TRUE, truncates the longer vector instead of padding
+the shorter one with zeros.</p></dd>
 
 </dl></div>
     <div class="section level2">

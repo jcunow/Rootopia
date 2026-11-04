@@ -12,11 +12,14 @@ data(rgb_Oulanka2023_Session03_T067)
 
 ## Format
 
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with
+[`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html).
+Dimensions:
 
-- 4900 columns (width)
+- 1160 rows (height)
 
-- 1161 rows (height)
+- 4899 columns (width)
 
 - 3 layers (RGB channels)
 

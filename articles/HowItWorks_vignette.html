@@ -1571,10 +1571,12 @@ circumference is added across the rows: pixels imaged from the upper
 side of the tube are nearer the surface than those from the lower side.
 Its crest-to-trough range is
 <code>tube_thicc × sin(angle_from_vertical)</code>, so its amplitude is
-half of that, and <code>center_offset</code> rotates the wave to match
-where the top of your tube actually sits: as a fraction of one full
-circumference, <code>0</code> puts the tube top on the first row,
-<code>0.5</code> halfway down and <code>1</code> on the last row.</p>
+half of that, and <code>center_offset</code> shifts the wave to match
+where the top of your tube actually sits: as a fraction of the image
+height, <code>0</code> puts the tube top on the first row,
+<code>0.5</code> halfway down and <code>1</code> on the last row. A scan
+that covers only part of the circumference shows the matching part of
+the wave.</p>
 <p><strong>The two terms are complements, and that is the whole role of
 the angle.</strong> A tube’s depth has to come from somewhere: either
 from running down into the soil along its length, or from the thickness

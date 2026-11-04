@@ -1,7 +1,6 @@
-# Convert RGB image to grayscale with optimized memory management and parallel processing
+# Convert an RGB image to grayscale as a weighted sum of its channels
 
-Convert RGB image to grayscale with optimized memory management and
-parallel processing
+Convert an RGB image to grayscale as a weighted sum of its channels
 
 ## Usage
 

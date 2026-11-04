@@ -15,7 +15,7 @@ compare_depth_distribution(
   weighting = "sigmoid",
   parameter = list(lambda = 0.2, x0 = 30),
   inverse = FALSE,
-  index = 1:min(length(P), length(Q)),
+  index = NULL,
   index.spacing = "equal",
   alignPQ = TRUE,
   cut = FALSE,
@@ -55,7 +55,8 @@ compare_depth_distribution(
 
 - index:
 
-  Numeric vector defining depth or ordering.
+  Numeric positions of the bins (e.g. depths), one per bin after
+  alignment. `NULL` (default) uses `1, 2, ..., n`.
 
 - index.spacing:
 
@@ -63,11 +64,13 @@ compare_depth_distribution(
 
 - alignPQ:
 
-  Logical. Aligns unequal-length vectors.
+  Logical. Aligns unequal-length vectors; if FALSE, unequal lengths are
+  an error.
 
 - cut:
 
-  Logical. If TRUE, truncates longer vector when aligning.
+  Logical. If TRUE, truncates the longer vector instead of padding the
+  shorter one with zeros.
 
 - baseline.weight:
 
@@ -113,10 +116,13 @@ If `P` and `Q` differ in length, they are made comparable as follows:
 
 **cut = TRUE:** both vectors are truncated to the shared minimum length.
 
-**cut = FALSE:** the shorter vector is padded with zeros.
+**cut = FALSE** (default): the shorter vector is padded with zeros.
 
-No interpolation or re-binning is performed. Alignment only enforces
-equal vector length; consistent bin definitions are assumed.
+The same rule applies to all three metrics. No interpolation or
+re-binning is performed. Alignment only enforces equal vector length;
+consistent bin definitions are assumed. Padding gives `"kl"` a value of
+`Inf` whenever `P` has mass in a bin that was padded onto `Q`, since \\P
+\log(P / 0)\\ is infinite; `"js"` and `"wasserstein"` stay finite.
 
 ## Interpretation
 

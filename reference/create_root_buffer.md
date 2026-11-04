@@ -24,7 +24,9 @@ create_root_buffer(img, width = 2, halo_only = TRUE, kernel = "circle")
 
 - kernel:
 
-  character - shape of the thickening kernel: "circle" or "diamond"
+  character - neighborhood added at each of the `width` steps:
+  `"circle"` adds all 8 neighbors, so the buffer grows as a square;
+  `"diamond"` adds the 4 orthogonal neighbors, so it grows as a diamond
 
 ## Value
 

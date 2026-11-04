@@ -9,7 +9,7 @@ optional depth-dependent weighting along an index (e.g., soil depth).
 tail_weighted_kl_divergence(
   P,
   Q,
-  index = 1:min(length(P), length(Q)),
+  index = NULL,
   index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 30),
   weighting = "constant",
@@ -32,7 +32,8 @@ tail_weighted_kl_divergence(
 
 - index:
 
-  Numeric vector defining position (e.g., depth layers).
+  Numeric positions of the bins (e.g. depths), one per bin after
+  alignment. `NULL` (default) uses `1, 2, ..., n`.
 
 - index.spacing:
 
@@ -56,11 +57,13 @@ tail_weighted_kl_divergence(
 
 - alignPQ:
 
-  Logical. If TRUE, aligns vectors of unequal length.
+  Logical. If TRUE, aligns vectors of unequal length; if FALSE, unequal
+  lengths are an error.
 
 - cut:
 
-  Logical. If TRUE, truncates longer vector instead of padding.
+  Logical. If TRUE, truncates the longer vector instead of padding the
+  shorter one with zeros.
 
 ## Value
 

@@ -26,8 +26,9 @@ modal_peaks(
 
 - prominence_threshold:
 
-  Minimum prominence (height difference to nearest valley) for a peak to
-  be considered significant. Defaults to 0.005.
+  Minimum prominence (height of the peak above the higher of its two
+  neighboring valleys) for a peak to be considered significant, in
+  density units. Defaults to 0.005.
 
 - display_type:
 
@@ -90,9 +91,10 @@ A list with the following elements:
 
 ## Details
 
-Prominence is calculated as the vertical difference between each local
-maximum and the nearest local minimum (valley). This helps identify
-meaningful peaks while filtering out spurious noise-driven ones. When
+Prominence is calculated as the height of each local maximum above the
+higher of the two local minima (valleys) on either side of it, or above
+the one valley when it has only one. This helps identify meaningful
+peaks while filtering out spurious noise-driven ones. When
 `mclust = TRUE`, model-based clustering is performed using Gaussian
 mixture models (`V` variance structure), and the results are returned
 along with a classification vector. By default the number of components
@@ -114,7 +116,6 @@ visual comparison.
 
 ``` r
 set.seed(2)
-#' library(mclust)
 # Example 1: Noisy Unimodal
 x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
 peaks1_1 = modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")

@@ -116,18 +116,26 @@ for <code>method = "adaptive"</code> only.</p></dd>
 
 
 <dt id="arg-select-layer">select_layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
-<dd><p>Integer or NULL. Which layer to threshold or deblur.
-If NULL and the image is multilayer, the mean of all layers is used.</p></dd>
+<dd><p>Integer or NULL. The layer the threshold is computed on.
+The output has as many layers as <code>img</code>, and every layer except
+<code>mask_layer</code> receives this layer's result. If NULL and the image is
+multilayer, the threshold is computed on the mean of all layers and that
+one result goes into every layer.</p></dd>
 
 
 <dt id="arg-mask-layer">mask_layer<a class="anchor" aria-label="anchor" href="#arg-mask-layer"></a></dt>
-<dd><p>Integer or NULL. If set, this layer is thresholded against
-its own level rather than against <code>select_layer</code>'s.</p></dd>
+<dd><p>Integer or NULL. A layer that keeps its own result
+instead of receiving <code>select_layer</code>'s: it is thresholded on its own
+pixel values and against its own level (its own maximum, or its own local
+mean for <code>method = "adaptive"</code>). It excludes no pixels. The default
+1 suits RootDetector output, where layer 1 carries roots and tape and
+layer 2 roots only, so the tape can still be found from the two layers
+after thresholding. NULL treats every layer alike.</p></dd>
 
 
 <dt id="arg-binary-">binary_01<a class="anchor" aria-label="anchor" href="#arg-binary-"></a></dt>
-<dd><p>Logical. If TRUE, the output is 0/1; if FALSE, it keeps the
-maximum value of the input.</p></dd>
+<dd><p>Logical. Coding of the output: TRUE gives 0/1; FALSE gives
+0 and the maximum of the thresholded layer, e.g. 0/255 for 8-bit input.</p></dd>
 
 
 <dt id="arg-deblur">deblur<a class="anchor" aria-label="anchor" href="#arg-deblur"></a></dt>

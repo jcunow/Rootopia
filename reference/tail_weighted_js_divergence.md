@@ -9,10 +9,11 @@ weighted KL decomposition.
 tail_weighted_js_divergence(
   P,
   Q,
-  index = 1:min(length(P), length(Q)),
+  index = NULL,
   index.spacing = "equal",
   parameter = list(lambda = 0.2, x0 = 30),
   weighting = "constant",
+  baseline.weight = 0,
   inverse = FALSE,
   alignPQ = TRUE,
   cut = FALSE
@@ -31,7 +32,8 @@ tail_weighted_js_divergence(
 
 - index:
 
-  Numeric vector defining position (e.g., depth layers).
+  Numeric positions of the bins (e.g. depths), one per bin after
+  alignment. `NULL` (default) uses `1, 2, ..., n`.
 
 - index.spacing:
 
@@ -45,17 +47,23 @@ tail_weighted_js_divergence(
 
   Character. Weighting function applied before comparison.
 
+- baseline.weight:
+
+  Numeric in `[0,1]`. Minimum weight.
+
 - inverse:
 
   Logical. Reverse weighting direction.
 
 - alignPQ:
 
-  Logical. If TRUE, aligns vectors of unequal length.
+  Logical. If TRUE, aligns vectors of unequal length; if FALSE, unequal
+  lengths are an error.
 
 - cut:
 
-  Logical. If TRUE, truncates longer vector instead of padding.
+  Logical. If TRUE, truncates the longer vector instead of padding the
+  shorter one with zeros.
 
 ## Value
 

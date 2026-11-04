@@ -87,12 +87,15 @@ and the depth spread across a curved surface.</p>
 
 
 <dl><dt id="arg-img">img<a class="anchor" aria-label="anchor" href="#arg-img"></a></dt>
-<dd><p>Input image (accepts terra SpatRaster, matrix, array, or file path). For multi-band
-images, specify band_index parameter</p></dd>
+<dd><p>Input image (accepts terra SpatRaster, matrix, array, or file
+path). Only its size is used, so any layer of a multi-layer image will do.
+A SpatRaster passes its extent, resolution and CRS on to the depth map.</p></dd>
 
 
 <dt id="arg-mask">mask<a class="anchor" aria-label="anchor" href="#arg-mask"></a></dt>
-<dd><p>Raster mask indicating foreign objects (1 = mask, 0 or NA = keep)</p></dd>
+<dd><p>Raster mask on the same grid as <code>img</code>, marking foreign
+objects such as tape with 1 (or TRUE); those cells are <code>NA</code> in the
+depth map. 0 and NA cells are kept.</p></dd>
 
 
 <dt id="arg-sinoid">sinoid<a class="anchor" aria-label="anchor" href="#arg-sinoid"></a></dt>
@@ -124,12 +127,16 @@ angle either way</p></dd>
 
 
 <dt id="arg-center-offset">center_offset<a class="anchor" aria-label="anchor" href="#arg-center-offset"></a></dt>
-<dd><p>Numeric in <code>[0, 1]</code>; where the top of the tube – the
-shallowest line of the curvature wave – sits across the image height, as a
-fraction of one full tube circumference. <code>0</code> puts it on the first row,
-<code>0.5</code> halfway down, <code>1</code> on the last row. <code>0</code> and <code>1</code>
-are the same point on the tube, the image seam. Used by
-<code>geometry = "tube"</code> only</p></dd>
+<dd><p>Numeric; the image row of the top of the tube – the
+shallowest line of the curvature wave – given in one of two forms:</p><ul><li><p><strong>Fraction</strong> - a number in <code>[0, 1]</code>: the tube top is on
+row <code>1 + center_offset * (nrow - 1)</code>, so <code>0</code> puts it on the
+first row, <code>0.5</code> halfway down and <code>1</code> on the last row.</p></li>
+<li><p><strong>Absolute row</strong> - a number <code>&gt; 1</code>: the row itself, at
+most <code>nrow</code>, e.g. from <code><a href="estimate_rotation_center.html">estimate_rotation_center()</a></code>.</p></li>
+</ul><p>The wave itself
+always spans one full tube circumference (<code>tube_thicc * pi</code> cm at
+<code>dpi</code>); an image that covers only part of the circumference shows the
+matching part of the wave. Used by <code>geometry = "tube"</code> only</p></dd>
 
 
 <dt id="arg-geometry">geometry<a class="anchor" aria-label="anchor" href="#arg-geometry"></a></dt>
@@ -194,8 +201,7 @@ bin. <code>tube_thicc</code>, <code>angle_from_vertical</code> and
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">seg_Oulanka2023_Session01_T067</span> <span class="op">=</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">img</span> <span class="op">=</span> <span class="va">seg_Oulanka2023_Session01_T067</span></span></span>
-<span class="r-in"><span><span class="va">mask</span> <span class="op">=</span> <span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span></span>
-<span class="r-in"><span><span class="va">mask</span><span class="op">[</span><span class="va">mask</span> <span class="op">==</span> <span class="fl">255</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span></span>
+<span class="r-in"><span><span class="va">mask</span> <span class="op">=</span> <span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span>   <span class="co"># layer 1 marks the tape</span></span></span>
 <span class="r-in"><span><span class="va">map</span> <span class="op">=</span> <span class="fu">create_depthmap</span><span class="op">(</span><span class="va">img</span>, <span class="va">mask</span>, start_soil <span class="op">=</span> <span class="fl">0.1</span>,</span></span>
 <span class="r-in"><span>  geometry <span class="op">=</span> <span class="st">"tube"</span>,</span></span>
 <span class="r-in"><span>  tube_thicc <span class="op">=</span> <span class="fl">7</span>,</span></span>

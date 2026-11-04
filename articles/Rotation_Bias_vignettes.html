@@ -360,10 +360,10 @@ or an installation-angle artifact).</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n"</span>,</span>
 <span>            <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000</span></span>
+<span><span class="co">#&gt; Mean: 3.5079 | Amplitude: 2.0958 | Phase (slice): 38.36 | R²: 0.824 | p: 0.0000</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Peak-to-trough spread is %.2f x the mean root length density\n"</span>,</span>
 <span>            <span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">amplitude</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="va">res</span><span class="op">$</span><span class="va">offset</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Peak-to-trough spread is 1.13 x the mean root length density</span></span></code></pre></div>
+<span><span class="co">#&gt; Peak-to-trough spread is 1.19 x the mean root length density</span></span></code></pre></div>
 <p>A significant, non-trivial amplitude indicates that root abundance
 varies systematically with circumferential position — i.e. there is more
 root material on one side of the tube than the other.

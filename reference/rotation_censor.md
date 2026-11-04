@@ -41,8 +41,8 @@ rotation_censor(
     `0` = top, `0.25` = a quarter down, `0.5` = middle, `1` = bottom (so
     the center row is `center_offset * nrow`).
 
-  - **Keyword** - `"top"` (= 0), `"middle"` / `"center"` / `"center"` (=
-    0.5), or `"bottom"` (= 1).
+  - **Keyword** - `"top"` (= 0), `"middle"` / `"center"` (= 0.5), or
+    `"bottom"` (= 1).
 
   The default `0` centers on the top row. When `fixed_rotation = FALSE`
   the resolved value is used as the rotation shift in rows to trim (e.g.
@@ -86,9 +86,11 @@ A cropped `SpatRaster` (returned invisibly when `overlay = TRUE`), or
 ``` r
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
-r0  <- estimate_rotation_center(img)
-rotation_censor(img, center_offset = r0, fixed_width = 800,
-                fixed_rotation = TRUE, overlay = TRUE)
+if (requireNamespace("RStoolbox", quietly = TRUE)) {
+  r0 <- estimate_rotation_center(img)
+  rotation_censor(img, center_offset = r0, fixed_width = 800,
+                  fixed_rotation = TRUE, overlay = TRUE)
+}
 
 
 # Same window centered on the middle of the image, via a fraction or keyword

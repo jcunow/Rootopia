@@ -93,7 +93,9 @@ centroid cannot be assigned to that class.</p></dd>
 
 <dt id="arg-prior">prior<a class="anchor" aria-label="anchor" href="#arg-prior"></a></dt>
 <dd><p>Optional <code>data.frame</code> of existing centroids (same format
-as the output of this function, or <code>.default_soil_centroids()</code>).
+as the output of this function, or the <code>centroids</code> element returned
+by <code><a href="classify_soil_rgb.html">classify_soil_rgb</a></code>, which holds the default table when no
+<code>centroids</code> were passed).
 When supplied, the new centroids derived from <code>picks</code> are blended
 with the prior centroids using <code>alpha</code>. Only classes present in both
 <code>picks</code> and <code>prior</code> are blended; new classes in <code>picks</code>
@@ -128,7 +130,7 @@ matrix. Default <code>TRUE</code>.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Blend: 30% old calibration, 70% new picks</span></span></span>
 <span class="r-in"><span><span class="va">cents</span> <span class="op">&lt;-</span> <span class="fu">build_soil_centroids</span><span class="op">(</span><span class="va">new_picks</span>, <span class="va">max_dist</span>,</span></span>
-<span class="r-in"><span>                              prior <span class="op">=</span> <span class="fu">.default_soil_centroids</span><span class="op">(</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                              prior <span class="op">=</span> <span class="fu"><a href="classify_soil_rgb.html">classify_soil_rgb</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span><span class="op">$</span><span class="va">centroids</span>,</span></span>
 <span class="r-in"><span>                              alpha <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Iterative refinement across sessions:</span></span></span>

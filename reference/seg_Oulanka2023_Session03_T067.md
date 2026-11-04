@@ -11,7 +11,10 @@ data(seg_Oulanka2023_Session03_T067)
 
 ## Format
 
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with
+[`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html).
+Dimensions:
 
 - 4900 columns (width)
 
@@ -27,13 +30,11 @@ were processed using RootDetector.
 
 ## Details
 
-Binary mask representation where:
+Binary mask, stored as 0 (background) and 255 (foreground):
 
-- Roots = 1
+- Layer 1: foreign objects such as tape
 
-- Background = 0
-
-- Layer 1 includes foreign objects (e.g., tape) marked as 1
+- Layers 2 and 3 (identical): roots
 
 Spatial dimensions correspond to physical tube measurements: columns =
 tube length, rows = tube rotation.

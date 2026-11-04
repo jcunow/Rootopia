@@ -37,11 +37,9 @@ The algorithm operates as follows:
 
 3.  A zero-padded border is added around the image.
 
-4.  For each pixel equal to 1:
-
-    - The 3x3 neighborhood is extracted
-
-    - A weighted sum (mask encoding) produces a unique neighborhood code
+4.  For every pixel equal to 1, the eight neighbors are read from
+    shifted copies of the padded matrix and combined as a weighted sum
+    into a unique neighborhood code
 
 5.  The code is used as an index into a 256-entry lookup table:
 
@@ -59,5 +57,5 @@ Important properties of implementation:
 
 - All intermediate steps operate on in-memory matrix/vector data
 
-- Neighborhood encoding is performed via explicit loops over image
-  pixels
+- Neighborhood codes are computed for the whole matrix at once, by
+  shifting it, not by looping over pixels

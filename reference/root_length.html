@@ -65,7 +65,7 @@ either Freeman chain-code based estimators or Kimura estimators.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">root_length</span><span class="op">(</span></span>
 <span>  <span class="va">img</span>,</span>
 <span>  unit <span class="op">=</span> <span class="st">"cm"</span>,</span>
-<span>  dpi <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  dpi <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  select_layer <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"kimura2"</span>, <span class="st">"kimura1"</span>, <span class="st">"freeman_basic"</span>, <span class="st">"freeman_corrected"</span><span class="op">)</span>,</span>
 <span>  show_messages <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -87,11 +87,15 @@ a segmented (non-skeleton) mask can be supplied instead.</p></dd>
 
 
 <dt id="arg-dpi">dpi<a class="anchor" aria-label="anchor" href="#arg-dpi"></a></dt>
-<dd><p>Numeric. Scan resolution (dots per inch); required for cm/inch conversion.</p></dd>
+<dd><p>Numeric. Scan resolution (dots per inch). Required when
+<code>unit</code> is <code>"cm"</code> or <code>"inch"</code>; not used for <code>"px"</code>.</p></dd>
 
 
 <dt id="arg-select-layer">select_layer<a class="anchor" aria-label="anchor" href="#arg-select-layer"></a></dt>
-<dd><p>Numeric. Which layer to select if <code>img</code> has multiple layers.</p></dd>
+<dd><p>Numeric. Which layer to measure if <code>img</code> has
+multiple layers. Without it a multi-layer image is measured on layer 1,
+with a warning: in the bundled RootDetector images layer 1 also carries
+the tape, and the skeleton is layer 2.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -117,7 +121,9 @@ segmented mask and reduced to a skeleton internally via
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Let Nd be the number of diagonal pixel connections and No the number
-of orthogonal pixel connections in the skeleton.</p>
+of orthogonal pixel connections in the skeleton. Every connection between
+two 8-connected skeleton pixels is counted once, so a pixel at a bend or a
+junction contributes each of its connections.</p>
 <p>Freeman methods treat the skeleton as a discrete chain-code path:</p><ul><li><p>freeman_basic:
 L = sqrt(2) * Nd + No</p></li>
 <li><p>freeman_corrected:
@@ -131,6 +137,15 @@ L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2</p></li>
 across object orientations and curvature distributions.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">skl</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">root_length</span><span class="op">(</span><span class="va">skl</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>, select_layer <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Diagonal: 14811 | Orthogonal: 41399</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1002.029</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

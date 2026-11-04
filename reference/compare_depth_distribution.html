@@ -73,7 +73,7 @@ with optional depth-dependent weighting.</p>
 <span>  weighting <span class="op">=</span> <span class="st">"sigmoid"</span>,</span>
 <span>  parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">0.2</span>, x0 <span class="op">=</span> <span class="fl">30</span><span class="op">)</span>,</span>
 <span>  inverse <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  index <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">Q</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  index.spacing <span class="op">=</span> <span class="st">"equal"</span>,</span>
 <span>  alignPQ <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cut <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -116,7 +116,8 @@ with optional depth-dependent weighting.</p>
 
 
 <dt id="arg-index">index<a class="anchor" aria-label="anchor" href="#arg-index"></a></dt>
-<dd><p>Numeric vector defining depth or ordering.</p></dd>
+<dd><p>Numeric positions of the bins (e.g. depths), one per bin
+after alignment. <code>NULL</code> (default) uses <code>1, 2, ..., n</code>.</p></dd>
 
 
 <dt id="arg-index-spacing">index.spacing<a class="anchor" aria-label="anchor" href="#arg-index-spacing"></a></dt>
@@ -124,11 +125,13 @@ with optional depth-dependent weighting.</p>
 
 
 <dt id="arg-alignpq">alignPQ<a class="anchor" aria-label="anchor" href="#arg-alignpq"></a></dt>
-<dd><p>Logical. Aligns unequal-length vectors.</p></dd>
+<dd><p>Logical. Aligns unequal-length vectors; if FALSE, unequal
+lengths are an error.</p></dd>
 
 
 <dt id="arg-cut">cut<a class="anchor" aria-label="anchor" href="#arg-cut"></a></dt>
-<dd><p>Logical. If TRUE, truncates longer vector when aligning.</p></dd>
+<dd><p>Logical. If TRUE, truncates the longer vector instead of padding
+the shorter one with zeros.</p></dd>
 
 
 <dt id="arg-baseline-weight">baseline.weight<a class="anchor" aria-label="anchor" href="#arg-baseline-weight"></a></dt>
@@ -171,9 +174,13 @@ probability mass functions over a shared ordered index (e.g. depth bins).</p>
 
 <p>If <code>P</code> and <code>Q</code> differ in length, they are made comparable as follows:</p>
 <p><strong>cut = TRUE:</strong> both vectors are truncated to the shared minimum length.</p>
-<p><strong>cut = FALSE:</strong> the shorter vector is padded with zeros.</p>
-<p>No interpolation or re-binning is performed. Alignment only enforces
-equal vector length; consistent bin definitions are assumed.</p>
+<p><strong>cut = FALSE</strong> (default): the shorter vector is padded with zeros.</p>
+<p>The same rule applies to all three metrics. No interpolation or re-binning
+is performed. Alignment only enforces equal vector length; consistent bin
+definitions are assumed. Padding gives <code>"kl"</code> a value of <code>Inf</code>
+whenever <code>P</code> has mass in a bin that was padded onto <code>Q</code>, since
+\(P \log(P / 0)\) is infinite; <code>"js"</code> and <code>"wasserstein"</code> stay
+finite.</p>
     </div>
     <div class="section level2">
     <h2 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a></h2>

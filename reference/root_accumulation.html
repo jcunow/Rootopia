@@ -71,7 +71,9 @@
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
-<dd><p>Character vector specifying grouping variable(s)</p></dd>
+<dd><p>Character vector naming one or more grouping columns. With
+several, each combination of their values is accumulated separately, e.g.
+<code>group = c("Plot", "Site")</code>.</p></dd>
 
 
 <dt id="arg-depth">depth<a class="anchor" aria-label="anchor" href="#arg-depth"></a></dt>
@@ -92,7 +94,8 @@ and <code>"relative"</code> divides by the sum of the cumulative values. Use
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Numeric vector of accumulated values</p>
+    <p>Numeric vector of accumulated values, one per row of <code>x</code> and in
+the same row order.</p>
     </div>
 
     <div class="section level2">
@@ -100,6 +103,12 @@ and <code>"relative"</code> divides by the sum of the cumulative values. Use
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">df</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>depth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">80</span>,<span class="fl">20</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">80</span>,<span class="fl">20</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>               Plot <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"a"</span>,<span class="fl">5</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"b"</span>,<span class="fl">5</span><span class="op">)</span><span class="op">)</span>, rootpx <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>,<span class="fl">50</span>,<span class="fl">20</span>,<span class="fl">15</span>,<span class="fl">5</span>,<span class="fl">10</span>,<span class="fl">40</span>,<span class="fl">30</span>,<span class="fl">10</span>,<span class="fl">5</span><span class="op">)</span> <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">accum_root</span> <span class="op">=</span> <span class="fu">root_accumulation</span><span class="op">(</span><span class="va">df</span>,group <span class="op">=</span> <span class="st">"Plot"</span>, depth <span class="op">=</span> <span class="st">"depth"</span>, variable <span class="op">=</span> <span class="st">"rootpx"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Several grouping columns: one curve per Plot x Session combination</span></span></span>
+<span class="r-in"><span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">df</span>, Session <span class="op">=</span> <span class="st">"June"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">df</span>, Session <span class="op">=</span> <span class="st">"Oct"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">root_accumulation</span><span class="op">(</span><span class="va">df2</span>, group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Plot"</span>, <span class="st">"Session"</span><span class="op">)</span>, depth <span class="op">=</span> <span class="st">"depth"</span>,</span></span>
+<span class="r-in"><span>                  variable <span class="op">=</span> <span class="st">"rootpx"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1]  5 55 75 90 95 10 50 80 90 95  5 55 75 90 95 10 50 80 90 95</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

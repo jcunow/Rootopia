@@ -12,7 +12,10 @@ data(skl_Oulanka2023_Session01_T067)
 
 ## Format
 
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with
+[`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html).
+Dimensions:
 
 - 4900 columns (width)
 
@@ -28,16 +31,18 @@ were processed using RootDetector.
 
 ## Details
 
-Binary mask representation where:
+Binary mask, stored as 0 (background) and a single non-zero value
+(foreground):
 
-- Root skeletons = 1
+- Layer 1: foreign objects such as tape, filled
 
-- Background = 0
+- Layers 2 and 3 (identical): root skeleton
 
-- Layer 1 includes foreign objects (e.g., tape) marked as 1
-
-Skeletonization reduces root width to single-pixel lines while
-preserving the root system topology.
+The skeleton is stored at reduced resolution, and its one-pixel lines
+did not survive that intact: they are broken into many short pieces. For
+traits that depend on connectivity (tips, branch points, branching
+order), skeletonize the matching segmentation with
+[`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md).
 
 ## References
 

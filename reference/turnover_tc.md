@@ -52,12 +52,15 @@ data.frame containing:
 
 - standingroot_t2: Standing roots at second timepoint
 
-- production: Root production between timepoints
+- production: Net change in standing roots,
+  `standingroot_t2 - standingroot_t1`. Roots lost between the dates
+  offset roots gained, so the value is negative when more roots
+  disappeared than appeared.
 
-- newroot.per_t1: Percentage of new roots compared to starting
-  conditions
+- newroot.per_t1: `production` as a fraction of `standingroot_t1` (0.25
+  = 25 percent)
 
-- newroot.per_t2: Percentage of new roots at second timepoint
+- newroot.per_t2: `production` as a fraction of `standingroot_t2`
 
 The last two names carry a dot where the percent sign would read more
 naturally: [`data.frame()`](https://rdrr.io/r/base/data.frame.html)

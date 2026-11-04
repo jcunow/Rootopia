@@ -296,11 +296,10 @@ argument switches the run to minirhizotron geometry (see
 
 
 <dt id="arg-tube-center-offset">tube_center_offset<a class="anchor" aria-label="anchor" href="#arg-tube-center-offset"></a></dt>
-<dd><p>Numeric in <code>[0, 1]</code>. Where the top of the
-tube falls across the image height, as a fraction of one full tube
-circumference.  <code>0</code> puts it on the first row, <code>0.5</code> (default)
-halfway down, <code>1</code> on the last row; <code>0</code> and <code>1</code> are the same
-point on the tube, the image seam.  Set it if your scanner's rotational
+<dd><p>Numeric. Where the top of the tube falls across
+the image height: a fraction of that height in <code>[0, 1]</code> (<code>0</code>
+the first row, <code>0.5</code> (default) halfway down, <code>1</code> the last row),
+or a row number above 1.  Set it if your scanner's rotational
 reference differs, or the depth assigned to a root will be offset by up to a
 full tilted tube diameter
 (<code>tube_diameter_cm * sin(insertion_angles)</code>), the shallowest-to-deepest
@@ -389,9 +388,9 @@ transform and so into diameter.</p></dd>
 
 
 <dt id="arg-clean-drop-objects-upto">clean_drop_objects_upto<a class="anchor" aria-label="anchor" href="#arg-clean-drop-objects-upto"></a></dt>
-<dd><p>Numeric. Largest disconnected foreground blob
-that gets deleted; anything bigger is kept.  <code>0</code> (default) deletes
-none, <code>Inf</code> deletes everything not touching the largest structure.
+<dd><p>Numeric. Largest foreground blob that gets
+deleted; anything bigger is kept.  <code>0</code> (default) deletes none,
+<code>Inf</code> deletes every blob, roots included.
 Specks count as root area, as isolated skeleton pixels, and as root tips.</p></dd>
 
 
@@ -415,9 +414,12 @@ metrics.  Default <code>TRUE</code>.</p></dd>
 
 <dt id="arg-calc-root-length">calc_root_length<a class="anchor" aria-label="anchor" href="#arg-calc-root-length"></a></dt>
 <dd><p>Logical. Estimate root length (cm) per depth bin
-from the skeleton using D8 connectivity (orthogonal steps = 1 pixel,
-diagonal steps = \(\sqrt{2}\) pixels, isolated pixels = 1 pixel).
-Required for length density and angle metrics.  Default <code>TRUE</code>.</p></dd>
+from the skeleton with the Kimura estimator of <code><a href="root_length.html">root_length()</a></code>
+(<code>method = "kimura2"</code>): the orthogonal and diagonal connections
+between skeleton pixels are counted per bin, and the estimate is applied
+to each bin's counts.  An isolated pixel has no connection and adds no
+length.  Required for length density and angle metrics.  Default
+<code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-calc-diameter-stats">calc_diameter_stats<a class="anchor" aria-label="anchor" href="#arg-calc-diameter-stats"></a></dt>
@@ -718,9 +720,8 @@ divide by the bin's own measured pixel area (<code>rootpx + voidpx</code>), so
 there is nothing to bin by and no depth map is built, unless
 <code>calc_root_angles = TRUE</code> asks for one.  Nothing is masked or trimmed
 per slice either.  On a large scan both are worth skipping: a depth map is a
-full-size double raster.  (<code>calc_root_length</code> still builds a flat
-surface of its own to read flow directions from; that one belongs to the
-length estimator, not to the binning, and is built either way.)</p>
+full-size double raster.  In this mode <code>rootlength</code> equals
+<code><a href="root_length.html">root_length()</a></code> of the skeleton with <code>method = "kimura2"</code>.</p>
 <p><code>calc_distribution_indices</code> and <code>calc_advanced_metrics</code> are
 switched off in this mode: mean rooting depth, and each bin's share of the
 profile, mean nothing when there is only one bin.</p>

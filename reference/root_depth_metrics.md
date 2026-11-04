@@ -225,12 +225,11 @@ batch_root_traits(
 
 - tube_center_offset:
 
-  Numeric in `[0, 1]`. Where the top of the tube falls across the image
-  height, as a fraction of one full tube circumference. `0` puts it on
-  the first row, `0.5` (default) halfway down, `1` on the last row; `0`
-  and `1` are the same point on the tube, the image seam. Set it if your
-  scanner's rotational reference differs, or the depth assigned to a
-  root will be offset by up to a full tilted tube diameter
+  Numeric. Where the top of the tube falls across the image height: a
+  fraction of that height in `[0, 1]` (`0` the first row, `0.5`
+  (default) halfway down, `1` the last row), or a row number above 1.
+  Set it if your scanner's rotational reference differs, or the depth
+  assigned to a root will be offset by up to a full tilted tube diameter
   (`tube_diameter_cm * sin(insertion_angles)`), the
   shallowest-to-deepest range of the wave. Minirhizotron only.
 
@@ -320,10 +319,10 @@ batch_root_traits(
 
 - clean_drop_objects_upto:
 
-  Numeric. Largest disconnected foreground blob that gets deleted;
-  anything bigger is kept. `0` (default) deletes none, `Inf` deletes
-  everything not touching the largest structure. Specks count as root
-  area, as isolated skeleton pixels, and as root tips.
+  Numeric. Largest foreground blob that gets deleted; anything bigger is
+  kept. `0` (default) deletes none, `Inf` deletes every blob, roots
+  included. Specks count as root area, as isolated skeleton pixels, and
+  as root tips.
 
 - clean_size_unit:
 
@@ -346,9 +345,13 @@ batch_root_traits(
 - calc_root_length:
 
   Logical. Estimate root length (cm) per depth bin from the skeleton
-  using D8 connectivity (orthogonal steps = 1 pixel, diagonal steps =
-  \\\sqrt{2}\\ pixels, isolated pixels = 1 pixel). Required for length
-  density and angle metrics. Default `TRUE`.
+  with the Kimura estimator of
+  [`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
+  (`method = "kimura2"`): the orthogonal and diagonal connections
+  between skeleton pixels are counted per bin, and the estimate is
+  applied to each bin's counts. An isolated pixel has no connection and
+  adds no length. Required for length density and angle metrics. Default
+  `TRUE`.
 
 - calc_diameter_stats:
 
@@ -648,9 +651,9 @@ by the bin's own measured pixel area (`rootpx + voidpx`), so there is
 nothing to bin by and no depth map is built, unless
 `calc_root_angles = TRUE` asks for one. Nothing is masked or trimmed per
 slice either. On a large scan both are worth skipping: a depth map is a
-full-size double raster. (`calc_root_length` still builds a flat surface
-of its own to read flow directions from; that one belongs to the length
-estimator, not to the binning, and is built either way.)
+full-size double raster. In this mode `rootlength` equals
+[`root_length()`](https://jcunow.github.io/Rootopia/reference/root_length.md)
+of the skeleton with `method = "kimura2"`.
 
 `calc_distribution_indices` and `calc_advanced_metrics` are switched off
 in this mode: mean rooting depth, and each bin's share of the profile,

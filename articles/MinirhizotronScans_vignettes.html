@@ -292,16 +292,15 @@ calibration data.</td>
 <tr class="even">
 <td><code>center_offset</code></td>
 <td>Where the top of the tube sits across the image height, as a
-fraction of one full circumference (0–1). 0 = first row, 0.5 = halfway
-down, 1 = last row.</td>
+fraction of that height (0–1). 0 = first row, 0.5 = halfway down, 1 =
+last row.</td>
 </tr>
 </tbody>
 </table>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># `mask` flags foreign objects (e.g. tube edges / tape) to exclude from depth</span></span>
-<span><span class="co"># attribution. Here it is derived from the RootDetector layers.</span></span>
-<span><span class="va">mask</span> <span class="op">&lt;-</span> <span class="va">seg_img</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">-</span> <span class="va">seg_img</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="va">mask</span><span class="op">[</span><span class="va">mask</span> <span class="op">==</span> <span class="fl">255</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span><span class="co"># attribution. In the RootDetector layers, layer 1 marks them.</span></span>
+<span><span class="va">mask</span> <span class="op">&lt;-</span> <span class="va">seg_img</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&gt;</span> <span class="fl">0</span></span>
 <span></span>
 <span><span class="va">depth_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_depthmap.html">create_depthmap</a></span><span class="op">(</span></span>
 <span>  img           <span class="op">=</span> <span class="va">seg_img</span>,</span>
@@ -344,7 +343,7 @@ on your root prevalence.</p>
 <span><span class="va">depths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/values.html" class="external-link">values</a></span><span class="op">(</span><span class="va">depth_bins</span>, mat <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">depths</span> <span class="op">&lt;-</span> <span class="va">depths</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">depths</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">depths</span></span>
-<span><span class="co">#&gt;  [1] -5  0  5 10 15 20 25 30 35 40 45 50 55 60</span></span>
+<span><span class="co">#&gt;  [1]  0  5 10 15 20 25 30 35 40 45 50 55 60</span></span>
 <span><span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/plot.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">depth_bins</span>, main <span class="op">=</span> <span class="st">"Depth bins"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="The depth map reduced to discrete depth bins, drawn as bands of constant color." width="1350"></p>
 <hr>
@@ -374,12 +373,12 @@ just a per-bin sum or mean.</p>
 <span>                              <span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx</span> <span class="op">+</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">voidpx</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   depth rootpx voidpx rootpx.density</span></span>
-<span><span class="co">#&gt; 1    -5      0   5156       0.000000</span></span>
-<span><span class="co">#&gt; 2     0      0 302559       0.000000</span></span>
-<span><span class="co">#&gt; 3     5  34010 443650       7.120127</span></span>
-<span><span class="co">#&gt; 4    10  42947 434821       8.989091</span></span>
-<span><span class="co">#&gt; 5    15  36115 441521       7.561197</span></span>
-<span><span class="co">#&gt; 6    20  23860 453910       4.994035</span></span></code></pre></div>
+<span><span class="co">#&gt; 1     0     13   2239      0.5772647</span></span>
+<span><span class="co">#&gt; 2     5  34204 292602     10.4661481</span></span>
+<span><span class="co">#&gt; 3    10  41700 435962      8.7300225</span></span>
+<span><span class="co">#&gt; 4    15  36974 440780      7.7391293</span></span>
+<span><span class="co">#&gt; 5    20  23765 453883      4.9754212</span></span>
+<span><span class="co">#&gt; 6    25  19269 458499      4.0331291</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="b--root-length-for-a-single-depth-slice-depth_zoning-root_length">5b. Root length for a <em>single</em> depth slice —
@@ -398,7 +397,7 @@ and <code><a href="../reference/root_length.html">root_length()</a></code> then 
 <span><span class="va">skl_10cm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/depth_zoning.html">depth_zoning</a></span><span class="op">(</span><span class="va">skl</span>, depth_map <span class="op">=</span> <span class="va">depth_bins</span>, depth <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">len_10cm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/root_length.html">root_length</a></span><span class="op">(</span><span class="va">skl_10cm</span>, unit <span class="op">=</span> <span class="st">"cm"</span>, dpi <span class="op">=</span> <span class="fl">150</span>, show_messages <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">len_10cm</span></span>
-<span><span class="co">#&gt; [1] 398.291</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 390.391</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="c--scale-to-the-whole-profile-loop-the-single-slice-computation">5c. Scale to the whole profile — loop the single-slice
@@ -424,12 +423,12 @@ that takes a whole image.</p>
 <span>  <span class="op">(</span><span class="op">(</span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootpx</span> <span class="op">+</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">voidpx</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">150</span> <span class="op">/</span> <span class="fl">2.54</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   depth rootpx voidpx rootpx.density rootlength rootlength.density</span></span>
-<span><span class="co">#&gt; 1    -5      0   5156       0.000000     0.0000           0.000000</span></span>
-<span><span class="co">#&gt; 2     0      0 302559       0.000000     0.0000           0.000000</span></span>
-<span><span class="co">#&gt; 3     5  34010 443650       7.120127   312.5697           2.282144</span></span>
-<span><span class="co">#&gt; 4    10  42947 434821       8.989091   398.2910           2.907358</span></span>
-<span><span class="co">#&gt; 5    15  36115 441521       7.561197   346.3249           2.528726</span></span>
-<span><span class="co">#&gt; 6    20  23860 453910       4.994035   228.3132           1.666584</span></span></code></pre></div>
+<span><span class="co">#&gt; 1     0     13   2239      0.5772647   0.116981          0.1811599</span></span>
+<span><span class="co">#&gt; 2     5  34204 292602     10.4661481 330.350106          3.5253279</span></span>
+<span><span class="co">#&gt; 3    10  41700 435962      8.7300225 390.390992          2.8503237</span></span>
+<span><span class="co">#&gt; 4    15  36974 440780      7.7391293 361.674287          2.6401487</span></span>
+<span><span class="co">#&gt; 5    20  23765 453883      4.9754212 229.461626          1.6753949</span></span>
+<span><span class="co">#&gt; 6    25  19269 458499      4.0331291 194.433757          1.4192853</span></span></code></pre></div>
 </div>
 <div class="section level5">
 <h5 id="d--root-diameter-whole-profile-with-zonal">5d. Root diameter — whole profile with <code>zonal()</code><a class="anchor" aria-label="anchor" href="#d--root-diameter-whole-profile-with-zonal"></a>
@@ -455,12 +454,12 @@ Because it is a per-pixel value, the profile reduces with
 <span><span class="va">depth_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="va">diam_by_depth</span>, by <span class="op">=</span> <span class="st">"depth"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">depth_data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   depth rootpx voidpx rootpx.density rootlength rootlength.density avg.diameter</span></span>
-<span><span class="co">#&gt; 1    -5      0   5156       0.000000     0.0000           0.000000          NaN</span></span>
-<span><span class="co">#&gt; 2     0      0 302559       0.000000     0.0000           0.000000          NaN</span></span>
-<span><span class="co">#&gt; 3     5  34010 443650       7.120127   312.5697           2.282144   0.03902415</span></span>
-<span><span class="co">#&gt; 4    10  42947 434821       8.989091   398.2910           2.907358   0.03747047</span></span>
-<span><span class="co">#&gt; 5    15  36115 441521       7.561197   346.3249           2.528726   0.03659839</span></span>
-<span><span class="co">#&gt; 6    20  23860 453910       4.994035   228.3132           1.666584   0.03622819</span></span>
+<span><span class="co">#&gt; 1     0     13   2239      0.5772647   0.116981          0.1811599   0.03386667</span></span>
+<span><span class="co">#&gt; 2     5  34204 292602     10.4661481 330.350106          3.5253279   0.03854052</span></span>
+<span><span class="co">#&gt; 3    10  41700 435962      8.7300225 390.390992          2.8503237   0.03774329</span></span>
+<span><span class="co">#&gt; 4    15  36974 440780      7.7391293 361.674287          2.6401487   0.03673521</span></span>
+<span><span class="co">#&gt; 5    20  23765 453883      4.9754212 229.461626          1.6753949   0.03632576</span></span>
+<span><span class="co">#&gt; 6    25  19269 458499      4.0331291 194.433757          1.4192853   0.03540933</span></span>
 <span><span class="co"># root thickness</span></span>
 <span><span class="fu"><a href="../reference/zoom_plot.html">zoom_plot</a></span><span class="op">(</span><span class="va">diam_result</span><span class="op">$</span><span class="va">distance_map_rast</span>, frac <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="Root trait plotted for each depth bin down the profile." width="1350"><img src="MinirhizotronScans_vignettes_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="Root trait plotted for each depth bin down the profile." width="1350"></p>
@@ -559,7 +558,7 @@ profile.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"MRD: %.2f  Total length density: %.4f\n"</span>,</span>
 <span>            <span class="va">mrd_val</span>, <span class="va">total_ld</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; MRD: 19.72  Total length density: 70.2596</span></span></code></pre></div>
+<span><span class="co">#&gt; MRD: 18.43  Total length density: 78.1074</span></span></code></pre></div>
 <p><code><a href="../reference/root_accumulation.html">root_accumulation()</a></code> complements these by returning the
 cumulative profile itself — useful for plotting how root mass/length
 accumulates with depth, or for comparing the <em>shape</em> of
@@ -614,7 +613,7 @@ cumulative values, which is a different scale and does not end at 1.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">turnover</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2</span></span>
-<span><span class="co">#&gt; 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618</span></span></code></pre></div>
+<span><span class="co">#&gt; 1        35695.29        33619.31  -2075.975        -0.0582        -0.0617</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level4">

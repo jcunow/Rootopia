@@ -35,10 +35,12 @@ build_soil_centroids(picks, max_dist, prior = NULL, alpha = 0, verbose = TRUE)
 - prior:
 
   Optional `data.frame` of existing centroids (same format as the output
-  of this function, or `.default_soil_centroids()`). When supplied, the
-  new centroids derived from `picks` are blended with the prior
-  centroids using `alpha`. Only classes present in both `picks` and
-  `prior` are blended; new classes in `picks` that are absent from
+  of this function, or the `centroids` element returned by
+  [`classify_soil_rgb`](https://jcunow.github.io/Rootopia/reference/classify_soil_rgb.md),
+  which holds the default table when no `centroids` were passed). When
+  supplied, the new centroids derived from `picks` are blended with the
+  prior centroids using `alpha`. Only classes present in both `picks`
+  and `prior` are blended; new classes in `picks` that are absent from
   `prior` are added as-is.
 
 - alpha:
@@ -68,7 +70,7 @@ cents <- build_soil_centroids(new_picks, max_dist)
 
 # Blend: 30% old calibration, 70% new picks
 cents <- build_soil_centroids(new_picks, max_dist,
-                              prior = .default_soil_centroids(),
+                              prior = classify_soil_rgb(img)$centroids,
                               alpha = 0.3)
 
 # Iterative refinement across sessions:

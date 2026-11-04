@@ -12,7 +12,10 @@ data(TurnoverDPC_data)
 
 ## Format
 
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with
+[`terra::rast()`](https://rspatial.github.io/terra/reference/rast.html).
+Dimensions:
 
 - 2550 columns (width)
 

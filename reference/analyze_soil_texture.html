@@ -72,8 +72,10 @@
 
 
 <dl><dt id="arg-img-color">img.color<a class="anchor" aria-label="anchor" href="#arg-img-color"></a></dt>
-<dd><p>Three-band raster (RGB) or path to image. Internally
-converted to a <code>raster::RasterBrick</code> as required by the <code>glcm</code> package.</p></dd>
+<dd><p>Three-band (RGB) image: a <code>SpatRaster</code>, <code>RasterBrick</code>,
+<code>RasterStack</code>, or any other input <code><a href="load_flexible_image.html">load_flexible_image</a></code>
+accepts, including a file path. Internally converted to a
+<code>raster::RasterBrick</code> as required by the <code>glcm</code> package.</p></dd>
 
 
 <dt id="arg-grays">grays<a class="anchor" aria-label="anchor" href="#arg-grays"></a></dt>

@@ -4,10 +4,11 @@ Performs three sequential cleaning operations on a binary segmented
 image:
 
 1.  **Hole filling** – fills black regions enclosed by white
-    (segmentation gaps inside roots).
+    (segmentation gaps inside roots) up to `fill_holes_upto` pixels.
 
-2.  **Speck removal** – deletes isolated foreground blobs not connected
-    to the image border (false-positive root detections).
+2.  **Speck removal** – deletes foreground blobs (false-positive root
+    detections) up to `drop_objects_upto` pixels; blobs touching the
+    image border are included unless `protect_border = TRUE`.
 
 3.  **Edge smoothing** *(optional, off by default)* – applies
     morphological closing to smooth jagged root edges.
@@ -43,19 +44,19 @@ clean_image(
 - fill_holes_upto:
 
   Largest enclosed hole that gets filled; anything bigger is left alone.
-  `NULL` (default) fills every enclosed hole. Units are set by
-  `size_unit`. See **Choosing thresholds** above.
+  `NULL` (default) fills nothing; `Inf` fills every enclosed hole. Units
+  are set by `size_unit`. See **Choosing thresholds** above.
 
 - drop_objects_upto:
 
-  Largest disconnected foreground blob that gets deleted; anything
-  bigger is kept. `NULL` (default) deletes every candidate blob. Units
-  are set by `size_unit`.
+  Largest foreground blob that gets deleted; anything bigger is kept.
+  `NULL` (default) deletes nothing; `Inf` deletes every blob, roots
+  included. Units are set by `size_unit`.
 
 - size_unit:
 
   Unit of the two thresholds above: `"px"` (default, pixel count) or
-  `"mm2"` (square millimetres, which requires `dpi`).
+  `"mm2"` (square millimeters, which requires `dpi`).
 
 - dpi:
 
@@ -121,14 +122,20 @@ clean_image(
 A cleaned image in the format specified by `output_format`
 (`SpatRaster`, `cimg`, or matrix).
 
+## Details
+
+Each step runs only when its argument is set: with the defaults (`NULL`,
+`NULL`, `edge_smooth = FALSE`) the image is binarized and returned
+otherwise unchanged.
+
 ## Why clean before skeletonization
 
 [`skeletonize_image()`](https://jcunow.github.io/Rootopia/reference/skeletonize_image.md)
-uses the Medial Axis Transform, which is driven by the distance
-transform. Small holes inside a root inflate the local distance values
-and force the medial axis to bifurcate around the hole, producing
-spurious branching points. Isolated artifact pixels produce phantom
-skeleton segments. Cleaning first yields a much cleaner skeleton.
+thins the mask to a one-pixel line (Zhang-Suen thinning). Thinning keeps
+the topology of the mask, so a small hole inside a root becomes a loop
+in the skeleton, which reads as two spurious branch points. An isolated
+artifact pixel becomes a phantom skeleton segment. Cleaning first yields
+a much cleaner skeleton.
 
 ## Choosing thresholds
 

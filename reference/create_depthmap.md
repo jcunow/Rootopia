@@ -27,11 +27,14 @@ create_depthmap(
 - img:
 
   Input image (accepts terra SpatRaster, matrix, array, or file path).
-  For multi-band images, specify band_index parameter
+  Only its size is used, so any layer of a multi-layer image will do. A
+  SpatRaster passes its extent, resolution and CRS on to the depth map.
 
 - mask:
 
-  Raster mask indicating foreign objects (1 = mask, 0 or NA = keep)
+  Raster mask on the same grid as `img`, marking foreign objects such as
+  tape with 1 (or TRUE); those cells are `NA` in the depth map. 0 and NA
+  cells are kept.
 
 - sinoid:
 
@@ -62,11 +65,21 @@ create_depthmap(
 
 - center_offset:
 
-  Numeric in `[0, 1]`; where the top of the tube – the shallowest line
-  of the curvature wave – sits across the image height, as a fraction of
-  one full tube circumference. `0` puts it on the first row, `0.5`
-  halfway down, `1` on the last row. `0` and `1` are the same point on
-  the tube, the image seam. Used by `geometry = "tube"` only
+  Numeric; the image row of the top of the tube – the shallowest line of
+  the curvature wave – given in one of two forms:
+
+  - **Fraction** - a number in `[0, 1]`: the tube top is on row
+    `1 + center_offset * (nrow - 1)`, so `0` puts it on the first row,
+    `0.5` halfway down and `1` on the last row.
+
+  - **Absolute row** - a number `> 1`: the row itself, at most `nrow`,
+    e.g. from
+    [`estimate_rotation_center()`](https://jcunow.github.io/Rootopia/reference/estimate_rotation_center.md).
+
+  The wave itself always spans one full tube circumference
+  (`tube_thicc * pi` cm at `dpi`); an image that covers only part of the
+  circumference shows the matching part of the wave. Used by
+  `geometry = "tube"` only
 
 - geometry:
 
@@ -128,8 +141,7 @@ Johannes Cunow, Robert Weigel
 data(seg_Oulanka2023_Session01_T067)
 seg_Oulanka2023_Session01_T067 = terra::rast(seg_Oulanka2023_Session01_T067)
 img = seg_Oulanka2023_Session01_T067
-mask = seg_Oulanka2023_Session01_T067[[1]] - seg_Oulanka2023_Session01_T067[[2]]
-mask[mask == 255] <- NA
+mask = seg_Oulanka2023_Session01_T067[[1]] > 0   # layer 1 marks the tape
 map = create_depthmap(img, mask, start_soil = 0.1,
   geometry = "tube",
   tube_thicc = 7,

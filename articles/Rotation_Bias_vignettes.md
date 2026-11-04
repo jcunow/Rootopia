@@ -265,10 +265,10 @@ res <- rhythmicity(
 
 cat(sprintf("Mean: %.4f | Amplitude: %.4f | Phase (slice): %.2f | R²: %.3f | p: %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
-#> Mean: 2.7540 | Amplitude: 1.5502 | Phase (slice): 38.31 | R²: 0.801 | p: 0.0000
+#> Mean: 3.5079 | Amplitude: 2.0958 | Phase (slice): 38.36 | R²: 0.824 | p: 0.0000
 cat(sprintf("Peak-to-trough spread is %.2f x the mean root length density\n",
             (res$amplitude * 2) / res$offset))
-#> Peak-to-trough spread is 1.13 x the mean root length density
+#> Peak-to-trough spread is 1.19 x the mean root length density
 ```
 
 A significant, non-trivial amplitude indicates that root abundance

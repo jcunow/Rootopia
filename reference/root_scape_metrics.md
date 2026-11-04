@@ -39,8 +39,8 @@ root_scape_metrics(
 
 ## Value
 
-A data frame of metric values with columns: metric, value, object,
-depth.
+A data frame in wide format: columns `object` and `depth`, then one
+column per metric named as in `metrics`.
 
 ## Examples
 

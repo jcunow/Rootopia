@@ -16,7 +16,9 @@ root_accumulation(x, group, depth, variable, stdrz = "counts")
 
 - group:
 
-  Character vector specifying grouping variable(s)
+  Character vector naming one or more grouping columns. With several,
+  each combination of their values is accumulated separately, e.g.
+  `group = c("Plot", "Site")`.
 
 - depth:
 
@@ -36,7 +38,8 @@ root_accumulation(x, group, depth, variable, stdrz = "counts")
 
 ## Value
 
-Numeric vector of accumulated values
+Numeric vector of accumulated values, one per row of `x` and in the same
+row order.
 
 ## Examples
 
@@ -44,4 +47,10 @@ Numeric vector of accumulated values
 df = data.frame(depth = c(seq(0,80,20),seq(0,80,20)),
                Plot = c(rep("a",5),rep("b",5)), rootpx = c(5,50,20,15,5,10,40,30,10,5) )
 accum_root = root_accumulation(df,group = "Plot", depth = "depth", variable = "rootpx")
+
+# Several grouping columns: one curve per Plot x Session combination
+df2 <- rbind(transform(df, Session = "June"), transform(df, Session = "Oct"))
+root_accumulation(df2, group = c("Plot", "Session"), depth = "depth",
+                  variable = "rootpx")
+#>  [1]  5 55 75 90 95 10 50 80 90 95  5 55 75 90 95 10 50 80 90 95
 ```

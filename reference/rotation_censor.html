@@ -97,7 +97,7 @@ image height. <code>0</code> = top, <code>0.25</code> = a quarter down,
 <code>0.5</code> = middle, <code>1</code> = bottom (so the center row is
 <code>center_offset * nrow</code>).</p></li>
 <li><p><strong>Keyword</strong> - <code>"top"</code> (= 0), <code>"middle"</code> /
-<code>"center"</code> / <code>"center"</code> (= 0.5), or <code>"bottom"</code> (= 1).</p></li>
+<code>"center"</code> (= 0.5), or <code>"bottom"</code> (= 1).</p></li>
 </ul><p>The default <code>0</code> centers on the top row.
 When <code>fixed_rotation = FALSE</code> the resolved value is used as the
 rotation shift in rows to trim (e.g. from
@@ -141,9 +141,11 @@ Default <code>FALSE</code>.</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">img</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">seg_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">r0</span>  <span class="op">&lt;-</span> <span class="fu"><a href="estimate_rotation_center.html">estimate_rotation_center</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>, center_offset <span class="op">=</span> <span class="va">r0</span>, fixed_width <span class="op">=</span> <span class="fl">800</span>,</span></span>
-<span class="r-in"><span>                fixed_rotation <span class="op">=</span> <span class="cn">TRUE</span>, overlay <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"RStoolbox"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">r0</span> <span class="op">&lt;-</span> <span class="fu"><a href="estimate_rotation_center.html">estimate_rotation_center</a></span><span class="op">(</span><span class="va">img</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu">rotation_censor</span><span class="op">(</span><span class="va">img</span>, center_offset <span class="op">=</span> <span class="va">r0</span>, fixed_width <span class="op">=</span> <span class="fl">800</span>,</span></span>
+<span class="r-in"><span>                  fixed_rotation <span class="op">=</span> <span class="cn">TRUE</span>, overlay <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="rotation_censor-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Same window centered on the middle of the image, via a fraction or keyword</span></span></span>

@@ -79,7 +79,10 @@
 
 
 <dt id="arg-kernel">kernel<a class="anchor" aria-label="anchor" href="#arg-kernel"></a></dt>
-<dd><p>character - shape of the thickening kernel: "circle" or "diamond"</p></dd>
+<dd><p>character - neighborhood added at each of the <code>width</code>
+steps: <code>"circle"</code> adds all 8 neighbors, so the buffer grows as a
+square; <code>"diamond"</code> adds the 4 orthogonal neighbors, so it grows as a
+diamond</p></dd>
 
 </dl></div>
     <div class="section level2">

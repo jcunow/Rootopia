@@ -831,10 +831,10 @@ of one call.</p>
 <span>                        <span class="op">(</span><span class="fl">2.54</span> <span class="op">/</span> <span class="va">dpi</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   depth rootpx voidpx area_cm2</span></span>
-<span><span class="co">#&gt; 2     0  10203 432006 126.7980</span></span>
-<span><span class="co">#&gt; 3     5  58108 426762 139.0305</span></span>
-<span><span class="co">#&gt; 4    10  50946 433824 139.0019</span></span>
-<span><span class="co">#&gt; 5    15  47220 437614 139.0202</span></span></code></pre></div>
+<span><span class="co">#&gt; 2     0  15084 428819 127.2838</span></span>
+<span><span class="co">#&gt; 3     5  53836 431024 139.0277</span></span>
+<span><span class="co">#&gt; 4    10  49261 435480 138.9936</span></span>
+<span><span class="co">#&gt; 5    15  47905 436955 139.0277</span></span></code></pre></div>
 <p>Root length cannot go through <code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal()</a></code> at all, for a
 plainer reason: <code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal()</a></code> applies a summary to the
 <em>values</em> in each zone, and length is not a property of pixel
@@ -862,10 +862,10 @@ not be compared.</p>
 <span><span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength.density</span> <span class="op">&lt;-</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">rootlength</span> <span class="op">/</span> <span class="va">depth_data</span><span class="op">$</span><span class="va">area_cm2</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   depth rootpx voidpx area_cm2 rootlength rootlength.density</span></span>
-<span><span class="co">#&gt; 1     0  10203 432006 126.7980   47.26035          0.3727215</span></span>
-<span><span class="co">#&gt; 2     5  58108 426762 139.0305  232.97663          1.6757226</span></span>
-<span><span class="co">#&gt; 3    10  50946 433824 139.0019  194.66974          1.4004829</span></span>
-<span><span class="co">#&gt; 4    15  47220 437614 139.0202  187.38270          1.3478808</span></span></code></pre></div>
+<span><span class="co">#&gt; 1     0  15084 428819 127.2838    73.9053          0.5806341</span></span>
+<span><span class="co">#&gt; 2     5  53836 431024 139.0277   219.9093          1.5817660</span></span>
+<span><span class="co">#&gt; 3    10  49261 435480 138.9936   190.4468          1.3701847</span></span>
+<span><span class="co">#&gt; 4    15  47905 436955 139.0277   193.0921          1.3888754</span></span></code></pre></div>
 <p>Diameter is a per-pixel value, so it reduces with
 <code><a href="https://rspatial.github.io/terra/reference/zonal.html" class="external-link">zonal()</a></code> like the counts, once <code>diam_result</code>’s
 raster is snapped onto the depth grid.</p>
@@ -879,10 +879,10 @@ raster is snapped onto the depth grid.</p>
 <span><span class="va">depth_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="va">diam_by_depth</span>, by <span class="op">=</span> <span class="st">"depth"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/headtail.html" class="external-link">head</a></span><span class="op">(</span><span class="va">depth_data</span>, <span class="fl">4</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   depth rootpx voidpx area_cm2 rootlength rootlength.density avg.diameter</span></span>
-<span><span class="co">#&gt; 1     0  10203 432006 126.7980   47.26035          0.3727215   0.03560018</span></span>
-<span><span class="co">#&gt; 2     5  58108 426762 139.0305  232.97663          1.6757226   0.03746447</span></span>
-<span><span class="co">#&gt; 3    10  50946 433824 139.0019  194.66974          1.4004829   0.03735308</span></span>
-<span><span class="co">#&gt; 4    15  47220 437614 139.0202  187.38270          1.3478808   0.03611764</span></span></code></pre></div>
+<span><span class="co">#&gt; 1     0  15084 428819 127.2838    73.9053          0.5806341   0.03588448</span></span>
+<span><span class="co">#&gt; 2     5  53836 431024 139.0277   219.9093          1.5817660   0.03734805</span></span>
+<span><span class="co">#&gt; 3    10  49261 435480 138.9936   190.4468          1.3701847   0.03732756</span></span>
+<span><span class="co">#&gt; 4    15  47905 436955 139.0277   193.0921          1.3888754   0.03621884</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="profile-summaries">Profile summaries<a class="anchor" aria-label="anchor" href="#profile-summaries"></a>
@@ -902,7 +902,7 @@ raster is snapped onto the depth grid.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"MRD: %.2f cm | total length: %.1f cm | mean RLD: %.4f cm cm-2\n"</span>,</span>
 <span>            <span class="va">mrd_val</span>, <span class="va">total_len</span>, <span class="va">mean_rld</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; MRD: 20.64 cm | total length: 1226.7 cm | mean RLD: 0.7668 cm cm-2</span></span></code></pre></div>
+<span><span class="co">#&gt; MRD: 20.49 cm | total length: 1253.4 cm | mean RLD: 0.7835 cm cm-2</span></span></code></pre></div>
 <p><code><a href="../reference/MRD.html">MRD()</a></code> stops on <code>NA</code>, on negative root values,
 and on an all-zero profile rather than returning a number built from
 part of the data, which is why the profile is filtered first and the
@@ -1263,7 +1263,7 @@ and <code>RootMap</code> when you do not, which is the usual case.</p>
 <code class="sourceCode R"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/deep_drive.html">deep_drive</a></span><span class="op">(</span>DepthMap <span class="op">=</span> <span class="va">depth_map</span>, RootMap <span class="op">=</span> <span class="va">skl</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"deep_drive: %.3f of root pixels head the deepest way\n"</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; deep_drive: 0.260 of root pixels head the deepest way</span></span></code></pre></div>
+<span><span class="co">#&gt; deep_drive: 0.209 of root pixels head the deepest way</span></span></code></pre></div>
 <p>One number between 0 and 1, so it compares across tubes. It is an
 agreement score rather than a deviation: a pixel pointing 45 degrees off
 the steepest direction counts exactly as wrong as one pointing 180
@@ -1481,7 +1481,7 @@ the three that package distinguishes.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Mean %.4f | Amplitude %.4f | Phase %.2f | R2 %.3f | p %.4f\n"</span>,</span>
 <span>            <span class="va">res</span><span class="op">$</span><span class="va">offset</span>, <span class="va">res</span><span class="op">$</span><span class="va">amplitude</span>, <span class="va">res</span><span class="op">$</span><span class="va">phase</span>, <span class="va">res</span><span class="op">$</span><span class="va">R2</span>, <span class="va">res</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mean 4.9233 | Amplitude 1.8943 | Phase 39.56 | R2 0.650 | p 0.0000</span></span></code></pre></div>
+<span><span class="co">#&gt; Mean 6.0539 | Amplitude 2.4897 | Phase 39.79 | R2 0.669 | p 0.0000</span></span></code></pre></div>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Smooth fitted sine over the slice index</span></span>
 <span><span class="va">fit_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>slice <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n_slices</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span>
@@ -1742,7 +1742,7 @@ which method produced a number matters more than the number.</p>
 <span><span class="fu"><a href="../reference/root_turnover.html">root_turnover</a></span><span class="op">(</span>img1 <span class="op">=</span> <span class="va">t1</span>, img2 <span class="op">=</span> <span class="va">t2</span>, method <span class="op">=</span> <span class="st">"tc"</span>, tc_method <span class="op">=</span> <span class="st">"kimura"</span>,</span>
 <span>              dpi <span class="op">=</span> <span class="va">dpi</span>, unit <span class="op">=</span> <span class="st">"cm"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2</span></span>
-<span><span class="co">#&gt; 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618</span></span></code></pre></div>
+<span><span class="co">#&gt; 1        35695.29        33619.31  -2075.975        -0.0582        -0.0617</span></span></code></pre></div>
 <p><code>tc_method</code> picks how “root amount” is measured —
 <code>"kimura"</code> for length, pixel counts for area — and the two
 can disagree in sign when roots thicken without extending.</p>

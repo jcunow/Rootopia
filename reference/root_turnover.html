@@ -3,8 +3,8 @@
 one runs:
 &quot;tc&quot; (Temporal Comparison)
 Compares two timepoint images
-(img1, img2) and reports standing roots, production, and
-new-root percentages. Dispatches to turnover_tc. The
+(img1, img2) and reports standing roots, their net
+change, and that change as a fraction of each date's standing roots. Dispatches to turnover_tc. The
 tc_method argument chooses how root amount is measured:
 &quot;kimura&quot; (root length) or &quot;rootpx&quot; (root pixel count).
 
@@ -20,8 +20,8 @@ turnover_dpc; img2 is not used.
 one runs:
 &quot;tc&quot; (Temporal Comparison)
 Compares two timepoint images
-(img1, img2) and reports standing roots, production, and
-new-root percentages. Dispatches to turnover_tc. The
+(img1, img2) and reports standing roots, their net
+change, and that change as a fraction of each date's standing roots. Dispatches to turnover_tc. The
 tc_method argument chooses how root amount is measured:
 &quot;kimura&quot; (root length) or &quot;rootpx&quot; (root pixel count).
 
@@ -91,8 +91,8 @@ turnover_dpc; img2 is not used.
     <p>Wrapper around the two root-turnover methods. <code>method</code> selects which
 one runs:</p><dl><dt><code>"tc"</code> (Temporal Comparison)</dt>
 <dd><p>Compares two timepoint images
-(<code>img1</code>, <code>img2</code>) and reports standing roots, production, and
-new-root percentages. Dispatches to <code><a href="turnover_tc.html">turnover_tc</a></code>. The
+(<code>img1</code>, <code>img2</code>) and reports standing roots, their net
+change, and that change as a fraction of each date's standing roots. Dispatches to <code><a href="turnover_tc.html">turnover_tc</a></code>. The
 <code>tc_method</code> argument chooses how root amount is measured:
 <code>"kimura"</code> (root length) or <code>"rootpx"</code> (root pixel count).</p></dd>
 
@@ -192,7 +192,9 @@ timepoint in the DPC method? Default: FALSE</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Depends on the method:</p><ul><li><p><code>"tc"</code>: data.frame with standing roots, production, and new-root percentages.</p></li>
+    <p>Depends on the method:</p><ul><li><p><code>"tc"</code>: data.frame with standing roots, their net change
+(<code>production</code>), and that change as a fraction of each date's
+standing roots.</p></li>
 <li><p><code>"dpc"</code>: data.frame of pixel sums and ratios, or (if <code>im_return = TRUE</code>) a list of SpatRaster layers.</p></li>
 </ul></div>
     <div class="section level2">
@@ -215,10 +217,12 @@ timepoint in the DPC method? Default: FALSE</p></dd>
 <span class="r-in"><span><span class="va">t1</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session01_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">t2</span> <span class="op">&lt;-</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/rast.html" class="external-link">rast</a></span><span class="op">(</span><span class="va">skl_Oulanka2023_Session03_T067</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">root_turnover</span><span class="op">(</span><span class="va">t1</span>, <span class="va">t2</span>, method <span class="op">=</span> <span class="st">"tc"</span>, tc_method <span class="op">=</span> <span class="st">"kimura"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Diagonal: 457958 | Orthogonal: 459143</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Diagonal: 431284 | Orthogonal: 432437</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>img has 3 layers and select_layer is not set; measuring layer 1. Layer 1 is often not the skeleton: set select_layer to the layer that holds it.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Diagonal: 914793 | Orthogonal: 916350</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>img has 3 layers and select_layer is not set; measuring layer 1. Layer 1 is often not the skeleton: set select_layer to the layer that holds it.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Diagonal: 861596 | Orthogonal: 863048</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        8937.922        8417.615  -520.3067        -0.0582        -0.0618</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        17847.64        16809.66  -1037.987        -0.0582        -0.0617</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

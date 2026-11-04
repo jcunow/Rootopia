@@ -683,10 +683,10 @@ depth_data$area_cm2 <- (depth_data$rootpx + depth_data$voidpx) *
                         (2.54 / dpi)^2
 head(depth_data, 4)
 #>   depth rootpx voidpx area_cm2
-#> 2     0  10203 432006 126.7980
-#> 3     5  58108 426762 139.0305
-#> 4    10  50946 433824 139.0019
-#> 5    15  47220 437614 139.0202
+#> 2     0  15084 428819 127.2838
+#> 3     5  53836 431024 139.0277
+#> 4    10  49261 435480 138.9936
+#> 5    15  47905 436955 139.0277
 ```
 
 Root length cannot go through
@@ -725,10 +725,10 @@ depth_data <- merge(depth_data, length_by_depth, by = "depth")
 depth_data$rootlength.density <- depth_data$rootlength / depth_data$area_cm2
 head(depth_data, 4)
 #>   depth rootpx voidpx area_cm2 rootlength rootlength.density
-#> 1     0  10203 432006 126.7980   47.26035          0.3727215
-#> 2     5  58108 426762 139.0305  232.97663          1.6757226
-#> 3    10  50946 433824 139.0019  194.66974          1.4004829
-#> 4    15  47220 437614 139.0202  187.38270          1.3478808
+#> 1     0  15084 428819 127.2838    73.9053          0.5806341
+#> 2     5  53836 431024 139.0277   219.9093          1.5817660
+#> 3    10  49261 435480 138.9936   190.4468          1.3701847
+#> 4    15  47905 436955 139.0277   193.0921          1.3888754
 ```
 
 Diameter is a per-pixel value, so it reduces with
@@ -746,10 +746,10 @@ colnames(diam_by_depth) <- c("depth", "avg.diameter")
 depth_data <- merge(depth_data, diam_by_depth, by = "depth")
 head(depth_data, 4)
 #>   depth rootpx voidpx area_cm2 rootlength rootlength.density avg.diameter
-#> 1     0  10203 432006 126.7980   47.26035          0.3727215   0.03560018
-#> 2     5  58108 426762 139.0305  232.97663          1.6757226   0.03746447
-#> 3    10  50946 433824 139.0019  194.66974          1.4004829   0.03735308
-#> 4    15  47220 437614 139.0202  187.38270          1.3478808   0.03611764
+#> 1     0  15084 428819 127.2838    73.9053          0.5806341   0.03588448
+#> 2     5  53836 431024 139.0277   219.9093          1.5817660   0.03734805
+#> 3    10  49261 435480 138.9936   190.4468          1.3701847   0.03732756
+#> 4    15  47905 436955 139.0277   193.0921          1.3888754   0.03621884
 ```
 
 ### Profile summaries
@@ -770,7 +770,7 @@ mean_rld  <- total_len / sum(depth_data$area_cm2, na.rm = TRUE)
 
 cat(sprintf("MRD: %.2f cm | total length: %.1f cm | mean RLD: %.4f cm cm-2\n",
             mrd_val, total_len, mean_rld))
-#> MRD: 20.64 cm | total length: 1226.7 cm | mean RLD: 0.7668 cm cm-2
+#> MRD: 20.49 cm | total length: 1253.4 cm | mean RLD: 0.7835 cm cm-2
 ```
 
 [`MRD()`](https://jcunow.github.io/Rootopia/reference/MRD.md) stops on
@@ -1146,7 +1146,7 @@ takes an `AngleMap` if you have one from elsewhere, and computes it from
 dd <- deep_drive(DepthMap = depth_map, RootMap = skl)
 
 cat(sprintf("deep_drive: %.3f of root pixels head the deepest way\n", dd))
-#> deep_drive: 0.260 of root pixels head the deepest way
+#> deep_drive: 0.209 of root pixels head the deepest way
 ```
 
 One number between 0 and 1, so it compares across tubes. It is an
@@ -1390,7 +1390,7 @@ res <- rhythmicity(
 
 cat(sprintf("Mean %.4f | Amplitude %.4f | Phase %.2f | R2 %.3f | p %.4f\n",
             res$offset, res$amplitude, res$phase, res$R2, res$p_value))
-#> Mean 4.9233 | Amplitude 1.8943 | Phase 39.56 | R2 0.650 | p 0.0000
+#> Mean 6.0539 | Amplitude 2.4897 | Phase 39.79 | R2 0.669 | p 0.0000
 ```
 
 ``` r
@@ -1691,7 +1691,7 @@ t2 <- load_flexible_image(skl_Oulanka2023_Session03_T067,
 root_turnover(img1 = t1, img2 = t2, method = "tc", tc_method = "kimura",
               dpi = dpi, unit = "cm")
 #>   standingroot_t1 standingroot_t2 production newroot.per_t1 newroot.per_t2
-#> 1        17875.84        16835.23  -1040.613        -0.0582        -0.0618
+#> 1        35695.29        33619.31  -2075.975        -0.0582        -0.0617
 ```
 
 `tc_method` picks how “root amount” is measured — `"kimura"` for length,

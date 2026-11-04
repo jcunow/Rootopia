@@ -1,7 +1,10 @@
-# Remove small isolated white artifacts from a binary image
+# Remove small white objects from a binary image
 
-Sets to 0 all white regions (value = 1) that are not connected to the
-image border.
+Sets to 0 every white region (value 1) of at most `max_size` pixels.
+Regions are 8-connected: pixels that touch at a corner belong to the
+same object, so a diagonal run of root pixels is one object. With
+`protect_border = TRUE`, regions touching the image border are kept
+whatever their size.
 
 ## Usage
 
@@ -13,21 +16,20 @@ remove_small_objects(img, max_size = NULL, protect_border = FALSE)
 
 - img:
 
-  A `cimg` binary image (values 0 and 1).
+  A 0/1 matrix.
 
 - max_size:
 
-  Maximum artifact size in pixels to remove. If `NULL`, all candidate
-  white regions are removed.
+  Maximum object size in pixels to remove. `NULL` (default) removes
+  nothing; `Inf` removes every candidate region.
 
 - protect_border:
 
   Logical. If `TRUE`, white regions touching the image border are never
   removed (they are assumed to be roots leaving the frame). If `FALSE`
   (default), border-touching regions are subject to the same `max_size`
-  test as any other region, so edge specks are removed too. Border
-  location confers no protection on its own.
+  test as any other region, so edge specks are removed too.
 
 ## Value
 
-A `cimg` with artifacts removed.
+The matrix with objects removed.

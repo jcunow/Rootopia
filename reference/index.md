@@ -12,8 +12,7 @@ directory of images.
 ## Stitching scans from the same tube together
 
 High-level wrapper that combines multiple depths from a tube into a
-single large mosaic image, plus helpers to preview what a folder
-contains.
+single large mosaic image.
 
 - [`stitch_root_scans()`](https://jcunow.github.io/Rootopia/reference/stitch_root_scans.md)
   : Batch-stitch grouped scan sequences (tubes) into mosaics
@@ -32,8 +31,7 @@ images.
 - [`image_threshold()`](https://jcunow.github.io/Rootopia/reference/image_threshold.md)
   : Threshold or deblur an image to binarize features
 - [`rgb2gray()`](https://jcunow.github.io/Rootopia/reference/rgb2gray.md)
-  : Convert RGB image to grayscale with optimized memory management and
-  parallel processing
+  : Convert an RGB image to grayscale as a weighted sum of its channels
 - [`prune_skeleton()`](https://jcunow.github.io/Rootopia/reference/prune_skeleton.md)
   : Prune short or thin spurs from a skeleton or segmentation image
 - [`rotation_censor()`](https://jcunow.github.io/Rootopia/reference/rotation_censor.md)
