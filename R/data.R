@@ -12,10 +12,11 @@
 #' }
 #'
 #' @author Johannes Cunow \email{johannes.cunow@gmail.com}
-#' @format A RasterBrick object with dimensions:
+#' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
+#'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
-#'     \item 4900 columns (width)
-#'     \item 1161 rows (height)
+#'     \item 1160 rows (height)
+#'     \item 4899 columns (width)
 #'     \item 3 layers (RGB channels)
 #'   }
 #' @usage data(rgb_Oulanka2023_Session03_T067)
@@ -36,17 +37,17 @@
 #' The image was processed using RootDetector for root segmentation.
 #'
 #' @details
-#' Binary mask representation where:
+#' Binary mask, stored as 0 (background) and 255 (foreground):
 #' \itemize{
-#'   \item Roots = 1
-#'   \item Background = 0
-#'   \item Layer 1 includes foreign objects (e.g., tape) marked as 1
+#'   \item Layer 1: foreign objects such as tape
+#'   \item Layers 2 and 3 (identical): roots
 #' }
 #' Spatial dimensions correspond to physical tube measurements:
 #' columns = tube length, rows = tube rotation.
 #'
 #' @author Johannes Cunow \email{johannes.cunow@gmail.com}
-#' @format A RasterBrick object with dimensions:
+#' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
+#'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
 #'     \item 1144 rows (height)
@@ -70,16 +71,16 @@
 #' The image was processed using RootDetector for root segmentation.
 #'
 #' @details
-#' Binary mask representation where:
+#' Binary mask, stored as 0 (background) and 255 (foreground):
 #' \itemize{
-#'   \item Roots = 1
-#'   \item Background = 0
-#'   \item Layer 1 includes foreign objects (e.g., tape) marked as 1
+#'   \item Layer 1: foreign objects such as tape
+#'   \item Layers 2 and 3 (identical): roots
 #' }
 #' Spatial dimensions correspond to physical tube measurements:
 #' columns = tube length, rows = tube rotation.
 #'
-#' @format A RasterBrick object with dimensions:
+#' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
+#'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
 #'     \item 1161 rows (height)
@@ -110,16 +111,19 @@
 #' The image was processed using RootDetector for segmentation and skeletonization.
 #'
 #' @details
-#' Binary mask representation where:
+#' Binary mask, stored as 0 (background) and a single non-zero value
+#' (foreground):
 #' \itemize{
-#'   \item Root skeletons = 1
-#'   \item Background = 0
-#'   \item Layer 1 includes foreign objects (e.g., tape) marked as 1
+#'   \item Layer 1: foreign objects such as tape, filled
+#'   \item Layers 2 and 3 (identical): root skeleton
 #' }
-#' Skeletonization reduces root width to single-pixel lines while preserving
-#' the root system topology.
+#' The skeleton is stored at reduced resolution, and its one-pixel lines did
+#' not survive that intact: they are broken into many short pieces. For traits
+#' that depend on connectivity (tips, branch points, branching order),
+#' skeletonize the matching segmentation with \code{skeletonize_image()}.
 #'
-#' @format A RasterBrick object with dimensions:
+#' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
+#'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
 #'     \item 1144 rows (height)
@@ -150,16 +154,19 @@
 #' The image was processed using RootDetector for segmentation and skeletonization.
 #'
 #' @details
-#' Binary mask representation where:
+#' Binary mask, stored as 0 (background) and a single non-zero value
+#' (foreground):
 #' \itemize{
-#'   \item Root skeletons = 1
-#'   \item Background = 0
-#'   \item Layer 1 includes foreign objects (e.g., tape) marked as 1
+#'   \item Layer 1: foreign objects such as tape, filled
+#'   \item Layers 2 and 3 (identical): root skeleton
 #' }
-#' Skeletonization reduces root width to single-pixel lines while preserving
-#' the root system topology.
+#' The skeleton is stored at reduced resolution, and its one-pixel lines did
+#' not survive that intact: they are broken into many short pieces. For traits
+#' that depend on connectivity (tips, branch points, branching order),
+#' skeletonize the matching segmentation with \code{skeletonize_image()}.
 #'
-#' @format A RasterBrick object with dimensions:
+#' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
+#'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
 #'     \item 4900 columns (width)
 #'     \item 1161 rows (height)
@@ -211,7 +218,8 @@
 #' }
 #' Background is represented as 0 in all layers.
 #'
-#' @format A RasterBrick object with dimensions:
+#' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
+#'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
 #'     \item 2550 columns (width)
 #'     \item 2273 rows (height)
@@ -263,7 +271,7 @@
 #'     \item 3 layers (segmentation channels)
 #'   }
 #' @usage data(flatbed_scan_example)
-#' @author Johannes Cunow
+#' @source
 #' Original flatbed scans from boreal pine forests in northern Finland, acquired by
 #' Johannes Cunow and others (field campaign 2022).
 #'
