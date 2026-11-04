@@ -117,8 +117,8 @@
 #'   \item Layer 1: foreign objects such as tape, filled
 #'   \item Layers 2 and 3 (identical): root skeleton
 #' }
-#' The skeleton is stored at reduced resolution, and its one-pixel lines did
-#' not survive that intact: they are broken into many short pieces. For traits
+#' At the stored resolution the skeleton's one-pixel lines are broken into
+#' many short pieces. For traits
 #' that depend on connectivity (tips, branch points, branching order),
 #' skeletonize the matching segmentation with \code{skeletonize_image()}.
 #'
@@ -160,8 +160,8 @@
 #'   \item Layer 1: foreign objects such as tape, filled
 #'   \item Layers 2 and 3 (identical): root skeleton
 #' }
-#' The skeleton is stored at reduced resolution, and its one-pixel lines did
-#' not survive that intact: they are broken into many short pieces. For traits
+#' At the stored resolution the skeleton's one-pixel lines are broken into
+#' many short pieces. For traits
 #' that depend on connectivity (tips, branch points, branching order),
 #' skeletonize the matching segmentation with \code{skeletonize_image()}.
 #'
@@ -198,39 +198,31 @@
 #' RootDetector root tracking feature.
 #'
 #' @details
-#' Multi-layer representation of root dynamics where:
-#' \itemize{
-#'   \item Layer 1: Root decay (value = 1)
-#'     \itemize{
-#'       \item Roots that disappeared between time points
-#'       \item Foreign objects (e.g., tape)
-#'       \item Persistent roots
-#'     }
-#'   \item Layer 2: Root growth (value = 1)
-#'     \itemize{
-#'       \item New roots that appeared
-#'       \item Persistent roots
-#'     }
-#'   \item Layer 3: Persistent roots (value = 1)
-#'     \itemize{
-#'       \item Roots present in both time points
-#'     }
+#' An RGB image in which each turnover class has its own color:
+#' \tabular{lll}{
+#'   \strong{Class} \tab \strong{Color} \tab \strong{R, G, B} \cr
+#'   background \tab dark slate \tab 39, 54, 59 \cr
+#'   foreign objects (e.g. tape) \tab red \tab 255, 0, 0 \cr
+#'   constant (present at both dates) \tab white \tab 255, 255, 255 \cr
+#'   production (new at the second date) \tab green \tab 96, 209, 130 \cr
+#'   decay (gone at the second date) \tab rose \tab 226, 106, 116
 #' }
-#' Background is represented as 0 in all layers.
+#' \code{root_turnover(method = "dpc")} reads these classes with its default
+#' \code{decay_layer = 1} and \code{product_layer = 2}.
 #'
 #' @format A numeric array (rows x columns x layers), values 0-255. Rebuild a
 #'   SpatRaster with \code{terra::rast()}. Dimensions:
 #'   \itemize{
-#'     \item 2550 columns (width)
 #'     \item 2273 rows (height)
-#'     \item 3 layers (decay, growth, persistent)
+#'     \item 2550 columns (width)
+#'     \item 3 layers (red, green, blue)
 #'   }
 #' @usage data(TurnoverDPC_data)
 #' @author Johannes Cunow
 #' @source
 #' Original minirhizotron images acquired by Johannes Cunow
-#' and Gesche Blume-Werry at Oulanka Research Station, Finland (June 2023).
-#' Images were processed using RootDetector.
+#' and Gesche Blume-Werry at Oulanka Research Station, Finland (June and
+#' October 2023). Images were processed using RootDetector.
 #'
 #' @references
 #' Peters B, Blume-Werry G, Gillert A, et al. (2023)
@@ -239,13 +231,9 @@
 #' @examples
 #' \dontrun{
 #'   data(TurnoverDPC_data)
-#'   img = terra::rast(TurnoverDPC_data)
-#'   # Plot individual layers
-#'   terra::plot(img, maxcell = Inf)
-#'   # Calculate turnover statistics
-#'   decay <- sum(terra::values(img[[1]]) == 1)
-#'   growth <- sum(terra::values(img[[2]]) == 1)
-#'   persistent <- sum(terra::values(img[[3]]) == 1)
+#'   img <- terra::rast(TurnoverDPC_data)
+#'   terra::plotRGB(img, maxcell = Inf)
+#'   root_turnover(img, method = "dpc")
 #' }
 "TurnoverDPC_data"
 
