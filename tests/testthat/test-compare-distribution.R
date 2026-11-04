@@ -14,3 +14,24 @@ test_that("js and kl metrics return a single numeric value", {
   expect_true(is.numeric(compare_depth_distribution(P, Q, metric = "js")))
   expect_true(is.numeric(compare_depth_distribution(P, Q, metric = "kl")))
 })
+
+test_that("unequal lengths are padded with zeros, the same way for every metric", {
+  P <- c(0.2, 0.3, 0.5); Q <- c(0.5, 0.5)
+  for (m in c("js", "kl")) {
+    expect_equal(compare_depth_distribution(P, Q, metric = m),
+                 compare_depth_distribution(P, c(Q, 0), metric = m))
+    expect_equal(compare_depth_distribution(P, Q, metric = m, cut = TRUE),
+                 compare_depth_distribution(P[1:2], Q, metric = m))
+  }
+  # P has mass where the padded Q has none, so KL is infinite; JS is not.
+  expect_equal(compare_depth_distribution(P, Q, metric = "kl"), Inf)
+  expect_true(is.finite(compare_depth_distribution(P, Q, metric = "js")))
+  expect_error(compare_depth_distribution(P, Q, alignPQ = FALSE), "differ in length")
+  expect_error(compare_depth_distribution(P, Q, index = 1:2), "one position per bin")
+
+  skip_if_not_installed("transport")
+  expect_equal(compare_depth_distribution(P, Q, metric = "wasserstein"),
+               compare_depth_distribution(P, c(Q, 0), metric = "wasserstein"))
+  # All mass moved one bin deeper costs exactly one bin.
+  expect_equal(compare_depth_distribution(c(1, 0), c(0, 1)), 1)
+})
