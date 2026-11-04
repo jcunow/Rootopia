@@ -1,12 +1,68 @@
 ########################
 
+#' Orthogonal and diagonal connections per skeleton pixel
+#'
+#' Every connection between two 8-connected skeleton pixels is counted once,
+#' at one of its two pixels: each pixel counts its connections to the left and
+#' upper neighbor as orthogonal, and to the upper-left and lower-left neighbor
+#' as diagonal. A pixel at a bend or a junction can therefore hold two
+#' connections of one kind. Because each connection sits on exactly one pixel,
+#' summing the maps over any set of pixels -- a depth bin, a diameter class --
+#' gives that set's counts, and the counts of the parts add up to the whole.
+#'
+#' @param img Single-layer 0/1 SpatRaster.
+#' @return Two-layer SpatRaster, \code{orth} and \code{diag}, holding 0, 1 or 2
+#'   per pixel.
+#' @keywords internal
+#' @noRd
+.skeleton_links <- function(img) {
+  # Each kernel holds the pixel and one neighbor; a focal sum of 2 means both
+  # are skeleton, i.e. one connection.
+  left       <- matrix(c(0,1,0, 0,1,0, 0,0,0), 3, 3)
+  up         <- matrix(c(0,0,0, 1,1,0, 0,0,0), 3, 3)
+  up_left    <- matrix(c(1,0,0, 0,1,0, 0,0,0), 3, 3)
+  down_left  <- matrix(c(0,0,1, 0,1,0, 0,0,0), 3, 3)
+  pair <- function(w) terra::focal(img, w = w, fun = "sum", na.rm = TRUE) == 2
+
+  orth <- pair(left) + pair(up)
+  diag <- pair(up_left) + pair(down_left)
+  out <- c(orth, diag)
+  names(out) <- c("orth", "diag")
+  out
+}
+
+
+#' Root length in pixels from diagonal and orthogonal connection counts
+#'
+#' Vectorized over \code{nd} and \code{no}, so it turns per-bin counts into
+#' per-bin lengths in one call.
+#'
+#' @param nd,no Diagonal and orthogonal connection counts.
+#' @param method One of \code{"kimura2"}, \code{"kimura1"},
+#'   \code{"freeman_basic"}, \code{"freeman_corrected"}.
+#' @return Length in pixels.
+#' @keywords internal
+#' @noRd
+.length_estimate <- function(nd, no, method = "kimura2") {
+  switch(method,
+    freeman_basic     = sqrt(2) * nd + no,
+    freeman_corrected = 0.948 * (sqrt(2) * nd + no),
+    kimura1           = sqrt(nd^2 + (nd + no)^2),
+    kimura2           = sqrt(nd^2 + (nd + no / 2)^2) + no / 2,
+    stop("Unknown length method: ", method)
+  )
+}
+
+
 #' Root length estimation from skeleton images
 #'
 #' Root length is estimated from a skeletonized binary image using
 #' either Freeman chain-code based estimators or Kimura estimators.
 #'
 #' Let Nd be the number of diagonal pixel connections and No the number
-#' of orthogonal pixel connections in the skeleton.
+#' of orthogonal pixel connections in the skeleton. Every connection between
+#' two 8-connected skeleton pixels is counted once, so a pixel at a bend or a
+#' junction contributes each of its connections.
 #'
 #' Freeman methods treat the skeleton as a discrete chain-code path:
 #' - freeman_basic:
@@ -32,8 +88,12 @@
 #' @param img Skeletonized binary raster image. If \code{skeletonize = TRUE},
 #'   a segmented (non-skeleton) mask can be supplied instead.
 #' @param unit Character. Output unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.
-#' @param dpi Numeric. Scan resolution (dots per inch); required for cm/inch conversion.
-#' @param select_layer Numeric. Which layer to select if \code{img} has multiple layers.
+#' @param dpi Numeric. Scan resolution (dots per inch). Required when
+#'   \code{unit} is \code{"cm"} or \code{"inch"}; not used for \code{"px"}.
+#' @param select_layer Numeric. Which layer to measure if \code{img} has
+#'   multiple layers. Without it a multi-layer image is measured on layer 1,
+#'   with a warning: in the bundled RootDetector images layer 1 also carries
+#'   the tape, and the skeleton is layer 2.
 #' @param show_messages Logical. If \code{TRUE}, prints informational messages during processing.
 #' @param skeletonize Logical. If \code{TRUE}, \code{img} is treated as a
 #'   segmented mask and reduced to a skeleton internally via
@@ -41,9 +101,13 @@
 #'   \code{FALSE} (assumes \code{img} is already a skeleton).
 #' @return Root length in pixels or converted units
 #' @export
+#' @examples
+#' data(skl_Oulanka2023_Session01_T067)
+#' skl <- terra::rast(skl_Oulanka2023_Session01_T067)
+#' root_length(skl, unit = "cm", dpi = 150, select_layer = 2)
 root_length <- function(img,
                         unit = "cm",
-                        dpi = 300,
+                        dpi = NULL,
                         select_layer = NULL,
                         method = c("kimura2",
                                    "kimura1",
@@ -65,9 +129,11 @@ root_length <- function(img,
     }
     
     if (unit %in% c("cm", "inch")) {
-      if (missing(dpi) || !is.numeric(dpi) || dpi <= 0) {
-        stop("Valid positive dpi required for cm/inch conversion")
-      }
+      if (is.null(dpi))
+        stop("`dpi` is required for unit = \"", unit, "\": pass the scan ",
+             "resolution of the image, e.g. dpi = 300, or use unit = \"px\"")
+      if (!is.numeric(dpi) || length(dpi) != 1L || is.na(dpi) || dpi <= 0)
+        stop("`dpi` must be a single positive number")
     }
     
     # -----------------------------
@@ -84,8 +150,11 @@ root_length <- function(img,
       stop("Invalid image after loading")
     }
 
-    # ensure single layer safely
     if (terra::nlyr(img) > 1) {
+      warning(sprintf(paste("img has %d layers and select_layer is not set;",
+                            "measuring layer 1. Layer 1 is often not the",
+                            "skeleton: set select_layer to the layer that",
+                            "holds it."), terra::nlyr(img)), call. = FALSE)
       img <- img[[1]]
     }
     
@@ -113,73 +182,17 @@ root_length <- function(img,
     }
     
     # -----------------------------
-    # Connectivity kernels
+    # Connection counts and length estimate
     # -----------------------------
-    k0 <- matrix(c(0,1,0,
-                   0,1,0,
-                   0,0,0), 3, 3)
-    
-    k1 <- matrix(c(0,0,0,
-                   1,1,0,
-                   0,0,0), 3, 3)
-    
-    g0 <- matrix(c(1,0,0,
-                   0,1,0,
-                   0,0,0), 3, 3)
-    
-    g1 <- matrix(c(0,0,1,
-                   0,1,0,
-                   0,0,0), 3, 3)
-    
-    # -----------------------------
-    # Focal operations
-    # -----------------------------
-    r0 <- terra::focal(img, w = k0, fun = "sum", na.rm = TRUE)
-    r1 <- terra::focal(img, w = k1, fun = "sum", na.rm = TRUE)
-    
-    u0 <- terra::focal(img, w = g0, fun = "sum", na.rm = TRUE)
-    u1 <- terra::focal(img, w = g1, fun = "sum", na.rm = TRUE)
-    
-    # -----------------------------
-    # Per-pixel pair detection
-    # A focal sum of 2 means the pixel and exactly one neighbor (in the
-    # relevant direction) are both root, i.e. a connected step. Compare the
-    # rasters element-wise to flag those steps before summing them below.
-    # -----------------------------
-    orth.img <- (r0 == 2) | (r1 == 2)
-    diag.img <- (u0 == 2) | (u1 == 2)
-    
-    kimura.sum.orth <- terra::global(orth.img, "sum", na.rm = TRUE)[1,1]
-    kimura.sum.diag <- terra::global(diag.img, "sum", na.rm = TRUE)[1,1]
-    
+    links <- .skeleton_links(img)
+    n_orth <- terra::global(links[["orth"]], "sum", na.rm = TRUE)[1, 1]
+    n_diag <- terra::global(links[["diag"]], "sum", na.rm = TRUE)[1, 1]
+
     if (show_messages) {
-      message(
-        "Diagonal: ", kimura.sum.diag,
-        " | Orthogonal: ", kimura.sum.orth
-      )
+      message("Diagonal: ", n_diag, " | Orthogonal: ", n_orth)
     }
-    
-    # -----------------------------
-    # Length estimators
-    # -----------------------------
-    rootlength_px <- switch(
-      method,
-      
-      freeman_basic =
-        sqrt(2) * kimura.sum.diag + kimura.sum.orth,
-      
-      freeman_corrected =
-        0.948 * (sqrt(2) * kimura.sum.diag + kimura.sum.orth),
-      
-      kimura1 =
-        sqrt(kimura.sum.diag^2 +
-               (kimura.sum.diag + kimura.sum.orth)^2),
-      
-      kimura2 =
-        sqrt(kimura.sum.diag^2 +
-               (kimura.sum.diag + kimura.sum.orth/2)^2) +
-        kimura.sum.orth/2
-    )
+
+    rootlength_px <- .length_estimate(n_diag, n_orth, method)
     
     # -----------------------------
     # Unit conversion
@@ -219,8 +232,8 @@ root_length <- function(img,
 #'   from `landscapemetrics::list_lsm()`.
 #' @param select_layer Integer. Specifies which layer to use if the input is a
 #'   multi-band image. Default is `NULL` (single-layer expected).
-#' @return A data frame of metric values with columns: metric, value, object,
-#'   depth.
+#' @return A data frame in wide format: columns \code{object} and
+#'   \code{depth}, then one column per metric named as in \code{metrics}.
 #' @export
 #'
 #' @examples
@@ -349,10 +362,9 @@ count_pixels <- function(img) {
 #' img <- terra::rast(rgb_Oulanka2023_Session03_T067)
 #' colorvector <- tube_coloration(img)
 tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
-  # These are the exact Rec. 709 luma coefficients, deliberately NOT the rounded
-  # 0.21/0.72/0.07 that rgb2gray() defaults to. Routing this through rgb2gray()
-  # would shift every color value this function has ever reported, so the two
-  # stay separate even though the arithmetic is the same.
+  # These are the exact Rec. 709 luma coefficients, not the rounded
+  # 0.21/0.72/0.07 that rgb2gray() defaults to, so the two stay separate even
+  # though the arithmetic is the same.
   tryCatch({
     if (missing(img)) stop("Image input is required")
 
@@ -396,9 +408,9 @@ tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
       message("Some pixels have zero intensity, which may affect color calculations")
     }
 
-    # Rec.709 luminance from the caller's channel weights. `hsl[3]` below is
-    # HSV *value* (max channel), which is not luminance -- reporting that as
-    # `luminosity` ignored r/g/b entirely, so the weighted mean is used instead.
+    # Rec.709 luminance from the caller's channel weights. HSV *value* (the
+    # max channel) is not luminance and ignores r/g/b, so `luminosity` is the
+    # weighted mean instead.
     lum.gray <- vr * r + vg * g + vb * b
     mean.lum <- round(mean(lum.gray, na.rm = TRUE), 4)
 
@@ -428,8 +440,10 @@ tube_coloration <- function(img, r = 0.2126, g = 0.7152, b = 0.0722) {
 
 #' Texture calculation using Gray-Level Co-occurrence Matrix (GLCM)
 #'
-#' @param img.color Three-band raster (RGB) or path to image. Internally
-#'   converted to a `raster::RasterBrick` as required by the `glcm` package.
+#' @param img.color Three-band (RGB) image: a `SpatRaster`, `RasterBrick`,
+#'   `RasterStack`, or any other input \code{\link{load_flexible_image}}
+#'   accepts, including a file path. Internally converted to a
+#'   `raster::RasterBrick` as required by the `glcm` package.
 #' @param grays Number of gray levels for GLCM quantization. Must be between
 #'   2 and 255. Default is 7.
 #' @param window Window size for GLCM calculation as a length-2 vector of odd
@@ -467,13 +481,14 @@ analyze_soil_texture <- function(img.color, grays = 7, window = c(9, 9),
       stop("Invalid metrics specified: ", paste(invalid_metrics, collapse = ", "))
     }
 
-    # glcm requires a raster object; coerce from terra if needed
-    if (inherits(img.color, "SpatRaster")) {
+    # glcm requires a raster::RasterBrick. Raster objects are converted
+    # directly, which keeps their extent; anything else (file path, array,
+    # cimg, ...) goes through load_flexible_image().
+    if (inherits(img.color, c("SpatRaster", "RasterStack"))) {
       img.color <- raster::brick(img.color)
-    }
-
-    if (!inherits(img.color, c("RasterLayer", "RasterBrick", "RasterStack"))) {
-      stop("img.color must be a raster object (RasterLayer, RasterBrick, RasterStack, or SpatRaster)")
+    } else if (!inherits(img.color, c("RasterLayer", "RasterBrick"))) {
+      img.color <- load_flexible_image(img.color, output_format = "brick",
+                                       scale = "none")
     }
 
     if (raster::nlayers(img.color) != 3) {
