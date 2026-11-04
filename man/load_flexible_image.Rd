@@ -17,12 +17,16 @@ load_flexible_image(
 \arguments{
 \item{input}{File path or image object}
 
-\item{output_format}{Character, one out of "cimg", "spatrast", "matrix", "array", "brick", "raster", "spatrast", "magick-image". Other spellings are accepted.}
+\item{output_format}{Character, one of "cimg", "spatrast", "matrix",
+"array", "brick", "raster", "magick-image". Capitalization does not
+matter, and "SpatRaster", "RasterBrick", "RasterLayer" and "magick" are
+accepted as well.}
 
 \item{scale}{Character, the value rescaling to apply. One of
 \code{"to_01"} (0-255 -> 0-1, the default), \code{"to_255"} (0-1 -> 0-255),
-\code{"binary"} (strictly 0/1), or \code{"none"} (leave values untouched). Each
-conversion is a no-op if the data is already in the target range.}
+\code{"binary"} (every positive value becomes 1), or \code{"none"} (leave values
+untouched). \code{"to_01"} and \code{"to_255"} leave data that is already in the
+target range untouched.}
 
 \item{select_layer}{Numeric, which layer to select if input has multiple layers}
 
@@ -31,6 +35,13 @@ backward compatibility; use \code{scale} instead. \code{normalize = TRUE} maps t
 \code{scale = "to_01"}, \code{denormalize = TRUE} to \code{"to_255"}, and
 \code{binarize = TRUE} to \code{"binary"}. Supplying these together with \code{scale}, or
 setting both \code{normalize} and \code{denormalize}, is an error.}
+}
+\value{
+The image in the requested format. Arrays and matrices are
+(rows, columns\link{, layers}); a SpatRaster built from an array spans
+\code{0..ncol} by \code{0..nrow}, while a SpatRaster passed in with
+\code{scale = "none"} and no \code{select_layer} is returned unchanged.
+Reading \code{.tif}/\code{.tiff} files needs the \pkg{tiff} package.
 }
 \description{
 Load an image flexibly from file or convert from memory

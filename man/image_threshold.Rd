@@ -34,14 +34,22 @@ method to separate anything; see the section above.}
 \item{window_size}{Odd integer, the side of the local-mean box in pixels,
 for \code{method = "adaptive"} only.}
 
-\item{select_layer}{Integer or NULL. Which layer to threshold or deblur.
-If NULL and the image is multilayer, the mean of all layers is used.}
+\item{select_layer}{Integer or NULL. The layer the threshold is computed on.
+The output has as many layers as \code{img}, and every layer except
+\code{mask_layer} receives this layer's result. If NULL and the image is
+multilayer, the threshold is computed on the mean of all layers and that
+one result goes into every layer.}
 
-\item{mask_layer}{Integer or NULL. If set, this layer is thresholded against
-its own level rather than against \code{select_layer}'s.}
+\item{mask_layer}{Integer or NULL. A layer that keeps its own result
+instead of receiving \code{select_layer}'s: it is thresholded on its own
+pixel values and against its own level (its own maximum, or its own local
+mean for \code{method = "adaptive"}). It excludes no pixels. The default
+1 suits RootDetector output, where layer 1 carries roots and tape and
+layer 2 roots only, so the tape can still be found from the two layers
+after thresholding. NULL treats every layer alike.}
 
-\item{binary_01}{Logical. If TRUE, the output is 0/1; if FALSE, it keeps the
-maximum value of the input.}
+\item{binary_01}{Logical. Coding of the output: TRUE gives 0/1; FALSE gives
+0 and the maximum of the thresholded layer, e.g. 0/255 for 8-bit input.}
 
 \item{deblur}{Logical. If TRUE, runs the deblurring mode instead of
 thresholding.}

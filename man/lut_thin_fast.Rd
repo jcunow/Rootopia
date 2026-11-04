@@ -26,11 +26,9 @@ The algorithm operates as follows:
 \item Raster values are extracted once into a numeric vector.
 \item Each iteration reconstructs a matrix representation of the image.
 \item A zero-padded border is added around the image.
-\item For each pixel equal to 1:
-\itemize{
-\item The 3x3 neighborhood is extracted
-\item A weighted sum (mask encoding) produces a unique neighborhood code
-}
+\item For every pixel equal to 1, the eight neighbors are read from shifted
+copies of the padded matrix and combined as a weighted sum into a
+unique neighborhood code
 \item The code is used as an index into a 256-entry lookup table:
 \itemize{
 \item LUT value 1 or 3 -> pixel removed in first sub-step
@@ -44,7 +42,8 @@ Important properties of implementation:
 \itemize{
 \item Raster is only written back once at the end
 \item All intermediate steps operate on in-memory matrix/vector data
-\item Neighborhood encoding is performed via explicit loops over image pixels
+\item Neighborhood codes are computed for the whole matrix at once, by
+shifting it, not by looping over pixels
 }
 }
 \keyword{internal}

@@ -16,7 +16,9 @@ modal_peaks(
 \arguments{
 \item{x}{Numeric vector of observations.}
 
-\item{prominence_threshold}{Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.}
+\item{prominence_threshold}{Minimum prominence (height of the peak above the
+higher of its two neighboring valleys) for a peak to be considered
+significant, in density units. Defaults to 0.005.}
 
 \item{display_type}{Type of plot to display: \code{"density"} (default), \code{"raw"} for colored points, or \code{"none"} for no plot.}
 
@@ -48,7 +50,7 @@ estimation and a prominence threshold. It can optionally apply model-based clust
 using \code{mclust} to estimate the number and characteristics of distributional components.
 }
 \details{
-Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
+Prominence is calculated as the height of each local maximum above the higher of the two local minima (valleys) on either side of it, or above the one valley when it has only one.
 This helps identify meaningful peaks while filtering out spurious noise-driven ones.
 When \code{mclust = TRUE}, model-based clustering is performed using Gaussian mixture models (\code{V} variance structure),
 and the results are returned along with a classification vector. By default the
@@ -65,7 +67,6 @@ Both plots (density and uncertainty) share the same x-axis to support visual com
 }
 \examples{
 set.seed(2)
-#' library(mclust)
 # Example 1: Noisy Unimodal
 x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
 peaks1_1 = modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")

@@ -22,9 +22,7 @@ Bin continuous depth values into discrete intervals
 \examples{
 data(seg_Oulanka2023_Session01_T067)
 img = terra::rast(seg_Oulanka2023_Session01_T067)
-mask = img[[1]] - img[[2]]
-mask[mask == 255] <- NA
-img = img
-depthmap = create_depthmap(img,mask,start_soil = 2.9 )
+mask = img[[1]] > 0                  # layer 1 marks the tape
+depthmap = create_depthmap(img, mask, start_soil = 2.9, dpi = 150)
 binned.map = binning(depthmap,nn = 5)
 }

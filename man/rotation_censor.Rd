@@ -28,7 +28,7 @@ image height. \code{0} = top, \code{0.25} = a quarter down,
 \code{0.5} = middle, \code{1} = bottom (so the center row is
 \code{center_offset * nrow}).
 \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
-\code{"center"} / \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
+\code{"center"} (= 0.5), or \code{"bottom"} (= 1).
 }
 The default \code{0} centers on the top row.
 When \code{fixed_rotation = FALSE} the resolved value is used as the
@@ -63,9 +63,11 @@ a measured offset. Optionally previews what is kept versus cut.
 \examples{
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
-r0  <- estimate_rotation_center(img)
-rotation_censor(img, center_offset = r0, fixed_width = 800,
-                fixed_rotation = TRUE, overlay = TRUE)
+if (requireNamespace("RStoolbox", quietly = TRUE)) {
+  r0 <- estimate_rotation_center(img)
+  rotation_censor(img, center_offset = r0, fixed_width = 800,
+                  fixed_rotation = TRUE, overlay = TRUE)
+}
 
 # Same window centered on the middle of the image, via a fraction or keyword
 rotation_censor(img, center_offset = 0.5,      fixed_width = 800)

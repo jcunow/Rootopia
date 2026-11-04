@@ -183,11 +183,10 @@ and wavelength of the sinusoidal curvature correction.  Supplying this
 argument switches the run to minirhizotron geometry (see
 \strong{Geometry}).  Default \code{NULL} (flatbed).}
 
-\item{tube_center_offset}{Numeric in \code{[0, 1]}. Where the top of the
-tube falls across the image height, as a fraction of one full tube
-circumference.  \code{0} puts it on the first row, \code{0.5} (default)
-halfway down, \code{1} on the last row; \code{0} and \code{1} are the same
-point on the tube, the image seam.  Set it if your scanner's rotational
+\item{tube_center_offset}{Numeric. Where the top of the tube falls across
+the image height: a fraction of that height in \code{[0, 1]} (\code{0}
+the first row, \code{0.5} (default) halfway down, \code{1} the last row),
+or a row number above 1.  Set it if your scanner's rotational
 reference differs, or the depth assigned to a root will be offset by up to a
 full tilted tube diameter
 (\code{tube_diameter_cm * sin(insertion_angles)}), the shallowest-to-deepest
@@ -258,9 +257,9 @@ gets filled before anything is measured; anything bigger is left alone.
 inside a painted root read as background, which eats into the distance
 transform and so into diameter.}
 
-\item{clean_drop_objects_upto}{Numeric. Largest disconnected foreground blob
-that gets deleted; anything bigger is kept.  \code{0} (default) deletes
-none, \code{Inf} deletes everything not touching the largest structure.
+\item{clean_drop_objects_upto}{Numeric. Largest foreground blob that gets
+deleted; anything bigger is kept.  \code{0} (default) deletes none,
+\code{Inf} deletes every blob, roots included.
 Specks count as root area, as isolated skeleton pixels, and as root tips.}
 
 \item{clean_size_unit}{Character. Unit of the two thresholds above:
@@ -276,9 +275,12 @@ same call cleans the same physical size at any scan resolution.  Both use
 metrics.  Default \code{TRUE}.}
 
 \item{calc_root_length}{Logical. Estimate root length (cm) per depth bin
-from the skeleton using D8 connectivity (orthogonal steps = 1 pixel,
-diagonal steps = \eqn{\sqrt{2}} pixels, isolated pixels = 1 pixel).
-Required for length density and angle metrics.  Default \code{TRUE}.}
+from the skeleton with the Kimura estimator of \code{root_length()}
+(\code{method = "kimura2"}): the orthogonal and diagonal connections
+between skeleton pixels are counted per bin, and the estimate is applied
+to each bin's counts.  An isolated pixel has no connection and adds no
+length.  Required for length density and angle metrics.  Default
+\code{TRUE}.}
 
 \item{calc_diameter_stats}{Logical. Compute per-bin mean, maximum, and
 variance of root diameter (cm) using the distance-transform approach in
@@ -537,9 +539,8 @@ divide by the bin's own measured pixel area (\code{rootpx + voidpx}), so
 there is nothing to bin by and no depth map is built, unless
 \code{calc_root_angles = TRUE} asks for one.  Nothing is masked or trimmed
 per slice either.  On a large scan both are worth skipping: a depth map is a
-full-size double raster.  (\code{calc_root_length} still builds a flat
-surface of its own to read flow directions from; that one belongs to the
-length estimator, not to the binning, and is built either way.)
+full-size double raster.  In this mode \code{rootlength} equals
+\code{root_length()} of the skeleton with \code{method = "kimura2"}.
 
 \code{calc_distribution_indices} and \code{calc_advanced_metrics} are
 switched off in this mode: mean rooting depth, and each bin's share of the

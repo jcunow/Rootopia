@@ -5,7 +5,8 @@
 \alias{seg_Oulanka2023_Session03_T067}
 \title{Segmented Minirhizotron Root Scan - Session 3, Tube 67}
 \format{
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with \code{terra::rast()}. Dimensions:
 \itemize{
 \item 4900 columns (width)
 \item 1161 rows (height)
@@ -25,11 +26,10 @@ Segmented root scan image from a sedge fen in northern Finland (October 2023).
 The image was processed using RootDetector for root segmentation.
 }
 \details{
-Binary mask representation where:
+Binary mask, stored as 0 (background) and 255 (foreground):
 \itemize{
-\item Roots = 1
-\item Background = 0
-\item Layer 1 includes foreign objects (e.g., tape) marked as 1
+\item Layer 1: foreign objects such as tape
+\item Layers 2 and 3 (identical): roots
 }
 Spatial dimensions correspond to physical tube measurements:
 columns = tube length, rows = tube rotation.

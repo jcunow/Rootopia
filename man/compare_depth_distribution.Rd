@@ -12,7 +12,7 @@ compare_depth_distribution(
   weighting = "sigmoid",
   parameter = list(lambda = 0.2, x0 = 30),
   inverse = FALSE,
-  index = 1:min(length(P), length(Q)),
+  index = NULL,
   index.spacing = "equal",
   alignPQ = TRUE,
   cut = FALSE,
@@ -36,13 +36,16 @@ compare_depth_distribution(
 
 \item{inverse}{Logical. Reverse weighting direction.}
 
-\item{index}{Numeric vector defining depth or ordering.}
+\item{index}{Numeric positions of the bins (e.g. depths), one per bin
+after alignment. \code{NULL} (default) uses \code{1, 2, ..., n}.}
 
 \item{index.spacing}{Character. \code{"equal"} or \code{"custom"}.}
 
-\item{alignPQ}{Logical. Aligns unequal-length vectors.}
+\item{alignPQ}{Logical. Aligns unequal-length vectors; if FALSE, unequal
+lengths are an error.}
 
-\item{cut}{Logical. If TRUE, truncates longer vector when aligning.}
+\item{cut}{Logical. If TRUE, truncates the longer vector instead of padding
+the shorter one with zeros.}
 
 \item{baseline.weight}{Numeric in \verb{[0,1]}. Minimum weight applied.}
 }
@@ -92,10 +95,14 @@ If \code{P} and \code{Q} differ in length, they are made comparable as follows:
 
 \strong{cut = TRUE:} both vectors are truncated to the shared minimum length.
 
-\strong{cut = FALSE:} the shorter vector is padded with zeros.
+\strong{cut = FALSE} (default): the shorter vector is padded with zeros.
 
-No interpolation or re-binning is performed. Alignment only enforces
-equal vector length; consistent bin definitions are assumed.
+The same rule applies to all three metrics. No interpolation or re-binning
+is performed. Alignment only enforces equal vector length; consistent bin
+definitions are assumed. Padding gives \code{"kl"} a value of \code{Inf}
+whenever \code{P} has mass in a bin that was padded onto \code{Q}, since
+\eqn{P \log(P / 0)} is infinite; \code{"js"} and \code{"wasserstein"} stay
+finite.
 }
 
 \section{Interpretation}{

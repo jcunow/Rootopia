@@ -7,16 +7,19 @@
 fill_holes(img, max_size = NULL)
 }
 \arguments{
-\item{img}{A \code{cimg} binary image (values 0 and 1).}
+\item{img}{A 0/1 matrix.}
 
-\item{max_size}{Maximum hole size in pixels to fill.  If \code{NULL} (default),
-all holes are filled regardless of size.}
+\item{max_size}{Maximum hole size in pixels to fill.  \code{NULL} (default)
+fills nothing; \code{Inf} fills every hole.}
 }
 \value{
-A \code{cimg} with holes filled.
+The matrix with holes filled.
 }
 \description{
-Sets to 1 all black regions (value = 0) that are completely surrounded by
-white (value = 1) -- i.e. not connected to the image border.
+Sets to 1 every black region (value 0) of at most \code{max_size} pixels
+that is enclosed by white (value 1), i.e. does not touch the image border.
+Holes are 4-connected: two background pixels that touch only at a corner
+belong to different holes, because the 8-connected foreground passes
+between them.
 }
 \keyword{internal}

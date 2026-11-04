@@ -62,7 +62,9 @@ timepoint in the DPC method? Default: FALSE}
 \value{
 Depends on the method:
 \itemize{
-\item \code{"tc"}: data.frame with standing roots, production, and new-root percentages.
+\item \code{"tc"}: data.frame with standing roots, their net change
+(\code{production}), and that change as a fraction of each date's
+standing roots.
 \item \code{"dpc"}: data.frame of pixel sums and ratios, or (if \code{im_return = TRUE}) a list of SpatRaster layers.
 }
 }
@@ -71,8 +73,8 @@ Wrapper around the two root-turnover methods. \code{method} selects which
 one runs:
 \describe{
 \item{\code{"tc"} (Temporal Comparison)}{Compares two timepoint images
-(\code{img1}, \code{img2}) and reports standing roots, production, and
-new-root percentages. Dispatches to \code{\link{turnover_tc}}. The
+(\code{img1}, \code{img2}) and reports standing roots, their net
+change, and that change as a fraction of each date's standing roots. Dispatches to \code{\link{turnover_tc}}. The
 \code{tc_method} argument chooses how root amount is measured:
 \code{"kimura"} (root length) or \code{"rootpx"} (root pixel count).}
 \item{\code{"dpc"} (Decay, Production, Constant)}{Decomposes a single

@@ -7,7 +7,7 @@
 root_length(
   img,
   unit = "cm",
-  dpi = 300,
+  dpi = NULL,
   select_layer = NULL,
   method = c("kimura2", "kimura1", "freeman_basic", "freeman_corrected"),
   show_messages = TRUE,
@@ -20,9 +20,13 @@ a segmented (non-skeleton) mask can be supplied instead.}
 
 \item{unit}{Character. Output unit: \code{"cm"}, \code{"inch"}, or \code{"px"}.}
 
-\item{dpi}{Numeric. Scan resolution (dots per inch); required for cm/inch conversion.}
+\item{dpi}{Numeric. Scan resolution (dots per inch). Required when
+\code{unit} is \code{"cm"} or \code{"inch"}; not used for \code{"px"}.}
 
-\item{select_layer}{Numeric. Which layer to select if \code{img} has multiple layers.}
+\item{select_layer}{Numeric. Which layer to measure if \code{img} has
+multiple layers. Without it a multi-layer image is measured on layer 1,
+with a warning: in the bundled RootDetector images layer 1 also carries
+the tape, and the skeleton is layer 2.}
 
 \item{method}{Character. One of:
 "freeman_basic", "freeman_corrected", "kimura1", "kimura2"}
@@ -43,7 +47,9 @@ either Freeman chain-code based estimators or Kimura estimators.
 }
 \details{
 Let Nd be the number of diagonal pixel connections and No the number
-of orthogonal pixel connections in the skeleton.
+of orthogonal pixel connections in the skeleton. Every connection between
+two 8-connected skeleton pixels is counted once, so a pixel at a bend or a
+junction contributes each of its connections.
 
 Freeman methods treat the skeleton as a discrete chain-code path:
 \itemize{
@@ -64,4 +70,9 @@ L = sqrt(Nd^2 + (Nd + No/2)^2) + No/2
 
 The Kimura2 estimator is generally preferred due to improved stability
 across object orientations and curvature distributions.
+}
+\examples{
+data(skl_Oulanka2023_Session01_T067)
+skl <- terra::rast(skl_Oulanka2023_Session01_T067)
+root_length(skl, unit = "cm", dpi = 150, select_layer = 2)
 }

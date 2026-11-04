@@ -20,7 +20,9 @@ matched by name to \code{picks}. Pixels further than this from a class
 centroid cannot be assigned to that class.}
 
 \item{prior}{Optional \code{data.frame} of existing centroids (same format
-as the output of this function, or \code{.default_soil_centroids()}).
+as the output of this function, or the \code{centroids} element returned
+by \code{\link{classify_soil_rgb}}, which holds the default table when no
+\code{centroids} were passed).
 When supplied, the new centroids derived from \code{picks} are blended
 with the prior centroids using \code{alpha}. Only classes present in both
 \code{picks} and \code{prior} are blended; new classes in \code{picks}
@@ -53,7 +55,7 @@ cents <- build_soil_centroids(new_picks, max_dist)
 
 # Blend: 30\% old calibration, 70\% new picks
 cents <- build_soil_centroids(new_picks, max_dist,
-                              prior = .default_soil_centroids(),
+                              prior = classify_soil_rgb(img)$centroids,
                               alpha = 0.3)
 
 # Iterative refinement across sessions:

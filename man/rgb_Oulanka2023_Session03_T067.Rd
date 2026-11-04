@@ -5,10 +5,11 @@
 \alias{rgb_Oulanka2023_Session03_T067}
 \title{Original Minirhizotron Root Scan - Session 3, Tube 67}
 \format{
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with \code{terra::rast()}. Dimensions:
 \itemize{
-\item 4900 columns (width)
-\item 1161 rows (height)
+\item 1160 rows (height)
+\item 4899 columns (width)
 \item 3 layers (RGB channels)
 }
 }

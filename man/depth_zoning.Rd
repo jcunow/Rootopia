@@ -32,8 +32,10 @@ single depth slice without splitting the raster into separate objects.
 }
 \details{
 Depth is matched against the binned values in \code{depth_map}: a single value
-selects the closest available bin; a consecutive sequence selects an inclusive
-range; discrete values select each closest bin.
+selects the closest available bin; three or more equally spaced values, e.g.
+\code{seq(10, 30, 5)} or \code{c(0, 50, 100)}, select every bin from the
+smallest to the largest inclusive; any other set of values selects the
+closest bin to each value.
 
 To split a tube into circumferential (rotation) slices, use
 \code{\link{slice_rotation}} instead.
@@ -41,7 +43,7 @@ To split a tube into circumferential (rotation) slices, use
 \examples{
 data(seg_Oulanka2023_Session01_T067)
 img <- terra::rast(seg_Oulanka2023_Session01_T067)
-mask <- img[[1]] - img[[2]]; mask[mask == 255] <- NA
+mask <- img[[1]] > 0                 # layer 1 marks the tape
 depth_map  <- create_depthmap(img, mask, start_soil = 2.9, dpi = 150 )
 depth_bins <- binning(depth_map, nn = 5)
 # depth_bins is already aligned with img -- no transpose/flip needed

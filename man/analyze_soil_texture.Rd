@@ -12,8 +12,10 @@ analyze_soil_texture(
 )
 }
 \arguments{
-\item{img.color}{Three-band raster (RGB) or path to image. Internally
-converted to a \code{raster::RasterBrick} as required by the \code{glcm} package.}
+\item{img.color}{Three-band (RGB) image: a \code{SpatRaster}, \code{RasterBrick},
+\code{RasterStack}, or any other input \code{\link{load_flexible_image}}
+accepts, including a file path. Internally converted to a
+\code{raster::RasterBrick} as required by the \code{glcm} package.}
 
 \item{grays}{Number of gray levels for GLCM quantization. Must be between
 2 and 255. Default is 7.}

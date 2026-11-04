@@ -2,13 +2,14 @@
 % Please edit documentation in R/clean_image.R
 \name{.component_sizes}
 \alias{.component_sizes}
-\title{Connected-component sizes (px) of a binary cimg}
+\title{Connected-component sizes (px) of a logical matrix}
 \usage{
-.component_sizes(bin_cimg, exclude_border)
+.component_sizes(x, directions, exclude_border)
 }
 \description{
-Labels the connected \code{1}-regions of \code{bin_cimg} and returns one size per
-component. With \code{exclude_border = TRUE}, components touching the image edge
-are dropped (used for enclosed holes).
+Labels the connected \code{TRUE} regions of \code{x} with the same connectivity
+clean_image() uses -- 8 for root objects, 4 for holes -- and returns one
+size per region. With \code{exclude_border = TRUE}, regions touching the image
+edge are dropped (used for enclosed holes).
 }
 \keyword{internal}

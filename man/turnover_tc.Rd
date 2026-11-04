@@ -31,9 +31,13 @@ data.frame containing:
 \itemize{
 \item standingroot_t1: Standing roots at first timepoint
 \item standingroot_t2: Standing roots at second timepoint
-\item production: Root production between timepoints
-\item newroot.per_t1: Percentage of new roots compared to starting conditions
-\item newroot.per_t2: Percentage of new roots at second timepoint
+\item production: Net change in standing roots, \code{standingroot_t2 -
+    standingroot_t1}. Roots lost between the dates offset roots gained, so
+the value is negative when more roots disappeared than appeared.
+\item newroot.per_t1: \code{production} as a fraction of
+\code{standingroot_t1} (0.25 = 25 percent)
+\item newroot.per_t2: \code{production} as a fraction of
+\code{standingroot_t2}
 }
 
 The last two names carry a dot where the percent sign would read more

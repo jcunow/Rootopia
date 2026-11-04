@@ -2,7 +2,7 @@
 % Please edit documentation in R/LilHelpers3.R
 \name{rgb2gray}
 \alias{rgb2gray}
-\title{Convert RGB image to grayscale with optimized memory management and parallel processing}
+\title{Convert an RGB image to grayscale as a weighted sum of its channels}
 \usage{
 rgb2gray(img, r = 0.21, g = 0.72, b = 0.07)
 }
@@ -16,7 +16,7 @@ rgb2gray(img, r = 0.21, g = 0.72, b = 0.07)
 \item{b}{Weight for blue channel}
 }
 \description{
-Convert RGB image to grayscale with optimized memory management and parallel processing
+Convert an RGB image to grayscale as a weighted sum of its channels
 }
 \examples{
 data(seg_Oulanka2023_Session01_T067)

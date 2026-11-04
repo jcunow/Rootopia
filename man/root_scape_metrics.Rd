@@ -27,8 +27,8 @@ multi-band image. Default is \code{NULL} (single-layer expected).}
 from \code{landscapemetrics::list_lsm()}.}
 }
 \value{
-A data frame of metric values with columns: metric, value, object,
-depth.
+A data frame in wide format: columns \code{object} and
+\code{depth}, then one column per metric named as in \code{metrics}.
 }
 \description{
 RootScapeMetric relies on Landscapemetrics to extract 'Root Scape' Features

@@ -2,27 +2,29 @@
 % Please edit documentation in R/clean_image.R
 \name{remove_small_objects}
 \alias{remove_small_objects}
-\title{Remove small isolated white artifacts from a binary image}
+\title{Remove small white objects from a binary image}
 \usage{
 remove_small_objects(img, max_size = NULL, protect_border = FALSE)
 }
 \arguments{
-\item{img}{A \code{cimg} binary image (values 0 and 1).}
+\item{img}{A 0/1 matrix.}
 
-\item{max_size}{Maximum artifact size in pixels to remove.  If \code{NULL},
-all candidate white regions are removed.}
+\item{max_size}{Maximum object size in pixels to remove.  \code{NULL} (default)
+removes nothing; \code{Inf} removes every candidate region.}
 
 \item{protect_border}{Logical.  If \code{TRUE}, white regions touching the image
 border are never removed (they are assumed to be roots leaving the frame).
 If \code{FALSE} (default), border-touching regions are subject to the same
-\code{max_size} test as any other region, so edge specks are removed too.
-Border location confers no protection on its own.}
+\code{max_size} test as any other region, so edge specks are removed too.}
 }
 \value{
-A \code{cimg} with artifacts removed.
+The matrix with objects removed.
 }
 \description{
-Sets to 0 all white regions (value = 1) that are not connected to the
-image border.
+Sets to 0 every white region (value 1) of at most \code{max_size} pixels.
+Regions are 8-connected: pixels that touch at a corner belong to the same
+object, so a diagonal run of root pixels is one object. With
+\code{protect_border = TRUE}, regions touching the image border are kept
+whatever their size.
 }
 \keyword{internal}

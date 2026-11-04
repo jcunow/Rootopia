@@ -26,15 +26,16 @@ clean_image(
 \item{img}{A \code{cimg} object, \code{SpatRaster}, matrix, or file path (binary mask).}
 
 \item{fill_holes_upto}{Largest enclosed hole that gets filled; anything
-bigger is left alone.  \code{NULL} (default) fills every enclosed hole.  Units
-are set by \code{size_unit}.  See \strong{Choosing thresholds} above.}
+bigger is left alone.  \code{NULL} (default) fills nothing; \code{Inf} fills every
+enclosed hole.  Units are set by \code{size_unit}.  See \strong{Choosing
+thresholds} above.}
 
-\item{drop_objects_upto}{Largest disconnected foreground blob that gets
-deleted; anything bigger is kept.  \code{NULL} (default) deletes every
-candidate blob.  Units are set by \code{size_unit}.}
+\item{drop_objects_upto}{Largest foreground blob that gets deleted;
+anything bigger is kept.  \code{NULL} (default) deletes nothing; \code{Inf} deletes
+every blob, roots included.  Units are set by \code{size_unit}.}
 
 \item{size_unit}{Unit of the two thresholds above: \code{"px"} (default, pixel
-count) or \code{"mm2"} (square millimetres, which requires \code{dpi}).}
+count) or \code{"mm2"} (square millimeters, which requires \code{dpi}).}
 
 \item{dpi}{Scan resolution, required when \code{size_unit = "mm2"} and ignored
 otherwise.}
@@ -83,20 +84,26 @@ A cleaned image in the format specified by \code{output_format}
 Performs three sequential cleaning operations on a binary segmented image:
 \enumerate{
 \item \strong{Hole filling} -- fills black regions enclosed by white (segmentation
-gaps inside roots).
-\item \strong{Speck removal} -- deletes isolated foreground blobs not connected to
-the image border (false-positive root detections).
+gaps inside roots) up to \code{fill_holes_upto} pixels.
+\item \strong{Speck removal} -- deletes foreground blobs (false-positive root
+detections) up to \code{drop_objects_upto} pixels; blobs touching the image
+border are included unless \code{protect_border = TRUE}.
 \item \strong{Edge smoothing} \emph{(optional, off by default)} -- applies morphological
 closing to smooth jagged root edges.
 }
 }
+\details{
+Each step runs only when its argument is set: with the defaults
+(\code{NULL}, \code{NULL}, \code{edge_smooth = FALSE}) the image is binarized and returned
+otherwise unchanged.
+}
 \section{Why clean before skeletonization}{
 
-\code{skeletonize_image()} uses the Medial Axis Transform, which is driven by
-the distance transform.  Small holes inside a root inflate the local
-distance values and force the medial axis to bifurcate around the hole,
-producing spurious branching points.  Isolated artifact pixels produce
-phantom skeleton segments.  Cleaning first yields a much cleaner skeleton.
+\code{skeletonize_image()} thins the mask to a one-pixel line (Zhang-Suen
+thinning). Thinning keeps the topology of the mask, so a small hole inside a
+root becomes a loop in the skeleton, which reads as two spurious branch
+points. An isolated artifact pixel becomes a phantom skeleton segment.
+Cleaning first yields a much cleaner skeleton.
 }
 
 \section{Choosing thresholds}{

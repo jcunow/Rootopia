@@ -5,7 +5,8 @@
 \alias{skl_Oulanka2023_Session03_T067}
 \title{Skeletonized Root Scan - Session 3, Tube 67}
 \format{
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with \code{terra::rast()}. Dimensions:
 \itemize{
 \item 4900 columns (width)
 \item 1161 rows (height)
@@ -25,14 +26,16 @@ Skeletonized root scan image from a sedge fen in northern Finland (October 2023)
 The image was processed using RootDetector for segmentation and skeletonization.
 }
 \details{
-Binary mask representation where:
+Binary mask, stored as 0 (background) and a single non-zero value
+(foreground):
 \itemize{
-\item Root skeletons = 1
-\item Background = 0
-\item Layer 1 includes foreign objects (e.g., tape) marked as 1
+\item Layer 1: foreign objects such as tape, filled
+\item Layers 2 and 3 (identical): root skeleton
 }
-Skeletonization reduces root width to single-pixel lines while preserving
-the root system topology.
+The skeleton is stored at reduced resolution, and its one-pixel lines did
+not survive that intact: they are broken into many short pieces. For traits
+that depend on connectivity (tips, branch points, branching order),
+skeletonize the matching segmentation with \code{skeletonize_image()}.
 }
 \examples{
 \dontrun{

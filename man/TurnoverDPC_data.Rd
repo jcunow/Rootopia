@@ -5,7 +5,8 @@
 \alias{TurnoverDPC_data}
 \title{Root Turnover Analysis Data}
 \format{
-A RasterBrick object with dimensions:
+A numeric array (rows x columns x layers), values 0-255. Rebuild a
+SpatRaster with \code{terra::rast()}. Dimensions:
 \itemize{
 \item 2550 columns (width)
 \item 2273 rows (height)

@@ -13,7 +13,10 @@ create_root_buffer(img, width = 2, halo_only = TRUE, kernel = "circle")
 
 \item{halo_only}{logical - if TRUE, returns only the buffer zone (default: TRUE)}
 
-\item{kernel}{character - shape of the thickening kernel: "circle" or "diamond"}
+\item{kernel}{character - neighborhood added at each of the \code{width}
+steps: \code{"circle"} adds all 8 neighbors, so the buffer grows as a
+square; \code{"diamond"} adds the 4 orthogonal neighbors, so it grows as a
+diamond}
 }
 \value{
 SpatRast - buffer zone around non-zero pixels

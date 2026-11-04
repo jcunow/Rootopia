@@ -14,6 +14,10 @@ Dimensions:
 \item 3 layers (segmentation channels)
 }
 }
+\source{
+Original flatbed scans from boreal pine forests in northern Finland, acquired by
+Johannes Cunow and others (field campaign 2022).
+}
 \usage{
 data(flatbed_scan_example)
 }
@@ -43,9 +47,5 @@ of boreal pine forests. Oikos. https://doi.org/10.1002/oik.12211
 }
 \author{
 Johannes Cunow \email{johannes.cunow@gmail.com}
-
-Johannes Cunow
-Original flatbed scans from boreal pine forests in northern Finland, acquired by
-Johannes Cunow and others (field campaign 2022).
 }
 \keyword{datasets}

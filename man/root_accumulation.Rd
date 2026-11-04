@@ -9,7 +9,9 @@ root_accumulation(x, group, depth, variable, stdrz = "counts")
 \arguments{
 \item{x}{Data frame containing group, depth, and variable columns}
 
-\item{group}{Character vector specifying grouping variable(s)}
+\item{group}{Character vector naming one or more grouping columns. With
+several, each combination of their values is accumulated separately, e.g.
+\code{group = c("Plot", "Site")}.}
 
 \item{depth}{Character string specifying depth column name}
 
@@ -22,7 +24,8 @@ and \code{"relative"} divides by the sum of the cumulative values. Use
 \code{"additive"} to compare the shape of profiles between groups}
 }
 \value{
-Numeric vector of accumulated values
+Numeric vector of accumulated values, one per row of \code{x} and in
+the same row order.
 }
 \description{
 Calculate root accumulation
@@ -31,4 +34,9 @@ Calculate root accumulation
 df = data.frame(depth = c(seq(0,80,20),seq(0,80,20)),
                Plot = c(rep("a",5),rep("b",5)), rootpx = c(5,50,20,15,5,10,40,30,10,5) )
 accum_root = root_accumulation(df,group = "Plot", depth = "depth", variable = "rootpx")
+
+# Several grouping columns: one curve per Plot x Session combination
+df2 <- rbind(transform(df, Session = "June"), transform(df, Session = "Oct"))
+root_accumulation(df2, group = c("Plot", "Session"), depth = "depth",
+                  variable = "rootpx")
 }
