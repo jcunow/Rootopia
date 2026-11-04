@@ -37,11 +37,8 @@ estimate_rotation_center = function(img, tape_brightness=0.66, extra_rows=100, s
     if (!is.null(select_layer) && (!is.numeric(select_layer) || select_layer < 1))
       stop("select_layer must be NULL or a positive integer")
     
-    # scale = "to_01" here, but estimate_soil_surface() loads with scale = "none".
-    # The two functions share most of this pipeline (reference band -> crop ->
-    # unsuperClass -> pick a cluster by brightness) yet their identically named
-    # tape_brightness argument therefore works against a ~255x different range.
-    # Do not factor the shared part out without carrying that difference with it.
+    # tape_brightness is a fraction of the image maximum (see `threshold`
+    # below), so it means the same on a 0-1 and a 0-255 image.
     im <- load_flexible_image(img, select_layer=select_layer,
                               output_format="array", scale = "to_01")
     if (length(dim(im)) != 3) stop("Input image must be 3-dimensional array (RGB)")
@@ -272,7 +269,7 @@ estimate_rotation_shift <- function(
 #'       \code{0.5} = middle, \code{1} = bottom (so the center row is
 #'       \code{center_offset * nrow}).
 #'     \item \strong{Keyword} - \code{"top"} (= 0), \code{"middle"} /
-#'       \code{"center"} / \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
+#'       \code{"center"} (= 0.5), or \code{"bottom"} (= 1).
 #'   }
 #'   The default \code{0} centers on the top row.
 #'   When \code{fixed_rotation = FALSE} the resolved value is used as the
@@ -294,9 +291,11 @@ estimate_rotation_shift <- function(
 #' @examples
 #' data(seg_Oulanka2023_Session01_T067)
 #' img <- terra::rast(seg_Oulanka2023_Session01_T067)
-#' r0  <- estimate_rotation_center(img)
-#' rotation_censor(img, center_offset = r0, fixed_width = 800,
-#'                 fixed_rotation = TRUE, overlay = TRUE)
+#' if (requireNamespace("RStoolbox", quietly = TRUE)) {
+#'   r0 <- estimate_rotation_center(img)
+#'   rotation_censor(img, center_offset = r0, fixed_width = 800,
+#'                   fixed_rotation = TRUE, overlay = TRUE)
+#' }
 #'
 #' # Same window centered on the middle of the image, via a fraction or keyword
 #' rotation_censor(img, center_offset = 0.5,      fixed_width = 800)
@@ -467,9 +466,8 @@ estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=15
       stop("select_layer must be NULL or positive integer")
     }
 
-    # scale = "none", unlike estimate_rotation_center()'s "to_01" -- so
-    # tape_brightness is read against the raw 0-255 range here. See the note at
-    # that function before merging the two pipelines.
+    # tape_brightness is a fraction of the image maximum (see `threshold`
+    # below), so the value scale does not change its meaning.
     im <- load_flexible_image(img, select_layer=select_layer,
                               output_format="array", scale = "none")
     if (length(dim(im)) != 3) {
@@ -557,8 +555,7 @@ estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=15
     while (i <= max_iter && iter_count < max_iter) {
       # `i` indexes COLUMNS (depth), so rr1[,i,] holds nrow(rr1) pixels -- the
       # tape coverage of that depth slice across the circumference. Dividing by
-      # ncol() scaled the ratio by the aspect ratio, so `tape_thresh` did not
-      # mean the documented "fraction of the slice covered by tape".
+      # nrow() makes `tape_thresh` the fraction of the slice covered by tape.
       current_ratio = sum(rr1[,i,], na.rm=TRUE) / nrow(rr1)
       ratio_24 = if (i+24 <= max_iter) sum(rr1[,i+24,], na.rm=TRUE) / nrow(rr1) else 0
       ratio_48 = if (i+48 <= max_iter) sum(rr1[,i+48,], na.rm=TRUE) / nrow(rr1) else 0
@@ -603,7 +600,7 @@ estimate_soil_surface = function(img, search_area=0.45, tape_thresh=0.33, dpi=15
     return(out)
 
   }, error = function(e) {
-    stop(paste("Error in SoilSurfE:", e$message))
+    stop(paste("Error in estimate_soil_surface:", e$message))
   })
 }
 
