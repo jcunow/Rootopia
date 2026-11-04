@@ -104,11 +104,10 @@
 #'   and wavelength of the sinusoidal curvature correction.  Supplying this
 #'   argument switches the run to minirhizotron geometry (see
 #'   \strong{Geometry}).  Default \code{NULL} (flatbed).
-#' @param tube_center_offset Numeric in \code{[0, 1]}. Where the top of the
-#'   tube falls across the image height, as a fraction of one full tube
-#'   circumference.  \code{0} puts it on the first row, \code{0.5} (default)
-#'   halfway down, \code{1} on the last row; \code{0} and \code{1} are the same
-#'   point on the tube, the image seam.  Set it if your scanner's rotational
+#' @param tube_center_offset Numeric. Where the top of the tube falls across
+#'   the image height: a fraction of that height in \code{[0, 1]} (\code{0}
+#'   the first row, \code{0.5} (default) halfway down, \code{1} the last row),
+#'   or a row number above 1.  Set it if your scanner's rotational
 #'   reference differs, or the depth assigned to a root will be offset by up to a
 #'   full tilted tube diameter
 #'   (\code{tube_diameter_cm * sin(insertion_angles)}), the shallowest-to-deepest
@@ -189,9 +188,8 @@
 #' there is nothing to bin by and no depth map is built, unless
 #' \code{calc_root_angles = TRUE} asks for one.  Nothing is masked or trimmed
 #' per slice either.  On a large scan both are worth skipping: a depth map is a
-#' full-size double raster.  (\code{calc_root_length} still builds a flat
-#' surface of its own to read flow directions from; that one belongs to the
-#' length estimator, not to the binning, and is built either way.)
+#' full-size double raster.  In this mode \code{rootlength} equals
+#' \code{root_length()} of the skeleton with \code{method = "kimura2"}.
 #'
 #' \code{calc_distribution_indices} and \code{calc_advanced_metrics} are
 #' switched off in this mode: mean rooting depth, and each bin's share of the
@@ -259,9 +257,9 @@
 #'   \code{0} (default) fills none, \code{Inf} fills every hole.  Pinholes
 #'   inside a painted root read as background, which eats into the distance
 #'   transform and so into diameter.
-#' @param clean_drop_objects_upto Numeric. Largest disconnected foreground blob
-#'   that gets deleted; anything bigger is kept.  \code{0} (default) deletes
-#'   none, \code{Inf} deletes everything not touching the largest structure.
+#' @param clean_drop_objects_upto Numeric. Largest foreground blob that gets
+#'   deleted; anything bigger is kept.  \code{0} (default) deletes none,
+#'   \code{Inf} deletes every blob, roots included.
 #'   Specks count as root area, as isolated skeleton pixels, and as root tips.
 #' @param clean_size_unit Character. Unit of the two thresholds above:
 #'   \code{"px"} (default) or \code{"mm2"}, which uses \code{dpi} so that the
@@ -282,9 +280,12 @@
 #'   \code{voidpx} (background pixels) per depth bin.  Required for density
 #'   metrics.  Default \code{TRUE}.
 #' @param calc_root_length Logical. Estimate root length (cm) per depth bin
-#'   from the skeleton using D8 connectivity (orthogonal steps = 1 pixel,
-#'   diagonal steps = \eqn{\sqrt{2}} pixels, isolated pixels = 1 pixel).
-#'   Required for length density and angle metrics.  Default \code{TRUE}.
+#'   from the skeleton with the Kimura estimator of \code{root_length()}
+#'   (\code{method = "kimura2"}): the orthogonal and diagonal connections
+#'   between skeleton pixels are counted per bin, and the estimate is applied
+#'   to each bin's counts.  An isolated pixel has no connection and adds no
+#'   length.  Required for length density and angle metrics.  Default
+#'   \code{TRUE}.
 #' @param calc_diameter_stats Logical. Compute per-bin mean, maximum, and
 #'   variance of root diameter (cm) using the distance-transform approach in
 #'   \code{root_diameter()}, plus \code{root.surface.area} (lateral surface
@@ -1145,27 +1146,43 @@ root_depth_metrics <- function(
     }
     
     # -------------------------------------------------------------------------
-    # 3e. Root length from skeleton (D8 path lengths)
+    # 3e. Root length from skeleton (Kimura, per depth bin)
     # -------------------------------------------------------------------------
+    # Connection counts per skeleton pixel, summed per bin and turned into a
+    # length with root_length()'s estimator. Each connection sits on one pixel,
+    # so the bins' counts add up to the image's; the estimate is applied to each
+    # bin's own counts. With one bin this is root_length() of the skeleton.
     root.length.map <- NULL
     angles_map      <- NULL
-    
+
     if (do_length) {
       rl_res <- .safe("root length", {
-        
-        # A planar ramp along the columns, used only to derive flow directions
-        # for the length calculation -- the curvature correction describes the
-        # depth axis, not path-length geometry. D8 compares neighbors, so only
-        # the ramp's direction matters and not its slope; the angle is therefore
-        # fixed upright here rather than following the insertion angle, which
-        # also keeps a horizontal installation from flattening the ramp.
-        #
-        # This builds a per-pixel length map rather than calling root_length()
-        # per depth bin, and that is deliberate: root_length() uses the Kimura2
-        # estimator, which is not additive -- the sum over bins does not equal
-        # the whole. A per-pixel Freeman length can be zonal-summed, which is
-        # what a depth profile needs, at the cost of Kimura's correction.
-        dm_flat <- create_depthmap(
+        links <- .skeleton_links(im.skeleton)
+        rl_z  <- terra::zonal(links, bm, "sum", na.rm = TRUE)
+        colnames(rl_z) <- c("depth", "orth", "diag")
+        rl_z$rootlength <- .length_estimate(rl_z$diag, rl_z$orth, "kimura2") /
+          (dpi / 2.54)                                        # pixels -> cm
+        list(rootlength = rl_z[, c("depth", "rootlength")], links = links)
+      })
+
+      if (!is.null(rl_res)) {
+        roots           <- merge(roots, rl_res$rootlength, by = "depth", all.x = TRUE)
+        root.length.map <- rl_res$links
+      } else {
+        roots$rootlength <- NA_real_
+        do_length <- do_angles <- do_diam_q <- FALSE
+      }
+    }
+
+    # -------------------------------------------------------------------------
+    # 3e2. Root direction map (D8 flow direction, for the angle metrics only)
+    # -------------------------------------------------------------------------
+    if (do_angles) {
+      angles_map <- .safe("root direction map", {
+        # A planar ramp along the columns: D8 compares neighbors, so only the
+        # ramp's direction matters, and the angle is fixed upright so that a
+        # horizontal installation does not flatten it.
+        dem_flat <- create_depthmap(
           img           = im,
           geometry      = "window",
           dpi           = dpi,
@@ -1173,44 +1190,16 @@ root_depth_metrics <- function(
           angle_from_vertical = 0,
           tube_thicc    = tube_diameter_cm
         )
-        # create_depthmap() is already aligned with `im` (no transpose).
-        dem_flat <- dm_flat
         terra::ext(dem_flat) <- terra::ext(im)
         dem_flat[im.skeleton != 1] <- NA
-        
         ang <- terra::terrain(dem_flat, v = "flowdir")
-        ang <- terra::subst(ang,
-                            from = c(  0,  1,   2,   4,   8,  16,  32, 64, 128),
-                            to   = c( NA, 90, 135, 180, 225, 270, 315,  0,  45))
-        orth <- (ang ==   0 | ang ==  90 | ang == 180 | ang == 270)
-        diag <- (ang ==  45 | ang == 135 | ang == 225 | ang == 315)
-        orth <- terra::t(terra::flip(orth))
-        diag <- terra::t(terra::flip(diag))
-        
-        w        <- matrix(1, 3, 3)
-        nb_sum   <- terra::focal(im.skeleton, w, fun = sum, na.policy = "omit")
-        isolated <- (nb_sum == 1)
-        
-        rlm <- orth * 1 + diag * sqrt(2) + terra::t(terra::flip(isolated))
-        rlm <- terra::flip(terra::t(rlm))
-        
-        rl_z <- terra::zonal(rlm, bm, "sum", na.rm = TRUE)
-        rl_z[[2]] <- rl_z[[2]] / (dpi / 2.54)   # pixels -> cm
-        colnames(rl_z) <- c("depth", "rootlength")
-        
-        list(rootlength = rl_z, rlm = rlm, ang = ang)
+        terra::subst(ang,
+                     from = c(  0,  1,   2,   4,   8,  16,  32, 64, 128),
+                     to   = c( NA, 90, 135, 180, 225, 270, 315,  0,  45))
       })
-      
-      if (!is.null(rl_res)) {
-        roots           <- merge(roots, rl_res$rootlength, by = "depth", all.x = TRUE)
-        root.length.map <- rl_res$rlm
-        angles_map      <- rl_res$ang
-      } else {
-        roots$rootlength <- NA_real_
-        do_length <- do_angles <- do_diam_q <- FALSE
-      }
+      if (is.null(angles_map)) do_angles <- FALSE
     }
-    
+
     # -------------------------------------------------------------------------
     # 3f. Root diameter map (shared between stats and quantile blocks)
     # -------------------------------------------------------------------------
@@ -1494,12 +1483,14 @@ root_depth_metrics <- function(
               res[[q_top_names[qi]]]  <- mean(rd_v[rd_v >= qv[qi]], na.rm = TRUE)
             }
             
-            sl_rl <- root.length.map
-            if (!one_bin) sl_rl[bm != d] <- NA
+            # Connection counts of the skeleton pixels in this bin at or above
+            # each diameter, turned into a length like the bin total.
             for (ti in seq_along(thr_cm)) {
-              ab  <- sl_rl; ab[rd.map < thr_cm[ti]] <- NA
+              sel <- rd.map >= thr_cm[ti]
+              if (!one_bin) sel <- sel & (bm == d)
+              cnt <- terra::global(root.length.map * sel, "sum", na.rm = TRUE)[[1]]
               res[[paste0("rootlength.above.",    thr_names[ti])]] <-
-                sum(terra::values(ab), na.rm = TRUE) / (dpi / 2.54)
+                .length_estimate(cnt[2], cnt[1], "kimura2") / (dpi / 2.54)
               res[[paste0("avg.diameter.above.",  thr_names[ti])]] <-
                 mean(rd_v[!is.na(rd_v) & rd_v >= thr_cm[ti]], na.rm = TRUE)
             }
