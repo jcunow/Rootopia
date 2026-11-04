@@ -536,12 +536,20 @@ circular_mean <- function(angles, input_units = "degrees", output_units = "degre
 #'   method to separate anything; see the section above.
 #' @param window_size Odd integer, the side of the local-mean box in pixels,
 #'   for \code{method = "adaptive"} only.
-#' @param select_layer Integer or NULL. Which layer to threshold or deblur.
-#'   If NULL and the image is multilayer, the mean of all layers is used.
-#' @param mask_layer Integer or NULL. If set, this layer is thresholded against
-#'   its own level rather than against \code{select_layer}'s.
-#' @param binary_01 Logical. If TRUE, the output is 0/1; if FALSE, it keeps the
-#'   maximum value of the input.
+#' @param select_layer Integer or NULL. The layer the threshold is computed on.
+#'   The output has as many layers as \code{img}, and every layer except
+#'   \code{mask_layer} receives this layer's result. If NULL and the image is
+#'   multilayer, the threshold is computed on the mean of all layers and that
+#'   one result goes into every layer.
+#' @param mask_layer Integer or NULL. A layer that keeps its own result
+#'   instead of receiving \code{select_layer}'s: it is thresholded on its own
+#'   pixel values and against its own level (its own maximum, or its own local
+#'   mean for \code{method = "adaptive"}). It excludes no pixels. The default
+#'   1 suits RootDetector output, where layer 1 carries roots and tape and
+#'   layer 2 roots only, so the tape can still be found from the two layers
+#'   after thresholding. NULL treats every layer alike.
+#' @param binary_01 Logical. Coding of the output: TRUE gives 0/1; FALSE gives
+#'   0 and the maximum of the thresholded layer, e.g. 0/255 for 8-bit input.
 #' @param invert Logical. FALSE, the default, keeps the pixels at or above the
 #'   cut, so the brighter side is the foreground: roots on a dark tray. TRUE
 #'   keeps the pixels at or below it, for the commoner flatbed case of dark
@@ -618,6 +626,8 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
     # ---- DEBLURRING MODE ----
     if (deblur) {
       if (nlyr < 2) stop("Deblurring requires a multi-layer image")
+      if (is.null(select_layer) || is.null(mask_layer))
+        stop("Deblurring needs both select_layer and mask_layer")
       if (select_layer == mask_layer) stop("select_layer and mask_layer cannot be the same")
       
       mx <- terra::global(img[[select_layer]], "max", na.rm = TRUE)[[1]]
@@ -696,7 +706,8 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
             mask_mean <- .box_mean(mask_layer_data, window_size)
             img2[[i]] <- keep(mask_layer_data, by_k(mask_mean)) * output_value
           } else {
-            img2[[i]] <- keep(mask_layer_data, mx * threshold) * output_value
+            mask_mx <- terra::global(mask_layer_data, "max", na.rm = TRUE)[[1]]
+            img2[[i]] <- keep(mask_layer_data, mask_mx * threshold) * output_value
           }
         } else {
           img2[[i]] <- threshold_mask * output_value
@@ -718,7 +729,9 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
 #' Calculate root accumulation
 #'
 #' @param x Data frame containing group, depth, and variable columns
-#' @param group Character vector specifying grouping variable(s)
+#' @param group Character vector naming one or more grouping columns. With
+#'   several, each combination of their values is accumulated separately, e.g.
+#'   \code{group = c("Plot", "Site")}.
 #' @param depth Character string specifying depth column name
 #' @param variable Character string specifying accumulating values column
 #' @param stdrz Character string naming the denominator applied to the
@@ -728,12 +741,18 @@ image_threshold <- function(img, threshold = 0.4, method = "global",
 #'   \code{"additive"} to compare the shape of profiles between groups
 #' @export
 #'
-#' @return Numeric vector of accumulated values
+#' @return Numeric vector of accumulated values, one per row of \code{x} and in
+#'   the same row order.
 #'
 #' @examples
 #'df = data.frame(depth = c(seq(0,80,20),seq(0,80,20)),
 #'                Plot = c(rep("a",5),rep("b",5)), rootpx = c(5,50,20,15,5,10,40,30,10,5) )
 #' accum_root = root_accumulation(df,group = "Plot", depth = "depth", variable = "rootpx")
+#'
+#' # Several grouping columns: one curve per Plot x Session combination
+#' df2 <- rbind(transform(df, Session = "June"), transform(df, Session = "Oct"))
+#' root_accumulation(df2, group = c("Plot", "Session"), depth = "depth",
+#'                   variable = "rootpx")
 root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
   tryCatch({
     if (missing(x) || missing(group) || missing(depth) || missing(variable)) {
@@ -745,8 +764,13 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
     }
 
     # Validate column names
-    if (!group %in% names(x)) {
-      stop(sprintf("group column '%s' not found in data frame", group))
+    if (!is.character(group) || length(group) == 0L) {
+      stop("group must name one or more columns")
+    }
+    missing_group <- setdiff(group, names(x))
+    if (length(missing_group) > 0) {
+      stop(sprintf("group column(s) not found in data frame: %s",
+                   paste(missing_group, collapse = ", ")))
     }
     if (!depth %in% names(x)) {
       stop(sprintf("depth column '%s' not found in data frame", depth))
@@ -772,8 +796,9 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
     # would scramble the output).
     x$.orig_order <- seq_len(nrow(x))
 
-    # Split data by group
-    split_df <- split(x, x[,group])
+    # One piece per combination of the grouping columns. drop = TRUE leaves out
+    # combinations that do not occur in the data.
+    split_df <- split(x, x[, group, drop = FALSE], drop = TRUE)
 
     # Initialize an empty list to store results
     result_list <- list()
@@ -822,11 +847,11 @@ root_accumulation = function(x, group, depth, variable, stdrz = "counts") {
     return(result_df$cs)
 
   }, error = function(e) {
-    stop(sprintf("Error in root.accumulation: %s", e$message))
+    stop(sprintf("Error in root_accumulation: %s", e$message))
   })
 }
 
-#' Convert RGB image to grayscale with optimized memory management and parallel processing
+#' Convert an RGB image to grayscale as a weighted sum of its channels
 #'
 #' @param img SpatRaster RGB image
 #' @param r Weight for red channel
@@ -892,7 +917,9 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #' using `mclust` to estimate the number and characteristics of distributional components.
 #'
 #' @param x Numeric vector of observations.
-#' @param prominence_threshold Minimum prominence (height difference to nearest valley) for a peak to be considered significant. Defaults to 0.005.
+#' @param prominence_threshold Minimum prominence (height of the peak above the
+#'   higher of its two neighboring valleys) for a peak to be considered
+#'   significant, in density units. Defaults to 0.005.
 #' @param display_type Type of plot to display: `"density"` (default), `"raw"` for colored points, or `"none"` for no plot.
 #' @param mclust Logical. If `TRUE`, performs model-based clustering using `mclust::Mclust`.
 #' @param adjust numeric. Adjusts the size of the density kernel. Higher values lead to more smoothing.
@@ -914,7 +941,7 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #' }
 #'
 #' @details
-#' Prominence is calculated as the vertical difference between each local maximum and the nearest local minimum (valley).
+#' Prominence is calculated as the height of each local maximum above the higher of the two local minima (valleys) on either side of it, or above the one valley when it has only one.
 #' This helps identify meaningful peaks while filtering out spurious noise-driven ones.  
 #' When \code{mclust = TRUE}, model-based clustering is performed using Gaussian mixture models (\code{V} variance structure),
 #' and the results are returned along with a classification vector. By default the
@@ -931,7 +958,6 @@ rgb2gray = function(img, r = 0.21, g = 0.72, b = 0.07) {
 #' 
 #' @examples
 #' set.seed(2)
-#' #' library(mclust)
 #' # Example 1: Noisy Unimodal
 #' x1 <- rnorm(500, mean = 0, sd = 1) + runif(500, -0.5, 0.5)
 #' peaks1_1 = modal_peaks(x1, prominence_threshold = 0.01, mclust = FALSE, display_type = "density")
