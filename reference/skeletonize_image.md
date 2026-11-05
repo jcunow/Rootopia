@@ -53,6 +53,11 @@ Processing steps:
     - lookup table determines pixel deletions in two sub-steps per
       iteration
 
+    - masked cells (`NA`) are not thinned and stay `NA`; a root next to
+      them is thinned as if the masked cells were background, so a root
+      cut by a mask ends at the mask edge, as it does at the image
+      border
+
 4.  Output is the final thinned binary raster.
 
 5.  Optionally, an overlay image is generated:

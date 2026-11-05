@@ -52,7 +52,7 @@ load_flexible_image(
 ## Value
 
 The image in the requested format. Arrays and matrices are (rows,
-columns, layers); a SpatRaster built from an array spans `0..ncol` by
-`0..nrow`, while a SpatRaster passed in with `scale = "none"` and no
-`select_layer` is returned unchanged. Reading `.tif`/`.tiff` files needs
-the tiff package.
+columns) for one layer and (rows, columns, layers) for several; a
+SpatRaster built from an array spans `0..ncol` by `0..nrow`, while a
+SpatRaster passed in with `scale = "none"` and no `select_layer` is
+returned unchanged. Reading `.tif`/`.tiff` files needs the tiff package.

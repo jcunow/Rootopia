@@ -2780,7 +2780,6 @@ where to look when a result surprises you.
 |----|----|----|
 | **terra** | every raster: reading, extents, [`zonal()`](https://rspatial.github.io/terra/reference/zonal.html), plotting | yes |
 | **imager** | connected components, morphology, the distance transform behind [`root_diameter()`](https://jcunow.github.io/Rootopia/reference/root_diameter.md) | yes |
-| **transport** | `wasserstein1d()`, the earth-mover distance in [`compare_depth_distribution()`](https://jcunow.github.io/Rootopia/reference/compare_depth_distribution.md) | yes |
 | **minpack.lm** | Levenberg-Marquardt fit in [`fit_sine_curve()`](https://jcunow.github.io/Rootopia/reference/fit_sine_curve.md) / [`rhythmicity()`](https://jcunow.github.io/Rootopia/reference/rhythmicity.md) | yes |
 | **mclust** | Gaussian mixture clustering in [`modal_peaks()`](https://jcunow.github.io/Rootopia/reference/modal_peaks.md) | yes |
 | **glcm** | the texture matrices in [`analyze_soil_texture()`](https://jcunow.github.io/Rootopia/reference/analyze_soil_texture.md) | yes |
@@ -2862,10 +2861,6 @@ package version 1.9-11.
 Müller K, Schwalb-Willmann J, Wegmann M, Leutner B (2024) RStoolbox: an
 R package for remote sensing data analysis. *Methods in Ecology and
 Evolution*. <doi:10.1111/2041-210X.14451>
-
-Schuhmacher D, Bähre B, Bonneel N, Gottschlich C, Hartmann V, Heinemann
-F, Schmitzer B, Schrieber J (2024) *transport: Computation of Optimal
-Transport Plans and Wasserstein Distances*. R package version 0.15-4.
 
 Scrucca L, Fraley C, Murphy TB, Raftery AE (2023) *Model-Based
 Clustering, Classification, and Density Estimation Using mclust in R*.

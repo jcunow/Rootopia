@@ -74,12 +74,12 @@ Numeric Wasserstein distance, in the units of `index`.
 Wasserstein distance measures the minimal transport cost required to
 transform one distribution into another along a one-dimensional index:
 the mass-weighted mean distance the probability has to travel, in the
-units of `index`. For depth profiles indexed in centimetres it is
+units of `index`. For depth profiles indexed in centimeters it is
 therefore a depth, and a profile shifted `d` cm returns exactly `d`.
 
-[`transport::wasserstein1d()`](https://rdrr.io/pkg/transport/man/wasserstein1d.html)
-does the work. Its `a` and `b` are positions and its `wa` and `wb` the
-mass at those positions, so `index` is passed as the positions and `P`
-and `Q` as the weights. Passing the mass vectors as positions instead
-would sort them and discard `index`, which measures how differently
-concentrated the two profiles are rather than how far apart they sit.
+`P` and `Q` are the mass at the positions in `index`. On a shared
+one-dimensional support the distance is the area between the two
+cumulative distributions: after sorting by `index`, the absolute
+difference of the cumulative masses times the gap to the next position,
+summed over all gaps. A profile with all its mass in one bin is a valid
+input.

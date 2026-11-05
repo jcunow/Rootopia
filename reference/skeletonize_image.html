@@ -101,6 +101,9 @@ implementation of the Zhang-Suen skeletonization algorithm.</p>
 <li><p>Foreground pixel count is computed.</p></li>
 <li><p>Skeletonization is performed using <code><a href="lut_thin_fast.html">lut_thin_fast()</a></code>:</p><ul><li><p>iterative removal of pixels based on 3x3 neighborhood codes</p></li>
 <li><p>lookup table determines pixel deletions in two sub-steps per iteration</p></li>
+<li><p>masked cells (<code>NA</code>) are not thinned and stay <code>NA</code>; a root next to them
+is thinned as if the masked cells were background, so a root cut by
+a mask ends at the mask edge, as it does at the image border</p></li>
 </ul></li>
 <li><p>Output is the final thinned binary raster.</p></li>
 <li><p>Optionally, an overlay image is generated:</p><ul><li><p>original image marked as base layer</p></li>

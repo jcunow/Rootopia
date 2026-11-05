@@ -108,7 +108,8 @@ setting both <code>normalize</code> and <code>denormalize</code>, is an error.</
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The image in the requested format. Arrays and matrices are
-(rows, columns, layers); a SpatRaster built from an array spans
+(rows, columns) for one layer and (rows, columns, layers) for several; a
+SpatRaster built from an array spans
 <code>0..ncol</code> by <code>0..nrow</code>, while a SpatRaster passed in with
 <code>scale = "none"</code> and no <code>select_layer</code> is returned unchanged.
 Reading <code>.tif</code>/<code>.tiff</code> files needs the <span class="pkg">tiff</span> package.</p>

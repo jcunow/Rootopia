@@ -132,14 +132,14 @@ the shorter one with zeros.</p></dd>
     <p>Wasserstein distance measures the minimal transport cost required to
 transform one distribution into another along a one-dimensional index: the
 mass-weighted mean distance the probability has to travel, in the units of
-<code>index</code>. For depth profiles indexed in centimetres it is therefore a
+<code>index</code>. For depth profiles indexed in centimeters it is therefore a
 depth, and a profile shifted <code>d</code> cm returns exactly <code>d</code>.</p>
-<p><code><a href="https://rdrr.io/pkg/transport/man/wasserstein1d.html" class="external-link">transport::wasserstein1d()</a></code> does the work. Its <code>a</code> and <code>b</code>
-are positions and its <code>wa</code> and <code>wb</code> the mass at those positions,
-so <code>index</code> is passed as the positions and <code>P</code> and <code>Q</code> as
-the weights. Passing the mass vectors as positions instead would sort them
-and discard <code>index</code>, which measures how differently concentrated the
-two profiles are rather than how far apart they sit.</p>
+<p><code>P</code> and <code>Q</code> are the mass at the positions in <code>index</code>. On a
+shared one-dimensional support the distance is the area between the two
+cumulative distributions: after sorting by <code>index</code>, the absolute
+difference of the cumulative masses times the gap to the next position,
+summed over all gaps. A profile with all its mass in one bin is a valid
+input.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
