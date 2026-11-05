@@ -38,7 +38,8 @@ setting both \code{normalize} and \code{denormalize}, is an error.}
 }
 \value{
 The image in the requested format. Arrays and matrices are
-(rows, columns\link{, layers}); a SpatRaster built from an array spans
+(rows, columns) for one layer and (rows, columns, layers) for several; a
+SpatRaster built from an array spans
 \code{0..ncol} by \code{0..nrow}, while a SpatRaster passed in with
 \code{scale = "none"} and no \code{select_layer} is returned unchanged.
 Reading \code{.tif}/\code{.tiff} files needs the \pkg{tiff} package.

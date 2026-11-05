@@ -163,7 +163,8 @@ normalize_array <- function(arr, scale = "none") {
 #'   `binarize = TRUE` to `"binary"`. Supplying these together with `scale`, or
 #'   setting both `normalize` and `denormalize`, is an error.
 #' @return The image in the requested format. Arrays and matrices are
-#'   (rows, columns[, layers]); a SpatRaster built from an array spans
+#'   (rows, columns) for one layer and (rows, columns, layers) for several; a
+#'   SpatRaster built from an array spans
 #'   \code{0..ncol} by \code{0..nrow}, while a SpatRaster passed in with
 #'   \code{scale = "none"} and no \code{select_layer} is returned unchanged.
 #'   Reading \code{.tif}/\code{.tiff} files needs the \pkg{tiff} package.
@@ -226,7 +227,15 @@ load_flexible_image <- function(input, output_format = "cimg",
     if (ext %in% c("tif", "tiff")) {
       if (!requireNamespace("tiff", quietly = TRUE))
         stop("Reading .tif files needs the 'tiff' package: install.packages(\"tiff\")")
-      arr <- as.array(tiff::readTIFF(input))  # 3D array, already (H, W, C)
+      # GeoTIFFs (e.g. written by terra or GDAL) carry georeferencing tags the
+      # tiff package does not know. libtiff warns once per tag and still reads
+      # the pixels, so only those warnings are silenced.
+      arr <- withCallingHandlers(
+        as.array(tiff::readTIFF(input)),  # 3D array, already (H, W, C)
+        warning = function(w) {
+          if (grepl("Unknown field with tag", conditionMessage(w)))
+            invokeRestart("muffleWarning")
+        })
     } else {
       # imager loads as 4D (x, y, depth, channel); drop the depth axis, then
       # swap x/y so the result is (H, W, C) like the tiff/raster branches.
