@@ -368,13 +368,6 @@ test_that("rotation_fixed_width controls the rotation-axis crop", {
   expect_lt(sum(narrow$rootpx, na.rm = TRUE), sum(wide$rootpx, na.rm = TRUE))
 })
 
-# stitch_root_scans needs an overlapping scan SEQUENCE, which the bundled
-# single-tube data cannot provide. Supply a directory of overlapping frames to
-# enable this test.
-test_that("stitch_root_scans end-to-end (needs a scan-sequence fixture)", {
-  skip("Provide a directory of overlapping scans to enable this test.")
-})
-
 
 test_that("one unreadable image is skipped and named, the rest still reported", {
   skip_if_not_installed("terra")
@@ -415,13 +408,15 @@ test_that("a run where every image fails returns nothing rather than an empty fr
   on.exit(unlink(dir, recursive = TRUE), add = TRUE)
   writeLines("not an image", file.path(dir, "a.tif"))
 
-  expect_warning(
+  # The run names the skipped image and then reports that nothing is left.
+  warns <- capture_warnings(
     res <- root_depth_metrics(path_seg = dir, tube_names = "a",
                               depth_interval_cm = NULL, verbose = FALSE,
                               calc_root_length = FALSE, calc_diameter_stats = FALSE,
                               calc_density_metrics = FALSE,
                               calc_distribution_indices = FALSE,
-                              calc_advanced_metrics = FALSE),
-    "No images were processed successfully")
+                              calc_advanced_metrics = FALSE))
+  expect_match(warns, "skipped entirely: a.tif", all = FALSE)
+  expect_match(warns, "No images were processed successfully", all = FALSE)
   expect_null(res)
 })
