@@ -72,10 +72,19 @@ test_that("groups = \"thinnest\" returns that class and a rest row", {
 })
 
 test_that("a named groups list keeps every ordered segment in exactly one row", {
-  res  <- make_order_map()
+  skip_if_not_installed("terra")
+  # A main axis with one lateral on each side has three branch-order classes,
+  # so one named group leaves a non-empty "rest".
+  m <- matrix(0, 40, 40)
+  m[5:36, 20] <- 1     # main axis
+  m[20, 21:34] <- 1    # lateral to the right
+  m[30, 6:19]  <- 1    # lateral to the left
+  skel <- terra::rast(m)
+  res  <- branch_order_map(skel = skel, mask = skel, order = "branch_order",
+                           unit = "px", return_map = TRUE, verbose = FALSE)
   per  <- order_metrics(res)
   lv   <- per[[1]]
-  skip_if(length(lv) < 2, "need at least two order classes")
+  expect_gte(length(lv), 2)
   om   <- order_metrics(res, groups = list(fine = lv[1]))
   expect_equal(sort(om$group), c("fine", "rest"))
   expect_equal(sum(om$total_length), sum(per$total_length), tolerance = 1e-8)
