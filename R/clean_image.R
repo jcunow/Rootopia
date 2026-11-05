@@ -1,7 +1,7 @@
 # Image cleaning functions
 #
 # Hole filling and speck removal work on 0/1 matrices and label connected
-# components with terra::patches(). Edge smoothing and cimg output use imager.
+# components with imager::label(). Edge smoothing and cimg output use imager.
 # load_flexible_image() handles conversion from SpatRaster / matrix / file path.
 
 
@@ -19,8 +19,16 @@
 #' @keywords internal
 #' @noRd
 .label_regions <- function(m, directions) {
-  p <- terra::patches(terra::rast(m), directions = directions, zeroAsNA = TRUE)
-  matrix(terra::values(p, mat = FALSE), nrow(m), ncol(m), byrow = TRUE)
+  inside <- !is.na(m) & m != 0
+  # imager::label() numbers every connected region of equal value, the 0-valued
+  # background included, so the cells outside the regions are blanked after.
+  # as.cimg() maps matrix rows to x and columns to y, so the labels unroll in
+  # the same cell order as m.
+  lab <- imager::label(imager::as.cimg(inside * 1),
+                       high_connectivity = directions == 8)
+  lab <- matrix(as.integer(lab), nrow(m), ncol(m))
+  lab[!inside] <- NA
+  lab
 }
 
 #' Labels of the regions that touch the matrix border
