@@ -45,7 +45,6 @@ Imports:
     stringr,
     terra(>= 1.8),
     tidyr,
-    transport,
     utils
 Suggests:
     ggplot2,

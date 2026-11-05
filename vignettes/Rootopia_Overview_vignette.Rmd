@@ -2295,7 +2295,6 @@ when a result surprises you.
 |---|---|---|
 | **terra** | every raster: reading, extents, `zonal()`, plotting | yes |
 | **imager** | connected components, morphology, the distance transform behind `root_diameter()` | yes |
-| **transport** | `wasserstein1d()`, the earth-mover distance in `compare_depth_distribution()` | yes |
 | **minpack.lm** | Levenberg-Marquardt fit in `fit_sine_curve()` / `rhythmicity()` | yes |
 | **mclust** | Gaussian mixture clustering in `modal_peaks()` | yes |
 | **glcm** | the texture matrices in `analyze_soil_texture()` | yes |
@@ -2371,10 +2370,6 @@ version 1.9-11.
 Müller K, Schwalb-Willmann J, Wegmann M, Leutner B (2024) RStoolbox: an R
 package for remote sensing data analysis. *Methods in Ecology and Evolution*.
 doi:10.1111/2041-210X.14451
-
-Schuhmacher D, Bähre B, Bonneel N, Gottschlich C, Hartmann V, Heinemann F,
-Schmitzer B, Schrieber J (2024) *transport: Computation of Optimal Transport
-Plans and Wasserstein Distances*. R package version 0.15-4.
 
 Scrucca L, Fraley C, Murphy TB, Raftery AE (2023) *Model-Based Clustering,
 Classification, and Density Estimation Using mclust in R*. Chapman and
