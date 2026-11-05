@@ -52,14 +52,14 @@ with optional depth-dependent weighting.
 Wasserstein distance measures the minimal transport cost required to
 transform one distribution into another along a one-dimensional index: the
 mass-weighted mean distance the probability has to travel, in the units of
-\code{index}. For depth profiles indexed in centimetres it is therefore a
+\code{index}. For depth profiles indexed in centimeters it is therefore a
 depth, and a profile shifted \code{d} cm returns exactly \code{d}.
 
-\code{transport::wasserstein1d()} does the work. Its \code{a} and \code{b}
-are positions and its \code{wa} and \code{wb} the mass at those positions,
-so \code{index} is passed as the positions and \code{P} and \code{Q} as
-the weights. Passing the mass vectors as positions instead would sort them
-and discard \code{index}, which measures how differently concentrated the
-two profiles are rather than how far apart they sit.
+\code{P} and \code{Q} are the mass at the positions in \code{index}. On a
+shared one-dimensional support the distance is the area between the two
+cumulative distributions: after sorting by \code{index}, the absolute
+difference of the cumulative masses times the gap to the next position,
+summed over all gaps. A profile with all its mass in one bin is a valid
+input.
 }
 \keyword{internal}

@@ -29,7 +29,6 @@ test_that("unequal lengths are padded with zeros, the same way for every metric"
   expect_error(compare_depth_distribution(P, Q, alignPQ = FALSE), "differ in length")
   expect_error(compare_depth_distribution(P, Q, index = 1:2), "one position per bin")
 
-  skip_if_not_installed("transport")
   expect_equal(compare_depth_distribution(P, Q, metric = "wasserstein"),
                compare_depth_distribution(P, c(Q, 0), metric = "wasserstein"))
   # All mass moved one bin deeper costs exactly one bin.
