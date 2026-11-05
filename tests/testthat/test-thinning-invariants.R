@@ -59,6 +59,55 @@ test_that("max_iter stops thinning early instead of running to convergence", {
   expect_setequal(unique(stats::na.omit(terra::values(capped))), c(0, 1))
 })
 
+test_that("codes at root pixels only give the same skeleton as codes at every cell", {
+  # lut_thin_fast() computes the neighborhood code at the current root pixels
+  # only. Every other cell has code 0, which the table keeps, so on any mask
+  # without NA the result must equal the same rule evaluated at every cell.
+  thin_every_cell <- function(m, max_iter = 200L) {
+    nr <- nrow(m); nc <- ncol(m)
+    deletion_flags <- function(m) {
+      mp <- matrix(0L, nr + 2, nc + 2)
+      mp[2:(nr + 1), 2:(nc + 1)] <- m
+      at <- function(dr, dc) mp[(2:(nr + 1)) + dr, (2:(nc + 1)) + dc]
+      code <-   1L*at(-1, -1) +  2L*at(-1, 0) +  4L*at(-1, 1) +
+              128L*at( 0, -1) +                  8L*at( 0, 1) +
+               64L*at( 1, -1) + 32L*at( 1, 0) + 16L*at( 1, 1)
+      code[m != 1L] <- 0L
+      .thinning_lut[code + 1L]          # column-major, like m
+    }
+    for (i in seq_len(max_iter)) {
+      d1 <- deletion_flags(m) %in% c(1L, 3L); m[d1] <- 0L
+      d2 <- deletion_flags(m) %in% c(2L, 3L); m[d2] <- 0L
+      if (!any(d1) && !any(d2)) break
+    }
+    m
+  }
+
+  set.seed(42)
+  for (i in 1:60) {
+    d <- sample(3:60, 2)
+    m <- matrix(rbinom(prod(d), 1, runif(1, 0.1, 0.9)), d[1], d[2])
+    if (i %% 4 == 0) m[, 1] <- 1L     # roots on the image border
+    if (i %% 9 == 0) m[] <- 1L        # nothing but root
+    s <- .mat(lut_thin_fast(terra::rast(m)))
+    expect_identical(s == 1, thin_every_cell(m) == 1, info = sprintf("mask %d", i))
+  }
+})
+
+test_that("masked cells stay NA and act like the image border", {
+  # A 5-px bar cut by a masked band. Masked cells read as background, so each
+  # side must thin exactly as it would as an image of its own whose edge lies
+  # where the mask starts.
+  m <- matrix(0, 15, 60); m[6:10, 5:56] <- 1
+  masked <- m; masked[, 28:32] <- NA
+  s <- .mat(lut_thin_fast(terra::rast(masked)))
+
+  expect_true(all(is.na(s[, 28:32])))
+  expect_false(anyNA(s[, -(28:32)]))
+  expect_equal(s[, 1:27],  .mat(lut_thin_fast(terra::rast(m[, 1:27]))))
+  expect_equal(s[, 33:60], .mat(lut_thin_fast(terra::rast(m[, 33:60]))))
+})
+
 test_that("detect_skeleton_points counts pixels by their eight-neighbourhood", {
   # A one-pixel plus: four arm tips have one neighbour each, so four endpoints.
   m <- matrix(0, 21, 21); m[11, 4:18] <- 1; m[4:18, 11] <- 1
