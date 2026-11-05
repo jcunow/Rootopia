@@ -37,6 +37,9 @@ Processing steps:
 \itemize{
 \item iterative removal of pixels based on 3x3 neighborhood codes
 \item lookup table determines pixel deletions in two sub-steps per iteration
+\item masked cells (\code{NA}) are not thinned and stay \code{NA}; a root next to them
+is thinned as if the masked cells were background, so a root cut by
+a mask ends at the mask edge, as it does at the image border
 }
 \item Output is the final thinned binary raster.
 \item Optionally, an overlay image is generated:

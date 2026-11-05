@@ -54,29 +54,37 @@
 #'
 #' The algorithm operates as follows:
 #'
-#' 1. Raster values are extracted once into a numeric vector.
-#' 2. Each iteration reconstructs a matrix representation of the image.
-#' 3. A zero-padded border is added around the image.
-#' 4. For every pixel equal to 1, the eight neighbors are read from shifted
-#'    copies of the padded matrix and combined as a weighted sum into a
-#'    unique neighborhood code
-#' 5. The code is used as an index into a 256-entry lookup table:
+#' 1. Raster values are extracted once into an integer vector and placed in a
+#'    zero-padded copy of the grid, stored row by row like terra's cell order.
+#'    In that layout each of the eight neighbors of a cell sits at a fixed
+#'    index offset, and the padding keeps a left or right neighbor from
+#'    wrapping into the adjacent row.
+#' 2. Only root pixels (value 1) can be deleted: every other cell has
+#'    neighborhood code 0, which the table keeps. The positions of the current
+#'    root pixels are therefore kept in a list, and the neighborhood code is
+#'    computed for those positions only.
+#' 3. The code is used as an index into a 256-entry lookup table:
 #'    - LUT value 1 or 3 -> pixel removed in first sub-step
 #'    - LUT value 2 or 3 -> pixel removed in second sub-step
-#' 6. Pixels are updated in-place in the vector representation
-#' 7. Iteration stops when no pixels are removed or max_iter is reached
+#'    Removed pixels are set to 0 and dropped from the list. Thinning never
+#'    adds a root pixel, so the list stays equal to the set of root pixels.
+#' 4. Iteration stops when no pixels are removed or max_iter is reached.
 #'
-#' Important properties of implementation:
-#' - Raster is only written back once at the end
-#' - All intermediate steps operate on in-memory matrix/vector data
-#' - Neighborhood codes are computed for the whole matrix at once, by
-#'   shifting it, not by looping over pixels
+#' Masked cells (\code{NA}) are neither root nor background. They are never
+#' deleted and are \code{NA} in the result; as a neighbor they read as
+#' background, the same way the zero padding beyond the image border does. A
+#' root cut by a mask is therefore thinned up to the mask edge and ends there,
+#' as it does at the image border.
+#'
+#' The work per sub-step scales with the number of root pixels, not with the
+#' number of cells in the image.
 #'
 #' @param img Binary SpatRaster (single layer only)
 #' @param max_iter Maximum number of thinning iterations
 #' @param verbose Logical. If TRUE, prints iteration count and pixel reduction
 #'
-#' @return Binary SpatRaster representing skeletonized image
+#' @return Binary SpatRaster representing skeletonized image, \code{NA} where
+#'   \code{img} is \code{NA}
 #'
 #' @keywords internal
 lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
@@ -87,25 +95,34 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
   nr <- dims[1]; nc <- dims[2]
   
   v <- as.integer(terra::values(img))
-  n_start <- sum(v == 1L, na.rm = TRUE)
+
+  # Masked cells read as background while thinning and are restored at the end.
+  masked <- is.na(v)
+  v[masked] <- 0L
+  n_start <- sum(v == 1L)
   
   lut <- .thinning_lut
 
-  # 3x3 neighborhood -> 256-LUT code for every current foreground pixel.
+  # Zero-padded grid, row-major like terra: the cell in row i, column j of the
+  # image sits at index i * w + j + 1 of `vp`, so up/down is -w/+w and
+  # left/right is -1/+1.
+  w     <- nc + 2L
+  vp    <- integer((nr + 2L) * w)
+  inner <- rep(seq_len(nr) * w, each = nc) + rep(seq_len(nc) + 1L, nr)
+  vp[inner] <- v
+
+  fg <- inner[which(v == 1L)]   # positions of the current root pixels in `vp`
+
+  # 3x3 neighborhood -> 256-LUT code for every current root pixel.
   # Weight layout (must match the `.thinning_lut` encoding):
   #   TL=1   T=2   TR=4
   #   L=128        R=8
   #   BL=64  B=32  BR=16
-  lut_codes <- function(v) {
-    m  <- matrix(v, nrow = nr, ncol = nc, byrow = TRUE)
-    mp <- matrix(0L, nr + 2, nc + 2)
-    mp[2:(nr+1), 2:(nc+1)] <- m
-    nw<-mp[1:nr,1:nc];      nn<-mp[1:nr,2:(nc+1)];      ne<-mp[1:nr,3:(nc+2)]
-    ww<-mp[2:(nr+1),1:nc];                              ee<-mp[2:(nr+1),3:(nc+2)]
-    sw<-mp[3:(nr+2),1:nc];  ss<-mp[3:(nr+2),2:(nc+1)];  se<-mp[3:(nr+2),3:(nc+2)]
-    Cmat <- 1L*nw + 2L*nn + 4L*ne + 128L*ww + 8L*ee + 64L*sw + 32L*ss + 16L*se
-    Cmat[m != 1L] <- 0L
-    lut[as.vector(t(Cmat)) + 1L]
+  lut_codes <- function(fg) {
+    code <-   1L*vp[fg - w - 1L] +   2L*vp[fg - w] +  4L*vp[fg - w + 1L] +
+            128L*vp[fg - 1L]     +                    8L*vp[fg + 1L] +
+             64L*vp[fg + w - 1L] +  32L*vp[fg + w] + 16L*vp[fg + w + 1L]
+    lut[code + 1L]
   }
 
   iter <- 0L
@@ -122,25 +139,25 @@ lut_thin_fast <- function(img, max_iter = 200L, verbose = FALSE) {
     # and destroys connectivity (a 2-px line or a loop disappears entirely).
 
     # sub-iteration 1: remove pixels flagged 1 or 3
-    lc  <- lut_codes(v)
-    rm1 <- lc %in% c(1L, 3L)
-    if (any(rm1)) { v[rm1] <- 0L; changed <- TRUE }
+    rm1 <- lut_codes(fg) %in% c(1L, 3L)
+    if (any(rm1)) { vp[fg[rm1]] <- 0L; fg <- fg[!rm1]; changed <- TRUE }
 
     # sub-iteration 2: recompute on the updated image, remove pixels flagged 2 or 3
-    lc  <- lut_codes(v)
-    rm2 <- lc %in% c(2L, 3L)
-    if (any(rm2)) { v[rm2] <- 0L; changed <- TRUE }
+    rm2 <- lut_codes(fg) %in% c(2L, 3L)
+    if (any(rm2)) { vp[fg[rm2]] <- 0L; fg <- fg[!rm2]; changed <- TRUE }
 
     if (!changed) break
   }
   
   if (verbose) {
     message(sprintf("LUT thinning: %d iters | %d -> %d px",
-                    iter, n_start, sum(v == 1L)))
+                    iter, n_start, length(fg)))
   }
   
+  out_v <- vp[inner]
+  out_v[masked] <- NA
   out <- img
-  terra::values(out) <- v
+  terra::values(out) <- out_v
   out
 }
 
@@ -262,6 +279,9 @@ detect_skeleton_points <- function(img, select_layer = NULL, skeletonize = FALSE
 #' 3. Skeletonization is performed using `lut_thin_fast()`:
 #'    - iterative removal of pixels based on 3x3 neighborhood codes
 #'    - lookup table determines pixel deletions in two sub-steps per iteration
+#'    - masked cells (`NA`) are not thinned and stay `NA`; a root next to them
+#'      is thinned as if the masked cells were background, so a root cut by
+#'      a mask ends at the mask edge, as it does at the image border
 #' 4. Output is the final thinned binary raster.
 #' 5. Optionally, an overlay image is generated:
 #'    - original image marked as base layer
